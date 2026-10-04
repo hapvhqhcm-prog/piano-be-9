@@ -17,6 +17,9 @@ describe('schema v1 (§7)', () => {
       autoAdvanceDelaySec: 4,
       leftHandEnabled: false,
       dailyLimit: 'none',
+      micEnabled: false, // micro mặc định TẮT
+      micTuningCents: 0,
+      micAutoNext: true,
     });
   });
 

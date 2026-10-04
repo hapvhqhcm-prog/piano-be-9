@@ -19,6 +19,12 @@ Mã nguồn app do dự án tự viết, dùng riêng cho gia đình (OWNER: Pha
 - Phase 3 (chưa làm): dự kiến dùng *Salamander Grand Piano* (Alexander Holm) — **CC-BY 3.0**.
   Khi thêm sẽ ghi attribution đầy đủ tại đây và chỉ đóng gói các sample cần thiết C3–C5 vào app.
 
+## Nhận cao độ qua micro
+
+Thuật toán YIN (A. de Cheveigné & H. Kawahara, J. Acoust. Soc. Am. 111(4), 2002) — tự cài đặt lại
+trong `src/audio/pitchDetect.ts`, không dùng thư viện ngoài. Âm thanh micro chỉ được phân tích trong bộ nhớ,
+không lưu, không gửi đi.
+
 ## Bài hát (`src/data/songs/`)
 
 Tất cả giai điệu thuộc **public domain**. Bản phối 5 ngón là bản tự soạn đơn giản cho app này;

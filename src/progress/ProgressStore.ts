@@ -27,7 +27,8 @@ export function isEmptySession(s: Session): boolean {
     !s.completed &&
     s.selfRating === null &&
     s.parentAssessments.length === 0 &&
-    s.appAssessments.length === 0
+    s.appAssessments.length === 0 &&
+    s.micAssessments.length === 0
   );
 }
 
@@ -150,6 +151,7 @@ export class ProgressStore {
       lessonId,
       parentAssessments: [],
       appAssessments: [],
+      micAssessments: [],
       selfRating: null,
       startedAt: now.getTime(),
       endedAt: null,
@@ -199,6 +201,26 @@ export class ProgressStore {
     const s = this.session(sessionId);
     s.appAssessments.push({ expected, actual, correct: expected === actual, ts: this.now().getTime() });
     this.touch(s);
+    this.save();
+  }
+
+  /** MIC_ASSESSMENT: micro nghe bé đàn xong một nốt trên đàn cơ. */
+  addMicAssessment(
+    sessionId: string,
+    rec: { expected: string; firstHeard: string; wrongCount: number },
+  ): void {
+    const s = this.session(sessionId);
+    s.micAssessments.push({ ...rec, firstTry: rec.wrongCount === 0, ts: this.now().getTime() });
+    this.touch(s);
+    this.save();
+  }
+
+  /** "Sửa" sau khi micro chấm: bố/mẹ ghi đè kết quả của bản ghi micro gần nhất. */
+  overrideLastMic(sessionId: string, result: ParentResult): void {
+    const s = this.session(sessionId);
+    const last = s.micAssessments[s.micAssessments.length - 1];
+    if (!last) return;
+    last.parentOverride = result;
     this.save();
   }
 

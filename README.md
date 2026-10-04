@@ -3,10 +3,12 @@
 **Bản đang chạy:** https://hapvhqhcm-prog.github.io/piano-be-9/
 
 App "thầy giáo hướng dẫn" chạy trên iPad (Safari), đặt trên giá nhạc của đàn piano cơ:
-chỉ phím, chỉ ngón, phát âm mẫu. **App không nghe đàn** — bố/mẹ bấm "Đúng rồi / Thử lại".
+chỉ phím, chỉ ngón, phát âm mẫu. Khi bật micro, app **nghe đàn cơ và tự chấm** từng nốt; khi tắt, bố/mẹ bấm "Đúng rồi / Thử lại".
 
 - Vite + TypeScript + Vanilla DOM + Web Audio (OscillatorNode) + PWA + localStorage
-- **0 thư viện runtime.** Không backend, không đăng nhập, không analytics, không CDN, không xin quyền gì.
+- **0 thư viện runtime.** Không backend, không đăng nhập, không analytics, không CDN.
+- **Micro (tùy chọn, mặc định tắt):** app nghe đàn cơ và tự chấm từng nốt — xử lý ngay trên iPad,
+  không ghi âm, không gửi đi đâu. Đây là quyền duy nhất app xin (OWNER mở khóa ngày 2026-10-04).
 - Offline-first: sau lần mở đầu tiên từ GitHub Pages, app chạy hoàn toàn không cần mạng.
 
 ## Chạy trên máy (Windows)
@@ -98,9 +100,20 @@ tests/            70 test: fingering, pitchTable, schema, song-validation, state
 scripts/          make-icons.mjs (sinh icon PNG), deploy.mjs
 ```
 
+## Micro — bật & thử trên đàn thật
+
+1. Mở app từ biểu tượng trên Màn hình chính (bản GitHub Pages, **https**).
+2. Giữ nút **Phụ huynh** 2 giây → phép cộng → **Cài đặt → 🎤 Thử micro** → **Bật micro** → chọn **Cho phép**.
+3. Đàn vài phím: app phải hiện đúng tên nốt. Bấm **Chỉnh theo đàn nhà** → đàn Đô giữa 3 lần.
+4. Quay lại Cài đặt → **Nghe đàn bằng micro: Bật**.
+5. Vào bài học: sau khi âm mẫu phát xong, dòng "🎤 Đang nghe…" xuất hiện → bé đàn trên đàn cơ.
+
+Đặt iPad trên giá nhạc là đủ gần. Nếu nhận sai nhiều: tắt TV/quạt to, làm lại bước "Chỉnh theo đàn nhà".
+Bản LAN (`http://192.168…`) **không** dùng được micro — iOS chỉ cho micro trên https.
+
 ## Hạn chế đã biết
 
-- **App không nghe được đàn thật.** Kết quả trên đàn cơ = nút bố/mẹ bấm (PARENT_ASSESSMENT).
+- Micro chỉ nhận **một nốt mỗi lần**; phòng ồn có thể nhận nhầm → bố mẹ bấm **Sửa**. Khi tắt micro, kết quả trên đàn cơ = nút bố/mẹ bấm (PARENT_ASSESSMENT).
 - **Safari và app ở Màn hình chính có bộ nhớ RIÊNG trên iPad.** Tiến độ làm trong tab Safari
   không sang app đã cài. Hãy luôn mở bằng biểu tượng trên Màn hình chính.
 - Dữ liệu chỉ nằm trên iPad. Nên **Xuất JSON / Sao chép JSON** định kỳ ở màn Phụ huynh.

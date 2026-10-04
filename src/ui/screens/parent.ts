@@ -4,6 +4,7 @@ import { CHECKLIST_ITEMS, localDateStr, type AppData, type Session, type Setting
 import type { App } from '../App';
 import { button, h } from '../components/dom';
 import { homeScreen } from './home';
+import { micTestScreen } from './micTest';
 import { startScreen } from './start';
 
 const RATING_LABEL = { all: '😄 Đánh được hết', some: '🙂 Còn vấp vài chỗ', hard: '😅 Khó quá' } as const;
@@ -111,6 +112,18 @@ export function parentScreen(app: App) {
 
       const rated = d.sessions.filter((s) => s.selfRating).slice(-10).reverse();
 
+      // MIC_ASSESSMENT — tổng hợp theo nốt
+      const micAgg = new Map<string, { t: number; first: number; over: number }>();
+      d.sessions.forEach((s) =>
+        s.micAssessments.forEach((a) => {
+          const e = micAgg.get(a.expected) ?? { t: 0, first: 0, over: 0 };
+          e.t++;
+          if (a.firstTry && a.parentOverride !== 'retry') e.first++;
+          if (a.parentOverride) e.over++;
+          micAgg.set(a.expected, e);
+        }),
+      );
+
       const set = (patch: Partial<Settings>) => {
         store.updateSettings(patch);
         render();
@@ -159,6 +172,21 @@ export function parentScreen(app: App) {
           ),
           h('h3', {}, 'Từng lượt chơi'),
           table(['Ngày', 'Buổi', 'Điểm'], games.slice(-10).reverse()),
+        ),
+
+        h(
+          'section',
+          { class: 'card' },
+          h('h2', {}, 'Micro nghe đàn thật — app tự chấm'),
+          h(
+            'p',
+            { class: 'muted' },
+            'MIC_ASSESSMENT: khi micro bật, app nghe đàn cơ. "Đúng ngay" = không đàn nhầm phím nào trước đó. "Bố mẹ sửa" = micro nghe nhầm, người lớn đã bấm Sửa.',
+          ),
+          table(
+            ['Nốt', 'Hoàn thành', 'Đúng ngay', '%', 'Bố mẹ sửa'],
+            [...micAgg.entries()].map(([k, v]) => [k, v.t, v.first, `${Math.round((v.first / v.t) * 100)}%`, v.over]),
+          ),
         ),
 
         h(
@@ -266,6 +294,40 @@ export function parentScreen(app: App) {
               render();
             },
           ),
+          h('h3', {}, '🎤 Nghe đàn bằng micro'),
+          h(
+            'p',
+            { class: 'muted' },
+            'App nghe đàn cơ và tự chấm từng nốt. Xử lý ngay trên iPad, không ghi âm, không gửi đi đâu. Nút "Đúng rồi" của bố mẹ vẫn dùng được. Hãy "Thử micro" trước khi bật.',
+          ),
+          h(
+            'div',
+            { class: 'row' },
+            segmented(
+              [
+                { value: 'off', label: 'Tắt' },
+                { value: 'on', label: 'Bật' },
+              ],
+              s.micEnabled ? 'on' : 'off',
+              (v) => set({ micEnabled: v === 'on' }),
+            ),
+            button({ icon: '🎤', label: 'Thử micro', onTap: () => app.show(micTestScreen(app)) }),
+          ),
+          s.micEnabled
+            ? h(
+                'div',
+                {},
+                h('h3', {}, 'Micro nghe đúng → tự sang nốt sau'),
+                segmented(
+                  [
+                    { value: 'on', label: 'Bật' },
+                    { value: 'off', label: 'Tắt' },
+                  ],
+                  s.micAutoNext ? 'on' : 'off',
+                  (v) => set({ micAutoNext: v === 'on' }),
+                ),
+              )
+            : null,
           h('h3', {}, 'Tay trái — mở ở Phase 3 (tuần 6)'),
           segmented([{ value: 'off', label: 'Chưa kích hoạt' }], 'off', () => undefined, true),
           h('h3', {}, 'Giới hạn mỗi ngày — Phase 3'),

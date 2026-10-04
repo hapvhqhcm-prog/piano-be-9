@@ -28,6 +28,7 @@ export type PracticeEvent =
   | { type: 'SAMPLE_END' }
   | { type: 'REPLAY' } // "Nghe lại"
   | { type: 'CORRECT' } // "Đúng rồi"
+  | { type: 'HEARD' } // micro nghe bé đàn đúng nốt (MIC_ASSESSMENT)
   | { type: 'RETRY' } // "Thử lại"
   | { type: 'CONTINUE' } // nút "Tiếp" / "Thử lại" ở màn RESULT
   | { type: 'AUTO_ADVANCE' } // hết giờ đếm auto-advance
@@ -38,7 +39,8 @@ export type PracticeEffect =
   | { type: 'playSample'; index: number }
   | { type: 'stopAudio' }
   | { type: 'record'; index: number; result: ParentResult }
-  | { type: 'amendLast'; index: number; result: ParentResult }
+  | { type: 'recordMic'; index: number }
+  | { type: 'amendLast'; index: number; result: ParentResult; source: ResultSource }
   | { type: 'startAutoAdvance'; delaySec: number }
   | { type: 'cancelAutoAdvance' }
   | { type: 'complete' }
@@ -49,11 +51,18 @@ export interface PracticeSnapshot {
   index: number;
   total: number;
   lastResult: ParentResult | null;
+  /** Ai chấm kết quả vừa rồi: bố/mẹ bấm nút, hay micro nghe được */
+  lastSource: ResultSource | null;
 }
+
+export type ResultSource = 'parent' | 'mic';
 
 export interface PracticeOptions {
   autoAdvance: boolean;
   autoAdvanceDelaySec: number;
+  /** Micro nghe đúng → tự sang nốt sau (giống app nghe đàn), mặc định bật */
+  micAutoNext?: boolean;
+  micNextDelaySec?: number;
 }
 
 export class PracticeStateMachine {
@@ -64,7 +73,7 @@ export class PracticeStateMachine {
     total: number,
     private readonly opts: PracticeOptions = { autoAdvance: false, autoAdvanceDelaySec: 4 },
   ) {
-    this.s = { state: 'INTRO', index: 0, total, lastResult: null };
+    this.s = { state: 'INTRO', index: 0, total, lastResult: null, lastSource: null };
   }
 
   get snapshot(): Readonly<PracticeSnapshot> {
@@ -89,15 +98,27 @@ export class PracticeStateMachine {
     return Math.min(10, Math.max(2, this.opts.autoAdvanceDelaySec));
   }
 
+  private micDelay(): number {
+    return Math.min(5, Math.max(0.5, this.opts.micNextDelaySec ?? 1.2));
+  }
+
+  /** Effect bắt đầu đếm tự chuyển, tùy nguồn kết quả; null nếu không tự chuyển. */
+  private autoFor(source: ResultSource): PracticeEffect | null {
+    if (source === 'mic') {
+      return this.opts.micAutoNext === false ? null : { type: 'startAutoAdvance', delaySec: this.micDelay() };
+    }
+    return this.opts.autoAdvance ? { type: 'startAutoAdvance', delaySec: this.delay() } : null;
+  }
+
   private goPrev(extra: PracticeEffect[]): { next: PracticeSnapshot; effects: PracticeEffect[] } {
     const { index } = this.s;
     if (index > 0) {
       return {
-        next: { ...this.s, state: 'SHOW_NOTE', index: index - 1, lastResult: null },
+        next: { ...this.s, state: 'SHOW_NOTE', index: index - 1, lastResult: null, lastSource: null },
         effects: extra,
       };
     }
-    return { next: { ...this.s, state: 'READY', index: 0, lastResult: null }, effects: extra };
+    return { next: { ...this.s, state: 'READY', index: 0, lastResult: null, lastSource: null }, effects: extra };
   }
 
   private transition(ev: PracticeEvent): { next: PracticeSnapshot; effects: PracticeEffect[] } | null {
@@ -111,7 +132,7 @@ export class PracticeStateMachine {
       case 'READY':
         if (ev.type === 'NEXT') {
           if (s.total === 0) return { next: { ...s, state: 'COMPLETE' }, effects: [{ type: 'complete' }] };
-          return { next: { ...s, state: 'SHOW_NOTE', index: 0, lastResult: null }, effects: [] };
+          return { next: { ...s, state: 'SHOW_NOTE', index: 0, lastResult: null, lastSource: null }, effects: [] };
         }
         if (ev.type === 'BACK') return { next: { ...s, state: 'INTRO' }, effects: [] };
         return null;
@@ -137,12 +158,20 @@ export class PracticeStateMachine {
             { type: 'stopAudio' },
             { type: 'record', index: s.index, result: 'correct' },
           ];
-          if (this.opts.autoAdvance) effects.push({ type: 'startAutoAdvance', delaySec: this.delay() });
-          return { next: { ...s, state: 'RESULT', lastResult: 'correct' }, effects };
+          const auto = this.autoFor('parent');
+          if (auto) effects.push(auto);
+          return { next: { ...s, state: 'RESULT', lastResult: 'correct', lastSource: 'parent' }, effects };
+        }
+        if (ev.type === 'HEARD') {
+          // Micro nghe đúng: cùng nhánh với "Đúng rồi" nhưng ghi MIC_ASSESSMENT, không ghi PARENT.
+          const effects: PracticeEffect[] = [{ type: 'stopAudio' }, { type: 'recordMic', index: s.index }];
+          const auto = this.autoFor('mic');
+          if (auto) effects.push(auto);
+          return { next: { ...s, state: 'RESULT', lastResult: 'correct', lastSource: 'mic' }, effects };
         }
         if (ev.type === 'RETRY') {
           return {
-            next: { ...s, state: 'RESULT', lastResult: 'retry' },
+            next: { ...s, state: 'RESULT', lastResult: 'retry', lastSource: 'parent' },
             effects: [{ type: 'stopAudio' }, { type: 'record', index: s.index, result: 'retry' }],
           };
         }
@@ -156,21 +185,23 @@ export class PracticeStateMachine {
           }
           // RETRY → về SHOW_NOTE của chính nốt đó.
           return {
-            next: { ...s, state: 'SHOW_NOTE', lastResult: null },
+            next: { ...s, state: 'SHOW_NOTE', lastResult: null, lastSource: null },
             effects: [{ type: 'cancelAutoAdvance' }],
           };
         }
         if (ev.type === 'AUTO_ADVANCE') {
-          if (!this.opts.autoAdvance || s.lastResult !== 'correct') return null;
+          if (s.lastResult !== 'correct' || !this.autoFor(s.lastSource ?? 'parent')) return null;
           return { next: { ...s, state: 'NEXT_NOTE' }, effects: [] };
         }
         if (ev.type === 'EDIT') {
+          const source = s.lastSource ?? 'parent';
           const result: ParentResult = s.lastResult === 'correct' ? 'retry' : 'correct';
           const effects: PracticeEffect[] = [
             { type: 'cancelAutoAdvance' },
-            { type: 'amendLast', index: s.index, result },
+            { type: 'amendLast', index: s.index, result, source },
           ];
-          if (result === 'correct' && this.opts.autoAdvance) {
+          // Sau khi bố/mẹ đã sửa thì KHÔNG tự chuyển nữa (để người lớn quyết)
+          if (result === 'correct' && source === 'parent' && this.opts.autoAdvance) {
             effects.push({ type: 'startAutoAdvance', delaySec: this.delay() });
           }
           return { next: { ...s, lastResult: result }, effects };
@@ -181,7 +212,7 @@ export class PracticeStateMachine {
       case 'NEXT_NOTE':
         if (ev.type === 'NEXT') {
           if (s.index + 1 < s.total) {
-            return { next: { ...s, state: 'SHOW_NOTE', index: s.index + 1, lastResult: null }, effects: [] };
+            return { next: { ...s, state: 'SHOW_NOTE', index: s.index + 1, lastResult: null, lastSource: null }, effects: [] };
           }
           return { next: { ...s, state: 'COMPLETE' }, effects: [{ type: 'complete' }] };
         }

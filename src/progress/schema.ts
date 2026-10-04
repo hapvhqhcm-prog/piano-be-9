@@ -22,6 +22,23 @@ export interface AppAssessment {
   ts: number;
 }
 
+/**
+ * (+) MIC_ASSESSMENT — loại thứ 3, tách riêng: app nghe đàn cơ qua micro.
+ * Mỗi bản ghi = một nốt bé đã hoàn thành khi micro đang bật.
+ */
+export interface MicAssessment {
+  expected: string;
+  /** Nốt đầu tiên micro nghe được cho lượt này */
+  firstHeard: string;
+  /** Đúng ngay từ lần đầu */
+  firstTry: boolean;
+  /** Số nốt sai nghe được trước khi đúng */
+  wrongCount: number;
+  /** Bố/mẹ bấm "Sửa" khi micro nghe nhầm */
+  parentOverride?: 'correct' | 'retry';
+  ts: number;
+}
+
 export type ChecklistKey = 'backStraight' | 'wristStraight' | 'fingersCurved' | 'rightFinger' | 'lessLooking' | 'happy';
 
 export const CHECKLIST_ITEMS: ReadonlyArray<{ key: ChecklistKey; label: string }> = [
@@ -39,6 +56,7 @@ export interface Session {
   lessonId: string;
   parentAssessments: ParentAssessment[];
   appAssessments: AppAssessment[];
+  micAssessments: MicAssessment[]; // (+)
   selfRating: SelfRating | null;
   startedAt: number; // (+)
   endedAt: number | null; // (+)
@@ -53,6 +71,9 @@ export interface Settings {
   autoAdvanceDelaySec: number; // 2–10
   leftHandEnabled: boolean; // Phase 3
   dailyLimit: DailyLimit; // Phase 3 — mặc định "none"
+  micEnabled: boolean; // (+) mặc định TẮT — phụ huynh bật sau khi "Thử micro"
+  micTuningCents: number; // (+) bù độ lệch dây đàn nhà, -100..100
+  micAutoNext: boolean; // (+) micro nghe đúng → tự sang nốt sau ~1 giây
 }
 
 export interface Progress {
@@ -83,6 +104,9 @@ export function defaultSettings(): Settings {
     autoAdvanceDelaySec: 4,
     leftHandEnabled: false,
     dailyLimit: 'none',
+    micEnabled: false,
+    micTuningCents: 0,
+    micAutoNext: true,
   };
 }
 
@@ -113,6 +137,10 @@ export function validateAppData(x: unknown): string[] {
     if (typeof d !== 'number' || d < 2 || d > 10) errs.push('settings.autoAdvanceDelaySec');
     if (typeof st.leftHandEnabled !== 'boolean') errs.push('settings.leftHandEnabled');
     if (!['none', 15, 20, 30].includes(st.dailyLimit as never)) errs.push('settings.dailyLimit');
+    if (typeof st.micEnabled !== 'boolean') errs.push('settings.micEnabled');
+    const tc = st.micTuningCents as number;
+    if (typeof tc !== 'number' || tc < -100 || tc > 100) errs.push('settings.micTuningCents');
+    if (typeof st.micAutoNext !== 'boolean') errs.push('settings.micAutoNext');
   }
   const p = x.progress;
   if (!isObj(p)) errs.push('Thiếu progress');
@@ -139,6 +167,11 @@ export function validateAppData(x: unknown): string[] {
       else
         s.appAssessments.forEach((a, j) => {
           if (!isObj(a) || typeof a.correct !== 'boolean') errs.push(`sessions[${i}].appAssessments[${j}]`);
+        });
+      if (!Array.isArray(s.micAssessments)) errs.push(`sessions[${i}].micAssessments`);
+      else
+        s.micAssessments.forEach((a, j) => {
+          if (!isObj(a) || typeof a.firstTry !== 'boolean') errs.push(`sessions[${i}].micAssessments[${j}]`);
         });
     });
   }

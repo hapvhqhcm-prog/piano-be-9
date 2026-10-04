@@ -102,3 +102,21 @@ describe('EarGame (APP_ASSESSMENT)', () => {
     }
   });
 });
+
+describe('tiêu chí tuần 1 với micro', () => {
+  it('micro nghe C4 đúng ngay 10 lần → qua tuần; một lần đàn nhầm trước → chưa qua', () => {
+    const st = store();
+    const s = st.startSession('w1-test');
+    for (let i = 0; i < 6; i++) st.addMicAssessment(s.id, { expected: 'C4', firstHeard: 'C4', wrongCount: 0 });
+    for (let i = 0; i < 4; i++) st.addParentAssessment(s.id, 'C4', 'correct');
+    expect(weekPassed(1, st.get())).toBe(true);
+
+    const st2 = store();
+    const s2 = st2.startSession('w1-test');
+    for (let i = 0; i < 10; i++) st2.addMicAssessment(s2.id, { expected: 'C4', firstHeard: 'C4', wrongCount: 0 });
+    st2.addMicAssessment(s2.id, { expected: 'C4', firstHeard: 'D4', wrongCount: 1 });
+    expect(weekPassed(1, st2.get())).toBe(false);
+    st2.overrideLastMic(s2.id, 'correct'); // micro nghe nhầm, bố mẹ sửa thành đúng
+    expect(weekPassed(1, st2.get())).toBe(true);
+  });
+});

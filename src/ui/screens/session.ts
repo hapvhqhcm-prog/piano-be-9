@@ -21,6 +21,7 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
   let lessonFinished = false;
 
   const finish = () => {
+    app.mic.stop();
     store.finishSession(session.id);
     if (lessonFinished) store.markLessonCompleted(lesson.id);
     let banner: string | undefined;
@@ -44,6 +45,7 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
 
   const go = (i: number): void => {
     if (i < 0) {
+      app.mic.stop();
       store.discardSessionIfEmpty(session.id);
       return app.show(homeScreen(app));
     }
@@ -67,7 +69,16 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
         return app.show(
           practiceScreen(app, step.segment, {
             record: (t, result) => store.addParentAssessment(session.id, t.noteId, result),
-            amendLast: (result) => store.amendLastParentAssessment(session.id, result),
+            recordMic: (t, info) =>
+              store.addMicAssessment(session.id, {
+                expected: t.keys.join('+'),
+                firstHeard: info.firstHeard,
+                wrongCount: info.wrongCount,
+              }),
+            amendLast: (result, source) =>
+              source === 'mic'
+                ? store.overrideLastMic(session.id, result)
+                : store.amendLastParentAssessment(session.id, result),
             onComplete: () => {
               if (step.last) {
                 lessonFinished = true;

@@ -113,7 +113,7 @@ export class PianoKeyboard {
     this.keys.forEach((k, p) => k.setGuide(set.has(p)));
   }
 
-  setResult(pitch: Pitch | null, kind: 'good' | 'show' | null): void {
+  setResult(pitch: Pitch | null, kind: 'good' | 'show' | 'heard' | null): void {
     this.keys.forEach((k, p) => k.setResult(p === pitch ? kind : null));
   }
 

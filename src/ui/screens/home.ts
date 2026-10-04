@@ -9,6 +9,7 @@ import { startSession } from './session';
 
 export function homeScreen(app: App, banner?: string) {
   return (root: HTMLElement) => {
+    app.mic.stop(); // ở màn chính không cần nghe
     const data = app.store.get();
     const plan = weekPlan(data.progress.currentWeek);
     const next = nextLesson(data);

@@ -93,7 +93,7 @@ describe('PracticeStateMachine (§5)', () => {
     sm.send({ type: 'NEXT' });
     toWaitParent(sm);
     sm.send({ type: 'CORRECT' });
-    expect(sm.send({ type: 'EDIT' })).toContainEqual({ type: 'amendLast', index: 0, result: 'retry' });
+    expect(sm.send({ type: 'EDIT' })).toContainEqual({ type: 'amendLast', index: 0, result: 'retry', source: 'parent' });
     expect(sm.snapshot.lastResult).toBe('retry');
     sm.send({ type: 'CONTINUE' });
     expect(sm.snapshot).toMatchObject({ state: 'SHOW_NOTE', index: 0 });
@@ -129,5 +129,54 @@ describe('PracticeStateMachine (§5)', () => {
     toWaitParent(sm);
     sm.send({ type: 'RETRY' });
     expect(sm.send({ type: 'AUTO_ADVANCE' })).toBeNull();
+  });
+});
+
+describe('PracticeStateMachine — micro (MIC_ASSESSMENT)', () => {
+  const ready = (sm: PracticeStateMachine) => {
+    sm.send({ type: 'NEXT' });
+    sm.send({ type: 'NEXT' });
+    sm.send({ type: 'SHOWN' });
+  };
+
+  it('HEARD chỉ hợp lệ ở WAIT_PARENT (không nghe khi đang phát mẫu)', () => {
+    const sm = new PracticeStateMachine(2);
+    ready(sm);
+    expect(sm.send({ type: 'HEARD' })).toBeNull();
+    sm.send({ type: 'SAMPLE_END' });
+    const fx = sm.send({ type: 'HEARD' })!;
+    expect(fx).toContainEqual({ type: 'recordMic', index: 0 });
+    expect(fx.some((e) => e.type === 'record')).toBe(false); // không ghi vào PARENT
+    expect(sm.snapshot).toMatchObject({ state: 'RESULT', lastResult: 'correct', lastSource: 'mic' });
+  });
+
+  it('micro nghe đúng → tự chuyển (mặc định), kể cả khi auto-advance của bố mẹ đang TẮT', () => {
+    const sm = new PracticeStateMachine(2, { autoAdvance: false, autoAdvanceDelaySec: 4 });
+    ready(sm);
+    sm.send({ type: 'SAMPLE_END' });
+    expect(sm.send({ type: 'HEARD' })).toContainEqual({ type: 'startAutoAdvance', delaySec: 1.2 });
+    sm.send({ type: 'AUTO_ADVANCE' });
+    expect(sm.snapshot.state).toBe('NEXT_NOTE');
+  });
+
+  it('tắt micAutoNext → không tự chuyển', () => {
+    const sm = new PracticeStateMachine(2, { autoAdvance: false, autoAdvanceDelaySec: 4, micAutoNext: false });
+    ready(sm);
+    sm.send({ type: 'SAMPLE_END' });
+    expect(sm.send({ type: 'HEARD' })!.some((e) => e.type === 'startAutoAdvance')).toBe(false);
+    expect(sm.send({ type: 'AUTO_ADVANCE' })).toBeNull();
+  });
+
+  it('"Sửa" sau khi micro chấm → ghi đè bản ghi micro, dừng tự chuyển, về nốt đó', () => {
+    const sm = new PracticeStateMachine(2);
+    ready(sm);
+    sm.send({ type: 'SAMPLE_END' });
+    sm.send({ type: 'HEARD' });
+    const fx = sm.send({ type: 'EDIT' })!;
+    expect(fx).toContainEqual({ type: 'amendLast', index: 0, result: 'retry', source: 'mic' });
+    expect(fx.some((e) => e.type === 'startAutoAdvance')).toBe(false);
+    expect(sm.send({ type: 'AUTO_ADVANCE' })).toBeNull();
+    sm.send({ type: 'CONTINUE' });
+    expect(sm.snapshot).toMatchObject({ state: 'SHOW_NOTE', index: 0 });
   });
 });

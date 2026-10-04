@@ -565,6 +565,52 @@ p {
   opacity: 0.85;
 }
 
+/* ---------- Micro nghe đàn ---------- */
+.mic-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 4px;
+}
+.mic-level {
+  width: 90px;
+  height: 14px;
+  border-radius: 7px;
+  background: #ece3d3;
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+.mic-level.wide {
+  width: min(420px, 80vw);
+  height: 18px;
+}
+.mic-level-bar {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--rh);
+  transition: width 0.08s linear;
+}
+.mic-hint {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.mic-hint[data-kind='good'] {
+  color: var(--good);
+}
+.mic-hint[data-kind='wrong'] {
+  color: #b86b12;
+}
+.key.is-heard.key-white,
+.key.is-heard.key-black {
+  box-shadow: inset 0 0 0 5px var(--retry);
+  background: #fff1dc;
+}
+.keyboard-wrap.short {
+  flex-basis: 28vh;
+}
+
 /* ---------- Âm thanh bị tạm dừng ---------- */
 .audio-overlay {
   position: fixed;

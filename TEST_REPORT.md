@@ -85,3 +85,35 @@ luôn mở app bằng biểu tượng trên Màn hình chính, và sao lưu JSON
 1. OWNER: deploy + chạy mục 6 và 7, cho bé chơi thử 2 buổi (bước 1C).
 2. OWNER duyệt 3 bài hát (vấn đề quãng A4 ở Frère Jacques và Twinkle — xem phần duyệt bài hát).
 3. Trả lời đúng chữ `PHASE 1 PASS` để bắt đầu Phase 2 (tuần 4–5, metronome, Theo nhịp 3 mức, 3 bài hát).
+
+---
+
+## 9. Thay đổi sau Phase 1 — OWNER mở khóa MICRO (2026-10-04)
+
+**Quyết định của OWNER:** cho phép app dùng micro nghe đàn cơ, theo hướng "giống Simply Piano".
+Điều này **thay thế** các dòng "không micro / không xin permission" ở §3, §17 và DoD Phase 1.
+
+Đã làm:
+- `src/audio/pitchDetect.ts`: nhận cao độ YIN + `NoteTracker` (ổn định ≥3 khung, nhận lần gõ phím mới,
+  bỏ qua nốt cũ còn ngân). Test với tín hiệu có họa âm mạnh C3–C5: sai lệch < 15 cents.
+- `src/audio/MicListener.ts`: micro → AnalyserNode (không nối ra loa), tắt echo/noise/AGC,
+  **bỏ qua khi app đang phát tiếng** (+250 ms) để không tự nghe âm mẫu / phím ảo.
+- **MIC_ASSESSMENT** — loại kết quả thứ 3, lưu riêng `session.micAssessments`
+  (`expected, firstHeard, firstTry, wrongCount, parentOverride?`). Không trộn với PARENT/APP.
+- Màn Từng nốt: micro chỉ nghe ở `WAIT_PARENT` (sau khi mẫu phát xong). Đúng → "App nghe con đàn đúng rồi!"
+  → tự sang nốt sau ~1,2 s (tắt được). Sai → nhắc nhẹ "Con vừa đàn Rê — tìm Đô nhé" (không âm tiêu cực).
+  Nút "Đúng rồi / Thử lại / Sửa" của bố mẹ vẫn giữ để dự phòng.
+- Màn Phụ huynh: bật/tắt micro (**mặc định TẮT**), **Thử micro**, **Chỉnh theo đàn nhà** (đàn C4 ×3 → bù cents),
+  bảng kết quả micro riêng.
+- Tiêu chí tuần 1: C4 10/10 tính cả micro (phải đúng ngay lần đầu; bố mẹ "Sửa" được ghi đè).
+
+Đã kiểm (trình duyệt, micro giả lập bằng tín hiệu có họa âm): đàn sai → nhắc đúng phím; đàn đúng → tự chuyển,
+lưu MIC không đụng PARENT; chỉnh đàn lệch −35 cents đo ra đúng −35.
+**Chưa kiểm trên đàn cơ thật** — xem hướng dẫn trong README → "Micro".
+
+Hạn chế đã biết của micro:
+- Chỉ nhận **một nốt mỗi lần** (đủ cho giai đoạn một tay). Hợp âm/hai tay chưa hỗ trợ.
+- Cần mở bằng **https://** (GitHub Pages). Bản LAN `http://192.168…` không dùng được micro.
+- Phòng ồn, TV, người nói to có thể gây nhận nhầm → bố mẹ bấm **Sửa**.
+- Khi micro bật, iPad có thể phát âm mẫu nhỏ hơn một chút (chế độ ghi + phát của iOS).
+- iPad có thể hỏi lại quyền micro mỗi lần mở app (hành vi của iOS với web app).

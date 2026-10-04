@@ -70,7 +70,8 @@ export class PianoKey {
     this.el.classList.toggle('is-guide', on);
   }
 
-  setResult(kind: 'good' | 'show' | null): void {
+  setResult(kind: 'good' | 'show' | 'heard' | null): void {
+    this.el.classList.toggle('is-heard', kind === 'heard');
     this.el.classList.toggle('is-good', kind === 'good');
     this.el.classList.toggle('is-show', kind === 'show');
   }

@@ -96,15 +96,40 @@ export class AudioEngine {
     this.listeners.forEach((fn) => fn(s));
   }
 
-  /** PHẢI gọi trong handler của thao tác chạm. */
-  async unlock(): Promise<boolean> {
-    // iOS 17+: để âm thanh vẫn phát khi bật công tắc im lặng.
+  /** AudioContext dùng chung (micro cũng gắn vào đây); null trước unlock(). */
+  get context(): AudioContext | null {
+    return this.ctx;
+  }
+
+  /** App đang phát ra tiếng (âm mẫu, phím ảo, chuông) — micro phải bỏ qua lúc này. */
+  get isSounding(): boolean {
+    return this.voices.size > 0 || this.busyCount > 0;
+  }
+
+  /** Số ms kể từ khi app im hẳn (0 nếu đang phát). */
+  msSinceSound(now = Date.now()): number {
+    return this.isSounding ? 0 : now - this.lastSoundEnd;
+  }
+
+  private lastSoundEnd = 0;
+  private sessionType: 'playback' | 'play-and-record' = 'playback';
+
+  /**
+   * iOS 17+: "playback" = vẫn kêu khi bật im lặng; "play-and-record" = khi đang dùng micro.
+   */
+  setAudioSessionType(type: 'playback' | 'play-and-record'): void {
+    this.sessionType = type;
     try {
       const nav = globalThis.navigator as unknown as { audioSession?: { type: string } } | undefined;
-      if (nav?.audioSession) nav.audioSession.type = 'playback';
+      if (nav?.audioSession) nav.audioSession.type = type;
     } catch {
       /* bỏ qua */
     }
+  }
+
+  /** PHẢI gọi trong handler của thao tác chạm. */
+  async unlock(): Promise<boolean> {
+    this.setAudioSessionType(this.sessionType);
     if (!this.ctx) {
       this.ctx = this.factory();
       const master = this.ctx.createGain();
@@ -164,6 +189,7 @@ export class AudioEngine {
         if (done) return;
         done = true;
         this.voices.delete(voice);
+        this.lastSoundEnd = Date.now();
         try {
           osc.disconnect();
           gain.disconnect();

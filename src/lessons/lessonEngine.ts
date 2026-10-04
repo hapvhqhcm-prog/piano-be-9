@@ -32,13 +32,17 @@ export function weekPassed(week: number, data: Readonly<AppData>): boolean {
   const sessions = sessionsOfWeek(data, week);
   switch (week) {
     case 1:
-      // PARENT: tìm C4 đúng 10/10 trong bài kiểm tra.
+      // Tìm C4 đúng 10/10 trong bài kiểm tra — bố mẹ xác nhận (PARENT)
+      // hoặc micro nghe được (MIC, phải đúng ngay lần đầu và không bị bố mẹ sửa).
       return sessions.some((s) => {
         if (s.lessonId !== 'w1-test') return false;
         const c4 = s.parentAssessments.filter((a) => a.note === 'C4');
-        const correct = c4.filter((a) => a.result === 'correct').length;
-        const retry = c4.filter((a) => a.result === 'retry').length;
-        return correct >= 10 && retry === 0;
+        const mic = s.micAssessments.filter((a) => a.expected === 'C4');
+        const micOk = (a: (typeof mic)[number]) =>
+          a.parentOverride ? a.parentOverride === 'correct' : a.firstTry;
+        const correct = c4.filter((a) => a.result === 'correct').length + mic.filter(micOk).length;
+        const misses = c4.filter((a) => a.result === 'retry').length + mic.filter((a) => !micOk(a)).length;
+        return correct >= 10 && misses === 0;
       });
     case 2: {
       // SELF: 2 buổi liền (trong các buổi tuần 2 có tự đánh giá) đều "all".
