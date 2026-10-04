@@ -3,6 +3,7 @@ import { defineConfig } from 'vitest/config';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { createHash } from 'node:crypto';
+import { execSync } from 'node:child_process';
 
 function listFiles(dir: string): string[] {
   const out: string[] = [];
@@ -57,7 +58,21 @@ function serviceWorkerPlugin(): Plugin {
   };
 }
 
+/** "2026-10-04 · b6662bb" — để phụ huynh biết iPad đang chạy bản nào. */
+function appVersion(): string {
+  const d = new Date();
+  const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  try {
+    return `${date} · ${execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim()}`;
+  } catch {
+    return date;
+  }
+}
+
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(appVersion()),
+  },
   // Đường dẫn tương đối: chạy được ở https://<user>.github.io/<repo>/ lẫn LAN.
   base: './',
   build: {

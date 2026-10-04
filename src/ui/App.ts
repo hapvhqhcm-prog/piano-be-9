@@ -1,5 +1,6 @@
 import type { AudioEngine } from '../audio/AudioEngine';
 import { MicListener } from '../audio/MicListener';
+import { markSafePoint } from '../pwa/updater';
 import type { ProgressStore } from '../progress/ProgressStore';
 
 /** Một màn hình: vẽ vào root, trả về hàm dọn dẹp (tùy chọn). */
@@ -43,6 +44,7 @@ export class App {
     this.audio.stopAll();
     this.root.replaceChildren();
     this.root.scrollTop = 0;
+    markSafePoint(false); // màn Bắt đầu / màn chính tự đánh dấu an toàn
     this.cleanup = screen(this.root) || null;
   }
 }

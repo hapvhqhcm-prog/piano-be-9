@@ -5,6 +5,7 @@ import type { App } from '../App';
 import { button, h } from '../components/dom';
 import { homeScreen } from './home';
 import { micTestScreen } from './micTest';
+import { APP_VERSION, checkForUpdate, isUpdateReady } from '../../pwa/updater';
 import { startScreen } from './start';
 
 const RATING_LABEL = { all: '😄 Đánh được hết', some: '🙂 Còn vấp vài chỗ', hard: '😅 Khó quá' } as const;
@@ -137,6 +138,26 @@ export function parentScreen(app: App) {
           button({ icon: '←', label: 'Về màn của bé', kind: 'primary', onTap: () => app.show(homeScreen(app)) }),
         ),
         message ? h('div', { class: 'banner' }, message) : null,
+        h(
+          'section',
+          { class: 'card version-card' },
+          h('p', {}, 'Phiên bản đang chạy: ', h('b', {}, APP_VERSION)),
+          button({
+            icon: '🔄',
+            label: 'Kiểm tra bản mới',
+            onTap: async () => {
+              if (!navigator.onLine) return say('iPad đang không có mạng — bật Wi‑Fi rồi thử lại.');
+              say('Đang kiểm tra…');
+              await checkForUpdate(true);
+              await new Promise((r) => setTimeout(r, 5000));
+              say(
+                isUpdateReady()
+                  ? '✅ Đã tải bản mới. Bấm "Về màn của bé" — app sẽ tự khởi động lại bằng bản mới.'
+                  : 'Đang dùng bản mới nhất (nếu vừa deploy, đợi 1–2 phút rồi thử lại).',
+              );
+            },
+          }),
+        ),
         store.lastSaveError ? h('div', { class: 'banner warn' }, `Lỗi lưu dữ liệu: ${store.lastSaveError}`) : null,
 
         h(

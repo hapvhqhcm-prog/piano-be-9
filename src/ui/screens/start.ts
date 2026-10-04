@@ -1,10 +1,12 @@
 import type { App } from '../App';
 import { button, h } from '../components/dom';
 import { homeScreen } from './home';
+import { markSafePoint } from '../../pwa/updater';
 
 /** Màn đầu tiên: AudioContext CHỈ được tạo sau khi chạm "Bắt đầu" (§3). */
 export function startScreen(app: App) {
   return (root: HTMLElement) => {
+    markSafePoint(true);
     const name = app.store.get().learner.name;
     root.append(
       h(

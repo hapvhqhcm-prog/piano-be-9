@@ -6,10 +6,12 @@ import { parentButton } from '../components/longPress';
 import { freePlayScreen } from './freePlay';
 import { parentGateScreen } from './parentGate';
 import { startSession } from './session';
+import { markSafePoint } from '../../pwa/updater';
 
 export function homeScreen(app: App, banner?: string) {
   return (root: HTMLElement) => {
     app.mic.stop(); // ở màn chính không cần nghe
+    markSafePoint(true); // có bản mới thì cập nhật ngay tại đây
     const data = app.store.get();
     const plan = weekPlan(data.progress.currentWeek);
     const next = nextLesson(data);

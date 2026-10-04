@@ -4,6 +4,7 @@ import { ProgressStore, type KeyValueStorage } from './progress/ProgressStore';
 import { App } from './ui/App';
 import { installAudioOverlay } from './ui/components/audioOverlay';
 import { startScreen } from './ui/screens/start';
+import { registerServiceWorker } from './pwa/updater';
 
 /** localStorage có thể bị chặn (chế độ riêng tư cũ) → dùng bộ nhớ tạm. */
 function storage(): KeyValueStorage {
@@ -36,13 +37,6 @@ function installTouchGuards(): void {
   }
   document.addEventListener('contextmenu', (e) => {
     if (!(e.target as Element | null)?.closest?.('input, textarea')) e.preventDefault();
-  });
-}
-
-function registerServiceWorker(): void {
-  if (!import.meta.env.PROD || !('serviceWorker' in navigator) || !window.isSecureContext) return;
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch((e) => console.warn('SW register failed', e));
   });
 }
 
