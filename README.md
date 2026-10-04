@@ -1,5 +1,7 @@
 # Piano bé — PIANO-BE-9-TUOI (Phase 1)
 
+**Bản đang chạy:** https://hapvhqhcm-prog.github.io/piano-be-9/
+
 App "thầy giáo hướng dẫn" chạy trên iPad (Safari), đặt trên giá nhạc của đàn piano cơ:
 chỉ phím, chỉ ngón, phát âm mẫu. **App không nghe đàn** — bố/mẹ bấm "Đúng rồi / Thử lại".
 
