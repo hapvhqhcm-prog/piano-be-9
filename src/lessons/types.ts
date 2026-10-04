@@ -40,7 +40,12 @@ export interface Segment {
 }
 
 /** Nhịp tuần 4 mức 1: "Đi" (1 phách) · "Chạy-chạy" (2 nửa phách) · "Đi-i" (2 phách) · "Suỵt" (lặng). */
-export type RhythmSymbol = 'walk' | 'run' | 'long' | 'rest';
+/**
+ * walk = nốt đen "Đi" (1 phách) · run = hai móc đơn "Chạy-chạy" · long = nốt trắng "Đi-i" (2 phách)
+ * long3 = nốt trắng chấm "Đi-i-i" (3 phách) · dotted = đen chấm + móc đơn "Đi-chấm chạy" (2 phách: vỗ ở 0 và 1,5)
+ * rest = lặng đen "Suỵt".
+ */
+export type RhythmSymbol = 'walk' | 'run' | 'long' | 'long3' | 'dotted' | 'rest';
 
 export type Activity =
   | { kind: 'notes'; segment: Segment }

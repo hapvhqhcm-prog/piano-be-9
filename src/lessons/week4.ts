@@ -40,10 +40,10 @@ export const WEEK4: WeekPlan = {
     {
       id: 'w4-l2',
       week: 4,
-      title: 'Mức 2: Đô mỗi phách',
+      title: 'Mức 2: Mỗi phách một nốt',
       emoji: '🥁',
       activities: [
-        { kind: 'song', songId: 'ex_c_quarter', mode: 'tempo', level: 2, hints: 'full', intro: 'Đánh Đô đúng mỗi tiếng "tích". Con trỏ nhảy tới đâu, con đánh tới đó!' },
+        { kind: 'song', songId: 'ex_c_quarter', mode: 'tempo', level: 2, hints: 'full', intro: 'Đánh một nốt đúng mỗi tiếng "tích" — mỗi ô nhịp 4 lần cùng một nốt: Đô, Rê, Mi… Con trỏ nhảy tới đâu, con đánh tới đó!' },
         { kind: 'song', songId: 'ex_cde_walk', mode: 'tempo', level: 2, hints: 'full' },
       ],
     },

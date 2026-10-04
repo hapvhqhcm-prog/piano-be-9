@@ -16,7 +16,7 @@ export function postureScreen(_app: App, hooks: { short?: boolean; onDone(): voi
     // Bé đã quen (sau 3 buổi) → rút gọn còn 1 thẻ (v2)
     const CARDS = hooks.short ? [SHORT] : ALL_CARDS;
     let i = 0;
-    const stage = h('div', { class: 'stage' });
+    const stage = h('div', { class: 'stage scrollable' });
     const bar = h('div', { class: 'actions' });
     root.append(h('div', { class: 'screen' }, stage, bar));
 

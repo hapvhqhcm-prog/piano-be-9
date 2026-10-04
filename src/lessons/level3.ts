@@ -67,7 +67,8 @@ export const WEEK18: WeekPlan = {
   islandEmoji: '⛵',
   title: 'Đổi thế tay',
   story: 'Trên Biển Đổi Thế, bàn tay như con thuyền: dời sang chỗ mới mà vẫn chèo êm.',
-  warmup: { variant: 'read', pool: ['E4', 'G4', 'A4', 'B4', 'C5', 'D5'], rounds: 8 },
+  // Đọc trước nốt của tuần sau: La3, Si3 (dòng kẻ phụ dưới — La thứ tuần 19) và Mi5–Sol5 (Minuet tuần 20)
+  warmup: { variant: 'read', pool: ['A3', 'B3', 'C4', 'E4', 'G4', 'A4', 'B4', 'C5', 'D5', 'E5', 'F5', 'G5'], rounds: 8 },
   teach: { emoji: '👨‍🏫', text: 'Con chỉ bố/mẹ chỗ trong bài phải dời tay, và dời bằng ngón nào.' },
   criterion: { text: 'Chơi trọn "Đêm thánh vô cùng"', who: 'PARENT/MIC' },
   lessons: [
@@ -96,6 +97,12 @@ export const WEEK19: WeekPlan = {
       emoji: '🌗',
       activities: [
         { kind: 'quiz', title: 'Vui hay buồn? 😊😢', intro: 'App rải một hợp âm — nghe VUI hay BUỒN?', quiz: { variant: 'majorminor', pool: ['C4', 'D4', 'F4', 'G4'], rounds: 10 } },
+        {
+          kind: 'quiz',
+          title: 'Đọc nốt thấp & cao 📖',
+          intro: 'La, Si nằm DƯỚI Đô giữa (có dòng kẻ phụ) — dùng trong bài La thứ. Mi, Fa, Sol cao ở trên khuông — chuẩn bị cho Minuet!',
+          quiz: { variant: 'read', pool: ['A3', 'B3', 'C4', 'D5', 'E5', 'F5', 'G5'], rounds: 8 },
+        },
         song('frere_jacques_minor', 'tempo', 2, 'names'),
       ],
     },
@@ -162,7 +169,7 @@ export const WEEK23: WeekPlan = {
   warmup: { variant: 'majorminor', pool: ['C4', 'F4', 'G4'], rounds: 6 },
   teach: { emoji: '👨‍🏫', text: 'Con dạy bố/mẹ đệm hợp âm Đô – Fa – Sol bằng tay trái.' },
   criterion: { text: 'Chơi trọn "Các thánh tiến bước — hai tay" theo nhịp', who: 'PARENT/MIC' },
-  lessons: [trio('w23-l1', 23, 'Các thánh tiến bước — hai tay', '🎺', 'saints_both'), trio('w23-l2', 23, 'Chuông ngân vang — hai tay', '🔔', 'jingle_bells_both')],
+  lessons: [trio('w23-l1', 23, 'Các thánh tiến bước — hai tay', '🎺', 'saints_both'), trio('w23-l2', 23, 'Ô Susanna — hai tay', '🪕', 'oh_susanna_both', 'Tay phải hát, tay trái đệm hợp âm Đô – Sol.')],
 };
 
 export const WEEK24: WeekPlan = {

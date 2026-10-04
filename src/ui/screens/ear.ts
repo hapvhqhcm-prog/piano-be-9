@@ -28,6 +28,15 @@ const ANSWER_TEXT: Record<string, string> = {
   minor: 'Buồn (thứ) 😢',
 };
 
+/** Câu hỏi hiện trên màn (không suy ra từ tiêu đề — tiêu đề có thể đổi/không có emoji). */
+const QUESTION: Record<QuizSpec['variant'], string> = {
+  updown: 'Lên hay xuống?',
+  stepskip: 'Bước hay nhảy?',
+  identify: 'Nốt nào đây?',
+  read: 'Nốt này là nốt gì?',
+  majorminor: 'Vui hay buồn?',
+};
+
 /** Trò nghe / đọc nốt (v2): Lên hay xuống? · Bước hay nhảy? · Nốt nào đây? (có mốc Đô) · Đọc nốt. */
 export function quizScreen(app: App, hooks: QuizHooks) {
   return (root: HTMLElement) => {
@@ -53,7 +62,7 @@ export function quizScreen(app: App, hooks: QuizHooks) {
         if (accepting && !answered && q && !q.choices) answer(p);
       },
     });
-    const stage = h('div', { class: 'stage' });
+    const stage = h('div', { class: 'stage scrollable' });
     const bar = h('div', { class: 'actions' });
     root.append(h('div', { class: 'screen' }, stage, h('div', { class: 'keyboard-wrap' }, kb.el), bar));
 
@@ -130,7 +139,7 @@ export function quizScreen(app: App, hooks: QuizHooks) {
       stage.replaceChildren(
         prog,
         h('div', { class: 'hero-emoji' }, '🎵'),
-        h('h1', { class: 'title' }, q.choices ? hooks.title.replace(/ [^ ]*$/, '') : 'Nốt nào đây?'),
+        h('h1', { class: 'title' }, q.choices ? QUESTION[spec.variant] : 'Nốt nào đây?'),
         choices ?? h('p', { class: 'lead' }, 'Nghe nốt Đô mốc, rồi nốt bí ẩn — chạm phím'),
       );
       setBar(back(), button({ icon: '🔊', label: 'Nghe lại', onTap: () => void playQuestion() }));
@@ -156,7 +165,7 @@ export function quizScreen(app: App, hooks: QuizHooks) {
       const what = isPitchAnswer ? noteLabel(q.expected) : ANSWER_TEXT[q.expected];
       stage.replaceChildren(
         h('div', { class: 'hero-emoji' }, correct ? '🎉' : '👂'),
-        h('h1', { class: 'title' }, correct ? 'Đúng rồi!' : 'Gần đúng rồi!'),
+        h('h1', { class: 'title' }, correct ? 'Đúng rồi!' : 'Chưa đúng — nghe lại nhé!'),
         h('p', { class: 'lead' }, correct ? `Đó là ${what}` : `Đáp án là ${what}${isPitchAnswer ? ' — phím đang sáng' : ''}`),
       );
       setBar(

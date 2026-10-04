@@ -1,7 +1,7 @@
 import { LEVELS, songMastered } from '../../lessons/lessonEngine';
 import { SONGS, type Tune } from '../../music/tune';
 import type { App } from '../App';
-import { actionBar, backButton, h } from '../components/dom';
+import { actionBar, backButton, h, toast } from '../components/dom';
 import { homeScreen } from './home';
 import { songScreen } from './song';
 
@@ -21,7 +21,7 @@ export function libraryScreen(app: App) {
         {
           class: `song-card${open ? '' : ' locked'}`,
           type: 'button',
-          onClick: () => open && playSong(app, s),
+          onClick: () => (open ? playSong(app, s) : toast(s.week ? `🔒 Bài này mở ở Tuần ${s.week} nhé` : '🔒 Bài này mở sau nhé')),
         },
         h('div', { class: 'song-card-title' }, open ? `${star ? '⭐ ' : ''}${s.titleVi}` : `🔒 ${s.titleVi}`),
         h('div', { class: 'song-card-sub' }, `${s.title}${s.hand === 'LH' ? ' · tay trái' : s.hand === 'BOTH' ? ' · hai tay' : ''}`),

@@ -114,7 +114,7 @@ export function stageScreen(app: App, hooks: StageHooks) {
           { class: 'screen center' },
           h('div', { class: 'hero-emoji huge' }, '👏'),
           h('h1', { class: 'hero-title' }, 'Bravo! Buổi biểu diễn tuyệt vời!'),
-          h('p', { class: 'lead' }, '👪 Bố/mẹ: hãy trao huy chương cho nghệ sĩ nhỏ'),
+          h('p', { class: 'lead' }, '👪 Bố mẹ: hãy trao huy chương cho nghệ sĩ nhỏ'),
           h(
             'div',
             { class: 'end-actions' },

@@ -11,6 +11,7 @@
  "timeSignature": "4/4",
  "week": 7,
  "extension": "A4",
+ "position": "free",
  "phrases": [
   0,
   4,
@@ -30,12 +31,12 @@
   {
    "pitch": "G4",
    "beats": 1,
-   "finger": 5
+   "finger": 4
   },
   {
    "pitch": "G4",
    "beats": 1,
-   "finger": 5
+   "finger": 4
   },
   {
    "pitch": "A4",
@@ -50,7 +51,7 @@
   {
    "pitch": "G4",
    "beats": 2,
-   "finger": 5
+   "finger": 4
   },
   {
    "pitch": "F4",
@@ -170,12 +171,12 @@
   {
    "pitch": "G4",
    "beats": 1,
-   "finger": 5
+   "finger": 4
   },
   {
    "pitch": "G4",
    "beats": 1,
-   "finger": 5
+   "finger": 4
   },
   {
    "pitch": "A4",
@@ -190,7 +191,7 @@
   {
    "pitch": "G4",
    "beats": 2,
-   "finger": 5
+   "finger": 4
   },
   {
    "pitch": "F4",

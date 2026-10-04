@@ -97,12 +97,14 @@ interface Score {
   latency: number[];
 }
 
-function run(notes: SimNote[], pipe: Pipeline, hopMs: number, o: SimOptions = {}): Score {
+async function run(notes: SimNote[], pipe: Pipeline, hopMs: number, o: SimOptions = {}): Promise<Score> {
   const end = Math.max(...notes.map((n) => n.start + n.dur)) + 1.5;
   const sig = renderPiano(notes, end, o);
   const hop = Math.round((hopMs / 1000) * SIM_RATE);
   const heard: Array<{ t: number; midi: number }> = [];
-  for (let i = 2048; i < sig.length; i += hop) {
+  for (let i = 2048, k = 0; i < sig.length; i += hop, k++) {
+    // Nhường CPU định kỳ — khối tính dài làm vitest báo "Timeout calling onTaskUpdate"
+    if (k % 100 === 99) await new Promise((r) => setTimeout(r, 0));
     const n = pipe(sig.subarray(i - 2048, i), i / SIM_RATE);
     if (n) heard.push({ t: i / SIM_RATE, midi: n.midi });
   }
@@ -185,23 +187,26 @@ describe('đo micro trên giả lập đàn cơ', () => {
   const totals = { old: { ok: 0, n: 0 }, neu: { ok: 0, n: 0 } };
   const newScores: Record<string, Score> = {};
 
-  it.each(SCENARIOS)('$name', { timeout: 60000 }, (sc) => {
-    const a = run(sc.notes, oldPipeline(), 40, sc);
-    const b = run(sc.notes, newPipeline(), 25, sc);
+  // So với bộ cũ chỉ khi cần (MIC_BENCH_OLD=1) — kết quả đã ghi ở TEST_REPORT §14; chạy cả hai thì rất lâu
+  const withOld = !!(globalThis as { process?: { env: Record<string, string | undefined> } }).process?.env.MIC_BENCH_OLD;
+  it.each(SCENARIOS)('$name', { timeout: 120000 }, async (sc) => {
+    const a = withOld ? await run(sc.notes, oldPipeline(), 40, sc) : null;
+    const b = await run(sc.notes, newPipeline(), 25, sc);
     newScores[sc.name] = b;
-    totals.old.ok += a.ok;
-    totals.old.n += a.played;
+    totals.old.ok += a?.ok ?? 0;
+    totals.old.n += a?.played ?? 0;
     totals.neu.ok += b.ok;
     totals.neu.n += b.played;
     rows.push(
-      `${sc.name.padEnd(30)} | CŨ đúng ${pct(a.ok, a.played).padStart(4)} quãng8 ${a.octave} sai ${a.wrong} sót ${a.missed} thừa ${a.extra} trễ ${Math.round(median(a.latency) * 1000)}ms` +
+      `${sc.name.padEnd(30)} | ` +
+        (a ? `CŨ đúng ${pct(a.ok, a.played).padStart(4)} quãng8 ${a.octave} sai ${a.wrong} sót ${a.missed} thừa ${a.extra} trễ ${Math.round(median(a.latency) * 1000)}ms` : '') +
         ` || MỚI đúng ${pct(b.ok, b.played).padStart(4)} quãng8 ${b.octave} sai ${b.wrong} sót ${b.missed} thừa ${b.extra} trễ ${Math.round(median(b.latency) * 1000)}ms`,
     );
     expect(b.played).toBeGreaterThan(0);
   });
 
   it('in bảng kết quả & yêu cầu tối thiểu cho bộ mới', () => {
-    console.log('\n' + rows.join('\n') + `\nTỔNG: CŨ ${pct(totals.old.ok, totals.old.n)} — MỚI ${pct(totals.neu.ok, totals.neu.n)}\n`);
+    console.log('\n' + rows.join('\n') + `\nTỔNG: ${withOld ? `CŨ ${pct(totals.old.ok, totals.old.n)} — ` : ''}MỚI ${pct(totals.neu.ok, totals.neu.n)}\n`);
     for (const [name, s] of Object.entries(newScores)) {
       expect(s.ok / s.played, name).toBeGreaterThanOrEqual(0.85);
       expect(s.wrong + s.octave, name).toBeLessThanOrEqual(Math.ceil(s.played * 0.08));

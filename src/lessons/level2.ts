@@ -31,7 +31,7 @@ export const WEEK9: WeekPlan = {
   title: 'Đô giữa tay trái · hai tay luân phiên',
   story: 'Qua Cầu Hai Tay, hai bàn tay gặp nhau ở Đô giữa: ngón cái tay phải và ngón cái tay trái là hàng xóm!',
   leftHand: true,
-  warmup: { variant: 'read', pool: ['C3', 'D3', 'E3', 'F3', 'G3'], rounds: 8, clef: 'bass' },
+  warmup: { variant: 'read', pool: ['F3', 'G3', 'A3', 'B3', 'C4'], rounds: 8, clef: 'bass' },
   teach: { emoji: '👨‍🏫', text: 'Con chỉ cho bố/mẹ khóa Fa: nốt Fa ở giữa hai dấu chấm, Đô giữa ở trên cùng.' },
   criterion: { text: 'Chơi trọn "Hỏi – Đáp" hai tay luân phiên', who: 'PARENT/MIC' },
   lessons: [
@@ -126,7 +126,13 @@ export const WEEK11: WeekPlan = {
       ],
     },
     pair('w11-l2', 11, 'Bài ca niềm vui — thế Sol', '🎶', 'ode_to_joy_g', 'names'),
-    pair('w11-l3', 11, 'Chèo thuyền & cô Rhody', '🚣', 'lightly_row_g', 'names'),
+    {
+      id: 'w11-l3',
+      week: 11,
+      title: 'Chèo thuyền & cô Rhody',
+      emoji: '🚣',
+      activities: [song('lightly_row_g', 'wait', 2, 'names'), song('lightly_row_g', 'tempo', 2, 'names'), song('aunt_rhody_g', 'wait', 2, 'names'), song('aunt_rhody_g', 'tempo', 2, 'names')],
+    },
     {
       id: 'w11-l4',
       week: 11,
@@ -141,7 +147,7 @@ export const WEEK11: WeekPlan = {
           targets: [posNote('G2', 'LH', 'G', 'Ngón 5'), posNote('A2', 'LH', 'G'), posNote('B2', 'LH', 'G'), posNote('C3', 'LH', 'G'), posNote('D3', 'LH', 'G', 'Ngón 1')],
         }),
         song('hot_cross_buns_g_lh', 'wait'),
-        song('aunt_rhody_g', 'wait', 2, 'names'),
+        song('hot_cross_buns_g_lh', 'tempo'),
       ],
     },
   ],
@@ -167,11 +173,12 @@ export const WEEK12: WeekPlan = {
         {
           kind: 'rhythm',
           title: 'Nhịp 3',
-          intro: 'Mỗi ô nhịp có 3 phách. "Đi-i-i" = 3 phách (nốt trắng chấm).',
+          intro: 'Mỗi ô nhịp có 3 phách. "Đi-i" = 2 phách (nốt trắng), "Đi-i-i" = 3 phách (nốt trắng chấm) — giữ hết ô nhịp!',
           patterns: [
             ['walk', 'walk', 'walk'],
             ['long', 'walk'],
             ['walk', 'long'],
+            ['long3'],
             ['run', 'walk', 'walk'],
           ],
         },
@@ -180,7 +187,7 @@ export const WEEK12: WeekPlan = {
     },
     pair('w12-l2', 12, 'Điệu valse con mèo', '🐱', 'waltz_cat'),
     pair('w12-l3', 12, 'Điệu valse mưa rơi', '🌧️', 'waltz_rain'),
-    pair('w12-l4', 12, 'Chúc mừng sinh nhật', '🎂', 'birthday_both', 'full', 'Tay trái mở đầu "Happy birth-day", tay phải nối tiếp!'),
+    pair('w12-l4', 12, 'Chúc mừng sinh nhật', '🎂', 'birthday_both', 'full', 'Bài bắt đầu ở phách 3 ("Hap-py" lấy đà). Câu 1 tay trái hát trọn; các câu sau tay trái mở đầu, tay phải nối tiếp!'),
   ],
 };
 
@@ -242,9 +249,9 @@ export const WEEK14: WeekPlan = {
   island: 'Sa mạc Nhịp Chấm',
   islandEmoji: '🐪',
   title: 'Nốt chấm dôi & móc đơn',
-  story: 'Con lạc đà đi "Đi-i chạy": nốt có CHẤM dài thêm một nửa, nốt sau đó ngắn lại cho vừa.',
+  story: 'Con lạc đà đi "Đi-chấm chạy": nốt có CHẤM dài thêm một nửa, nốt sau đó ngắn lại cho vừa.',
   warmup: { variant: 'read', pool: ['C4', 'D4', 'E4', 'F4', 'G4', 'A4'], rounds: 8 },
-  teach: { emoji: '👨‍🏫', text: 'Con đọc to cho bố/mẹ nhịp "Đi-i chạy Đi Đi" (nốt chấm dôi).' },
+  teach: { emoji: '👨‍🏫', text: 'Con đọc to cho bố/mẹ nhịp "Đi-chấm chạy Đi Đi" (nốt chấm dôi).' },
   criterion: { text: 'Chơi "Bài ca niềm vui" đúng nhịp chấm dôi, 60 nhịp/phút', who: 'PARENT/MIC' },
   lessons: [
     {
@@ -253,7 +260,18 @@ export const WEEK14: WeekPlan = {
       title: 'Nhịp chấm dôi',
       emoji: '🐪',
       activities: [
-        { kind: 'rhythm', title: 'Đi-i chạy', intro: 'Nốt đen chấm = 1 phách rưỡi, nốt móc đơn theo sau = nửa phách.', patterns: [['long', 'walk', 'walk'], ['run', 'run', 'long'], ['walk', 'run', 'walk', 'walk']] },
+        {
+          kind: 'rhythm',
+          title: 'Đi-chấm chạy',
+          intro: 'Nốt đen CHẤM = 1 phách rưỡi ("Đi-chấm"), nốt móc đơn theo sau = nửa phách ("chạy"). Khác "Đi-i" (nốt trắng, 2 phách đều)!',
+          patterns: [
+            ['long', 'walk', 'walk'],
+            ['dotted', 'walk', 'walk'],
+            ['walk', 'walk', 'dotted'],
+            ['dotted', 'long'],
+            ['run', 'run', 'dotted'],
+          ],
+        },
         { kind: 'sight', title: 'Đọc nhạc có móc đơn', position: 'C', hand: 'RH', count: 2, rhythm: 2, hints: 'names' },
       ],
     },

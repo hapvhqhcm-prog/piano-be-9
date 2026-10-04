@@ -561,7 +561,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 10px 18px;
-  font-size: 20px;
+  font-size: 22px;
 }
 .goal-dots {
   display: flex;
@@ -588,7 +588,7 @@ body {
   color: var(--muted);
 }
 .parent-tip {
-  font-size: 18px;
+  font-size: 20px;
   color: var(--muted);
   max-width: 980px;
 }
@@ -624,3 +624,77 @@ body {
 .mic-log { width: min(36rem, 90vw); height: 10rem; font: 12px/1.3 ui-monospace, monospace; }
 .stage .seg { justify-content: center; flex-wrap: wrap; }
 .small { font-size: 0.85rem; }
+
+/* ---- Thanh nút: "Quay lại" nhẹ (ghost), sát mép trái — không lẫn với nút chính ---- */
+.actions > .btn-back:first-child {
+  margin-right: auto;
+}
+.actions > .btn-back:last-child:not(:first-child) {
+  margin-left: auto;
+}
+.btn.btn-back {
+  background: transparent;
+  box-shadow: none;
+  border: 2px solid rgba(108, 104, 132, 0.35);
+  color: var(--muted);
+  font-weight: 700;
+  min-height: 64px;
+  padding: 8px 20px;
+}
+.btn.btn-back:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: none;
+  background: rgba(108, 104, 132, 0.08);
+}
+
+/* ---- Thông báo ngắn (toast) ---- */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(118px + env(safe-area-inset-bottom));
+  z-index: 180;
+  max-width: min(720px, 90vw);
+  padding: 14px 28px;
+  border-radius: 999px;
+  background: rgba(42, 39, 64, 0.92);
+  color: #fff;
+  font-size: 26px;
+  font-weight: 800;
+  text-align: center;
+  box-shadow: 0 8px 22px rgba(42, 39, 64, 0.3);
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, 16px);
+  transition:
+    opacity 0.2s,
+    transform 0.2s;
+}
+.toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* ---- Thử micro: nút phụ nhỏ trong vùng cuộn ---- */
+.mic-tools {
+  justify-content: center;
+}
+.mic-tools .btn {
+  min-height: 56px;
+  font-size: 20px;
+  padding: 6px 18px;
+}
+.mic-tools .btn-icon {
+  font-size: 22px;
+}
+
+/* ---- Bảng phụ huynh: cuộn ngang được (.scrollable * chỉ cho pan-y) ---- */
+.scrollable .tbl-wrap,
+.tbl-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
+}
+.scrollable .tbl-wrap * {
+  touch-action: pan-x pan-y;
+}

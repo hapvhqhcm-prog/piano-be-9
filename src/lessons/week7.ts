@@ -58,7 +58,7 @@ export const WEEK7: WeekPlan = {
           id: 'w7-a4',
           step: 'Bài mới',
           title: 'Nốt La',
-          intro: 'Ngón cái vẫn ở Đô. Ngón 5 DUỖI ra một chút là tới La — ngay bên phải Sol.',
+          intro: 'Ngón cái vẫn ở Đô. Ngón 5 DUỖI ra một chút là tới La — ngay bên phải Sol. Trong bài hát, khi Sol và La đi liền nhau (Sol–La–Sol), bàn tay nhích sang phải: ngón 4 Sol, ngón 5 La — nhìn số ngón trên nốt nhé!',
           targets: [rhNote('G4', 'Ngón 5'), rhNote('A4', 'Ngón 5 duỗi ra'), rhNote('G4'), rhNote('A4'), staffNote('A4', 'Ở khe 2')],
         }),
         { kind: 'song', songId: 'frere_jacques_easy', mode: 'wait', hints: 'full' },

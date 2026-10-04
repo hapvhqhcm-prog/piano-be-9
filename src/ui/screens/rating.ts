@@ -6,7 +6,7 @@ import type { App } from '../App';
 import { backButton, button, h } from '../components/dom';
 
 const OPTIONS: Array<{ rating: SelfRating; emoji: string; label: string; praise: string }> = [
-  { rating: 'all', emoji: '😄', label: 'Đánh được hết', praise: 'Tuyệt vời!' },
+  { rating: 'all', emoji: '😄', label: 'Đàn được hết', praise: 'Tuyệt vời!' },
   { rating: 'some', emoji: '🙂', label: 'Còn vấp vài chỗ', praise: 'Con tiến bộ lắm!' },
   { rating: 'hard', emoji: '😅', label: 'Khó quá', praise: 'Con đã cố gắng — giỏi lắm!' },
 ];
@@ -17,13 +17,13 @@ export function ratingScreen(
   hooks: { onRate(r: SelfRating): void; onDone(): void; onBack(): void },
 ) {
   return (root: HTMLElement) => {
-    const stage = h('div', { class: 'stage' });
+    const stage = h('div', { class: 'stage scrollable' });
     const bar = h('div', { class: 'actions' });
     root.append(h('div', { class: 'screen' }, stage, bar));
 
     const ask = () => {
       stage.replaceChildren(
-        h('h1', { class: 'title' }, 'Hôm nay con đánh thế nào?'),
+        h('h1', { class: 'title' }, 'Hôm nay con đàn thế nào?'),
         h(
           'div',
           { class: 'rating-options' },

@@ -184,7 +184,7 @@ export function validateAppData(x: unknown): string[] {
   const p = x.progress;
   if (!isObj(p)) errs.push('Thiếu progress');
   else {
-    if (typeof p.currentWeek !== 'number' || p.currentWeek < 1 || p.currentWeek > MAX_WEEK_LIMIT) errs.push('progress.currentWeek');
+    if (!Number.isInteger(p.currentWeek) || (p.currentWeek as number) < 1 || (p.currentWeek as number) > MAX_WEEK_LIMIT) errs.push('progress.currentWeek');
     if (!Array.isArray(p.lessonsCompleted)) errs.push('progress.lessonsCompleted');
     if (!isObj(p.practiceDays)) errs.push('progress.practiceDays');
   }
@@ -207,7 +207,23 @@ export function validateAppData(x: unknown): string[] {
         s.appAssessments.forEach((a, j) => {
           if (!isObj(a) || typeof a.correct !== 'boolean') errs.push(`sessions[${i}].appAssessments[${j}]`);
         });
+      if (s.selfRating !== null && !['all', 'some', 'hard'].includes(s.selfRating as string)) {
+        errs.push(`sessions[${i}].selfRating`);
+      }
       if (!Array.isArray(s.songRuns)) errs.push(`sessions[${i}].songRuns`);
+      else
+        s.songRuns.forEach((r, j) => {
+          if (
+            !isObj(r) ||
+            typeof r.songId !== 'string' ||
+            !['wait', 'tempo'].includes(r.mode as string) ||
+            typeof r.passed !== 'boolean' ||
+            typeof r.bpm !== 'number' ||
+            !Number.isFinite(r.bpm)
+          ) {
+            errs.push(`sessions[${i}].songRuns[${j}]`);
+          }
+        });
       if (!Array.isArray(s.micAssessments)) errs.push(`sessions[${i}].micAssessments`);
       else
         s.micAssessments.forEach((a, j) => {

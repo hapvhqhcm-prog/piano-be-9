@@ -1,5 +1,4 @@
 import { mascot } from '../components/mascot';
-import { parentTip } from '../../lessons/parentTips';
 import {
   sessionsThisWeek,
   streakDays,
@@ -15,7 +14,7 @@ import {
 } from '../../lessons/lessonEngine';
 import type { Lesson } from '../../lessons/types';
 import type { App } from '../App';
-import { button, h } from '../components/dom';
+import { button, h, toast } from '../components/dom';
 import { parentButton } from '../components/longPress';
 import { freePlayScreen } from './freePlay';
 import { libraryScreen } from './library';
@@ -59,13 +58,15 @@ export function homeScreen(app: App, banner?: string) {
     const limit = data.settings.dailyLimit;
     const overLimit = limit !== 'none' && minutesToday(data, today) >= limit;
 
+    const restToast = () => toast('🌙 Hôm nay con học đủ rồi — mai mình học tiếp nhé!');
+
     const lessonChip = (l: Lesson) =>
       h(
         'button',
         {
           class: `chip${l.id === next.id ? ' chip-next' : ''}`,
           type: 'button',
-          onClick: () => !overLimit && startSession(app, l),
+          onClick: () => (overLimit ? restToast() : startSession(app, l)),
         },
         h('span', { class: 'chip-emoji' }, l.emoji),
         h('span', {}, l.title),
@@ -90,7 +91,7 @@ export function homeScreen(app: App, banner?: string) {
         islandMap(app),
         h(
           'div',
-          { class: 'stage home-stage' },
+          { class: 'stage home-stage scrollable' },
           banner ? h('div', { class: 'banner' }, banner) : null,
           h('div', { class: 'story-row' }, mascot('happy', 64), h('p', { class: 'story bubble' }, plan.story)),
           // Mục tiêu tuần (§1: 4–5 buổi/tuần) + chuỗi ngày + mục tiêu qua đảo
@@ -129,7 +130,7 @@ export function homeScreen(app: App, banner?: string) {
             plan.week >= 9 && next.id !== `w${plan.week}-daily`
               ? h(
                   'button',
-                  { class: 'chip', type: 'button', onClick: () => !overLimit && startSession(app, dailyLesson(app.store.get())) },
+                  { class: 'chip', type: 'button', onClick: () => (overLimit ? restToast() : startSession(app, dailyLesson(app.store.get()))) },
                   h('span', { class: 'chip-emoji' }, '🔁'),
                   h('span', {}, 'Luyện tập mỗi ngày'),
                 )
@@ -142,7 +143,7 @@ export function homeScreen(app: App, banner?: string) {
             button({ icon: '🎹', label: 'Đàn tự do', onTap: () => app.show(freePlayScreen(app)) }),
             h('div', { class: 'today-stars' }, 'Hôm nay: ', todayStars ? '★'.repeat(Math.min(todayStars, 9)) : '—'),
           ),
-          h('p', { class: 'parent-tip' }, `👪 Bố mẹ: ${parentTip(plan.week)}`),
+          // Mẹo cho bố mẹ nằm ở màn Phụ huynh (thẻ "Tuần N: bố mẹ chú ý") — màn chính ít chữ cho bé
           todayCount >= MAX_SESSIONS_PER_DAY && !overLimit
             ? h('p', { class: 'soft-note' }, `Hôm nay con đã học ${todayCount} buổi rồi, giỏi quá! Nghỉ ngơi nhé 😊`)
             : null,

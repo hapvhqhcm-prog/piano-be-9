@@ -87,31 +87,61 @@ export class ProgressStore {
   /** Các bản dữ liệu từng bị coi là hỏng (đã cất ở khóa "piano-be-9:corrupt-<thời điểm>"), mới nhất trước. */
   private corruptBackups(): Array<{ key: string; data: AppData }> {
     const out: Array<{ key: string; data: AppData; ts: number }> = [];
-    const n = this.kv.length ?? 0;
-    for (let i = 0; i < n; i++) {
-      const k = this.kv.key?.(i);
-      if (!k || !k.startsWith(`${STORAGE_KEY}:corrupt-`)) continue;
+    for (const k of this.corruptKeys()) {
       const d = this.parse(this.kv.getItem(k));
       if (d) out.push({ key: k, data: d, ts: Number(k.split('-').pop()) || 0 });
     }
     return out.sort((a, b) => b.ts - a.ts);
   }
 
-  private load(): AppData {
-    const raw = this.kv.getItem(STORAGE_KEY);
-    const main = this.parse(raw);
-    // Tự khôi phục: nếu dữ liệu chính trống/ít hơn một bản từng bị đặt lại do lỗi kiểm tra cũ → dùng bản đó
-    const best = this.corruptBackups().find((b) => b.data.sessions.length > (main?.sessions.length ?? 0));
-    if (best) {
-      this.recoveredFromBackup = true;
+  /** Các khóa "corrupt-*" hiện có (cả bản đọc được lẫn không). */
+  private corruptKeys(): string[] {
+    const keys: string[] = [];
+    const n = this.kv.length ?? 0;
+    for (let i = 0; i < n; i++) {
+      const k = this.kv.key?.(i);
+      if (k && k.startsWith(`${STORAGE_KEY}:corrupt-`)) keys.push(k);
+    }
+    return keys;
+  }
+
+  /**
+   * Cất bản sao lưu "corrupt-*" sang "archived-*": không bao giờ tự khôi phục nữa nhưng vẫn giữ lại
+   * (không mất gì). Tránh bản cũ đè lên dữ liệu sau khi đặt lại / nhập JSON.
+   */
+  private archiveCorrupt(keys: string[] = this.corruptKeys()): void {
+    for (const k of keys) {
       try {
-        this.kv.setItem(STORAGE_KEY, JSON.stringify(best.data));
-        this.kv.removeItem(best.key);
+        const v = this.kv.getItem(k);
+        if (v !== null) this.kv.setItem(k.replace(`${STORAGE_KEY}:corrupt-`, `${STORAGE_KEY}:archived-`), v);
+        this.kv.removeItem(k);
       } catch {
         /* bỏ qua */
       }
+    }
+  }
+
+  private load(): AppData {
+    const raw = this.kv.getItem(STORAGE_KEY);
+    const main = this.parse(raw);
+    // Tự khôi phục (chỉ một lần): dữ liệu chính trống/ít hơn một bản từng bị đặt lại do lỗi kiểm tra cũ
+    // (vd lỗi tuần 9) → dùng bản đó. Các bản đọc được còn lại coi như cũ → cất sang "archived-*" để sau này
+    // không đè lên dữ liệu thật (đặt lại / nhập JSON). Bản chưa đọc được giữ nguyên chờ bản sửa lỗi sau.
+    const backups = this.corruptBackups();
+    const best = backups.find((b) => b.data.sessions.length > (main?.sessions.length ?? 0));
+    if (best) {
+      this.recoveredFromBackup = true;
+      try {
+        // Dữ liệu chính đang hỏng → vẫn cất lại trước khi ghi đè
+        if (raw && !main) this.kv.setItem(`${STORAGE_KEY}:corrupt-${this.now().getTime()}`, raw);
+        this.kv.setItem(STORAGE_KEY, JSON.stringify(best.data));
+        this.archiveCorrupt(backups.map((b) => b.key));
+      } catch {
+        /* bỏ qua — chưa ghi được thì để nguyên, lần mở sau thử lại */
+      }
       return best.data;
     }
+    this.archiveCorrupt(backups.map((b) => b.key));
     if (main) return main;
     if (!raw) return defaultData(this.now());
     try {
@@ -341,12 +371,14 @@ export class ProgressStore {
     if (errs.length) return { ok: false, error: `Dữ liệu sai cấu trúc: ${errs.slice(0, 3).join('; ')}` };
     this.data = d;
     this.recomputePracticeDays();
+    this.archiveCorrupt(); // dữ liệu nhập là ý muốn của phụ huynh → bản sao lưu cũ không được đè lên
     this.save();
     return { ok: true };
   }
 
   resetAll(): void {
     this.data = defaultData(this.now());
+    this.archiveCorrupt(); // đặt lại có chủ ý → lần mở sau không được tự khôi phục bản cũ
     this.save();
   }
 }

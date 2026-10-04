@@ -103,7 +103,7 @@ export function weekPassed(week: number, data: Readonly<AppData>): boolean {
         return correct >= 10 && misses === 0;
       });
     case 2: {
-      // SELF: 2 buổi liền đều "Đánh được hết"
+      // SELF: 2 buổi liền đều "Đàn được hết"
       const rated = sessions.filter((s) => s.selfRating !== null);
       for (let i = 1; i < rated.length; i++) {
         if (rated[i - 1].selfRating === 'all' && rated[i].selfRating === 'all') return true;

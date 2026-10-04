@@ -304,6 +304,23 @@ export function micTestScreen(app: App) {
           calib,
           tuning,
           report,
+          // Nút phụ (ít dùng) để trong vùng cuộn — thanh dưới chỉ giữ 4 nút chính
+          h(
+            'div',
+            { class: 'row mic-tools' },
+            button({
+              icon: '↺',
+              label: 'Bù = 0',
+              onTap: () => {
+                store.updateSettings({ micTuningCents: 0 });
+                app.mic.tuningCents = 0;
+                calibrating = false;
+                calib.textContent = '';
+                showTuning();
+              },
+            }),
+            button({ icon: '📋', label: 'Sao chép nhật ký', onTap: () => void copyLog() }),
+          ),
           h(
             'p',
             { class: 'muted small' },
@@ -340,18 +357,6 @@ export function micTestScreen(app: App) {
               calib.textContent = 'Đàn phím Đô giữa (C4) 3 lần, mỗi lần cách nhau 1 giây.';
             },
           }),
-          button({
-            icon: '↺',
-            label: 'Bù = 0',
-            onTap: () => {
-              store.updateSettings({ micTuningCents: 0 });
-              app.mic.tuningCents = 0;
-              calibrating = false;
-              calib.textContent = '';
-              showTuning();
-            },
-          }),
-          button({ icon: '📋', label: 'Sao chép nhật ký', onTap: () => void copyLog() }),
         ),
       ),
     );

@@ -44,17 +44,17 @@
   {
    "pitch": "G4",
    "beats": 2,
-   "finger": 1
+   "finger": 3
   },
   {
    "pitch": "A4",
    "beats": 2,
-   "finger": 2
+   "finger": 1
   },
   {
    "pitch": "B4",
    "beats": 2,
-   "finger": 3
+   "finger": 2
   },
   {
    "pitch": "E5",
@@ -84,17 +84,17 @@
   {
    "pitch": "G4",
    "beats": 2,
-   "finger": 1
+   "finger": 3
   },
   {
    "pitch": "A4",
    "beats": 2,
-   "finger": 2
+   "finger": 1
   },
   {
    "pitch": "G4",
    "beats": 2,
-   "finger": 1
+   "finger": 3
   }
  ],
  "lh": [
@@ -106,7 +106,7 @@
   {
    "pitch": "G3",
    "beats": 2,
-   "finger": 1
+   "finger": 2
   },
   {
    "pitch": "A3",
@@ -131,12 +131,12 @@
   {
    "pitch": "F3",
    "beats": 2,
-   "finger": 2
+   "finger": 3
   },
   {
    "pitch": "G3",
    "beats": 2,
-   "finger": 1
+   "finger": 2
   },
   {
    "pitch": "C3",
@@ -146,7 +146,7 @@
   {
    "pitch": "G3",
    "beats": 2,
-   "finger": 1
+   "finger": 2
   },
   {
    "pitch": "A3",
@@ -171,7 +171,7 @@
   {
    "pitch": "F3",
    "beats": 2,
-   "finger": 2
+   "finger": 3
   },
   {
    "pitch": "C3",

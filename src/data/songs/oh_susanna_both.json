@@ -1,15 +1,15 @@
 {
- "id": "oh_susanna",
- "title": "Oh! Susanna",
- "titleVi": "Ô Susanna",
+ "id": "oh_susanna_both",
+ "title": "Oh! Susanna (hands together)",
+ "titleVi": "Ô Susanna — hai tay",
  "composer": "Stephen Foster (1848)",
  "sourceStatus": "public-domain",
  "arrangementBy": "Original simple arrangement for this app",
  "attributionRequired": false,
- "hand": "RH",
+ "hand": "BOTH",
  "bpm": 60,
  "timeSignature": "4/4",
- "week": 8,
+ "week": 23,
  "extension": "A4",
  "position": "free",
  "phrases": [
@@ -166,6 +166,135 @@
    "pitch": "C4",
    "beats": 2,
    "finger": 1
+  }
+ ],
+ "lh": [
+  {
+   "pitch": "C3",
+   "beats": 4,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "E3",
+     "finger": 3
+    },
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "C3",
+   "beats": 4,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "E3",
+     "finger": 3
+    },
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "C3",
+   "beats": 4,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "E3",
+     "finger": 3
+    },
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "D3",
+   "beats": 4,
+   "finger": 4,
+   "also": [
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "C3",
+   "beats": 4,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "E3",
+     "finger": 3
+    },
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "C3",
+   "beats": 4,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "E3",
+     "finger": 3
+    },
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "C3",
+   "beats": 4,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "E3",
+     "finger": 3
+    },
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "D3",
+   "beats": 2,
+   "finger": 4,
+   "also": [
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "C3",
+   "beats": 2,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "E3",
+     "finger": 3
+    },
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
   }
  ]
 }

@@ -1,4 +1,5 @@
 import { meterPct } from '../../audio/MicListener';
+import { matchHeard } from '../../audio/match';
 import type { Segment, Target } from '../../lessons/types';
 import { mascot } from '../components/mascot';
 import { confetti } from '../components/celebrate';
@@ -130,7 +131,7 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
     let demo: { cancel: () => void; done: Promise<void> } | null = null;
     const fingerOf = (t: Target, pitch: string, i = t.keys.indexOf(pitch)) =>
       t.fingers?.[i] ?? fingerFor(pitch, t.hand ?? 'RH', true);
-    const stage = h('div', { class: 'stage' });
+    const stage = h('div', { class: 'stage scrollable' });
     const bar = h('div', { class: 'actions' });
     root.append(h('div', { class: 'screen' }, stage, h('div', { class: 'keyboard-wrap' }, kb.el), bar));
 
@@ -295,7 +296,7 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
             bar.append(button({ icon: '🔊', label: 'Nghe lại', disabled: !waiting, onTap: () => send('REPLAY') }));
           }
           bar.append(
-            button({ icon: '✓', label: 'Đúng rồi', kind: 'good', disabled: !waiting, onTap: () => send('CORRECT') }),
+            button({ icon: '👪', label: 'Đúng rồi', kind: 'good', disabled: !waiting, onTap: () => send('CORRECT') }),
             button({ icon: '↻', label: 'Thử lại', kind: 'retry', disabled: !waiting, onTap: () => send('RETRY') }),
           );
           if (snap.state === 'SHOW_NOTE') later(() => send('SHOWN'), 450);
@@ -337,7 +338,7 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
           }
           bar.append(
             back,
-            button({ icon: '✎', label: 'Sửa', onTap: () => send('EDIT') }),
+            button({ icon: '👪', label: 'Bố mẹ sửa', onTap: () => send('EDIT') }),
             ok
               ? button({ icon: '▶', label: 'Tiếp', kind: 'primary', onTap: () => send('CONTINUE') })
               : button({ icon: '↻', label: 'Thử lại', kind: 'primary', onTap: () => send('CONTINUE') }),
@@ -446,13 +447,20 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
         return;
       }
       const match = t.keys.find((k) => samePitch(k, heard));
+      if (!match && matchHeard(n.midi, t.keys.map(pitchToMidi)) === 'chord') {
+        // Bấm cả hợp âm cùng lúc: micro nghe ra nốt trầm chung của hợp âm → tính là đủ các phím
+        t.keys.forEach((k) => heardKeys.add(k));
+        send('HEARD');
+        return;
+      }
       if (match) {
         heardKeys.add(match);
         kb.setResult(heard, 'good');
         if (t.keys.every((k) => heardKeys.has(k))) send('HEARD');
         else micHint(`🎤 Đúng rồi! Còn ${t.keys.length - heardKeys.size} phím nữa`, 'good');
       } else {
-        wrongCount++;
+        // Hợp âm: micro hay nghe lẫn khi các nốt chưa đều tay → không tính là sai
+        if (t.keys.length < 2) wrongCount++;
         kb.setResult(heard, 'heard');
         if (wrongCount === 3) showHelpHand(t);
         // Không có âm thanh/chữ tiêu cực — chỉ nhắc nhẹ phím vừa nghe (§10)

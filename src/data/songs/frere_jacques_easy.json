@@ -11,6 +11,7 @@
  "timeSignature": "4/4",
  "week": 7,
  "extension": "A4",
+ "position": "free",
  "phrases": [
   0,
   2,
@@ -76,22 +77,22 @@
   {
    "pitch": "E4",
    "beats": 1,
-   "finger": 3
+   "finger": 2
   },
   {
    "pitch": "F4",
    "beats": 1,
-   "finger": 4
+   "finger": 3
   },
   {
    "pitch": "G4",
    "beats": 2,
-   "finger": 5
+   "finger": 4
   },
   {
    "pitch": "G4",
    "beats": 0.5,
-   "finger": 5
+   "finger": 4
   },
   {
    "pitch": "A4",
@@ -101,17 +102,17 @@
   {
    "pitch": "G4",
    "beats": 0.5,
-   "finger": 5
+   "finger": 4
   },
   {
    "pitch": "F4",
    "beats": 0.5,
-   "finger": 4
+   "finger": 3
   },
   {
    "pitch": "E4",
    "beats": 1,
-   "finger": 3
+   "finger": 2
   },
   {
    "pitch": "C4",
@@ -121,7 +122,7 @@
   {
    "pitch": "G4",
    "beats": 0.5,
-   "finger": 5
+   "finger": 4
   },
   {
    "pitch": "A4",
@@ -131,17 +132,17 @@
   {
    "pitch": "G4",
    "beats": 0.5,
-   "finger": 5
+   "finger": 4
   },
   {
    "pitch": "F4",
    "beats": 0.5,
-   "finger": 4
+   "finger": 3
   },
   {
    "pitch": "E4",
    "beats": 1,
-   "finger": 3
+   "finger": 2
   },
   {
    "pitch": "C4",
@@ -151,32 +152,32 @@
   {
    "pitch": "C4",
    "beats": 1,
-   "finger": 1
+   "finger": 2
   },
   {
-   "pitch": "G4",
+   "pitch": "G3",
    "beats": 1,
-   "finger": 5
+   "finger": 1
   },
   {
    "pitch": "C4",
    "beats": 2,
-   "finger": 1
+   "finger": 2
   },
   {
    "pitch": "C4",
    "beats": 1,
-   "finger": 1
+   "finger": 2
   },
   {
-   "pitch": "G4",
+   "pitch": "G3",
    "beats": 1,
-   "finger": 5
+   "finger": 1
   },
   {
    "pitch": "C4",
    "beats": 2,
-   "finger": 1
+   "finger": 2
   }
  ]
 }

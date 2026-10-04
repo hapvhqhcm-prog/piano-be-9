@@ -1,4 +1,5 @@
 import { wait } from '../../audio/AudioEngine';
+import { matchHeard } from '../../audio/match';
 import { confetti } from '../components/celebrate';
 import { PASS_SCORE, TIMING_WINDOWS, gradeTiming, score as scoreOf, starsFor, type HeardEvent } from '../../music/timing';
 import {
@@ -40,8 +41,8 @@ export interface SongHooks {
   onBack(): void;
 }
 
-/** Độ trễ ước tính của micro (giây): khung phân tích + ổn định 3 khung. */
-const MIC_LATENCY = 0.18;
+/** Khi micro không ước được lúc gõ phím: trễ trung bình từ lúc gõ tới lúc nhận nốt (đo trên giả lập ~70 ms). */
+const MIC_LATENCY = 0.07;
 const TEMPOS = [40, 50, 60, 72];
 
 type State = 'idle' | 'demo' | 'countin' | 'playing' | 'rate' | 'result';
@@ -104,6 +105,8 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
     );
 
     const micOn = () => app.mic.state === 'on';
+    /** Bỏ nghe micro của lượt "theo nhịp" đang chạy (gọi khi dừng / rời màn) */
+    let unTempo: () => void = () => undefined;
     const setBar = (...b: (HTMLElement | null | false)[]) =>
       bar.replaceChildren(...b.filter((x): x is HTMLElement => !!x));
 
@@ -120,7 +123,8 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
           'div',
           { class: 'song-title' },
           h('b', {}, full.titleVi),
-          h('span', { class: 'muted' }, ` · ${full.title}${full.composer ? ' — ' + full.composer : ''}${full.lh ? ' · 🙌 hai tay' : ''}`),
+          // Tên gốc/nhạc sĩ chỉ dành cho bố mẹ (thư viện) — màn của bé gọn chữ
+          full.lh ? h('span', { class: 'muted' }, ' · 🙌 hai tay') : null,
         ),
       ];
       const opt = h('div', { class: 'song-opts' });
@@ -187,6 +191,7 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
     function reset(): void {
       token++;
       cancelAnimationFrame(raf);
+      unTempo();
       demoRun?.cancel();
       demoRun = null;
       overlay.hide();
@@ -313,8 +318,7 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
         backButton(reset),
         hints !== 'full' ? button({ icon: '💡', label: 'Gợi ý', onTap: () => hint(g) }) : null,
         // Luôn có nút cho bố mẹ (kể cả khi micro bật) — phòng micro không nhận ra nốt
-        button({ icon: '✓', label: micOn() ? 'Bố mẹ: tiếp' : 'Nốt tiếp', kind: 'good', onTap: () => onWaitInput(midisOf(g)[0], 'parent') }),
-        button({ icon: '⏹', label: 'Dừng', onTap: reset }),
+        button({ icon: '👪', label: 'Bố mẹ: tiếp', kind: 'good', onTap: () => onWaitInput(midisOf(g)[0], 'parent') }),
       );
     }
 
@@ -328,17 +332,19 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
     function onWaitInput(midi: number, from: 'mic' | 'tap' | 'parent'): void {
       const g = groups()[wIdx];
       if (!g) return;
-      if (midisOf(g).includes(midi)) {
+      const match = matchHeard(midi, midisOf(g));
+      if (match !== 'none') {
         // Bố mẹ bấm "tiếp" khi micro đang bật: không tính là micro nghe đúng
         if (wWrongThis === 0 && !(from === 'parent' && micOn())) wHits++;
         for (const i of idxOf(g)) staff.mark(i, 'hit');
-        kb.setResult(midiToPitch(midi), 'good');
+        if (match === 'exact') kb.setResult(midiToPitch(midi), 'good');
         wIdx++;
         wWrongThis = 0;
         if (from === 'mic') app.mic.resetTracker();
         showWaitNote();
       } else if (from === 'mic') {
-        wWrongThis++;
+        // Nhiều nốt cùng lúc: micro hay nghe lẫn → không tính là sai, chỉ chỉ ra phím nghe được
+        if (midisOf(g).length < 2) wWrongThis++;
         const heard = midiToPitch(midi);
         kb.setResult(heard, 'heard');
         status.textContent = `🎤 Con vừa đàn ${viName(heard)} — tìm ${viName(g.pitches[0])} nhé`;
@@ -374,10 +380,15 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
         const g = gs.find((x) => x.notes[0].index === firstIndex);
         if (g) for (const i of idxOf(g)) staff.mark(i, m);
       };
+      unTempo();
+      // Bé đàn theo tiếng tích NGHE THẤY (trễ thêm độ trễ loa) → trừ đi khi chấm
+      const outLat = app.audio.outputLatency;
       const unNote = app.mic.onNote((n) => {
-        heard.push({ beat: (app.audio.now() - MIC_LATENCY - t0) / spb, midi: n.midi });
+        const at = n.at ?? app.audio.now() - MIC_LATENCY;
+        heard.push({ beat: (at - outLat - t0) / spb, midi: n.midi });
         gradeTiming(gradeInput, heard, win.early, win.late).forEach((r) => r.hit && markGroup(r.index, 'hit'));
       });
+      unTempo = unNote;
       app.mic.resetTracker();
       const countEl = h('div', { class: 'countin' });
       status.replaceChildren(countEl);
@@ -428,7 +439,7 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
 
     function askParent(question: string, total: number): void {
       state = 'rate';
-      status.replaceChildren(h('b', {}, `👪 Bố/mẹ: ${question}`));
+      status.replaceChildren(h('b', {}, `👪 Bố mẹ: ${question}`));
       setBar(
         backButton(reset),
         button({
@@ -489,6 +500,7 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
       disposed = true;
       token++;
       cancelAnimationFrame(raf);
+      unTempo();
       unWaitNote();
       demoRun?.cancel();
       overlay.destroy();

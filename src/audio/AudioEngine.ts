@@ -72,6 +72,8 @@ export class AudioEngine {
   private allVoices = new Set<Voice>();
   /** Tiếng gõ nhịp đã hẹn — stopAll() hủy luôn. */
   private clicks = new Set<OscillatorNode>();
+  /** Thời điểm (đồng hồ AudioContext) các tiếng tích đã hẹn — để micro bỏ qua đúng lúc có tiếng tích. */
+  private clickTimes: number[] = [];
   private listeners = new Set<(s: EngineState) => void>();
   private generation = 0;
   private busyCount = 0;
@@ -270,6 +272,8 @@ export class AudioEngine {
     const master = this.master;
     if (!ctx || !master) return;
     const t = Math.max(when, ctx.currentTime);
+    this.clickTimes = this.clickTimes.filter((c) => c > ctx.currentTime - 1);
+    this.clickTimes.push(t);
     const osc = ctx.createOscillator();
     osc.type = 'square';
     osc.frequency.value = accent ? 2000 : 1600;
@@ -362,6 +366,20 @@ export class AudioEngine {
     return new Promise((r) => this.idleWaiters.push(r));
   }
 
+  /**
+   * Có tiếng tích trong khoảng [t − before, t + after] không (giây, đồng hồ AudioContext).
+   * Tiếng tích (1,6–2 kHz, không tính là "app đang phát") lọt qua bộ lọc micro → micro phải bỏ qua các khung đó.
+   */
+  clickNear(t: number, before: number, after: number): boolean {
+    return this.clickTimes.some((c) => c >= t - before && c <= t + after);
+  }
+
+  /** Độ trễ loa (giây) — bé đàn theo tiếng tích NGHE THẤY, trễ hơn lúc hẹn. */
+  get outputLatency(): number {
+    const c = this.ctx as (AudioContext & { outputLatency?: number }) | null;
+    return c ? (c.outputLatency || c.baseLatency || 0) : 0;
+  }
+
   stopAll(): void {
     this.generation++;
     const ctx = this.ctx;
@@ -375,6 +393,7 @@ export class AudioEngine {
       }
     }
     this.clicks.clear();
+    this.clickTimes = [];
     for (const v of this.allVoices) {
       const gs = [v.gain, ...(v.extraGains ?? [])];
       const os = [v.osc, ...(v.extra ?? [])];

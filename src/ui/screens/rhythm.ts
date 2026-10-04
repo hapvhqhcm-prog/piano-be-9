@@ -9,6 +9,8 @@ const SYMBOL: Record<RhythmSymbol, { label: string; emoji: string; beats: number
   walk: { label: 'Đi', emoji: '👣', beats: 1, hits: [0] },
   run: { label: 'Chạy-chạy', emoji: '🏃', beats: 1, hits: [0, 0.5] },
   long: { label: 'Đi-i', emoji: '🐢', beats: 2, hits: [0] },
+  long3: { label: 'Đi-i-i', emoji: '🐌', beats: 3, hits: [0] },
+  dotted: { label: 'Đi-chấm chạy', emoji: '🐪', beats: 2, hits: [0, 1.5] },
   rest: { label: 'Suỵt', emoji: '🤫', beats: 1, hits: [] },
 };
 
@@ -30,10 +32,11 @@ export function rhythmScreen(app: App, hooks: RhythmHooks) {
   return (root: HTMLElement) => {
     let i = 0;
     let token = 0;
+    let micFails = 0;
     let raf = 0;
     /** Bộ nghe tiếng vỗ đang bật — gỡ khi rời màn */
     let unOnsetCur: () => void = () => undefined;
-    const stage = h('div', { class: 'stage' });
+    const stage = h('div', { class: 'stage scrollable' });
     const bar = h('div', { class: 'actions' });
     root.append(h('div', { class: 'screen' }, stage, bar));
     const setBar = (...b: (HTMLElement | null)[]) => bar.replaceChildren(...b.filter((x): x is HTMLElement => !!x));
@@ -72,6 +75,7 @@ export function rhythmScreen(app: App, hooks: RhythmHooks) {
 
     function show(): void {
       token++;
+      micFails = 0;
       cancelAnimationFrame(raf);
       const p = hooks.patterns[i];
       const { row } = cells(p);
@@ -93,7 +97,12 @@ export function rhythmScreen(app: App, hooks: RhythmHooks) {
      * (sau 4 tiếng đếm vào thì tắt tiếng tích, chỉ còn nhịp nháy trên màn để micro nghe rõ tiếng vỗ).
      */
     async function play(demo: boolean): Promise<void> {
-      if (!demo) await app.ensureMic();
+      if (!demo) {
+        // Lần đầu iPad hỏi quyền micro: chờ xong mà bé đã rời màn / bấm nút khác thì thôi
+        const tk0 = ++token;
+        await app.ensureMic();
+        if (tk0 !== token) return;
+      }
       const tk = ++token;
       const p = hooks.patterns[i];
       const { row, els, starts } = cells(p);
@@ -159,9 +168,12 @@ export function rhythmScreen(app: App, hooks: RhythmHooks) {
       stage.append(
         h('p', { class: 'lead' }, ok ? `🎤 Con vỗ đúng ${hits}/${expected.length} — đều lắm!` : `🎤 Đúng ${hits}/${expected.length}${extras > 1 ? `, vỗ thừa ${extras}` : ''} — thử lại nhé!`),
       );
+      if (!ok) micFails++;
       setBar(
         backButton(show),
         button({ icon: '↻', label: 'Vỗ lại', onTap: () => void play(false) }),
+        // Micro có thể chấm trượt (phòng ồn, vỗ nhỏ) → sau 2 lần, bố mẹ được cho qua — không kẹt bé lại
+        !ok && micFails >= 2 ? button({ icon: '👪', label: 'Bố mẹ: qua', onTap: () => askParent() }) : null,
         ok
           ? button({
               icon: '▶',
@@ -180,7 +192,7 @@ export function rhythmScreen(app: App, hooks: RhythmHooks) {
     function askParent(): void {
       const p = hooks.patterns[i];
       const id = `rhythm:${p.join('-')}`;
-      stage.replaceChildren(h('h1', { class: 'title' }, '👪 Bố/mẹ: con vỗ đều chưa?'), cells(p).row);
+      stage.replaceChildren(h('h1', { class: 'title' }, '👪 Bố mẹ: con vỗ đều chưa?'), cells(p).row);
       setBar(
         backButton(show),
         button({

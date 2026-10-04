@@ -12,7 +12,7 @@
  "week": 12,
  "phrases": [
   0,
-  4
+  5
  ],
  "notes": [
   {
@@ -20,17 +20,16 @@
    "beats": 3
   },
   {
-   "pitch": "C4",
-   "beats": 1,
-   "finger": 1
-  },
-  {
    "rest": true,
-   "beats": 2
+   "beats": 3
   },
   {
    "rest": true,
    "beats": 3
+  },
+  {
+   "rest": true,
+   "beats": 2
   },
   {
    "pitch": "D4",
@@ -57,9 +56,8 @@
    "finger": 3
   },
   {
-   "pitch": "C4",
-   "beats": 1,
-   "finger": 1
+   "rest": true,
+   "beats": 1
   },
   {
    "rest": true,
@@ -94,9 +92,17 @@
    "pitch": "C4",
    "beats": 2,
    "finger": 1
+  },
+  {
+   "rest": true,
+   "beats": 1
   }
  ],
  "lh": [
+  {
+   "rest": true,
+   "beats": 2
+  },
   {
    "pitch": "G3",
    "beats": 0.5,
@@ -118,8 +124,9 @@
    "finger": 4
   },
   {
-   "rest": true,
-   "beats": 1
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
   },
   {
    "pitch": "B3",
@@ -148,7 +155,11 @@
   },
   {
    "rest": true,
-   "beats": 3
+   "beats": 1
+  },
+  {
+   "rest": true,
+   "beats": 2
   },
   {
    "pitch": "G3",
@@ -165,8 +176,9 @@
    "beats": 2
   },
   {
-   "rest": true,
-   "beats": 1
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
   },
   {
    "pitch": "B3",
@@ -177,6 +189,10 @@
    "pitch": "A3",
    "beats": 1,
    "finger": 3
+  },
+  {
+   "rest": true,
+   "beats": 1
   },
   {
    "rest": true,

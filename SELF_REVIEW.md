@@ -55,3 +55,49 @@ Thêm từ lần này: gỡ bộ nghe tiếng vỗ khi rời màn giữa chừng
 Đo lại toàn bộ đường xử lý trên giả lập đàn cơ thật. Tìm ra **5 nguyên nhân** làm micro "không hiệu quả" và đã sửa cả 5,
 nâng tỉ lệ nhận đúng từ 87% lên 97% và giảm độ trễ từ 143 ms xuống 68 ms. Chi tiết ở TEST_REPORT §14.
 Lỗi đáng kể nhất là bé nhại lại ngay sau tiếng mẫu thì nốt **không bao giờ** được nhận. Lỗi này hay xảy ra nhất ở chế độ "Từng nốt".
+
+## G. Phản biện bằng 4 agent độc lập (2026-10-04, OWNER: "dùng tất cả các agent")
+
+Bốn agent chỉ đọc mã, mỗi agent soát một mảng; sau đó các agent sửa theo từng nhóm file riêng. Tổng cộng: 366 test, tsc sạch.
+
+**Micro & chấm điểm**
+- **Hợp âm / hai tay bị chấm SAI dù bé đàn đúng.** Micro nghe 2–3 nốt cùng lúc thành một nốt trầm chung (đo trên giả lập: Đô+Mi → Đô thấp).
+  Giờ nhận ra trường hợp này (`src/audio/match.ts`), và với hợp âm không tính nốt nghe lẫn là lỗi.
+- **iOS cắt micro** (khóa màn hình, cuộc gọi) thì app vẫn hiện 🎤 nhưng không nghe gì nữa. Giờ app phát hiện và bật lại ở lần chạm sau.
+- **Chấm nhịp lệch sớm ~110 ms.** Giờ dùng lúc GÕ PHÍM ước tính (sai số ±30 ms) và trừ độ trễ loa.
+- **Tiếng tích máy đếm nhịp bị nghe thành nốt Sol cao** và làm mất lần gõ đúng phách. Giờ micro bỏ qua đúng các khung có tiếng tích, và lần gõ trùng tiếng tích vẫn được tính.
+- Vỗ nhịp: không còn chạy chồng khi iPad hỏi quyền micro; micro chấm trượt 2 lần thì có nút "Bố mẹ: qua" (hết ngõ cụt).
+- Rò bộ nghe micro khi rời màn bài hát.
+
+**Dữ liệu & cập nhật**
+- App cài lần đầu không nhận bản cập nhật trong cùng phiên mở.
+- Bản sao lưu hỏng cũ có thể **ghi đè** dữ liệu sau khi "Xóa hẳn" hoặc nhập JSON. Giờ các bản đó được cất sang `archived-*`.
+- Banner "xong 24 tuần" hiện lại sau mọi buổi tập.
+- Nhập JSON lỗi (tuần lẻ, bài hát thiếu trường) có thể làm sập màn hình. Giờ bị từ chối ngay khi nhập.
+
+**Giáo trình (sửa lỗi dữ liệu, không đổi cấu trúc 24 tuần)**
+- Happy Birthday: sửa phách lấy đà ("Hap-py" ở phách 3).
+- Frère Jacques: thêm La♭ ở bản thứ, và kết đúng Đô–Sol trầm–Đô.
+- Silent Night: đàn trọn bài.
+- Für Elise: nhịp lấy đà, thêm nốt Mi bị thiếu.
+- Canon: sửa ngón không với tới.
+- Các bài có La4: đàn Sol–La–Sol bằng ngón 4-5-4 thay vì ngón 5 lặp lại.
+- Thêm nhịp "Đi-i-i" (3 phách) và "Đi-chấm chạy" (nốt chấm) để tuần 12/14 thật sự luyện đúng thứ đang dạy.
+- Bài cô Rhody chuyển về đúng bài học; tuần 23 có bài mới (Oh Susanna hai tay, tổng 50 bài).
+- Khởi động tuần 9 đọc đúng vùng nốt của tuần; tuần 18–19 chuẩn bị các nốt La3/Si3 và Mi5–Sol5 trước khi gặp trong bài.
+
+**Giao diện cho bé**
+- Nội dung dài không còn bị cắt mất phần trên; các màn đều cuộn được.
+- Nút "Quay lại" tách sang mép trái, kiểu nhạt, để bé khỏi bấm nhầm.
+- Chạm vào bài đang khóa thì có thông báo "🔒 mở ở Tuần N".
+- Màn chính bớt chữ; chữ nhỏ nhất được tăng lên ≥ 18px.
+- Các nút dành cho bố mẹ có dấu 👪.
+- Màn bài hát bỏ tên tiếng Anh / tên nhạc sĩ; thống nhất cách gọi "Bố mẹ" và "đàn".
+
+**Cần OWNER quyết (chưa làm)**
+1. **Ngón Sol–La:** ở các bài, Sol–La–Sol nay đàn 4-5-4. Riêng thẻ dạy nốt của tuần 7 vẫn ghi "ngón 5 lo cả Sol và La", vì quy tắc ngón tuần 1–8 đã được OWNER duyệt.
+   Đề xuất đổi luôn thẻ tuần 7 sang 4-5 cho thống nhất.
+2. **Sắc thái (to/nhỏ) và liền tiếng/ngắt tiếng** chưa có trong giáo trình. Đây là lỗ hổng âm nhạc lớn nhất so với giáo trình chuẩn; cần thêm định dạng bài và bài tập mới.
+3. **Tuần 20 (Minuet) là bước nhảy lớn nhất.** Nên chèn một tuần đọc nốt Đô5–Sol5 với bài ở thế Đô cao trước đó (sẽ thành 25 tuần).
+4. **Nhiều bài trùng lặp** (Ode to Joy 7 lần, Mary 5 lần). Có thể thêm bài thiếu nhi Việt Nam (cần bài không vướng bản quyền) và bài sáng tác vui (ninja, robot…).
+5. **Tay trái chỉ giữ hợp âm.** Có thể thêm đệm rải / "bùm-tách" ở cấp 3.

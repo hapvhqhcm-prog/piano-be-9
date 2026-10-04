@@ -13,9 +13,13 @@
  "position": "free",
  "phrases": [
   0,
-  4
+  5
  ],
  "notes": [
+  {
+   "rest": true,
+   "beats": 2
+  },
   {
    "pitch": "E5",
    "beats": 0.5,
@@ -58,8 +62,12 @@
   },
   {
    "pitch": "A4",
-   "beats": 2,
+   "beats": 1,
    "finger": 1
+  },
+  {
+   "rest": true,
+   "beats": 0.5
   },
   {
    "pitch": "C4",
@@ -78,8 +86,12 @@
   },
   {
    "pitch": "B4",
-   "beats": 1.5,
+   "beats": 1,
    "finger": 5
+  },
+  {
+   "rest": true,
+   "beats": 0.5
   },
   {
    "pitch": "E4",
@@ -98,8 +110,17 @@
   },
   {
    "pitch": "C5",
-   "beats": 1.5,
+   "beats": 1,
    "finger": 5
+  },
+  {
+   "rest": true,
+   "beats": 0.5
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 1
   },
   {
    "pitch": "E5",
@@ -143,8 +164,12 @@
   },
   {
    "pitch": "A4",
-   "beats": 2,
+   "beats": 1,
    "finger": 1
+  },
+  {
+   "rest": true,
+   "beats": 0.5
   },
   {
    "pitch": "C4",
@@ -163,8 +188,12 @@
   },
   {
    "pitch": "B4",
-   "beats": 1.5,
+   "beats": 1,
    "finger": 5
+  },
+  {
+   "rest": true,
+   "beats": 0.5
   },
   {
    "pitch": "E4",
@@ -183,8 +212,12 @@
   },
   {
    "pitch": "A4",
-   "beats": 1.5,
+   "beats": 2,
    "finger": 3
+  },
+  {
+   "rest": true,
+   "beats": 1
   }
  ]
 }

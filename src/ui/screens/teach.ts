@@ -3,7 +3,7 @@ import { mascot } from '../components/mascot';
 import { backButton, button, h } from '../components/dom';
 
 /**
- * "Con làm thầy" (v2) — 1 phút cuối buổi: bé dạy lại bố/mẹ điều vừa học.
+ * "Con làm thầy" (v2) — 1 phút cuối buổi: bé dạy lại bố mẹ điều vừa học.
  * Dạy lại giúp nhớ lâu hơn và bé thấy tự hào.
  */
 export function teachScreen(
@@ -17,7 +17,7 @@ export function teachScreen(
         { class: 'screen' },
         h(
           'div',
-          { class: 'stage' },
+          { class: 'stage scrollable' },
           h('div', { class: 'step-tag' }, 'Con làm thầy'),
           h('div', { class: 'hero-mascot' }, mascot('wave', 120)),
           h('h1', { class: 'title' }, 'Bây giờ con là thầy giáo!'),
@@ -28,7 +28,7 @@ export function teachScreen(
           { class: 'actions' },
           backButton(o.onBack),
           button({ icon: '⏭', label: 'Để sau', onTap: o.onSkip }),
-          button({ icon: '😄', label: 'Bố/mẹ đã học xong', kind: 'good', onTap: o.onDone }),
+          button({ icon: '😄', label: 'Bố mẹ đã học xong', kind: 'good', onTap: o.onDone }),
         ),
       ),
     );

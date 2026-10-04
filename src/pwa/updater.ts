@@ -47,9 +47,13 @@ export function isUpdateReady(): boolean {
 export function registerServiceWorker(): void {
   if (!import.meta.env.PROD || !('serviceWorker' in navigator) || !window.isSecureContext) return;
   // Trang này đã có service worker điều khiển từ trước → lần đổi controller sau là bản MỚI.
-  const hadController = !!navigator.serviceWorker.controller;
+  // Trang cài lần đầu: lần đổi controller ĐẦU TIÊN chỉ là SW vừa cài nhận quyền; các lần sau mới là bản mới.
+  let seen = !!navigator.serviceWorker.controller;
   navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (!hadController) return; // lần cài đầu tiên, không phải cập nhật
+    if (!seen) {
+      seen = true; // lần cài đầu tiên, không phải cập nhật
+      return;
+    }
     updateReady = true;
     if (atSafePoint) reloadNow();
   });

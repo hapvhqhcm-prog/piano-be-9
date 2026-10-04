@@ -11,7 +11,7 @@ import { micTestScreen } from './micTest';
 import { APP_VERSION, checkForUpdate, isUpdateReady } from '../../pwa/updater';
 import { startScreen } from './start';
 
-const RATING_LABEL = { all: '😄 Đánh được hết', some: '🙂 Còn vấp vài chỗ', hard: '😅 Khó quá' } as const;
+const RATING_LABEL = { all: '😄 Đàn được hết', some: '🙂 Còn vấp vài chỗ', hard: '😅 Khó quá' } as const;
 
 function mondayOf(d: Date): Date {
   const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -34,11 +34,16 @@ const HINT_LABEL = { full: 'phím sáng', names: 'tên nốt', staff: 'chỉ khu
 
 function table(head: string[], rows: (string | number)[][]): HTMLElement {
   if (rows.length === 0) return h('p', { class: 'muted' }, 'Chưa có dữ liệu');
+  // Bảng rộng: bọc trong khung cuộn ngang (.scrollable chỉ cho cuộn dọc)
   return h(
-    'table',
-    { class: 'tbl' },
-    h('thead', {}, h('tr', {}, ...head.map((c) => h('th', {}, c)))),
-    h('tbody', {}, ...rows.map((r) => h('tr', {}, ...r.map((c) => h('td', {}, String(c)))))),
+    'div',
+    { class: 'tbl-wrap' },
+    h(
+      'table',
+      { class: 'tbl' },
+      h('thead', {}, h('tr', {}, ...head.map((c) => h('th', {}, c)))),
+      h('tbody', {}, ...rows.map((r) => h('tr', {}, ...r.map((c) => h('td', {}, String(c)))))),
+    ),
   );
 }
 
@@ -237,7 +242,7 @@ export function parentScreen(app: App) {
           'section',
           { class: 'card' },
           h('h2', {}, 'Bé đánh trên đàn thật — phụ huynh xác nhận'),
-          h('p', { class: 'muted' }, 'PARENT_ASSESSMENT: app KHÔNG nghe đàn. Đây chỉ là nút bố/mẹ đã bấm.'),
+          h('p', { class: 'muted' }, 'PARENT_ASSESSMENT: app KHÔNG nghe đàn. Đây chỉ là nút bố mẹ đã bấm.'),
           table(
             ['Nốt / việc', '✓ Đúng rồi', '↻ Thử lại'],
             [...pAgg.entries()].map(([k, v]) => [k, v.c, v.r]),

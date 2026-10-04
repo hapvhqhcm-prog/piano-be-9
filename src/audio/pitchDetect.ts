@@ -98,6 +98,8 @@ export interface HeardNote {
   /** Lệch so với nốt chuẩn gần nhất (cents, sau khi đã bù tuningCents) */
   cents: number;
   freq: number;
+  /** Thời điểm ước tính bé GÕ PHÍM (giây, cùng đồng hồ với `t` truyền vào MicAnalyzer) — để chấm nhịp */
+  at?: number;
 }
 
 export function nearestNote(freq: number, tuningCents = 0): HeardNote {

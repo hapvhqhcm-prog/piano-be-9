@@ -14,7 +14,10 @@
  "phrases": [
   0,
   4,
-  8
+  8,
+  12,
+  16,
+  20
  ],
  "notes": [
   {
@@ -90,27 +93,27 @@
   {
    "pitch": "A4",
    "beats": 2,
-   "finger": 2
-  },
-  {
-   "pitch": "A4",
-   "beats": 1,
-   "finger": 2
-  },
-  {
-   "pitch": "C5",
-   "beats": 1.5,
-   "finger": 4
-  },
-  {
-   "pitch": "B4",
-   "beats": 0.5,
    "finger": 3
   },
   {
    "pitch": "A4",
    "beats": 1,
-   "finger": 2
+   "finger": 3
+  },
+  {
+   "pitch": "C5",
+   "beats": 1.5,
+   "finger": 5
+  },
+  {
+   "pitch": "B4",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 3
   },
   {
    "pitch": "G4",
@@ -129,6 +132,121 @@
   },
   {
    "pitch": "E4",
+   "beats": 3,
+   "finger": 1
+  },
+  {
+   "pitch": "A4",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "C5",
+   "beats": 1.5,
+   "finger": 5
+  },
+  {
+   "pitch": "B4",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 1.5,
+   "finger": 2
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 3,
+   "finger": 1
+  },
+  {
+   "pitch": "D5",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "D5",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "F5",
+   "beats": 1.5,
+   "finger": 5
+  },
+  {
+   "pitch": "D5",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "B4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "C5",
+   "beats": 3,
+   "finger": 2
+  },
+  {
+   "pitch": "E5",
+   "beats": 3,
+   "finger": 4
+  },
+  {
+   "pitch": "C5",
+   "beats": 1.5,
+   "finger": 4
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 1.5,
+   "finger": 5
+  },
+  {
+   "pitch": "F4",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
    "beats": 3,
    "finger": 1
   }

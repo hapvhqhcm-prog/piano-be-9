@@ -19,8 +19,12 @@ function ex(id: string, titleVi: string, notes: TuneNote[]): Tune {
 }
 
 export const EXERCISES: readonly Tune[] = [
-  // Mức 2: "đánh Đô mỗi phách" — 8 ô nhịp (tiêu chí tuần 4)
-  ex('ex_c_quarter', 'Đô mỗi phách (8 ô nhịp)', Array.from({ length: 32 }, () => n('C4'))),
+  // Mức 2: "đánh mỗi phách một nốt" — 8 ô nhịp nốt đen (tiêu chí tuần 4); mỗi ô một nốt, đi Đô–Rê–Mi rồi về
+  ex(
+    'ex_c_quarter',
+    'Mỗi phách một nốt (8 ô nhịp)',
+    ['C4', 'D4', 'E4', 'D4', 'C4', 'E4', 'D4', 'C4'].flatMap((p) => [n(p), n(p), n(p), n(p)]),
+  ),
   ex('ex_cde_walk', 'Đô Rê Mi đi đều', [
     ...['C4', 'D4', 'E4', 'D4'].map((p) => n(p)),
     n('C4'), n('C4'), n('C4', 2),

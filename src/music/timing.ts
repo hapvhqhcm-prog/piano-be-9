@@ -1,3 +1,4 @@
+import { matchHeard } from '../audio/match';
 import type { TimedNote } from './tune';
 
 /**
@@ -42,7 +43,7 @@ export function gradeTiming(
     let best = -1;
     let bestAbs = Infinity;
     heard.forEach((h, i) => {
-      const ok = Array.isArray(n.midi) ? n.midi.includes(h.midi) : h.midi === n.midi;
+      const ok = Array.isArray(n.midi) ? matchHeard(h.midi, n.midi) !== 'none' : h.midi === n.midi;
       if (used.has(i) || !ok) return;
       const off = h.beat - n.start;
       if (off < -early || off > late) return;

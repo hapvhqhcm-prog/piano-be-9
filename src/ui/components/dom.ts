@@ -53,11 +53,32 @@ export function button(o: ButtonOpts): HTMLButtonElement {
   return b;
 }
 
+/** Nút "Quay lại": kiểu nhẹ (ghost) và nằm sát mép trái thanh nút — không lẫn với nút chính. */
 export function backButton(onTap: () => void): HTMLButtonElement {
-  return button({ icon: '←', label: 'Quay lại', onTap, kind: 'plain' });
+  const b = button({ icon: '←', label: 'Quay lại', onTap, kind: 'plain' });
+  b.classList.add('btn-back');
+  return b;
 }
 
-/** Thanh nút cố định cuối màn hình (tối đa 4 nút — §4). */
+/** Thanh nút cố định cuối màn hình (tối đa 4 nút — §4). Nút Quay lại (.btn-back) tự dạt sang trái (CSS). */
 export function actionBar(...buttons: (HTMLElement | null | false)[]): HTMLElement {
   return h('div', { class: 'actions' }, ...buttons);
+}
+
+let toastEl: HTMLElement | null = null;
+let toastTimer = 0;
+
+/** Thông báo ngắn, tự ẩn sau ~2 giây (vd khi bé chạm vào bài còn khóa) — để chạm không bao giờ "im lặng". */
+export function toast(text: string, ms = 2000): void {
+  if (!toastEl || !toastEl.isConnected) {
+    toastEl = h('div', { class: 'toast', role: 'status', 'aria-live': 'polite' });
+    document.body.append(toastEl);
+  }
+  const el = toastEl;
+  el.textContent = text;
+  el.classList.remove('show');
+  void el.offsetWidth; // chạy lại hiệu ứng khi chạm liên tiếp
+  el.classList.add('show');
+  window.clearTimeout(toastTimer);
+  toastTimer = window.setTimeout(() => el.classList.remove('show'), ms);
 }

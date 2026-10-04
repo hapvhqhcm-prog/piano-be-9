@@ -1,7 +1,7 @@
 import { leftHandActive } from '../../lessons/lessonEngine';
 import { fingerOnKeyboard, type Hand } from '../../piano/fingering';
 import { PianoKeyboard } from '../../piano/PianoKeyboard';
-import { noteLabel, pitchFreq } from '../../piano/pitchTable';
+import { noteLabel } from '../../piano/pitchTable';
 import type { App } from '../App';
 import { actionBar, backButton, button, h } from '../components/dom';
 import { FINGER_NAMES, handDiagram, type HandDiagram } from '../components/handDiagram';
@@ -32,7 +32,7 @@ export function freePlayScreen(app: App) {
         fingerName.textContent = m
           ? `${FINGER_NAMES[m.finger]} · tay ${hand === 'RH' ? 'phải' : 'trái'}${p === 'A4' ? ' (duỗi ra)' : ''}`
           : 'Phím này nằm ngoài thế 5 ngón';
-        small.textContent = `${p} · ${pitchFreq(p).toFixed(2)} Hz`;
+        small.textContent = p; // chỉ tên nốt — không hiện số Hz kỹ thuật cho bé
       },
     });
     // Đổi quãng tám: bàn phím thật có 88 phím, iPad chỉ hiện 2 quãng tám một lúc
@@ -52,7 +52,7 @@ export function freePlayScreen(app: App) {
       h(
         'div',
         { class: 'screen' },
-        h('div', { class: 'stage' }, big, row, small),
+        h('div', { class: 'stage scrollable' }, big, row, small),
         h('div', { class: 'keyboard-wrap' }, kb.el),
         actionBar(
           backButton(() => app.show(homeScreen(app))),

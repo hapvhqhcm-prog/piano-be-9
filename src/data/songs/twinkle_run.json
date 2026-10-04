@@ -11,6 +11,7 @@
  "timeSignature": "4/4",
  "week": 14,
  "extension": "A4",
+ "position": "free",
  "phrases": [
   0,
   2
@@ -39,22 +40,22 @@
   {
    "pitch": "G4",
    "beats": 0.5,
-   "finger": 5
+   "finger": 4
   },
   {
    "pitch": "G4",
    "beats": 0.5,
-   "finger": 5
+   "finger": 4
   },
   {
    "pitch": "G4",
    "beats": 0.5,
-   "finger": 5
+   "finger": 4
   },
   {
    "pitch": "G4",
    "beats": 0.5,
-   "finger": 5
+   "finger": 4
   },
   {
    "pitch": "A4",
@@ -79,7 +80,7 @@
   {
    "pitch": "G4",
    "beats": 2,
-   "finger": 5
+   "finger": 4
   },
   {
    "pitch": "F4",

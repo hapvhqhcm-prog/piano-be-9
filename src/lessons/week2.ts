@@ -3,7 +3,7 @@ import type { WeekPlan } from './types';
 
 /**
  * TUẦN 2 — Làng Đô Rê Mi: ngón 1-2-3, Nhại lại 2 nốt, bài "Bánh nóng", tai nghe "Lên hay xuống?",
- * vỗ tay "Đi – Đi" (chuẩn bị nhịp tuần 4). Tiêu chí: 2 buổi liền bé chọn "Đánh được hết" (SELF).
+ * vỗ tay "Đi – Đi" (chuẩn bị nhịp tuần 4). Tiêu chí: 2 buổi liền bé chọn "Đàn được hết" (SELF).
  */
 export const WEEK2: WeekPlan = {
   week: 2,
@@ -13,7 +13,7 @@ export const WEEK2: WeekPlan = {
   story: 'Ở Làng Đô Rê Mi, ba bạn Đô, Rê, Mi sống cạnh nhau. Ngón 1, 2, 3 của con sẽ đến thăm từng nhà!',
   warmup: { variant: 'updown', pool: ['C4', 'D4', 'E4'], rounds: 8 },
   teach: { emoji: '👨‍🏫', text: 'Con dạy bố/mẹ: ngón nào đánh Đô, ngón nào đánh Rê, ngón nào đánh Mi?' },
-  criterion: { text: '2 buổi liền bé tự chọn "Đánh được hết"', who: 'SELF' },
+  criterion: { text: '2 buổi liền bé tự chọn "Đàn được hết"', who: 'SELF' },
   lessons: [
     {
       id: 'w2-l1',

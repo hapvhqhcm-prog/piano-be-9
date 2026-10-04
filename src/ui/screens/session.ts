@@ -20,6 +20,8 @@ import { teachScreen } from './teach';
  */
 export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean } = {}): void {
   const store = app.store;
+  // Đã qua tuần hiện tại TRƯỚC buổi này chưa — để 🏆 tuần cuối chỉ hiện đúng buổi vừa qua, không lặp mãi
+  const passedBefore = weekPassed(store.get().progress.currentWeek, store.get());
   const session = store.startSession(lesson.id);
   const steps = buildSessionPlan(lesson, store.get(), opts);
   const wrapUp = steps.findIndex((s) => s.kind === 'teach' || s.kind === 'rating');
@@ -40,7 +42,7 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
           levelOf(week + 1).level !== levelOf(week).level
             ? `🎉 Con đã lên ${levelOf(week + 1).name}! Chặng mới: ${next.islandEmoji} ${next.island}.`
             : `🏅 Con đã qua ${weekPlan(week).island}! Chặng tiếp: ${next.islandEmoji} ${next.island}.`;
-      } else {
+      } else if (!passedBefore) {
         banner = '🏆 Con đã hoàn thành cả 24 tuần — từ nay mỗi ngày có bài luyện tập mới!';
       }
     }

@@ -90,11 +90,29 @@ p {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  /* Căn giữa "an toàn": nội dung ngắn vẫn ở giữa, nội dung dài thì bắt đầu từ trên và cuộn được
+     (justify-content:center làm phần trên bị cắt mất, không cuộn tới được). Hai phần tử giả
+     ::before/::after có margin:auto đóng vai đệm — không phụ thuộc phần tử con đầu/cuối
+     (vd .progress position:absolute). */
+  justify-content: flex-start;
+  overflow-x: hidden;
+  overflow-y: auto;
   gap: 14px;
   padding: 12px 24px;
   text-align: center;
   position: relative;
+}
+.stage::before,
+.stage::after {
+  content: '';
+  flex: 0 0 0;
+  margin: auto 0;
+}
+.stage::before {
+  margin-bottom: -14px; /* bù khoảng gap của phần tử giả */
+}
+.stage::after {
+  margin-top: -14px;
 }
 
 .keyboard-wrap {
@@ -879,7 +897,7 @@ p {
   line-height: 1.1;
 }
 .island-name {
-  font-size: 15px;
+  font-size: 18px;
   font-weight: 700;
   line-height: 1.15;
 }
@@ -905,7 +923,7 @@ p {
   gap: 12px;
 }
 .story {
-  font-size: 22px;
+  font-size: 22px; /* ≥ 20px: bé đọc chậm */
   color: var(--muted);
   max-width: 980px;
   font-style: italic;
@@ -1155,6 +1173,10 @@ p {
   overflow-y: auto;
   justify-content: flex-start;
 }
+.scroll-y::before,
+.scroll-y::after {
+  display: none;
+}
 .lead.big {
   font-size: 32px;
   color: var(--ink);
@@ -1172,10 +1194,7 @@ p {
     min-height: 60px;
   }
   .island-name {
-    font-size: 13px;
-  }
-  .story {
-    font-size: 19px;
+    font-size: 18px;
   }
 }
 

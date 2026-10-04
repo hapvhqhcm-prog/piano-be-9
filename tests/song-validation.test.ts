@@ -21,9 +21,9 @@ const ALLOWED = [
   'hand', 'bpm', 'timeSignature', 'week', 'extension', 'position', 'lh', 'lhPosition', 'phrases', 'notes',
 ];
 
-it('có 49 bài hát, id không trùng, đủ tuần 2–23', () => {
-  expect(SONGS).toHaveLength(49);
-  expect(new Set(SONGS.map((s) => s.id)).size).toBe(49);
+it('có 50 bài hát, id không trùng, đủ tuần 2–23', () => {
+  expect(SONGS).toHaveLength(50);
+  expect(new Set(SONGS.map((s) => s.id)).size).toBe(50);
   const weeks = new Set(SONGS.map((s) => s.week));
   for (const w of [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22, 23]) expect(weeks.has(w)).toBe(true);
 });

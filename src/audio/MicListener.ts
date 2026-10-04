@@ -102,7 +102,12 @@ export class MicListener {
 
   /** Nên gọi trong thao tác chạm (iPad hỏi quyền micro ở lần đầu). */
   async start(): Promise<MicState> {
-    if (this._state === 'on' || this._state === 'starting') return this._state;
+    if (this._state === 'starting') return this._state;
+    if (this._state === 'on') {
+      // iOS có thể đã cắt micro (khóa màn hình, chuyển app, cuộc gọi) mà không báo → kiểm tra track còn sống
+      if (this.stream?.getAudioTracks().some((t) => t.readyState === 'live')) return this._state;
+      this.stop();
+    }
     if (!MicListener.supported) {
       this.setState('unsupported');
       return this._state;
@@ -133,6 +138,8 @@ export class MicListener {
       this.audio.setAudioSessionType('playback');
       return 'off';
     }
+    // iOS cắt micro (khóa màn hình, cuộc gọi…) → báo 'off' để lần chạm sau bật lại, không "điếc" mãi
+    for (const tr of this.stream.getAudioTracks()) tr.onended = () => myGen === this.gen && this.stop();
     if (ctx.state !== 'running') await ctx.resume().catch(() => undefined);
     this.source = ctx.createMediaStreamSource(this.stream);
     this.analyser = ctx.createAnalyser();
@@ -153,8 +160,17 @@ export class MicListener {
     if (!analyser || !buf || !ctx) return;
     analyser.getFloatTimeDomainData(buf);
     const since = this.audio.msSinceSound();
-    const app: AppSound = this.audio.isSounding ? 'sounding' : since < this.quietMarginMs ? 'tail' : 'quiet';
-    const f = this.analyzer.process(buf, ctx.sampleRate, ctx.currentTime, app);
+    const now = ctx.currentTime;
+    // Khung 43 ms có chứa tiếng tích (dài ~35 ms, tới micro trễ thêm độ trễ loa) → bỏ qua
+    const clickWin = 0.09 + this.audio.outputLatency;
+    const app: AppSound = this.audio.isSounding
+      ? 'sounding'
+      : this.audio.clickNear(now, clickWin, 0.01)
+        ? 'click'
+        : since < this.quietMarginMs
+          ? 'tail'
+          : 'quiet';
+    const f = this.analyzer.process(buf, ctx.sampleRate, now, app);
     // "Gõ/vỗ" (chấm vỗ nhịp): mốc thời gian lùi ~nửa cửa sổ phân tích + nửa bước
     if (f.onset && ctx.currentTime - this.lastClapAt > 0.15) {
       this.lastClapAt = ctx.currentTime;
