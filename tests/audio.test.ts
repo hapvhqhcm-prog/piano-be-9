@@ -56,8 +56,11 @@ describe('AudioEngine', () => {
     await eng.unlock();
     void eng.playPitch('A4');
     void eng.playPitch('C4');
-    expect(oscs[0].type).toBe('triangle');
-    expect(oscs[0].frequency.value).toBe(440);
-    expect(Math.abs(oscs[1].frequency.value - 261.63)).toBeLessThan(1);
+    // Mỗi nốt: âm cơ bản (tam giác) + họa âm bậc 2, 3
+    const fundamentals = oscs.filter((o) => o.type === 'triangle');
+    expect(fundamentals).toHaveLength(2);
+    expect(fundamentals[0].frequency.value).toBe(440);
+    expect(Math.abs(fundamentals[1].frequency.value - 261.63)).toBeLessThan(1);
+    expect(oscs.filter((o) => o.type === 'sine').map((o) => Math.round(o.frequency.value / 440))).toContain(2);
   });
 });

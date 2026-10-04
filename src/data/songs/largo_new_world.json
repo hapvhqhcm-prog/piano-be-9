@@ -1,0 +1,129 @@
+{
+ "id": "largo_new_world",
+ "title": "Largo — New World Symphony",
+ "titleVi": "Khúc Largo (Thế giới mới)",
+ "composer": "Antonín Dvořák (1893)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Original simple 5-finger arrangement for this app",
+ "attributionRequired": false,
+ "hand": "RH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 6,
+ "phrases": [
+  0,
+  4
+ ],
+ "notes": [
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "G4",
+   "beats": 2,
+   "finger": 5
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 2,
+   "finger": 1
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 4,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "G4",
+   "beats": 2,
+   "finger": 5
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 2,
+   "finger": 1
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "C4",
+   "beats": 4,
+   "finger": 1
+  }
+ ]
+}

@@ -1,0 +1,145 @@
+{
+ "id": "old_macdonald",
+ "title": "Old MacDonald Had a Farm",
+ "titleVi": "Ông MacDonald có trang trại",
+ "composer": "Dân ca Mỹ (traditional)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Original simple 5-finger arrangement for this app",
+ "attributionRequired": false,
+ "hand": "RH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 8,
+ "extension": "A4",
+ "phrases": [
+  0,
+  4
+ ],
+ "notes": [
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 2,
+   "finger": 1
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "F4",
+   "beats": 3,
+   "finger": 4
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 2,
+   "finger": 1
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "F4",
+   "beats": 4,
+   "finger": 4
+  }
+ ]
+}

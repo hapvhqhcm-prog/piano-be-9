@@ -1,6 +1,7 @@
 # ĐỀ XUẤT GIÁO TRÌNH v2 — "Hành trình tới Lâu đài Âm nhạc"
 
-Trạng thái: **CHỜ OWNER DUYỆT** (CURRICULUM LOCK §0). Chưa có dòng code nào được đổi theo đề xuất này.
+Trạng thái: **ĐÃ DUYỆT & ĐÃ LÀM** — OWNER duyệt 2026-10-04: giáo trình v2 cho trọn tuần 1–8 trong một lượt (bỏ qua STOP-GATE),
+~18 bài hát có nốt La (A4 = ngón 5 duỗi, từ tuần 7), âm thanh tổng hợp (không tải Salamander).
 
 Giữ nguyên (không đề xuất đổi): số ngón §6, 60 BPM, lịch 4–5 buổi/tuần × 10–15', mục tiêu 8 tuần (3–4 bài tay phải),
 tiêu chí qua tuần 1–3, nguyên tắc "một màn hình — một nhiệm vụ", không khóa/không phạt, app không nghe đàn.

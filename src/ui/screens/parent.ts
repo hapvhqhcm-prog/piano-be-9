@@ -1,4 +1,5 @@
-import { MAX_WEEK, PHASE1_WEEKS, findLesson, weekPassed, weekPlan } from '../../lessons/lessonEngine';
+import { WEEKS, findLesson, weekPassed, weekPlan } from '../../lessons/lessonEngine';
+import { findTune } from '../../music/exercises';
 import { RATING_STARS, isEmptySession } from '../../progress/ProgressStore';
 import { CHECKLIST_ITEMS, localDateStr, type AppData, type Session, type Settings } from '../../progress/schema';
 import type { App } from '../App';
@@ -19,8 +20,14 @@ function mondayOf(d: Date): Date {
 
 function lessonName(id: string): string {
   const l = findLesson(id);
-  return l ? `${l.emoji} ${l.title}` : id;
+  if (l) return `${l.emoji} ${l.title}`;
+  const m = /^w\d+-song-(.+)$/.exec(id);
+  if (m) return `🎵 ${findTune(m[1])?.titleVi ?? m[1]} (tự chọn)`;
+  return id;
 }
+
+const MODE_LABEL = { wait: 'Từng nốt', tempo: 'Theo nhịp' } as const;
+const HINT_LABEL = { full: 'phím sáng', names: 'tên nốt', staff: 'chỉ khuông' } as const;
 
 function table(head: string[], rows: (string | number)[][]): HTMLElement {
   if (rows.length === 0) return h('p', { class: 'muted' }, 'Chưa có dữ liệu');
@@ -213,6 +220,29 @@ export function parentScreen(app: App) {
         h(
           'section',
           { class: 'card' },
+          h('h2', {}, 'Bài hát & nhịp — các lượt chơi'),
+          h('p', { class: 'muted' }, '"Ai chấm": 🎤 micro tự chấm từng nốt, 👪 bố mẹ đánh giá cả lượt.'),
+          table(
+            ['Ngày', 'Bài', 'Chế độ', 'Gợi ý', 'Nhịp', 'Kết quả', 'Ai chấm'],
+            d.sessions
+              .flatMap((s) => s.songRuns.map((r) => ({ s, r })))
+              .slice(-12)
+              .reverse()
+              .map(({ s, r }) => [
+                s.date,
+                (findTune(r.songId)?.titleVi ?? r.songId) + (r.phrase ? ` (ô ${r.phrase[0] + 1}–${r.phrase[1]})` : ''),
+                MODE_LABEL[r.mode] + (r.level ? ` M${r.level}` : ''),
+                HINT_LABEL[r.hints],
+                r.mode === 'tempo' ? r.bpm : '—',
+                `${r.passed ? '✅' : '⏳'} ${r.source === 'mic' ? `${r.hits}/${r.total}` : ''}`,
+                r.source === 'mic' ? '🎤' : '👪',
+              ]),
+          ),
+        ),
+
+        h(
+          'section',
+          { class: 'card' },
           h('h2', {}, 'Bé tự đánh giá'),
           table(
             ['Ngày', 'Bài', 'Bé chọn', 'Sao'],
@@ -306,9 +336,9 @@ export function parentScreen(app: App) {
                 (v) => set({ autoAdvanceDelaySec: v }),
               )
             : null,
-          h('h3', {}, 'Tuần hiện tại (Phase 1: tuần 1–' + MAX_WEEK + ')'),
+          h('h3', {}, 'Tuần hiện tại (giáo trình v2: tuần 1–8) — chỉ đổi khi cần'),
           segmented(
-            PHASE1_WEEKS.map((w) => ({ value: w.week, label: `Tuần ${w.week}` })),
+            WEEKS.map((w) => ({ value: w.week, label: `${w.islandEmoji} ${w.week}` })),
             week,
             (v) => {
               store.setCurrentWeek(v);
@@ -349,10 +379,36 @@ export function parentScreen(app: App) {
                 ),
               )
             : null,
-          h('h3', {}, 'Tay trái — mở ở Phase 3 (tuần 6)'),
-          segmented([{ value: 'off', label: 'Chưa kích hoạt' }], 'off', () => undefined, true),
-          h('h3', {}, 'Giới hạn mỗi ngày — Phase 3'),
-          segmented([{ value: 'none', label: 'Không giới hạn' }], 'none', () => undefined, true),
+          h('h3', {}, 'Nhạc đệm khi đàn theo nhịp ("bố mẹ đàn cùng")'),
+          h('p', { class: 'muted' }, 'Khi micro đang bật, nhạc đệm tự tắt để micro nghe rõ tiếng đàn của bé.'),
+          segmented(
+            [
+              { value: 'on', label: 'Bật' },
+              { value: 'off', label: 'Tắt' },
+            ],
+            s.accompaniment ? 'on' : 'off',
+            (v) => set({ accompaniment: v === 'on' }),
+          ),
+          h('h3', {}, 'Tay trái — tự bật từ tuần 6'),
+          segmented(
+            [
+              { value: 'auto', label: 'Tự động (tuần 6)' },
+              { value: 'on', label: 'Bật ngay' },
+            ],
+            s.leftHandEnabled ? 'on' : 'auto',
+            (v) => set({ leftHandEnabled: v === 'on' }),
+          ),
+          h('h3', {}, 'Giới hạn mỗi ngày (mặc định không giới hạn)'),
+          segmented(
+            [
+              { value: 'none' as const, label: 'Không giới hạn' },
+              { value: 15 as const, label: '15 phút' },
+              { value: 20 as const, label: '20 phút' },
+              { value: 30 as const, label: '30 phút' },
+            ],
+            s.dailyLimit,
+            (v) => set({ dailyLimit: v }),
+          ),
           h('h3', {}, 'Tên của bé (hiện ở màn chào)'),
           (() => {
             const input = h('input', { class: 'text-in', type: 'text', value: d.learner.name, maxlength: '20' });

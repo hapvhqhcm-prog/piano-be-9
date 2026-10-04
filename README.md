@@ -1,4 +1,4 @@
-# Piano bé — PIANO-BE-9-TUOI (Phase 1)
+# Piano bé — PIANO-BE-9-TUOI (giáo trình v2, tuần 1–8)
 
 **Bản đang chạy:** https://hapvhqhcm-prog.github.io/piano-be-9/
 
@@ -10,6 +10,18 @@ chỉ phím, chỉ ngón, phát âm mẫu. Khi bật micro, app **nghe đàn cơ
 - **Micro (tùy chọn, mặc định tắt):** app nghe đàn cơ và tự chấm từng nốt — xử lý ngay trên iPad,
   không ghi âm, không gửi đi đâu. Đây là quyền duy nhất app xin (OWNER mở khóa ngày 2026-10-04).
 - Offline-first: sau lần mở đầu tiên từ GitHub Pages, app chạy hoàn toàn không cần mạng.
+
+## Có gì trong app
+
+- **Hành trình 8 tuần** (bản đồ đảo): Đảo Phím Đen → Làng Đô Rê Mi → Cầu thang Sol → Rừng Nhịp →
+  Sân khấu nhỏ → Hồ Tấm Gương (tay trái) → Thư viện Nốt (đọc khuông) → Lâu đài Âm nhạc (biểu diễn).
+- **Mỗi buổi 10–15'**: Tư thế → Ôn nhanh → Khởi động tai/đọc nốt → Bài mới → Con làm thầy → Tự đánh giá.
+- **Trò chơi**: Lên hay xuống? · Bước hay nhảy? · Nốt nào đây? (có mốc Đô) · Đọc nốt · Nhại lại (con vẹt) · Vỗ nhịp.
+- **18 bài hát** public domain (tự soạn bản 5 ngón) + 2 bài tập nhịp; **Thư viện** để bé tự chọn bài.
+- **Màn bài hát**: Từng nốt (chờ bé đàn đúng) · Theo nhịp (đếm vào, máy gõ nhịp, nhạc đệm; con trỏ hoặc băng chuyền) ·
+  tập từng câu · tốc độ 40/50/60 · khuông nhạc với gợi ý rút dần (phím sáng → tên nốt → chỉ khuông).
+- **Micro (tùy chọn)** chấm từng nốt và chấm nhịp; không có micro thì bố mẹ đánh giá.
+- Chạm phím → **số ngón nảy lên** + hình bàn tay; tay trái màu cam từ tuần 6; La = ngón 5 duỗi từ tuần 7.
 
 ## Chạy trên máy (Windows)
 
@@ -60,7 +72,9 @@ iPad nhận bản mới ở **lần mở thứ hai** sau khi deploy (lần đầ
 
 ## Thêm / sửa bài hát JSON
 
-File ở `src/data/songs/*.json`, định dạng v1 (§12), chỉ các trường:
+File ở `src/data/songs/*.json` (định dạng v2 — v1 §12 + `week`, `phrases`, `extension`, dấu lặng `rest`).
+Cách nhanh nhất: sửa danh sách trong `scripts/gen-songs.py` rồi chạy `py scripts/gen-songs.py`.
+Các trường:
 
 ```json
 {
@@ -74,29 +88,33 @@ File ở `src/data/songs/*.json`, định dạng v1 (§12), chỉ các trường
   "hand": "RH",
   "bpm": 60,
   "timeSignature": "4/4",
-  "notes": [{ "pitch": "E4", "beats": 1, "finger": 3 }]
+  "week": 5,
+  "extension": "A4",
+  "phrases": [0, 4],
+  "notes": [{ "pitch": "E4", "beats": 1, "finger": 3 }, { "rest": true, "beats": 1 }]
 }
 ```
 
 Luật (test `tests/song-validation.test.ts` kiểm tra tự động):
-- RH: mọi nốt trong C4–G4, ngón đúng §6 (C4=1 D4=2 E4=3 F4=4 G4=5).
+- RH: mọi nốt trong C4–G4, ngón đúng §6 (C4=1 D4=2 E4=3 F4=4 G4=5); bài có `"extension": "A4"` thêm A4 = ngón 5 duỗi (chỉ tuần 7–8).
 - LH: C3–G3 (C3=5 D3=4 E3=3 F3=2 G3=1).
 - Tổng phách chia hết cho 4. Không thêm trường lạ.
-- Mọi thay đổi bài hát cần OWNER duyệt (CURRICULUM LOCK). Thêm bài mới cần thêm vào danh sách trong test.
-
-Bài hát chưa được dùng trong app ở Phase 1 (Phase 2 mới dùng).
+- Mọi thay đổi bài hát cần OWNER duyệt (CURRICULUM LOCK). Thêm bài thì sửa số lượng trong `tests/song-validation.test.ts`.
+- Muốn bài xuất hiện trong giáo trình: thêm `{ kind: 'song', songId: '…' }` vào bài học trong `src/lessons/weekN.ts`.
+  Mọi bài tự xuất hiện trong **Thư viện** từ tuần `week`.
 
 ## Cấu trúc
 
 ```
-src/audio/        AudioEngine.ts — oscillator triangle + ADSR, không phụ thuộc DOM
-src/piano/        pitchTable.ts, fingering.ts (khóa cứng §6), PianoKey.ts, PianoKeyboard.ts
-src/practice/     PracticeStateMachine.ts (§5), EarGame.ts (APP_ASSESSMENT)
-src/lessons/      lessonEngine.ts, week1–3.ts, types.ts, targets.ts
+src/audio/        AudioEngine.ts (tiếng giống piano, gõ nhịp), pitchDetect.ts (YIN), MicListener.ts
+src/music/        tune.ts (bài hát, câu, nhạc đệm), timing.ts (chấm nhịp), staff.ts (khuông), exercises.ts
+src/piano/        pitchTable.ts, fingering.ts (khóa cứng §6 + A4 duỗi), PianoKey.ts, PianoKeyboard.ts
+src/practice/     PracticeStateMachine.ts (§5), quiz.ts (trò nghe/đọc)
+src/lessons/      lessonEngine.ts (kế hoạch buổi, tiêu chí 8 tuần), week1–8.ts, types.ts, targets.ts
 src/progress/     schema.ts (v1), migrations.ts, ProgressStore.ts
 src/ui/           App.ts, screens/, components/
 src/pwa/          sw-template.js (vite.config.ts sinh dist/sw.js)
-tests/            70 test: fingering, pitchTable, schema, song-validation, state machine, lessons, audio
+tests/            test tự động: ngón, cao độ, schema, bài hát, state machine, giáo trình, micro, nhịp, khuông, trò chơi
 scripts/          make-icons.mjs (sinh icon PNG), deploy.mjs
 ```
 

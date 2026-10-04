@@ -834,3 +834,364 @@ p {
     font-weight: 800;
   }
 }
+
+/* =========================================================
+   Giáo trình v2: bản đồ, bài hát, khuông nhạc, nhịp, thư viện
+   ========================================================= */
+
+/* ---------- Bản đồ đảo ---------- */
+.map {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  padding: 0 12px 4px;
+  position: relative;
+}
+.island {
+  position: relative;
+  flex: 1 1 0;
+  max-width: 130px;
+  min-height: 74px;
+  border-radius: 16px;
+  background: #f3ecdf;
+  border: 2px dashed #d9ccb6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  text-align: center;
+}
+.island.passed {
+  background: #e3f5ea;
+  border: 2px solid var(--good);
+}
+.island.here {
+  background: #fff2c6;
+  border: 3px solid #f1b72b;
+  transform: scale(1.06);
+}
+.island.later {
+  opacity: 0.55;
+}
+.island-emoji {
+  font-size: 30px;
+  line-height: 1.1;
+}
+.island-name {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.15;
+}
+.island-badge {
+  position: absolute;
+  top: -10px;
+  right: -6px;
+  background: var(--good);
+  color: #fff;
+  border-radius: 999px;
+  min-width: 26px;
+  height: 26px;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.island-badge.here {
+  background: transparent;
+  font-size: 22px;
+}
+.home-stage {
+  gap: 12px;
+}
+.story {
+  font-size: 22px;
+  color: var(--muted);
+  max-width: 980px;
+  font-style: italic;
+}
+
+/* ---------- Màn bài hát ---------- */
+.song-head {
+  padding: 8px 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.song-title {
+  font-size: 26px;
+}
+.song-title .muted {
+  font-size: 18px;
+}
+.song-opts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.seg-btn.small {
+  min-height: 48px;
+  min-width: 64px;
+  font-size: 20px;
+  padding: 4px 12px;
+}
+.song-staff {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+}
+.song-status {
+  flex: 0 0 auto;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 26px;
+  text-align: center;
+  padding: 0 16px;
+}
+.song-progress {
+  color: var(--muted);
+  font-size: 20px;
+}
+.keyboard-wrap.song-kb {
+  flex-basis: 30vh;
+}
+.countin {
+  font-size: 64px;
+  font-weight: 900;
+  color: var(--primary);
+  min-height: 1.1em;
+  line-height: 1.1;
+}
+.stars.small {
+  font-size: 40px;
+  letter-spacing: 2px;
+}
+
+/* ---------- Khuông nhạc ---------- */
+.staff {
+  width: 100%;
+  max-width: 1150px;
+  height: 100%;
+  max-height: 230px;
+}
+.staff svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.staff-mini {
+  width: 260px;
+  height: 150px;
+  max-height: 150px;
+}
+.staff-line,
+.staff-bar,
+.staff-ledger {
+  stroke: #3a3a44;
+  stroke-width: 1.6;
+}
+.staff-bar.end {
+  stroke-width: 4;
+}
+.staff-clef {
+  fill: none;
+  stroke: #3a3a44;
+  stroke-width: 3.2;
+  stroke-linecap: round;
+}
+.staff-time {
+  font-size: 26px;
+  font-weight: 900;
+  text-anchor: middle;
+  fill: #3a3a44;
+}
+.staff-head {
+  fill: #2b2a33;
+  stroke: #2b2a33;
+  stroke-width: 1.5;
+}
+.staff-head.hollow {
+  fill: #fff;
+  stroke-width: 2.6;
+}
+.staff-stem,
+.staff-flag {
+  stroke: #2b2a33;
+  stroke-width: 2;
+  fill: none;
+}
+.staff-rest,
+.staff-rest-q {
+  fill: #2b2a33;
+  stroke: #2b2a33;
+  stroke-width: 2.4;
+}
+.staff-rest-q {
+  fill: none;
+}
+.staff-finger {
+  font-size: 17px;
+  font-weight: 800;
+  text-anchor: middle;
+  fill: var(--rh);
+}
+.staff-name {
+  font-size: 16px;
+  font-weight: 700;
+  text-anchor: middle;
+  fill: var(--muted);
+}
+.staff-note.now .staff-head {
+  fill: var(--primary);
+  stroke: var(--primary);
+}
+.staff-note.now .staff-head.hollow {
+  fill: #dfe8fb;
+}
+.staff-note.now .staff-name {
+  fill: var(--primary);
+  font-size: 19px;
+}
+.staff-note.hit .staff-head {
+  fill: var(--good);
+  stroke: var(--good);
+}
+.staff-note.hit .staff-head.hollow {
+  fill: var(--rh-soft);
+}
+.staff-note.miss .staff-head {
+  fill: #e9a25a;
+  stroke: #e9a25a;
+}
+.staff-playhead {
+  stroke: #e04848;
+  stroke-width: 3;
+  stroke-dasharray: 6 4;
+}
+
+/* ---------- Trò chơi lựa chọn ---------- */
+.choice-row {
+  display: flex;
+  gap: 28px;
+  justify-content: center;
+}
+
+/* ---------- Nhịp ---------- */
+.rh-row {
+  display: flex;
+  gap: 8px;
+  width: min(1050px, 92vw);
+}
+.rh-cell {
+  flex: 1 1 0;
+  border-radius: 16px;
+  border: 3px solid var(--line);
+  background: var(--card);
+  padding: 10px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.rh-cell.rh-rest {
+  background: #f3ecdf;
+}
+.rh-cell.now {
+  border-color: var(--primary);
+  background: #e6eefc;
+  transform: scale(1.05);
+}
+.rh-emoji {
+  font-size: 40px;
+}
+.rh-label {
+  font-size: 20px;
+  font-weight: 800;
+}
+
+/* ---------- Thư viện ---------- */
+.library {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 8px 20px 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 14px;
+  align-content: start;
+}
+.song-card {
+  min-height: 110px;
+  text-align: left;
+  border-radius: var(--radius);
+  border: 3px solid var(--line);
+  background: var(--card);
+  padding: 12px 16px;
+  font: inherit;
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.song-card.locked {
+  opacity: 0.5;
+}
+.song-card-title {
+  font-size: 24px;
+  font-weight: 800;
+}
+.song-card-sub,
+.song-card-week {
+  font-size: 18px;
+  color: var(--muted);
+}
+.scroll-y {
+  overflow-y: auto;
+  justify-content: flex-start;
+}
+.lead.big {
+  font-size: 32px;
+  color: var(--ink);
+  font-weight: 700;
+}
+.hero-emoji.medal {
+  animation: finger-pop 0.6s ease-out;
+}
+
+@media (max-height: 760px) {
+  .island-emoji {
+    font-size: 24px;
+  }
+  .island {
+    min-height: 60px;
+  }
+  .island-name {
+    font-size: 13px;
+  }
+  .story {
+    font-size: 19px;
+  }
+}
+
+/* Tuần 7: thẻ nốt có khuông nhạc */
+.note-view.staff-row {
+  flex-direction: row;
+  gap: 36px;
+}
+.staff-row .staff-mini {
+  width: 300px;
+  height: 230px;
+  max-height: 230px;
+}
+.staff-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}

@@ -1,7 +1,8 @@
 import { pitchFreq, type Pitch } from '../piano/pitchTable';
 
 /**
- * AudioEngine — Phase 1: OscillatorNode (triangle) + envelope ADSR ngắn.
+ * AudioEngine — tiếng đàn tổng hợp "giống piano" (OWNER chọn thay cho sample Salamander):
+ * 3 họa âm + tắt dần; tiếng gõ nhịp; hẹn giờ nốt theo đồng hồ AudioContext.
  * Không phụ thuộc DOM: chỉ cần một AudioContext (được tiêm vào để test).
  * AudioContext chỉ được tạo/resume trong unlock(), gọi từ thao tác chạm.
  */
@@ -59,12 +60,18 @@ function defaultFactory(): AudioContext {
 interface Voice {
   osc: OscillatorNode;
   gain: GainNode;
+  extra?: OscillatorNode[];
+  extraGains?: GainNode[];
 }
 
 export class AudioEngine {
   private ctx: AudioContext | null = null;
   private master: GainNode | null = null;
   private voices = new Set<Voice>();
+  /** Mọi nốt đã hẹn (kể cả bè đệm không chặn micro) — để stopAll() dừng hết. */
+  private allVoices = new Set<Voice>();
+  /** Tiếng gõ nhịp đã hẹn — stopAll() hủy luôn. */
+  private clicks = new Set<OscillatorNode>();
   private listeners = new Set<(s: EngineState) => void>();
   private generation = 0;
   private busyCount = 0;
@@ -158,50 +165,153 @@ export class AudioEngine {
     return this.isRunning;
   }
 
-  /** Phát một tần số; resolve khi nốt tắt hẳn. */
+  /** Thời gian của AudioContext (giây) — dùng để hẹn giờ phát nốt theo nhịp. */
+  now(): number {
+    return this.ctx?.currentTime ?? 0;
+  }
+
+  /** Phát một tần số ngay; resolve khi nốt tắt hẳn. */
   playFreq(freq: number, duration = 0.9, volume = 1): Promise<void> {
+    const ctx = this.ctx;
+    if (!ctx || !this.master) return Promise.resolve();
+    if (ctx.state !== 'running') ctx.resume().catch(() => undefined);
+    return this.scheduleFreq(freq, ctx.currentTime + 0.01, duration, volume);
+  }
+
+  /**
+   * Hẹn giờ một nốt "giống piano" tại thời điểm `when` (giây, đồng hồ AudioContext):
+   * 3 họa âm (tam giác + sin bậc 2, 3), búa gõ nhanh rồi tắt dần; nốt trầm ngân lâu hơn nốt cao.
+   * track=false: không tính là "app đang phát" (để micro vẫn nghe được) — dùng cho bè đệm xa cao độ.
+   */
+  scheduleFreq(freq: number, when: number, duration = 0.9, volume = 1, track = true): Promise<void> {
     const ctx = this.ctx;
     const master = this.master;
     if (!ctx || !master) return Promise.resolve();
-    if (ctx.state !== 'running') ctx.resume().catch(() => undefined);
+    const start = Math.max(when, ctx.currentTime);
+    const peak = DEFAULT_ENVELOPE.peak * volume;
+    // Thời gian tắt tự nhiên: ~2,4 s ở C3, ~1,1 s ở C5
+    const decayT = Math.max(0.8, Math.min(2.6, 2.4 * Math.pow(130.8 / freq, 0.55)));
+    const release = 0.12;
+    const offAt = start + Math.min(duration, decayT);
+    const end = offAt + release;
 
-    const start = ctx.currentTime + 0.01;
-    const env = { ...DEFAULT_ENVELOPE, peak: DEFAULT_ENVELOPE.peak * volume };
-    const pts = envelopePoints(start, duration, env);
-    const end = pts[pts.length - 1].t;
+    const partials: Array<{ mult: number; type: OscillatorType; amp: number; speed: number }> = [
+      { mult: 1, type: 'triangle', amp: 1, speed: 1 },
+      { mult: 2.0016, type: 'sine', amp: 0.32, speed: 1.6 },
+      { mult: 3.004, type: 'sine', amp: 0.12, speed: 2.4 },
+    ];
+    const oscs: OscillatorNode[] = [];
+    const gains: GainNode[] = [];
+    for (const p of partials) {
+      const osc = ctx.createOscillator();
+      osc.type = p.type;
+      osc.frequency.value = freq * p.mult;
+      const g = ctx.createGain();
+      const a = peak * p.amp;
+      const t = decayT / p.speed;
+      const env = g.gain;
+      env.setValueAtTime(0, start);
+      env.linearRampToValueAtTime(a, start + 0.005);
+      // Tắt dần kiểu hàm mũ, xấp xỉ bằng các đoạn thẳng
+      const pts: Array<[number, number]> = [
+        [0.08, 0.62],
+        [0.3, 0.38],
+        [0.6, 0.2],
+        [1, 0.07],
+      ];
+      for (const [ft, fv] of pts) {
+        const at = start + 0.005 + ft * t;
+        if (at >= offAt) break;
+        env.linearRampToValueAtTime(a * fv, at);
+      }
+      env.linearRampToValueAtTime(a * 0.05, offAt);
+      env.linearRampToValueAtTime(0, end);
+      osc.connect(g);
+      g.connect(master);
+      osc.start(start);
+      osc.stop(end + 0.02);
+      oscs.push(osc);
+      gains.push(g);
+    }
 
-    const osc = ctx.createOscillator();
-    osc.type = 'triangle';
-    osc.frequency.value = freq;
-    const gain = ctx.createGain();
-    gain.gain.setValueAtTime(0, start);
-    for (const p of pts.slice(1)) gain.gain.linearRampToValueAtTime(p.v, p.t);
-    osc.connect(gain);
-    gain.connect(master);
-    osc.start(start);
-    osc.stop(end + 0.02);
-
-    const voice: Voice = { osc, gain };
-    this.voices.add(voice);
+    const voice: Voice = { osc: oscs[0], gain: gains[0], extra: oscs.slice(1), extraGains: gains.slice(1) };
+    if (track) this.voices.add(voice);
+    this.allVoices.add(voice);
     return new Promise((resolve) => {
       let done = false;
       const finish = () => {
         if (done) return;
         done = true;
-        this.voices.delete(voice);
-        this.lastSoundEnd = Date.now();
+        this.allVoices.delete(voice);
+        if (track) {
+          this.voices.delete(voice);
+          this.lastSoundEnd = Date.now();
+        }
         try {
-          osc.disconnect();
-          gain.disconnect();
+          oscs.forEach((o) => o.disconnect());
+          gains.forEach((g) => g.disconnect());
         } catch {
           /* bỏ qua */
         }
         resolve();
       };
-      osc.onended = finish;
+      oscs[0].onended = finish;
       // Phòng khi context bị treo (onended không bao giờ tới).
-      setTimeout(finish, (end - start) * 1000 + 250);
+      setTimeout(finish, (end - ctx.currentTime) * 1000 + 250);
     });
+  }
+
+  /**
+   * Tiếng gõ nhịp (metronome): rất ngắn, cao (~1,6–2 kHz) — nằm ngoài dải micro nghe đàn
+   * nên KHÔNG làm micro bỏ qua.
+   */
+  click(when: number, accent = false): void {
+    const ctx = this.ctx;
+    const master = this.master;
+    if (!ctx || !master) return;
+    const t = Math.max(when, ctx.currentTime);
+    const osc = ctx.createOscillator();
+    osc.type = 'square';
+    osc.frequency.value = accent ? 2000 : 1600;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(accent ? 0.25 : 0.15, t + 0.002);
+    g.gain.linearRampToValueAtTime(0, t + 0.035);
+    osc.connect(g);
+    g.connect(master);
+    osc.start(t);
+    osc.stop(t + 0.05);
+    this.clicks.add(osc);
+    osc.onended = () => {
+      this.clicks.delete(osc);
+      try {
+        osc.disconnect();
+        g.disconnect();
+      } catch {
+        /* bỏ qua */
+      }
+    };
+  }
+
+  /** Tiếng vỗ tay của khán giả (sân khấu) — nhiễu trắng ngắt quãng. */
+  applause(seconds = 2.5): void {
+    const ctx = this.ctx;
+    const master = this.master;
+    if (!ctx || !master) return;
+    const len = Math.floor(ctx.sampleRate * seconds);
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    let clap = 0;
+    for (let i = 0; i < len; i++) {
+      if (Math.random() < 0.0009) clap = 1;
+      clap *= 0.9993;
+      const fade = Math.min(1, i / (0.3 * ctx.sampleRate), (len - i) / (0.8 * ctx.sampleRate));
+      data[i] = (Math.random() * 2 - 1) * (0.15 + 0.6 * clap) * fade * 0.5;
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(master);
+    src.start();
   }
 
   playPitch(pitch: Pitch, duration = 0.9): Promise<void> {
@@ -257,12 +367,24 @@ export class AudioEngine {
     const ctx = this.ctx;
     if (!ctx) return;
     const now = ctx.currentTime;
-    for (const v of this.voices) {
+    for (const c of this.clicks) {
       try {
-        v.gain.gain.cancelScheduledValues(now);
-        v.gain.gain.setValueAtTime(v.gain.gain.value, now);
-        v.gain.gain.linearRampToValueAtTime(0, now + 0.04);
-        v.osc.stop(now + 0.05);
+        c.stop(now);
+      } catch {
+        /* bỏ qua */
+      }
+    }
+    this.clicks.clear();
+    for (const v of this.allVoices) {
+      const gs = [v.gain, ...(v.extraGains ?? [])];
+      const os = [v.osc, ...(v.extra ?? [])];
+      try {
+        for (const g of gs) {
+          g.gain.cancelScheduledValues(now);
+          g.gain.setValueAtTime(g.gain.value, now);
+          g.gain.linearRampToValueAtTime(0, now + 0.04);
+        }
+        for (const o of os) o.stop(now + 0.05);
       } catch {
         /* bỏ qua */
       }

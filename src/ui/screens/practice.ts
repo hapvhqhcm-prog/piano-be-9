@@ -7,6 +7,19 @@ import {
   type ResultSource,
 } from '../../practice/PracticeStateMachine';
 import { midiToPitch, noteLabel } from '../../piano/pitchTable';
+import { fingerFor, fingerOnKeyboard } from '../../piano/fingering';
+import { leftHandActive } from '../../lessons/lessonEngine';
+import { StaffView } from '../components/staffView';
+
+/** Khuông nhỏ hiện một nốt (tuần 7). */
+function miniStaff(pitch: string): HTMLElement {
+  const sv = new StaffView(
+    { id: `mini-${pitch}`, title: '', titleVi: pitch, hand: 'RH', bpm: 60, timeSignature: '4/4', notes: [{ pitch, beats: 4 }] },
+    { names: false, fingers: false, measuresPerPage: 1, pxPerBeat: 30 },
+  );
+  sv.el.classList.add('staff-mini');
+  return sv.el;
+}
 import type { App } from '../App';
 import { backButton, button, h } from '../components/dom';
 import { FINGER_NAMES, handDiagram } from '../components/handDiagram';
@@ -53,6 +66,7 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
 
     // --- Micro: theo dõi lượt hiện tại ---
     let heardKeys = new Set<string>();
+    let seqPos = 0;
     let firstHeard: string | null = null;
     let wrongCount = 0;
     let micForIndex = -1;
@@ -61,6 +75,7 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
       if (micForIndex === index) return;
       micForIndex = index;
       heardKeys = new Set();
+      seqPos = 0;
       firstHeard = null;
       wrongCount = 0;
     };
@@ -70,7 +85,13 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
       el.textContent = text;
       el.dataset.kind = kind;
     };
-    const kb = new PianoKeyboard({ labels: 'c', onPress: (p) => void app.audio.playPitch(p) });
+    const lhOn = leftHandActive(app.store.get());
+    const kb = new PianoKeyboard({
+      labels: 'c',
+      fingerOnPress: (p) => fingerOnKeyboard(p, lhOn),
+      onPress: (p) => void app.audio.playPitch(p),
+    });
+    const fingerOf = (t: Target, pitch: string) => fingerFor(pitch, t.hand ?? 'RH', true);
     const stage = h('div', { class: 'stage' });
     const bar = h('div', { class: 'actions' });
     root.append(h('div', { class: 'screen' }, stage, h('div', { class: 'keyboard-wrap' }, kb.el), bar));
@@ -87,23 +108,57 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
     const progress = () =>
       h('div', { class: 'progress' }, `${sm.snapshot.index + 1} / ${sm.snapshot.total}`);
 
+    const micRow = (t: Target) =>
+      micOn() && t.keys.length > 0
+        ? h(
+            'div',
+            { class: 'mic-row' },
+            h('div', { class: 'mic-level' }, h('span', { class: 'mic-level-bar' })),
+            h('div', { class: 'mic-hint', dataset: { kind: 'listen' } }, '🎤 Nghe mẫu xong rồi con đàn nhé'),
+          )
+        : null;
+
+    const fingerView = (t: Target) =>
+      t.sequence
+        ? h(
+            'div',
+            { class: `finger-big hand-${(t.hand ?? 'RH').toLowerCase()}` },
+            'Ngón ' + t.keys.map((k) => fingerOf(t, k) ?? '?').join(' – '),
+          )
+        : t.finger
+          ? t.staff
+            ? h('div', { class: `finger-big hand-${(t.hand ?? 'RH').toLowerCase()}` }, `Ngón ${t.finger}`)
+            : fingerRow(t.finger, t.hand ?? 'RH')
+          : t.emoji
+            ? h('div', { class: 'finger-big' }, t.emoji)
+            : null;
+
     const noteView = (t: Target) =>
-      h(
-        'div',
-        { class: 'note-view' },
-        progress(),
-        h('div', { class: 'note-big' }, t.title),
-        t.finger ? fingerRow(t.finger, t.hand ?? 'RH') : t.emoji ? h('div', { class: 'finger-big' }, t.emoji) : null,
-        t.subtitle ? h('div', { class: 'note-sub' }, t.subtitle) : null,
-        micOn() && t.keys.length > 0
-          ? h(
+      t.staff
+        ? // Tuần 7: khuông nhạc bên trái, tên + ngón bên phải
+          h(
+            'div',
+            { class: 'note-view staff-row' },
+            progress(),
+            miniStaff(t.keys[0]),
+            h(
               'div',
-              { class: 'mic-row' },
-              h('div', { class: 'mic-level' }, h('span', { class: 'mic-level-bar' })),
-              h('div', { class: 'mic-hint', dataset: { kind: 'listen' } }, '🎤 Nghe mẫu xong rồi con đàn nhé'),
-            )
-          : null,
-      );
+              { class: 'staff-text' },
+              h('div', { class: 'note-big' }, t.title),
+              fingerView(t),
+              t.subtitle ? h('div', { class: 'note-sub' }, t.subtitle) : null,
+              micRow(t),
+            ),
+          )
+        : h(
+            'div',
+            { class: 'note-view' },
+            progress(),
+            h('div', { class: 'note-big' }, t.title),
+            fingerView(t),
+            t.subtitle ? h('div', { class: 'note-sub' }, t.subtitle) : null,
+            micRow(t),
+          );
 
     const showTargetOnKeyboard = (t: Target) => {
       kb.setResult(null, null);
@@ -111,7 +166,7 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
         t.keys.map((pitch) => ({
           pitch,
           hand: t.hand ?? 'RH',
-          finger: t.keys.length === 1 ? t.finger : undefined,
+          finger: t.keys.length === 1 ? t.finger : t.sequence ? fingerOf(t, pitch) : undefined,
         })),
       );
       kb.setGuides(t.guides ?? []);
@@ -275,6 +330,22 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
       if (t.keys.length === 0) return;
       const heard = midiToPitch(n.midi);
       firstHeard ??= heard;
+      if (t.sequence) {
+        // Nhại lại: phải đúng THỨ TỰ; sai giữa chừng thì làm lại từ đầu (nhẹ nhàng)
+        const want = t.keys[seqPos];
+        if (heard === want) {
+          seqPos++;
+          kb.setResult(heard, 'good');
+          if (seqPos >= t.keys.length) send('HEARD');
+          else micHint(`🎤 Đúng rồi! Tiếp theo…`, 'good');
+        } else {
+          wrongCount++;
+          seqPos = heard === t.keys[0] ? 1 : 0;
+          kb.setResult(heard, 'heard');
+          micHint(`🎤 Gần đúng! Đàn lại từ ${noteLabel(t.keys[0]).split(' / ')[0]} nhé`, 'wrong');
+        }
+        return;
+      }
       if (t.keys.includes(heard)) {
         heardKeys.add(heard);
         kb.setResult(heard, 'good');

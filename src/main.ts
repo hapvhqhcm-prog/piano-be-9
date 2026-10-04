@@ -46,3 +46,6 @@ installTouchGuards();
 installAudioOverlay(app.audio, () => app.started);
 registerServiceWorker();
 app.show(startScreen(app));
+
+// Chỉ bản dev: cho phép kiểm thử tự động điều khiển app (không có trong bản build).
+if (import.meta.env.DEV) (window as unknown as { __piano: App }).__piano = app;

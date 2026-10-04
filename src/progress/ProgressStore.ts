@@ -8,6 +8,7 @@ import {
   type ParentResult,
   type Session,
   type SelfRating,
+  type SongRun,
   type Settings,
 } from './schema';
 
@@ -28,7 +29,8 @@ export function isEmptySession(s: Session): boolean {
     s.selfRating === null &&
     s.parentAssessments.length === 0 &&
     s.appAssessments.length === 0 &&
-    s.micAssessments.length === 0
+    s.micAssessments.length === 0 &&
+    s.songRuns.length === 0
   );
 }
 
@@ -152,6 +154,7 @@ export class ProgressStore {
       parentAssessments: [],
       appAssessments: [],
       micAssessments: [],
+      songRuns: [],
       selfRating: null,
       startedAt: now.getTime(),
       endedAt: null,
@@ -211,6 +214,14 @@ export class ProgressStore {
   ): void {
     const s = this.session(sessionId);
     s.micAssessments.push({ ...rec, firstTry: rec.wrongCount === 0, ts: this.now().getTime() });
+    this.touch(s);
+    this.save();
+  }
+
+  /** Lượt chơi bài hát (theo nhịp / chế độ chờ). */
+  addSongRun(sessionId: string, run: Omit<SongRun, 'ts'>): void {
+    const s = this.session(sessionId);
+    s.songRuns.push({ ...run, ts: this.now().getTime() });
     this.touch(s);
     this.save();
   }

@@ -14,10 +14,9 @@ Mã nguồn app do dự án tự viết, dùng riêng cho gia đình (OWNER: Pha
 
 ## Âm thanh
 
-- Phase 1–2: âm thanh tổng hợp bằng Web Audio `OscillatorNode` (sóng tam giác + envelope ADSR),
-  không dùng file ghi âm nào.
-- Phase 3 (chưa làm): dự kiến dùng *Salamander Grand Piano* (Alexander Holm) — **CC-BY 3.0**.
-  Khi thêm sẽ ghi attribution đầy đủ tại đây và chỉ đóng gói các sample cần thiết C3–C5 vào app.
+- Âm thanh **tổng hợp** bằng Web Audio `OscillatorNode` (3 họa âm + tắt dần giống piano, tiếng gõ nhịp,
+  tiếng vỗ tay bằng nhiễu) — không dùng file ghi âm nào.
+- OWNER chọn **không** dùng bộ mẫu Salamander (2026-10-04) → không có tài nguyên âm thanh bên ngoài.
 
 ## Nhận cao độ qua micro
 
@@ -32,9 +31,23 @@ không dùng bản phối, bản thu âm hay file MIDI nào của bên ngoài.
 
 | id | Giai điệu | Tình trạng |
 |---|---|---|
-| `ode_to_joy_easy` | Ludwig van Beethoven, Giao hưởng số 9 (1824) — chủ đề "Ode to Joy" | Public domain |
-| `frere_jacques_easy` | "Frère Jacques", dân ca Pháp (thế kỷ 18) | Public domain |
-| `twinkle_easy` | "Ah! vous dirai-je, maman", giai điệu dân gian Pháp (thế kỷ 18) | Public domain |
+| `hot_cross_buns / _lh` | "Hot Cross Buns" — dân ca Anh | Public domain |
+| `mary_lamb / _lh` | "Mary Had a Little Lamb" — dân ca Mỹ (thế kỷ 19) | Public domain |
+| `au_clair / _lh` | "Au clair de la lune" — dân ca Pháp (thế kỷ 18) | Public domain |
+| `go_tell_aunt_rhody` | "Go Tell Aunt Rhody" — dân ca Mỹ | Public domain |
+| `lightly_row` | "Lightly Row" (Hänschen klein) — dân ca Đức | Public domain |
+| `ode_to_joy_easy` | Ludwig van Beethoven, Giao hưởng số 9 (1824) | Public domain |
+| `jingle_bells` | James Lord Pierpont (1857) | Public domain |
+| `saints` | "When the Saints Go Marching In" — spiritual (traditional) | Public domain |
+| `largo_new_world` | Antonín Dvořák, Giao hưởng "Thế giới mới" (1893) — chỉ giai điệu, không dùng lời | Public domain |
+| `frere_jacques_easy` | "Frère Jacques" — dân ca Pháp (thế kỷ 18) | Public domain |
+| `london_bridge` | "London Bridge Is Falling Down" — dân ca Anh | Public domain |
+| `twinkle_easy` | "Ah! vous dirai-je, maman" — dân ca Pháp (thế kỷ 18) | Public domain |
+| `this_old_man` | "This Old Man" — dân ca Anh | Public domain |
+| `old_macdonald` | "Old MacDonald Had a Farm" — dân ca Mỹ | Public domain |
+| `oh_susanna` | Stephen Foster (1848) | Public domain |
+
+Bài tập nhịp tuần 4 (`src/music/exercises.ts`) và bè đệm (tự sinh từ giai điệu) do dự án tự soạn.
 
 Chỉ hiển thị tên bài; không dùng lời bài hát có bản quyền.
 

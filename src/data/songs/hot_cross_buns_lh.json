@@ -1,0 +1,104 @@
+{
+ "id": "hot_cross_buns_lh",
+ "title": "Hot Cross Buns (left hand)",
+ "titleVi": "Bánh nóng — tay trái",
+ "composer": "Dân ca Anh (traditional)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Original simple 5-finger arrangement for this app",
+ "attributionRequired": false,
+ "hand": "LH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 6,
+ "phrases": [
+  0,
+  2
+ ],
+ "notes": [
+  {
+   "pitch": "E3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D3",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "C3",
+   "beats": 2,
+   "finger": 5
+  },
+  {
+   "pitch": "E3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D3",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "C3",
+   "beats": 2,
+   "finger": 5
+  },
+  {
+   "pitch": "C3",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "C3",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "C3",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "C3",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "D3",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "D3",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "D3",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "D3",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "E3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D3",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "C3",
+   "beats": 2,
+   "finger": 5
+  }
+ ]
+}

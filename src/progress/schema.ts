@@ -39,6 +39,27 @@ export interface MicAssessment {
   ts: number;
 }
 
+/**
+ * (+) Một lượt chơi bài hát/bài tập theo nhịp hoặc chế độ chờ.
+ * source 'mic' = micro chấm từng nốt; 'parent' = bố mẹ đánh giá cả lượt.
+ */
+export interface SongRun {
+  songId: string;
+  mode: 'wait' | 'tempo';
+  /** Mức "Theo nhịp": 2 = nốt đứng yên con trỏ nhảy, 3 = băng chuyền */
+  level?: 2 | 3;
+  bpm: number;
+  /** Gợi ý: full = phím sáng + tên + ngón; names = tên nốt; staff = chỉ khuông nhạc */
+  hints: 'full' | 'names' | 'staff';
+  /** Chỉ tập một câu: [ô nhịp đầu, ô nhịp cuối) */
+  phrase?: [number, number] | null;
+  total: number;
+  hits: number;
+  source: 'mic' | 'parent';
+  passed: boolean;
+  ts: number;
+}
+
 export type ChecklistKey = 'backStraight' | 'wristStraight' | 'fingersCurved' | 'rightFinger' | 'lessLooking' | 'happy';
 
 export const CHECKLIST_ITEMS: ReadonlyArray<{ key: ChecklistKey; label: string }> = [
@@ -57,6 +78,7 @@ export interface Session {
   parentAssessments: ParentAssessment[];
   appAssessments: AppAssessment[];
   micAssessments: MicAssessment[]; // (+)
+  songRuns: SongRun[]; // (+)
   selfRating: SelfRating | null;
   startedAt: number; // (+)
   endedAt: number | null; // (+)
@@ -74,6 +96,7 @@ export interface Settings {
   micEnabled: boolean; // (+) mặc định TẮT — phụ huynh bật sau khi "Thử micro"
   micTuningCents: number; // (+) bù độ lệch dây đàn nhà, -100..100
   micAutoNext: boolean; // (+) micro nghe đúng → tự sang nốt sau ~1 giây
+  accompaniment: boolean; // (+) nhạc đệm "bố mẹ đàn cùng" khi chơi theo nhịp
 }
 
 export interface Progress {
@@ -107,6 +130,7 @@ export function defaultSettings(): Settings {
     micEnabled: false,
     micTuningCents: 0,
     micAutoNext: true,
+    accompaniment: true,
   };
 }
 
@@ -141,6 +165,7 @@ export function validateAppData(x: unknown): string[] {
     const tc = st.micTuningCents as number;
     if (typeof tc !== 'number' || tc < -100 || tc > 100) errs.push('settings.micTuningCents');
     if (typeof st.micAutoNext !== 'boolean') errs.push('settings.micAutoNext');
+    if (typeof st.accompaniment !== 'boolean') errs.push('settings.accompaniment');
   }
   const p = x.progress;
   if (!isObj(p)) errs.push('Thiếu progress');
@@ -168,6 +193,7 @@ export function validateAppData(x: unknown): string[] {
         s.appAssessments.forEach((a, j) => {
           if (!isObj(a) || typeof a.correct !== 'boolean') errs.push(`sessions[${i}].appAssessments[${j}]`);
         });
+      if (!Array.isArray(s.songRuns)) errs.push(`sessions[${i}].songRuns`);
       if (!Array.isArray(s.micAssessments)) errs.push(`sessions[${i}].micAssessments`);
       else
         s.micAssessments.forEach((a, j) => {

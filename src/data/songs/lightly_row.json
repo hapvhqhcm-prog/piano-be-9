@@ -1,0 +1,139 @@
+{
+ "id": "lightly_row",
+ "title": "Lightly Row",
+ "titleVi": "Chèo thuyền nhẹ",
+ "composer": "Dân ca Đức (traditional)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Original simple 5-finger arrangement for this app",
+ "attributionRequired": false,
+ "hand": "RH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 4,
+ "phrases": [
+  0,
+  4
+ ],
+ "notes": [
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "D4",
+   "beats": 2,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "G4",
+   "beats": 2,
+   "finger": 5
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "D4",
+   "beats": 2,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "C4",
+   "beats": 4,
+   "finger": 1
+  }
+ ]
+}

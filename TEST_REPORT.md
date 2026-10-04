@@ -117,3 +117,30 @@ Hạn chế đã biết của micro:
 - Phòng ồn, TV, người nói to có thể gây nhận nhầm → bố mẹ bấm **Sửa**.
 - Khi micro bật, iPad có thể phát âm mẫu nhỏ hơn một chút (chế độ ghi + phát của iOS).
 - iPad có thể hỏi lại quyền micro mỗi lần mở app (hành vi của iOS với web app).
+
+---
+
+## 10. Giáo trình v2 trọn tuần 1–8 (OWNER duyệt 2026-10-04)
+
+Quyết định của OWNER: làm trọn giáo trình **v2** trong một lượt (bỏ qua STOP-GATE Phase 2/3), **18 bài hát**
+(thêm nốt La = ngón 5 duỗi từ tuần 7), âm thanh **tổng hợp giống piano** (không tải Salamander).
+
+Đã làm:
+- 8 tuần (`src/lessons/week1–8.ts`), bản đồ đảo, câu chuyện mỗi tuần, "Con làm thầy", "Ôn nhanh" (gợi nhớ ngắt quãng).
+- Trò nghe/đọc v2 (`quiz.ts`): Lên hay xuống? · Bước hay nhảy? · Nốt nào đây? (luôn có mốc Đô) · Đọc nốt.
+- Nhại lại (2–3 nốt, micro chấm đúng thứ tự), vỗ nhịp Mức 1 ("Đi / Chạy-chạy / Đi-i / Suỵt").
+- Màn bài hát: Từng nốt / Theo nhịp (Mức 2 con trỏ, Mức 3 băng chuyền), đếm vào, gõ nhịp, nhạc đệm, câu, tốc độ, khuông nhạc,
+  gợi ý rút dần; micro chấm từng nốt & chấm nhịp (cửa sổ −0,45…+0,55 phách, bù trễ 0,18 s); không micro → bố mẹ đánh giá.
+- Tay trái (tuần 6, khóa Fa trên khuông), sân khấu tuần 8 (bé tự chọn 2–3 bài, vỗ tay, huy chương), thư viện bài hát.
+- Tiêu chí tuần 4–8 theo §11; lượt chơi lưu ở `session.songRuns` (schema chỉ thêm trường, vẫn v1).
+- Cài đặt: nhạc đệm, tay trái (tự bật tuần 6), giới hạn ngày 15/20/30' (mặc định không giới hạn).
+
+Kiểm thử: test tự động (bài hát, nhịp, khuông, trò chơi, kế hoạch buổi, tiêu chí 8 tuần) + chạy giao diện trên trình duyệt
+(màn chính & bản đồ, Lên hay xuống?, bài hát Từng nốt có micro giả 16/17, Theo nhịp + bố mẹ chấm, băng chuyền, thẻ khuông tuần 7,
+đọc nốt, vỗ nhịp, sân khấu). **Chưa kiểm trên iPad + đàn thật** — đặc biệt chấm nhịp bằng micro cần thử thật để chỉnh độ trễ.
+
+Điểm cần OWNER biết:
+- Twinkle, Frère Jacques giờ đúng giai điệu gốc (có La); Frère Jacques vẫn thay Sol trầm bằng Sol cao ở câu cuối (ngoài tầm tay).
+- Old MacDonald viết ở giọng Fa (bắt đầu ngón 4) để nằm gọn Đô–La.
+- Ngón 5 phụ trách cả Sol và La ("duỗi"), ngón cái luôn ở Đô — đơn giản cho bé, không đổi thế tay.
+- Khi micro bật, nhạc đệm tự tắt để micro nghe rõ (tiếng gõ nhịp vẫn có, nằm ngoài dải micro nghe).

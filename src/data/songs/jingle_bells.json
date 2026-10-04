@@ -1,0 +1,266 @@
+{
+ "id": "jingle_bells",
+ "title": "Jingle Bells (chorus)",
+ "titleVi": "Chuông ngân vang",
+ "composer": "James Lord Pierpont (1857)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Original simple 5-finger arrangement for this app",
+ "attributionRequired": false,
+ "hand": "RH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 5,
+ "phrases": [
+  0,
+  4,
+  8,
+  12
+ ],
+ "notes": [
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 4,
+   "finger": 3
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 2,
+   "finger": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 2,
+   "finger": 5
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 4,
+   "finger": 3
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 4,
+   "finger": 1
+  }
+ ]
+}

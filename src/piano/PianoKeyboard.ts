@@ -1,4 +1,4 @@
-import { fingerFor, type Hand } from './fingering';
+import { fingerOnKeyboard, type Hand } from './fingering';
 import { PianoKey, type KeyMark } from './PianoKey';
 import { KEYBOARD_PITCHES, viName, type Pitch } from './pitchTable';
 
@@ -8,11 +8,11 @@ export interface KeyboardOptions {
   /** Hiện tên tiếng Việt trên phím trắng: 'c' = chỉ phím Đô, 'all' = mọi phím trắng */
   labels?: 'none' | 'c' | 'all';
   /** Khi chạm phím: hiện số ngón to trên phím (mặc định: tay phải thế Đô, §6). false = tắt. */
-  fingerOnPress?: ((pitch: Pitch) => number | undefined) | false;
+  fingerOnPress?: ((pitch: Pitch) => number | { finger: number; hand: Hand } | null | undefined) | false;
 }
 
 /** Phase 1: chỉ tay phải thế Đô (tay trái mở ở Phase 3). */
-const defaultFinger = (pitch: Pitch) => fingerFor(pitch, 'RH');
+const defaultFinger = (pitch: Pitch) => fingerOnKeyboard(pitch, false);
 
 export interface KeyTarget {
   pitch: Pitch;
@@ -70,10 +70,11 @@ export class PianoKeyboard {
     const key = this.keys.get(pitch);
     key?.setPressed(true);
     const fingerOf = this.opts.fingerOnPress === undefined ? defaultFinger : this.opts.fingerOnPress;
-    const finger = fingerOf ? fingerOf(pitch) : undefined;
-    if (key && finger) {
+    const r = fingerOf ? fingerOf(pitch) : undefined;
+    const mark = typeof r === 'number' ? { finger: r, hand: 'RH' as Hand } : r;
+    if (key && mark) {
       window.clearTimeout(this.hideTimers.get(pitch));
-      key.showPressFinger(finger);
+      key.showPressFinger(mark.finger, mark.hand);
     }
     this.opts.onPress?.(pitch);
   };

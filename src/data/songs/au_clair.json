@@ -1,0 +1,129 @@
+{
+ "id": "au_clair",
+ "title": "Au clair de la lune",
+ "titleVi": "Dưới ánh trăng",
+ "composer": "Dân ca Pháp (traditional)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Original simple 5-finger arrangement for this app",
+ "attributionRequired": false,
+ "hand": "RH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 3,
+ "phrases": [
+  0,
+  4
+ ],
+ "notes": [
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 2,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 4,
+   "finger": 1
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 2,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 4,
+   "finger": 1
+  }
+ ]
+}

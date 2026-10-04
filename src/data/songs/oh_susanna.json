@@ -1,0 +1,170 @@
+{
+ "id": "oh_susanna",
+ "title": "Oh! Susanna",
+ "titleVi": "Ô Susanna",
+ "composer": "Stephen Foster (1848)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Original simple 5-finger arrangement for this app",
+ "attributionRequired": false,
+ "hand": "RH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 8,
+ "extension": "A4",
+ "phrases": [
+  0,
+  4
+ ],
+ "notes": [
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "D4",
+   "beats": 2,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 2,
+   "finger": 1
+  }
+ ]
+}

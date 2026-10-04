@@ -1,0 +1,197 @@
+{
+ "id": "saints",
+ "title": "When the Saints Go Marching In",
+ "titleVi": "Các thánh tiến bước",
+ "composer": "Spiritual (traditional)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Original simple 5-finger arrangement for this app",
+ "attributionRequired": false,
+ "hand": "RH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 5,
+ "phrases": [
+  0,
+  4,
+  8,
+  12
+ ],
+ "notes": [
+  {
+   "rest": true,
+   "beats": 1
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "G4",
+   "beats": 4,
+   "finger": 5
+  },
+  {
+   "rest": true,
+   "beats": 1
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "G4",
+   "beats": 4,
+   "finger": 5
+  },
+  {
+   "rest": true,
+   "beats": 1
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "G4",
+   "beats": 2,
+   "finger": 5
+  },
+  {
+   "pitch": "E4",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "C4",
+   "beats": 2,
+   "finger": 1
+  },
+  {
+   "pitch": "E4",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 4,
+   "finger": 2
+  },
+  {
+   "rest": true,
+   "beats": 1
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 3,
+   "finger": 1
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "E4",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "F4",
+   "beats": 4,
+   "finger": 4
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "G4",
+   "beats": 2,
+   "finger": 5
+  },
+  {
+   "pitch": "E4",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "C4",
+   "beats": 2,
+   "finger": 1
+  },
+  {
+   "pitch": "D4",
+   "beats": 4,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 4,
+   "finger": 1
+  }
+ ]
+}

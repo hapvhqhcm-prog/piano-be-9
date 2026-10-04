@@ -1,0 +1,149 @@
+{
+ "id": "mary_lamb_lh",
+ "title": "Mary Had a Little Lamb (left hand)",
+ "titleVi": "Chú cừu nhỏ — tay trái",
+ "composer": "Dân ca Mỹ (traditional)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Original simple 5-finger arrangement for this app",
+ "attributionRequired": false,
+ "hand": "LH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 6,
+ "phrases": [
+  0,
+  4
+ ],
+ "notes": [
+  {
+   "pitch": "E3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D3",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "C3",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "D3",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "E3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E3",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "D3",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "D3",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "D3",
+   "beats": 2,
+   "finger": 4
+  },
+  {
+   "pitch": "E3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G3",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "G3",
+   "beats": 2,
+   "finger": 1
+  },
+  {
+   "pitch": "E3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D3",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "C3",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "D3",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "E3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D3",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "D3",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "E3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D3",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "C3",
+   "beats": 4,
+   "finger": 5
+  }
+ ]
+}

@@ -40,6 +40,7 @@ function fillDefaults(d: Record<string, unknown>): AppData {
           parentAssessments: [],
           appAssessments: [],
           micAssessments: [],
+          songRuns: [],
           selfRating: null,
           startedAt: 0,
           endedAt: null,
