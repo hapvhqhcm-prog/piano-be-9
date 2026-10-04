@@ -6,16 +6,16 @@ import {
   type PracticeEffect,
   type ResultSource,
 } from '../../practice/PracticeStateMachine';
-import { midiToPitch, noteLabel } from '../../piano/pitchTable';
+import { keyboardRangeFor, midiToPitch, noteLabel, pitchToMidi, samePitch } from '../../piano/pitchTable';
 import { fingerFor, fingerOnKeyboard } from '../../piano/fingering';
 import { leftHandActive } from '../../lessons/lessonEngine';
 import { StaffView } from '../components/staffView';
 
 /** Khuông nhỏ hiện một nốt (tuần 7). */
-function miniStaff(pitch: string): HTMLElement {
+function miniStaff(pitch: string, clef: 'treble' | 'bass' = 'treble'): HTMLElement {
   const sv = new StaffView(
     { id: `mini-${pitch}`, title: '', titleVi: pitch, hand: 'RH', bpm: 60, timeSignature: '4/4', notes: [{ pitch, beats: 4 }] },
-    { names: false, fingers: false, measuresPerPage: 1, pxPerBeat: 30 },
+    { clef, names: false, fingers: false, measuresPerPage: 1, pxPerBeat: 30 },
   );
   sv.el.classList.add('staff-mini');
   return sv.el;
@@ -86,12 +86,24 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
       el.dataset.kind = kind;
     };
     const lhOn = leftHandActive(app.store.get());
+    const [kbLow, kbHigh] = keyboardRangeFor(seg.targets.flatMap((t) => t.keys));
+    const segFingers = new Map<number, { finger: number; hand: Hand }>();
+    for (const t of seg.targets) {
+      t.keys.forEach((k, i) => {
+        const f = t.fingers?.[i] ?? (t.keys.length === 1 ? t.finger : undefined);
+        if (f && !segFingers.has(pitchToMidi(k))) segFingers.set(pitchToMidi(k), { finger: f, hand: t.hand ?? 'RH' });
+      });
+    }
     const kb = new PianoKeyboard({
+      low: kbLow,
+      high: kbHigh,
       labels: 'c',
-      fingerOnPress: (p) => fingerOnKeyboard(p, lhOn),
+      // Số ngón theo chính bài này (thế Sol, thế Rê…), nếu không có thì theo thế Đô
+      fingerOnPress: (p) => segFingers.get(pitchToMidi(p)) ?? fingerOnKeyboard(p, lhOn),
       onPress: (p) => void app.audio.playPitch(p),
     });
-    const fingerOf = (t: Target, pitch: string) => fingerFor(pitch, t.hand ?? 'RH', true);
+    const fingerOf = (t: Target, pitch: string, i = t.keys.indexOf(pitch)) =>
+      t.fingers?.[i] ?? fingerFor(pitch, t.hand ?? 'RH', true);
     const stage = h('div', { class: 'stage' });
     const bar = h('div', { class: 'actions' });
     root.append(h('div', { class: 'screen' }, stage, h('div', { class: 'keyboard-wrap' }, kb.el), bar));
@@ -140,7 +152,7 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
             'div',
             { class: 'note-view staff-row' },
             progress(),
-            miniStaff(t.keys[0]),
+            miniStaff(t.keys[0], t.clef ?? (t.hand === 'LH' ? 'bass' : 'treble')),
             h(
               'div',
               { class: 'staff-text' },
@@ -166,7 +178,7 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
         t.keys.map((pitch) => ({
           pitch,
           hand: t.hand ?? 'RH',
-          finger: t.keys.length === 1 ? t.finger : t.sequence ? fingerOf(t, pitch) : undefined,
+          finger: t.keys.length === 1 ? t.finger : t.sequence || t.fingers ? fingerOf(t, pitch) : undefined,
         })),
       );
       kb.setGuides(t.guides ?? []);
@@ -276,7 +288,12 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
         case 'playSample': {
           const t = seg.targets[ef.index];
           const tk = token;
-          if (t.sample?.length) {
+          if (t.sample?.length && t.noteId.startsWith('chord:')) {
+            // Hợp âm: các nốt vang CÙNG LÚC
+            t.sample.forEach((p) => kb.flash(p, true));
+            await Promise.all(t.sample.map((p) => app.audio.playPitch(p, 1.2)));
+            t.sample.forEach((p) => kb.flash(p, false));
+          } else if (t.sample?.length) {
             await app.audio.playSequence(t.sample, { onEach: (p, on) => kb.flash(p, on) });
           }
           if (tk === token && sm.snapshot.state === 'PLAY_SAMPLE') send('SAMPLE_END');
@@ -333,21 +350,22 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
       if (t.sequence) {
         // Nhại lại: phải đúng THỨ TỰ; sai giữa chừng thì làm lại từ đầu (nhẹ nhàng)
         const want = t.keys[seqPos];
-        if (heard === want) {
+        if (samePitch(heard, want)) {
           seqPos++;
           kb.setResult(heard, 'good');
           if (seqPos >= t.keys.length) send('HEARD');
           else micHint(`🎤 Đúng rồi! Tiếp theo…`, 'good');
         } else {
           wrongCount++;
-          seqPos = heard === t.keys[0] ? 1 : 0;
+          seqPos = samePitch(heard, t.keys[0]) ? 1 : 0;
           kb.setResult(heard, 'heard');
           micHint(`🎤 Gần đúng! Đàn lại từ ${noteLabel(t.keys[0]).split(' / ')[0]} nhé`, 'wrong');
         }
         return;
       }
-      if (t.keys.includes(heard)) {
-        heardKeys.add(heard);
+      const match = t.keys.find((k) => samePitch(k, heard));
+      if (match) {
+        heardKeys.add(match);
         kb.setResult(heard, 'good');
         if (t.keys.every((k) => heardKeys.has(k))) send('HEARD');
         else micHint(`🎤 Đúng rồi! Còn ${t.keys.length - heardKeys.size} phím nữa`, 'good');

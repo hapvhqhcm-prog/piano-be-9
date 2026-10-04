@@ -47,7 +47,18 @@ không dùng bản phối, bản thu âm hay file MIDI nào của bên ngoài.
 | `old_macdonald` | "Old MacDonald Had a Farm" — dân ca Mỹ | Public domain |
 | `oh_susanna` | Stephen Foster (1848) | Public domain |
 
-Bài tập nhịp tuần 4 (`src/music/exercises.ts`) và bè đệm (tự sinh từ giai điệu) do dự án tự soạn.
+| `*_mc_lh`, `*_both`, `*_g`, `*_d`, `*_minor`, `*_original`, `*_chords` | Các bản phối khác (thế tay, hai tay, giọng thứ…) của những giai điệu trên | Public domain |
+| `birthday_both` | Mildred & Patty Hill, "Good Morning to All" (1893) — chỉ giai điệu | Public domain |
+| `twinkle_run`, `london_bridge_dotted` | Biến tấu nhịp tự soạn trên giai điệu dân gian | Public domain |
+| `joy_to_the_world` | Lowell Mason (1839), theo G. F. Handel | Public domain |
+| `silent_night` | Franz Xaver Gruber (1818) | Public domain |
+| `minuet_g` | Christian Petzold (khoảng 1725), Minuet Sol trưởng BWV Anh. 114 | Public domain |
+| `fur_elise` | Ludwig van Beethoven (1810) | Public domain |
+| `canon` | Johann Pachelbel (khoảng 1680) — chủ đề giản lược | Public domain |
+| `question_answer`, `waltz_cat`, `waltz_rain`, `scale_c_rh/lh` | Dự án tự sáng tác / bài tập gam truyền thống | Tự soạn |
+
+Bài tập nhịp tuần 4 (`src/music/exercises.ts`), bè đệm (tự sinh từ giai điệu) và các đoạn đọc nhạc ngẫu nhiên
+(`src/music/sightread.ts`) do app tự sinh.
 
 Chỉ hiển thị tên bài; không dùng lời bài hát có bản quyền.
 

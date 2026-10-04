@@ -3,7 +3,7 @@ import { fingerOnKeyboard, type Hand } from '../../piano/fingering';
 import { PianoKeyboard } from '../../piano/PianoKeyboard';
 import { noteLabel, pitchFreq } from '../../piano/pitchTable';
 import type { App } from '../App';
-import { actionBar, backButton, h } from '../components/dom';
+import { actionBar, backButton, button, h } from '../components/dom';
 import { FINGER_NAMES, handDiagram, type HandDiagram } from '../components/handDiagram';
 import { homeScreen } from './home';
 
@@ -35,13 +35,31 @@ export function freePlayScreen(app: App) {
         small.textContent = `${p} · ${pitchFreq(p).toFixed(2)} Hz`;
       },
     });
+    // Đổi quãng tám: bàn phím thật có 88 phím, iPad chỉ hiện 2 quãng tám một lúc
+    const WINDOWS: Array<[string, string, string]> = [
+      ['C2', 'C4', 'Trầm'],
+      ['C3', 'C5', 'Giữa'],
+      ['C4', 'C6', 'Cao'],
+    ];
+    let wi = 1;
+    const shift = (d: number) => {
+      wi = Math.max(0, Math.min(WINDOWS.length - 1, wi + d));
+      kb.setRange(WINDOWS[wi][0], WINDOWS[wi][1]);
+      range.textContent = `${WINDOWS[wi][2]}: ${WINDOWS[wi][0]}–${WINDOWS[wi][1]}`;
+    };
+    const range = h('div', { class: 'range-label' }, 'Giữa: C3–C5');
     root.append(
       h(
         'div',
         { class: 'screen' },
         h('div', { class: 'stage' }, big, row, small),
         h('div', { class: 'keyboard-wrap' }, kb.el),
-        actionBar(backButton(() => app.show(homeScreen(app)))),
+        actionBar(
+          backButton(() => app.show(homeScreen(app))),
+          button({ icon: '◀', label: 'Trầm hơn', onTap: () => shift(-1) }),
+          range,
+          button({ icon: '▶', label: 'Cao hơn', onTap: () => shift(1) }),
+        ),
       ),
     );
     return () => kb.destroy();

@@ -20,9 +20,12 @@ export interface NoteVerdict {
 export const EARLY = 0.45;
 export const LATE = 0.55;
 
-/** Ghép mỗi nốt với lần nghe khớp cao độ gần nhất trong cửa sổ; mỗi lần nghe chỉ dùng một lần. */
+/**
+ * Ghép mỗi nốt (hoặc NHÓM nốt cùng lúc — midi là mảng) với lần nghe khớp cao độ gần nhất trong cửa sổ;
+ * mỗi lần nghe chỉ dùng một lần.
+ */
 export function gradeTiming(
-  notes: Array<Pick<TimedNote, 'index' | 'start'> & { midi: number }>,
+  notes: Array<Pick<TimedNote, 'index' | 'start'> & { midi: number | number[] }>,
   heard: HeardEvent[],
   early = EARLY,
   late = LATE,
@@ -32,7 +35,8 @@ export function gradeTiming(
     let best = -1;
     let bestAbs = Infinity;
     heard.forEach((h, i) => {
-      if (used.has(i) || h.midi !== n.midi) return;
+      const ok = Array.isArray(n.midi) ? n.midi.includes(h.midi) : h.midi === n.midi;
+      if (used.has(i) || !ok) return;
       const off = h.beat - n.start;
       if (off < -early || off > late) return;
       if (Math.abs(off) < bestAbs) {

@@ -1,7 +1,7 @@
 import { wait } from '../../audio/AudioEngine';
 import { fingerOnKeyboard } from '../../piano/fingering';
 import { PianoKeyboard } from '../../piano/PianoKeyboard';
-import { noteLabel, viName, type Pitch } from '../../piano/pitchTable';
+import { keyboardRangeFor, noteLabel, samePitch, viName, type Pitch } from '../../piano/pitchTable';
 import { makeQuestion, referenceOf, type Question, type QuizSpec } from '../../practice/quiz';
 import type { Tune } from '../../music/tune';
 import type { App } from '../App';
@@ -18,7 +18,14 @@ export interface QuizHooks {
   onBack(): void;
 }
 
-const ANSWER_TEXT: Record<string, string> = { up: 'Lên ⬆️', down: 'Xuống ⬇️', step: 'Bước 🚶', skip: 'Nhảy 🐸' };
+const ANSWER_TEXT: Record<string, string> = {
+  up: 'Lên ⬆️',
+  down: 'Xuống ⬇️',
+  step: 'Bước 🚶',
+  skip: 'Nhảy 🐸',
+  major: 'Vui (trưởng) 😊',
+  minor: 'Buồn (thứ) 😢',
+};
 
 /** Trò nghe / đọc nốt (v2): Lên hay xuống? · Bước hay nhảy? · Nốt nào đây? (có mốc Đô) · Đọc nốt. */
 export function quizScreen(app: App, hooks: QuizHooks) {
@@ -32,7 +39,10 @@ export function quizScreen(app: App, hooks: QuizHooks) {
     let answered = false;
     let token = 0;
 
+    const [kbLow, kbHigh] = keyboardRangeFor(spec.variant === 'majorminor' ? [] : spec.pool);
     const kb = new PianoKeyboard({
+      low: kbLow,
+      high: kbHigh,
       labels: spec.variant === 'read' ? 'none' : 'c',
       fingerOnPress: (p) => fingerOnKeyboard(p, lhOn),
       onPress: (p) => {
@@ -98,7 +108,7 @@ export function quizScreen(app: App, hooks: QuizHooks) {
       const prog = h('div', { class: 'progress' }, `Lượt ${round} / ${spec.rounds}`);
       if (spec.variant === 'read') {
         const tune: Tune = { id: `read-${round}`, title: '', titleVi: '', hand: 'RH', bpm: 60, timeSignature: '4/4', notes: [{ pitch: q.show!, beats: 4 }] };
-        const staff = new StaffView(tune, { names: false, fingers: false, measuresPerPage: 1, pxPerBeat: 30 });
+        const staff = new StaffView(tune, { clef: spec.clef ?? 'treble', names: false, fingers: false, measuresPerPage: 1, pxPerBeat: 30 });
         staff.el.classList.add('staff-mini');
         stage.replaceChildren(prog, h('h1', { class: 'title' }, 'Nốt này là nốt gì?'), staff.el, h('p', { class: 'lead' }, 'Chạm đúng phím trên iPad'));
         setBar(back());
@@ -134,7 +144,7 @@ export function quizScreen(app: App, hooks: QuizHooks) {
       answered = true;
       accepting = false;
       const tk = ++token;
-      const correct = actual === q.expected;
+      const correct = q.choices ? actual === q.expected : samePitch(actual, q.expected);
       if (correct) score++;
       hooks.onAnswer(q.expected, actual);
       const isPitchAnswer = !q.choices;

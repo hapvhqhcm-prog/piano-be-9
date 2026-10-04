@@ -1,4 +1,4 @@
-import { fingerFor, type Hand } from '../piano/fingering';
+import { fingerFor, fingerInPosition, type Hand, type PositionId } from '../piano/fingering';
 import { noteLabel, viName, type Pitch } from '../piano/pitchTable';
 import type { Activity, Segment, Target } from './types';
 
@@ -61,3 +61,39 @@ export function echo(pitches: Pitch[], hand: Hand = 'RH'): Target {
 }
 
 export const notes = (segment: Segment): Activity => ({ kind: 'notes', segment });
+
+/** Nốt theo một thế tay (thế Sol, Đô giữa, thế Rê…) — có khuông nhạc kèm theo. */
+export function posNote(pitch: Pitch, hand: Hand, position: PositionId, subtitle?: string, staff = true): Target {
+  return {
+    noteId: pitch,
+    title: noteLabel(pitch),
+    subtitle,
+    keys: [pitch],
+    finger: fingerInPosition(pitch, hand, position),
+    hand,
+    sample: [pitch],
+    staff,
+    clef: hand === 'LH' ? 'bass' : 'treble',
+  };
+}
+
+/** Nhại lại trong một thế tay — số ngón cho từng phím theo thế đó. */
+export function posEcho(pitches: Pitch[], hand: Hand, position: PositionId): Target {
+  return {
+    ...echo(pitches, hand),
+    fingers: pitches.map((p) => fingerInPosition(p, hand, position) ?? 0),
+  };
+}
+
+/** Hợp âm (bấm cùng lúc) — tay trái thế Đô. */
+export function chordTarget(pitches: Pitch[], hand: Hand, name: string, fingers: number[]): Target {
+  return {
+    noteId: `chord:${pitches.join('+')}`,
+    title: name,
+    subtitle: 'Bấm các phím CÙNG LÚC',
+    keys: pitches,
+    hand,
+    fingers,
+    sample: pitches,
+  };
+}

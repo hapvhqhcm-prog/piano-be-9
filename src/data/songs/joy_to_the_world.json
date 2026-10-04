@@ -1,0 +1,100 @@
+{
+ "id": "joy_to_the_world",
+ "title": "Joy to the World",
+ "titleVi": "Niềm vui cho thế giới",
+ "composer": "Lowell Mason (1839), theo G. F. Handel",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Original simple arrangement for this app",
+ "attributionRequired": false,
+ "hand": "RH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 15,
+ "position": "free",
+ "phrases": [
+  0,
+  4
+ ],
+ "notes": [
+  {
+   "pitch": "C5",
+   "beats": 2,
+   "finger": 5
+  },
+  {
+   "pitch": "B4",
+   "beats": 1.5,
+   "finger": 4
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 3,
+   "finger": 2
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "E4",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 2,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 4,
+   "finger": 1
+  },
+  {
+   "pitch": "C5",
+   "beats": 2,
+   "finger": 5
+  },
+  {
+   "pitch": "B4",
+   "beats": 1.5,
+   "finger": 4
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 3,
+   "finger": 2
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "E4",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 2,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 4,
+   "finger": 1
+  }
+ ]
+}

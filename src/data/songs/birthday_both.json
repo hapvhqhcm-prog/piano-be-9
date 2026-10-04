@@ -1,0 +1,191 @@
+{
+ "id": "birthday_both",
+ "title": "Good Morning to All (Happy Birthday melody)",
+ "titleVi": "Chúc mừng sinh nhật",
+ "composer": "Mildred & Patty Hill (1893)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Original simple arrangement for this app",
+ "attributionRequired": false,
+ "hand": "BOTH",
+ "bpm": 60,
+ "timeSignature": "3/4",
+ "week": 12,
+ "phrases": [
+  0,
+  4
+ ],
+ "notes": [
+  {
+   "rest": true,
+   "beats": 3
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "rest": true,
+   "beats": 2
+  },
+  {
+   "rest": true,
+   "beats": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 2,
+   "finger": 1
+  },
+  {
+   "rest": true,
+   "beats": 1
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "rest": true,
+   "beats": 2
+  },
+  {
+   "pitch": "F4",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "F4",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 2,
+   "finger": 1
+  }
+ ],
+ "lh": [
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "A3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G3",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "rest": true,
+   "beats": 1
+  },
+  {
+   "pitch": "B3",
+   "beats": 2,
+   "finger": 2
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "A3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G3",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "rest": true,
+   "beats": 3
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "rest": true,
+   "beats": 2
+  },
+  {
+   "rest": true,
+   "beats": 1
+  },
+  {
+   "pitch": "B3",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "A3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "rest": true,
+   "beats": 3
+  },
+  {
+   "rest": true,
+   "beats": 3
+  }
+ ],
+ "lhPosition": "MC"
+}

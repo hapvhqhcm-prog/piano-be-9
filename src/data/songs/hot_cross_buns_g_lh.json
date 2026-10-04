@@ -1,0 +1,105 @@
+{
+ "id": "hot_cross_buns_g_lh",
+ "title": "Hot Cross Buns (G position, left hand)",
+ "titleVi": "Bánh nóng — thế Sol tay trái",
+ "composer": "Dân ca Anh (traditional)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Original simple arrangement for this app",
+ "attributionRequired": false,
+ "hand": "LH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 11,
+ "position": "G",
+ "phrases": [
+  0,
+  2
+ ],
+ "notes": [
+  {
+   "pitch": "B2",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "A2",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "G2",
+   "beats": 2,
+   "finger": 5
+  },
+  {
+   "pitch": "B2",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "A2",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "G2",
+   "beats": 2,
+   "finger": 5
+  },
+  {
+   "pitch": "G2",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "G2",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "G2",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "G2",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "A2",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "A2",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "A2",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "A2",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "B2",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "A2",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "G2",
+   "beats": 2,
+   "finger": 5
+  }
+ ]
+}

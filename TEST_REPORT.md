@@ -144,3 +144,29 @@ Kiểm thử: test tự động (bài hát, nhịp, khuông, trò chơi, kế ho
 - Old MacDonald viết ở giọng Fa (bắt đầu ngón 4) để nằm gọn Đô–La.
 - Ngón 5 phụ trách cả Sol và La ("duỗi"), ngón cái luôn ở Đô — đơn giản cho bé, không đổi thế tay.
 - Khi micro bật, nhạc đệm tự tắt để micro nghe rõ (tiếng gõ nhịp vẫn có, nằm ngoài dải micro nghe).
+
+---
+
+## 11. Cấp 2–3 (tuần 9–24) + luyện tập mỗi ngày (OWNER yêu cầu 2026-10-04: "hoàn thiện đến khi bé thành thạo")
+
+Đã làm:
+- **24 tuần, 3 cấp** (`lessons/level2.ts`, `level3.ts`), bản đồ đảo theo cấp, thông báo lên cấp; tiêu chí qua tuần 9–24.
+- **Thế tay mới** (`fingering.ts → POSITIONS`, cách bấm sư phạm chuẩn — **cần OWNER duyệt**):
+  Đô giữa tay trái (C4=1 B3=2 A3=3 G3=4 F3=5) · thế Sol (RH G4=1…D5=5; LH G2=5…D3=1) ·
+  thế Rê (D4=1 E4=2 F♯4=3 G4=4 A4=5) · Đô thứ (Mi♭4=3) · La thứ (A3=1…E4=5) ·
+  bài "free" (gam luồn ngón, Silent Night, Minuet, Für Elise, Canon) ghi số ngón từng nốt.
+- **49 bài hát** (thêm 31): hai tay luân phiên/cùng lúc, hợp âm I–IV–V, 3/4, chấm dôi, phím đen, cổ điển.
+- Khuông kép Sol + Fa, dấu ♯/♭, nốt chấm, hợp âm; bàn phím ảo tự chọn dải (C2–C6) theo bài; Đàn tự do đổi quãng tám.
+- Trò mới: "Vui hay buồn?" (trưởng/thứ), đọc nốt khóa Fa; **đọc nhạc ngẫu nhiên** (sinh đoạn mới mỗi lần).
+- **Luyện tập mỗi ngày** (từ tuần 9, và tự động sau tuần 24): đọc nhạc + 1 bài đang tập + 1 bài đã thuộc (ôn ngắt quãng).
+- "Thuộc bài" = trọn bài theo nhịp ≥ 60 BPM và đạt; ⭐ trong thư viện; màn Phụ huynh có mục **Tiến tới thành thạo**.
+- Micro nghe được C2–E6; bài hai tay chấm theo nhóm nốt cùng lúc (micro nghe một nốt mỗi lúc — trúng nốt nào trong nhóm cũng tính).
+
+Kiểm thử: 300+ test tự động (49 bài hợp lệ theo thế tay, đọc nhạc ngẫu nhiên mọi thế, tiêu chí tuần 9–24, luyện tập mỗi ngày,
+nhóm nốt hai tay, dấu giáng, dải micro) + giao diện trên trình duyệt (bản đồ Cấp 2, thư viện theo cấp, khuông kép "Chúc mừng sinh nhật",
+Minuet 3/4 có ♯ và dải C4–C6, thế Sol + nhại lại, đọc nhạc ngẫu nhiên). **Chưa thử trên iPad + đàn thật.**
+
+Hạn chế đã biết:
+- Micro chỉ nghe **một nốt mỗi lúc** → bài hai tay/hợp âm được chấm "dễ" hơn (đúng một nốt trong nhóm là tính); nên để bố mẹ xác nhận.
+- Bàn phím ảo hiện tối đa 4 quãng tám (C2–C6); bài cần nhiều hơn chưa có.
+- Für Elise, Canon là bản giản lược tay phải / hai tay đơn giản, không phải bản gốc đầy đủ.

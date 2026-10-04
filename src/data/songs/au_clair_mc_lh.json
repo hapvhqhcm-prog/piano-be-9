@@ -1,0 +1,130 @@
+{
+ "id": "au_clair_mc_lh",
+ "title": "Au clair de la lune (middle C, left hand)",
+ "titleVi": "Dưới ánh trăng — Đô giữa tay trái",
+ "composer": "Dân ca Pháp (traditional)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Original simple arrangement for this app",
+ "attributionRequired": false,
+ "hand": "LH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 9,
+ "position": "MC",
+ "phrases": [
+  0,
+  4
+ ],
+ "notes": [
+  {
+   "pitch": "F3",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "F3",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "F3",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "G3",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "A3",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "G3",
+   "beats": 2,
+   "finger": 4
+  },
+  {
+   "pitch": "F3",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "A3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G3",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "G3",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "F3",
+   "beats": 4,
+   "finger": 5
+  },
+  {
+   "pitch": "F3",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "F3",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "F3",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "G3",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "A3",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "G3",
+   "beats": 2,
+   "finger": 4
+  },
+  {
+   "pitch": "F3",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "A3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G3",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "G3",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "F3",
+   "beats": 4,
+   "finger": 5
+  }
+ ]
+}

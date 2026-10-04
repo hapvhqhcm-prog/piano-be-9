@@ -19,8 +19,8 @@ export interface DetectOptions {
   minRms: number;
 }
 
-/** Bàn phím C3–C5 → dải 100–1100 Hz là đủ, có chừa lề. */
-export const DEFAULT_DETECT: DetectOptions = { minFreq: 100, maxFreq: 1100, threshold: 0.15, minRms: 0.01 };
+/** Từ Đô trầm C2 (65 Hz) tới Mi cao E6 (1319 Hz) — đủ cho mọi thế tay của giáo trình. */
+export const DEFAULT_DETECT: DetectOptions = { minFreq: 60, maxFreq: 1400, threshold: 0.15, minRms: 0.01 };
 
 export function rms(buf: Float32Array): number {
   let s = 0;

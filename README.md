@@ -1,4 +1,4 @@
-# Piano bé — PIANO-BE-9-TUOI (giáo trình v2, tuần 1–8)
+# Piano bé — PIANO-BE-9-TUOI (3 cấp · 24 tuần · luyện tập mỗi ngày)
 
 **Bản đang chạy:** https://hapvhqhcm-prog.github.io/piano-be-9/
 
@@ -13,11 +13,16 @@ chỉ phím, chỉ ngón, phát âm mẫu. Khi bật micro, app **nghe đàn cơ
 
 ## Có gì trong app
 
-- **Hành trình 8 tuần** (bản đồ đảo): Đảo Phím Đen → Làng Đô Rê Mi → Cầu thang Sol → Rừng Nhịp →
-  Sân khấu nhỏ → Hồ Tấm Gương (tay trái) → Thư viện Nốt (đọc khuông) → Lâu đài Âm nhạc (biểu diễn).
+- **3 cấp × 8 tuần** (bản đồ đảo mỗi cấp), sau đó **Luyện tập mỗi ngày** không có điểm dừng:
+  - **Cấp 1 · Làm quen** (1–8): bàn phím, thế Đô hai tay, nhịp cơ bản, đọc nốt khóa Sol, La duỗi ngón.
+  - **Cấp 2 · Hai tay** (9–16): Đô giữa tay trái & khóa Fa, hai tay luân phiên → cùng lúc, thế Sol, nhịp 3/4,
+    phím đen (Fa♯, Mi♭), nốt chấm dôi & móc đơn, gam Đô trưởng luồn ngón, hòa nhạc Cấp 2.
+  - **Cấp 3 · Thành thạo** (17–24): hợp âm I–IV–V tay trái, đổi thế tay, trưởng/thứ, Minuet, Für Elise, Canon,
+    đọc nhạc hai khóa chỉ nhìn khuông, Đại hòa nhạc.
 - **Mỗi buổi 10–15'**: Tư thế → Ôn nhanh → Khởi động tai/đọc nốt → Bài mới → Con làm thầy → Tự đánh giá.
-- **Trò chơi**: Lên hay xuống? · Bước hay nhảy? · Nốt nào đây? (có mốc Đô) · Đọc nốt · Nhại lại (con vẹt) · Vỗ nhịp.
-- **18 bài hát** public domain (tự soạn bản 5 ngón) + 2 bài tập nhịp; **Thư viện** để bé tự chọn bài.
+- **Trò chơi**: Lên hay xuống? · Bước hay nhảy? · Nốt nào đây? (có mốc) · Đọc nốt khóa Sol/Fa · Vui hay buồn? (trưởng/thứ) · Nhại lại · Vỗ nhịp.
+- **49 bài hát** public domain / tự sáng tác + 2 bài tập nhịp; **Thư viện** (⭐ bài đã thuộc) để bé tự chọn bài.
+- **Đọc nhạc ngẫu nhiên**: app sinh đoạn nhạc mới mỗi lần (đúng thế tay, nhịp 4/4 hoặc 3/4) — luyện đọc vô hạn.
 - **Màn bài hát**: Từng nốt (chờ bé đàn đúng) · Theo nhịp (đếm vào, máy gõ nhịp, nhạc đệm; con trỏ hoặc băng chuyền) ·
   tập từng câu · tốc độ 40/50/60 · khuông nhạc với gợi ý rút dần (phím sáng → tên nốt → chỉ khuông).
 - **Micro (tùy chọn)** chấm từng nốt và chấm nhịp; không có micro thì bố mẹ đánh giá.
@@ -74,6 +79,8 @@ iPad nhận bản mới ở **lần mở thứ hai** sau khi deploy (lần đầ
 
 File ở `src/data/songs/*.json` (định dạng v2 — v1 §12 + `week`, `phrases`, `extension`, dấu lặng `rest`).
 Cách nhanh nhất: sửa danh sách trong `scripts/gen-songs.py` rồi chạy `py scripts/gen-songs.py`.
+Định dạng v3 thêm: `position` / `lhPosition` (thế tay: C, MC, G, D, Cm, Am, free), `hand: "BOTH"` + `lh` (bè tay trái),
+`also` (hợp âm), nốt giáng `Bb4`, nhịp 3/4, nốt chấm dôi (1.5 / 3 phách).
 Các trường:
 
 ```json

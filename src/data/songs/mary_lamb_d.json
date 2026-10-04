@@ -1,0 +1,150 @@
+{
+ "id": "mary_lamb_d",
+ "title": "Mary Had a Little Lamb (D position)",
+ "titleVi": "Chú cừu nhỏ — thế Rê (Fa♯)",
+ "composer": "Dân ca Mỹ (traditional)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Original simple arrangement for this app",
+ "attributionRequired": false,
+ "hand": "RH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 13,
+ "position": "D",
+ "phrases": [
+  0,
+  4
+ ],
+ "notes": [
+  {
+   "pitch": "F#4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "F#4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "F#4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "F#4",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 2,
+   "finger": 2
+  },
+  {
+   "pitch": "F#4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "A4",
+   "beats": 2,
+   "finger": 5
+  },
+  {
+   "pitch": "F#4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "F#4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "F#4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "F#4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "F#4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "F#4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "D4",
+   "beats": 4,
+   "finger": 1
+  }
+ ]
+}

@@ -1,4 +1,4 @@
-import type { Hand } from '../piano/fingering';
+import type { Hand, PositionId } from '../piano/fingering';
 import type { Pitch } from '../piano/pitchTable';
 import type { QuizSpec } from '../practice/quiz';
 
@@ -24,6 +24,10 @@ export interface Target {
   sequence?: boolean;
   /** Hiện nốt trên khuông nhạc (tuần 7) */
   staff?: boolean;
+  /** Số ngón cho TỪNG phím (nhại lại / hợp âm ở thế khác thế Đô) */
+  fingers?: number[];
+  /** Khóa hiện trên khuông (mặc định theo tay) */
+  clef?: 'treble' | 'bass';
 }
 
 export interface Segment {
@@ -51,7 +55,20 @@ export type Activity =
       intro?: string;
     }
   | { kind: 'rhythm'; title: string; intro: string; patterns: RhythmSymbol[][] }
-  | { kind: 'stage' };
+  /** Đọc nhạc ngẫu nhiên: sinh `count` đoạn nhạc mới trong một thế tay */
+  | {
+      kind: 'sight';
+      title: string;
+      position: Exclude<PositionId, 'free'>;
+      hand: Hand;
+      count: number;
+      measures?: number;
+      rhythm?: 1 | 2;
+      timeSignature?: '4/4' | '3/4';
+      /** names = có tên nốt (Cấp 2), staff = chỉ khuông (Cấp 3) */
+      hints: 'names' | 'staff';
+    }
+  | { kind: 'stage'; level?: 1 | 2 | 3 };
 
 export interface Lesson {
   id: string;
@@ -81,4 +98,12 @@ export interface WeekPlan {
   criterion: { text: string; who: CriterionWho };
   /** Tuần dùng tay trái */
   leftHand?: boolean;
+}
+
+/** Cấp độ: 8 tuần mỗi cấp. */
+export interface LevelInfo {
+  level: 1 | 2 | 3;
+  name: string;
+  goal: string;
+  weeks: [number, number];
 }

@@ -1,6 +1,6 @@
 import { fingerOnKeyboard, type Hand } from './fingering';
 import { PianoKey, type KeyMark } from './PianoKey';
-import { KEYBOARD_PITCHES, viName, type Pitch } from './pitchTable';
+import { KEYBOARD_HIGH, KEYBOARD_LOW, keyboardPitches, pitchToMidi, viName, type Pitch } from './pitchTable';
 
 export interface KeyboardOptions {
   onPress?: (pitch: Pitch) => void;
@@ -9,9 +9,11 @@ export interface KeyboardOptions {
   labels?: 'none' | 'c' | 'all';
   /** Khi chạm phím: hiện số ngón to trên phím (mặc định: tay phải thế Đô, §6). false = tắt. */
   fingerOnPress?: ((pitch: Pitch) => number | { finger: number; hand: Hand } | null | undefined) | false;
+  /** Dải phím (mặc định C3–C5) */
+  low?: Pitch;
+  high?: Pitch;
 }
 
-/** Phase 1: chỉ tay phải thế Đô (tay trái mở ở Phase 3). */
 const defaultFinger = (pitch: Pitch) => fingerOnKeyboard(pitch, false);
 
 export interface KeyTarget {
@@ -22,24 +24,41 @@ export interface KeyTarget {
 }
 
 /**
- * Bàn phím ảo C3–C5 (15 phím trắng, 10 phím đen).
+ * Bàn phím ảo (mặc định C3–C5; đổi dải được để chơi thế Sol, gam, hai tay…).
+ * Phím được tra theo MIDI nên "Bb4" và "A#4" là cùng một phím.
  * Dùng Pointer Events → nhiều ngón cùng lúc, không chờ 300 ms.
  */
 export class PianoKeyboard {
   readonly el: HTMLDivElement;
-  private keys = new Map<Pitch, PianoKey>();
+  private keys = new Map<number, PianoKey>();
   private pointers = new Map<number, Pitch>();
   private enabled = true;
-  private hideTimers = new Map<Pitch, number>();
+  private hideTimers = new Map<number, number>();
+  private low: Pitch;
+  private high: Pitch;
 
   constructor(private readonly opts: KeyboardOptions = {}) {
     this.el = document.createElement('div');
     this.el.className = 'keyboard';
-    const whites = KEYBOARD_PITCHES.filter((p) => !p.isBlack);
+    this.low = opts.low ?? KEYBOARD_LOW;
+    this.high = opts.high ?? KEYBOARD_HIGH;
+    this.build();
+    this.el.addEventListener('pointerdown', this.onDown);
+    window.addEventListener('pointerup', this.onUp);
+    window.addEventListener('pointercancel', this.onUp);
+    this.el.addEventListener('contextmenu', (e) => e.preventDefault());
+  }
+
+  private build(): void {
+    this.el.replaceChildren();
+    this.keys.clear();
+    const all = keyboardPitches(this.low, this.high);
+    const whites = all.filter((p) => !p.isBlack);
     const whiteW = 100 / whites.length;
     const blackW = whiteW * 0.62;
+    this.el.classList.toggle('wide', whites.length > 15);
     let whiteIndex = -1;
-    for (const info of KEYBOARD_PITCHES) {
+    for (const info of all) {
       const key = new PianoKey(info);
       if (info.isBlack) {
         key.el.style.left = `${(whiteIndex + 1) * whiteW - blackW / 2}%`;
@@ -48,16 +67,32 @@ export class PianoKeyboard {
         whiteIndex++;
         key.el.style.left = `${whiteIndex * whiteW}%`;
         key.el.style.width = `${whiteW}%`;
-        const labels = opts.labels ?? 'c';
+        const labels = this.opts.labels ?? 'c';
         if (labels === 'all' || (labels === 'c' && info.letter === 'C')) key.setBaseLabel(viName(info.pitch));
       }
-      this.keys.set(info.pitch, key);
+      this.keys.set(info.midi, key);
       this.el.append(key.el);
     }
-    this.el.addEventListener('pointerdown', this.onDown);
-    window.addEventListener('pointerup', this.onUp);
-    window.addEventListener('pointercancel', this.onUp);
-    this.el.addEventListener('contextmenu', (e) => e.preventDefault());
+  }
+
+  /** Đổi dải phím (vd chuyển sang thế Sol). */
+  setRange(low: Pitch, high: Pitch): void {
+    if (pitchToMidi(low) === pitchToMidi(this.low) && pitchToMidi(high) === pitchToMidi(this.high)) return;
+    this.low = low;
+    this.high = high;
+    this.build();
+  }
+
+  get range(): [Pitch, Pitch] {
+    return [this.low, this.high];
+  }
+
+  private key(pitch: Pitch): PianoKey | undefined {
+    try {
+      return this.keys.get(pitchToMidi(pitch));
+    } catch {
+      return undefined;
+    }
   }
 
   private onDown = (e: PointerEvent): void => {
@@ -67,13 +102,13 @@ export class PianoKeyboard {
     const pitch = keyEl?.dataset.pitch;
     if (!pitch) return;
     this.pointers.set(e.pointerId, pitch);
-    const key = this.keys.get(pitch);
+    const key = this.key(pitch);
     key?.setPressed(true);
     const fingerOf = this.opts.fingerOnPress === undefined ? defaultFinger : this.opts.fingerOnPress;
     const r = fingerOf ? fingerOf(pitch) : undefined;
     const mark = typeof r === 'number' ? { finger: r, hand: 'RH' as Hand } : r;
     if (key && mark) {
-      window.clearTimeout(this.hideTimers.get(pitch));
+      window.clearTimeout(this.hideTimers.get(pitchToMidi(pitch)));
       key.showPressFinger(mark.finger, mark.hand);
     }
     this.opts.onPress?.(pitch);
@@ -84,11 +119,11 @@ export class PianoKeyboard {
     if (!pitch) return;
     this.pointers.delete(e.pointerId);
     if (![...this.pointers.values()].includes(pitch)) {
-      const key = this.keys.get(pitch);
+      const key = this.key(pitch);
       key?.setPressed(false);
       // Giữ số ngón thêm một chút cho bé kịp nhìn.
       this.hideTimers.set(
-        pitch,
+        pitchToMidi(pitch),
         window.setTimeout(() => key?.showPressFinger(null), 900),
       );
     }
@@ -105,22 +140,23 @@ export class PianoKeyboard {
     this.keys.forEach((k) => k.setTarget(null));
     for (const t of targets) {
       const mark: KeyMark = { hand: t.hand, finger: t.finger, label: t.label };
-      this.keys.get(t.pitch)?.setTarget(mark);
+      this.key(t.pitch)?.setTarget(mark);
     }
   }
 
   setGuides(pitches: Pitch[]): void {
-    const set = new Set(pitches);
-    this.keys.forEach((k, p) => k.setGuide(set.has(p)));
+    const set = new Set(pitches.map(pitchToMidi));
+    this.keys.forEach((k, m) => k.setGuide(set.has(m)));
   }
 
   setResult(pitch: Pitch | null, kind: 'good' | 'show' | 'heard' | null): void {
-    this.keys.forEach((k, p) => k.setResult(p === pitch ? kind : null));
+    const target = pitch ? pitchToMidi(pitch) : -1;
+    this.keys.forEach((k, m) => k.setResult(m === target ? kind : null));
   }
 
   /** Nháy phím khi app phát âm mẫu. */
   flash(pitch: Pitch, on: boolean): void {
-    this.keys.get(pitch)?.setPressed(on);
+    this.key(pitch)?.setPressed(on);
   }
 
   clear(): void {

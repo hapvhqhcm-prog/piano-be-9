@@ -1,3 +1,4 @@
+import { LEVELS, songMastered } from '../../lessons/lessonEngine';
 import { SONGS, type Tune } from '../../music/tune';
 import type { App } from '../App';
 import { actionBar, backButton, h } from '../components/dom';
@@ -10,9 +11,11 @@ import { songScreen } from './song';
  */
 export function libraryScreen(app: App) {
   return (root: HTMLElement) => {
-    const week = app.store.get().progress.currentWeek;
+    const data = app.store.get();
+    const week = data.progress.currentWeek;
     const card = (s: Tune) => {
       const open = (s.week ?? 1) <= week;
+      const star = open && songMastered(data, s.id);
       return h(
         'button',
         {
@@ -20,9 +23,9 @@ export function libraryScreen(app: App) {
           type: 'button',
           onClick: () => open && playSong(app, s),
         },
-        h('div', { class: 'song-card-title' }, open ? s.titleVi : `🔒 ${s.titleVi}`),
-        h('div', { class: 'song-card-sub' }, `${s.title}${s.hand === 'LH' ? ' · tay trái' : ''}`),
-        h('div', { class: 'song-card-week' }, `Tuần ${s.week}`),
+        h('div', { class: 'song-card-title' }, open ? `${star ? '⭐ ' : ''}${s.titleVi}` : `🔒 ${s.titleVi}`),
+        h('div', { class: 'song-card-sub' }, `${s.title}${s.hand === 'LH' ? ' · tay trái' : s.hand === 'BOTH' ? ' · hai tay' : ''}`),
+        h('div', { class: 'song-card-week' }, star ? 'Đã thuộc!' : `Tuần ${s.week}`),
       );
     };
     root.append(
@@ -30,7 +33,19 @@ export function libraryScreen(app: App) {
         'div',
         { class: 'screen' },
         h('header', { class: 'topbar' }, h('div', { class: 'topbar-title' }, '🎵 Bài hát của con')),
-        h('div', { class: 'library scrollable' }, ...SONGS.map(card)),
+        h(
+          'div',
+          { class: 'library-wrap scrollable' },
+          h('p', { class: 'muted lib-note' }, `⭐ Đã thuộc ${SONGS.filter((x) => songMastered(data, x.id)).length}/${SONGS.length} bài — thuộc = đàn trọn bài theo nhịp từ 60 trở lên.`),
+          ...LEVELS.map((lv) =>
+            h(
+              'section',
+              {},
+              h('h2', { class: 'lib-level' }, lv.name),
+              h('div', { class: 'library' }, ...SONGS.filter((x) => (x.week ?? 1) >= lv.weeks[0] && (x.week ?? 1) <= lv.weeks[1]).map(card)),
+            ),
+          ),
+        ),
         actionBar(backButton(() => app.show(homeScreen(app)))),
       ),
     );
@@ -53,7 +68,8 @@ export function playSong(app: App, s: Tune): void {
     songScreen(
       app,
       s,
-      { mode: 'wait', hints: week >= 7 ? 'names' : 'full', free: true },
+      // Bài mới (của tuần này/tuần trước) có gợi ý đầy đủ; bài cũ thì chỉ tên nốt (đổi được trong màn bài hát)
+      { mode: 'wait', hints: week >= 7 && (s.week ?? 1) < week - 1 ? 'names' : 'full', free: true },
       { onRun: (run) => store.addSongRun(session.id, run), onDone: leave, onBack: leave },
     ),
   );

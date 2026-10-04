@@ -113,3 +113,12 @@ describe('NoteTracker — nốt cũ còn ngân', () => {
     expect(tr.push(d4(0.29))?.midi).toBe(62);
   });
 });
+
+describe('dải nghe mở rộng (Cấp 2–3)', () => {
+  it.each(['C2', 'G2', 'D5', 'G5', 'E5'])('nhận đúng %s', (p) => {
+    const f = midiToFreq(pitchToMidi(p));
+    const r = detectPitch(pianoLike(f), SR);
+    expect(r).not.toBeNull();
+    expect(nearestNote(r!.freq).midi).toBe(pitchToMidi(p));
+  });
+});

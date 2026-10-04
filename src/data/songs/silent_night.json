@@ -1,0 +1,136 @@
+{
+ "id": "silent_night",
+ "title": "Silent Night",
+ "titleVi": "Đêm thánh vô cùng",
+ "composer": "Franz Xaver Gruber (1818)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Original simple arrangement for this app",
+ "attributionRequired": false,
+ "hand": "RH",
+ "bpm": 60,
+ "timeSignature": "3/4",
+ "week": 18,
+ "position": "free",
+ "phrases": [
+  0,
+  4,
+  8
+ ],
+ "notes": [
+  {
+   "pitch": "G4",
+   "beats": 1.5,
+   "finger": 2
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 3,
+   "finger": 1
+  },
+  {
+   "pitch": "G4",
+   "beats": 1.5,
+   "finger": 2
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 3,
+   "finger": 1
+  },
+  {
+   "pitch": "D5",
+   "beats": 2,
+   "finger": 5
+  },
+  {
+   "pitch": "D5",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "B4",
+   "beats": 3,
+   "finger": 3
+  },
+  {
+   "pitch": "C5",
+   "beats": 2,
+   "finger": 4
+  },
+  {
+   "pitch": "C5",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "G4",
+   "beats": 3,
+   "finger": 1
+  },
+  {
+   "pitch": "A4",
+   "beats": 2,
+   "finger": 2
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "C5",
+   "beats": 1.5,
+   "finger": 4
+  },
+  {
+   "pitch": "B4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 1.5,
+   "finger": 2
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 3,
+   "finger": 1
+  }
+ ]
+}

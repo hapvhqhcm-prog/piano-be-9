@@ -42,3 +42,19 @@ describe('gradeTiming', () => {
     expect(PASS_SCORE).toBe(0.8);
   });
 });
+
+describe('gradeTiming — nhóm nốt cùng lúc (hai tay / hợp âm)', () => {
+  it('nghe được một nốt bất kỳ trong nhóm là trúng', () => {
+    const v = gradeTiming(
+      [
+        { index: 0, start: 0, midi: [64, 48] },
+        { index: 1, start: 1, midi: [62] },
+      ],
+      [
+        { beat: 0.05, midi: 48 },
+        { beat: 1.0, midi: 64 },
+      ],
+    );
+    expect(v.map((x) => x.hit)).toEqual([true, false]);
+  });
+});

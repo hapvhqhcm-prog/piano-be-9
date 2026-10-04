@@ -1,4 +1,4 @@
-import { pitchToMidi, type Pitch } from '../piano/pitchTable';
+import { midiToPitch, pitchToMidi, type Pitch } from '../piano/pitchTable';
 import { diatonic } from '../music/staff';
 
 /**
@@ -7,8 +7,9 @@ import { diatonic } from '../music/staff';
  * - stepskip: "Bước hay nhảy?" — 2 nốt cạnh nhau (bước) hay cách một phím (nhảy)
  * - identify: "Nốt nào đây?"   — luôn nghe nốt MỐC (Đô) trước, rồi nốt cần đoán → chạm phím ảo
  * - read:     "Đọc nốt"        — nốt hiện trên khuông, bé chạm phím ảo (không nghe trước)
+ * - majorminor: "Vui hay buồn?" — app rải hợp âm TRƯỞNG (vui) hoặc THỨ (buồn) — Cấp 3
  */
-export type QuizVariant = 'updown' | 'stepskip' | 'identify' | 'read';
+export type QuizVariant = 'updown' | 'stepskip' | 'identify' | 'read' | 'majorminor';
 
 export interface QuizSpec {
   variant: QuizVariant;
@@ -16,6 +17,8 @@ export interface QuizSpec {
   rounds: number;
   /** Nốt mốc cho identify (mặc định Đô thấp nhất trong pool) */
   reference?: Pitch;
+  /** Khóa nhạc cho trò đọc nốt (mặc định khóa Sol) */
+  clef?: 'treble' | 'bass';
 }
 
 export interface Choice {
@@ -43,6 +46,11 @@ export const UPDOWN_CHOICES: Choice[] = [
 export const STEPSKIP_CHOICES: Choice[] = [
   { value: 'step', label: 'Bước', emoji: '🚶' },
   { value: 'skip', label: 'Nhảy', emoji: '🐸' },
+];
+
+export const MAJORMINOR_CHOICES: Choice[] = [
+  { value: 'major', label: 'Vui (trưởng)', emoji: '😊' },
+  { value: 'minor', label: 'Buồn (thứ)', emoji: '😢' },
 ];
 
 type Rng = () => number;
@@ -97,6 +105,12 @@ function build(spec: QuizSpec, rng: Rng): Question {
     case 'read': {
       const target = pick(pool, rng);
       return { expected: target, play: [], show: target };
+    }
+    case 'majorminor': {
+      const root = pitchToMidi(pick(pool, rng));
+      const major = rng() < 0.5;
+      const chord = [root, root + (major ? 4 : 3), root + 7].map(midiToPitch);
+      return { expected: major ? 'major' : 'minor', play: [...chord, chord[2], chord[1], chord[0]], choices: MAJORMINOR_CHOICES };
     }
   }
 }

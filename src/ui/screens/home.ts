@@ -1,6 +1,8 @@
 import {
   MAX_SESSIONS_PER_DAY,
   WEEKS,
+  dailyLesson,
+  levelOf,
   minutesToday,
   nextLesson,
   sessionsToday,
@@ -21,10 +23,11 @@ import { markSafePoint } from '../../pwa/updater';
 function islandMap(app: App): HTMLElement {
   const data = app.store.get();
   const cur = data.progress.currentWeek;
+  const lv = levelOf(cur);
   return h(
     'div',
-    { class: 'map', role: 'list', 'aria-label': 'Bản đồ hành trình' },
-    ...WEEKS.map((w) => {
+    { class: 'map', role: 'list', 'aria-label': `Bản đồ ${lv.name}` },
+    ...WEEKS.filter((w) => w.week >= lv.weeks[0] && w.week <= lv.weeks[1]).map((w) => {
       const passed = w.week < cur || weekPassed(w.week, data);
       const here = w.week === cur;
       return h(
@@ -72,7 +75,12 @@ export function homeScreen(app: App, banner?: string) {
         h(
           'header',
           { class: 'topbar' },
-          h('div', { class: 'topbar-title' }, `${plan.islandEmoji} Tuần ${plan.week} · ${plan.island}`),
+          h(
+            'div',
+            { class: 'topbar-title' },
+            h('span', { class: 'level-tag' }, levelOf(plan.week).name),
+            ` ${plan.islandEmoji} Tuần ${plan.week} · ${plan.island}`,
+          ),
           parentButton(() => app.show(parentGateScreen(app))),
         ),
         islandMap(app),
@@ -90,7 +98,20 @@ export function homeScreen(app: App, banner?: string) {
                 big: true,
                 onTap: () => startSession(app, next),
               }),
-          h('div', { class: 'chips' }, ...plan.lessons.map(lessonChip)),
+          h(
+            'div',
+            { class: 'chips' },
+            ...plan.lessons.map(lessonChip),
+            // Từ Cấp 2: luyện tập mỗi ngày (bài đang tập + ôn bài đã thuộc + đọc nhạc mới)
+            plan.week >= 9 && next.id !== `w${plan.week}-daily`
+              ? h(
+                  'button',
+                  { class: 'chip', type: 'button', onClick: () => !overLimit && startSession(app, dailyLesson(app.store.get())) },
+                  h('span', { class: 'chip-emoji' }, '🔁'),
+                  h('span', {}, 'Luyện tập mỗi ngày'),
+                )
+              : null,
+          ),
           h(
             'div',
             { class: 'home-row' },

@@ -1,0 +1,164 @@
+{
+ "id": "question_answer",
+ "title": "Question and Answer",
+ "titleVi": "Hỏi – Đáp (hai tay luân phiên)",
+ "composer": "Bài tự sáng tác cho app (piano-be-9)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Bài tự sáng tác cho app (piano-be-9)",
+ "attributionRequired": false,
+ "hand": "BOTH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 9,
+ "phrases": [
+  0,
+  4
+ ],
+ "notes": [
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "G4",
+   "beats": 2,
+   "finger": 5
+  },
+  {
+   "pitch": "E4",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "rest": true,
+   "beats": 4
+  },
+  {
+   "rest": true,
+   "beats": 4
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "C4",
+   "beats": 2,
+   "finger": 1
+  },
+  {
+   "rest": true,
+   "beats": 4
+  },
+  {
+   "rest": true,
+   "beats": 4
+  }
+ ],
+ "lh": [
+  {
+   "rest": true,
+   "beats": 4
+  },
+  {
+   "rest": true,
+   "beats": 4
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "B3",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "A3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G3",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "F3",
+   "beats": 4,
+   "finger": 5
+  },
+  {
+   "rest": true,
+   "beats": 4
+  },
+  {
+   "rest": true,
+   "beats": 4
+  },
+  {
+   "pitch": "G3",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "A3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "B3",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "G3",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "C4",
+   "beats": 4,
+   "finger": 1
+  }
+ ],
+ "lhPosition": "MC"
+}

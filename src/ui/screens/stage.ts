@@ -5,6 +5,8 @@ import { backButton, button, h } from '../components/dom';
 import { songScreen } from './song';
 
 export interface StageHooks {
+  /** Cấp của buổi hòa nhạc: 1 = tay phải tuần 1–8, 2 = thêm bài hai tay, 3 = mọi bài */
+  level?: 1 | 2 | 3;
   onRun(run: Omit<SongRun, 'ts'>): void;
   /** Phụ huynh tặng huy chương — tiêu chí tuần 8 (PARENT) */
   onMedal(): void;
@@ -17,7 +19,12 @@ export interface StageHooks {
  */
 export function stageScreen(app: App, hooks: StageHooks) {
   return (root: HTMLElement) => {
-    const choices = songsUpToWeek(8).filter((s) => s.hand === 'RH');
+    const level = hooks.level ?? 1;
+    const upTo = level === 1 ? 8 : level === 2 ? 16 : 24;
+    // Cấp 1: bài tay phải; Cấp 2–3: mọi bài đã mở (ưu tiên bài mới của cấp đó lên đầu)
+    const choices = songsUpToWeek(upTo)
+      .filter((s) => level > 1 || s.hand === 'RH')
+      .sort((a, b) => (b.week ?? 0) - (a.week ?? 0));
     const picked: Tune[] = [];
 
     const pick = () => {
@@ -86,7 +93,7 @@ export function stageScreen(app: App, hooks: StageHooks) {
       const screen = songScreen(
         app,
         picked[k],
-        { mode: 'tempo', level: 2, hints: 'names', stage: true, intro: `Bài ${k + 1}/${picked.length}: ${picked[k].titleVi}.` },
+        { mode: 'tempo', level: level === 3 ? 3 : 2, hints: level === 3 ? 'staff' : 'names', stage: true, intro: `Bài ${k + 1}/${picked.length}: ${picked[k].titleVi}.` },
         { onRun: hooks.onRun, onDone: () => perform(k + 1), onBack: invite },
       );
       root.replaceChildren();
@@ -121,7 +128,11 @@ export function stageScreen(app: App, hooks: StageHooks) {
                     'div',
                     { class: 'screen center' },
                     h('div', { class: 'hero-emoji huge medal' }, '🏅'),
-                    h('h1', { class: 'hero-title' }, 'Con đã chinh phục Lâu đài Âm nhạc!'),
+                    h(
+            'h1',
+            { class: 'hero-title' },
+            level === 1 ? 'Con đã chinh phục Lâu đài Âm nhạc!' : level === 2 ? 'Huy chương Cấp 2 — nghệ sĩ hai tay!' : '🏆 Huy chương vàng — con đã thành thạo piano!',
+          ),
                     button({ icon: '▶', label: 'Tiếp', kind: 'primary', big: true, onTap: hooks.onDone }),
                   ),
                 );

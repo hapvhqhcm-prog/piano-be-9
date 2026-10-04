@@ -1,0 +1,126 @@
+{
+ "id": "hot_cross_buns_both",
+ "title": "Hot Cross Buns (hands together)",
+ "titleVi": "Bánh nóng — hai tay",
+ "composer": "Dân ca Anh (traditional)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Original simple arrangement for this app",
+ "attributionRequired": false,
+ "hand": "BOTH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 10,
+ "phrases": [
+  0,
+  2
+ ],
+ "notes": [
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 2,
+   "finger": 1
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 2,
+   "finger": 1
+  },
+  {
+   "pitch": "C4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "C4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "C4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "C4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "D4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "D4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "D4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "D4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 2,
+   "finger": 1
+  }
+ ],
+ "lh": [
+  {
+   "pitch": "C3",
+   "beats": 4,
+   "finger": 5
+  },
+  {
+   "pitch": "C3",
+   "beats": 4,
+   "finger": 5
+  },
+  {
+   "pitch": "G3",
+   "beats": 4,
+   "finger": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 4,
+   "finger": 5
+  }
+ ]
+}

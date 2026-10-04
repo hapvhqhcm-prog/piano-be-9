@@ -1,12 +1,18 @@
 import { ledgerSteps, staffStep, stemUp, type Clef } from '../../music/staff';
-import { beatsPerMeasure, measureCount, timeline, type TimedNote, type Tune } from '../../music/tune';
-import { viName } from '../../piano/pitchTable';
+import {
+  beatsPerMeasure,
+  lhTimeline,
+  measureCount,
+  pitchesOf,
+  timeline,
+  type TimedNote,
+  type Tune,
+} from '../../music/tune';
+import { pitchInfo, viName } from '../../piano/pitchTable';
 
 const SVG = 'http://www.w3.org/2000/svg';
 const GAP = 14; // khoảng cách 2 vạch
-const BOTTOM_Y = 116; // y của vạch dưới cùng
 const X0 = 104; // nốt đầu tiên
-const HEIGHT = 186;
 
 function el<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string, string | number> = {}) {
   const e = document.createElementNS(SVG, tag);
@@ -14,15 +20,13 @@ function el<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string, 
   return e;
 }
 
-const yOf = (step: number) => BOTTOM_Y - (step * GAP) / 2;
-
 export interface StaffOptions {
   clef?: Clef;
-  /** Hiện tên nốt dưới khuông (giàn giáo — rút dần ở tuần 7) */
+  /** Hiện tên nốt (giàn giáo — rút dần) */
   names?: boolean;
-  /** Hiện số ngón trên đầu nốt */
+  /** Hiện số ngón */
   fingers?: boolean;
-  /** 'page': hiện từng trang 4 ô nhịp, con trỏ nhảy; 'scroll': băng chuyền chạy ngang */
+  /** 'page': từng trang 4 ô nhịp, con trỏ nhảy; 'scroll': băng chuyền chạy ngang */
   mode?: 'page' | 'scroll';
   measuresPerPage?: number;
   pxPerBeat?: number;
@@ -30,16 +34,27 @@ export interface StaffOptions {
 
 export type NoteMark = 'now' | 'hit' | 'miss' | null;
 
-/** Khuông nhạc SVG cho một bài: vẽ nốt, vạch nhịp, con trỏ; tô nốt đúng/trượt. */
+interface Stave {
+  clef: Clef;
+  bottomY: number;
+  notes: TimedNote[];
+  fingerY: number;
+  nameY: number;
+}
+
+/**
+ * Khuông nhạc SVG: khuông đơn (Sol hoặc Fa) hoặc khuông KÉP cho bài hai tay.
+ * Vẽ nốt (đen/trắng/tròn/móc đơn, chấm dôi, dấu thăng/giáng, hợp âm, dấu lặng), vạch nhịp, con trỏ.
+ */
 export class StaffView {
   readonly el: HTMLDivElement;
   private svg: SVGSVGElement;
   private content: SVGGElement;
   private noteEls = new Map<number, SVGGElement>();
-  private notes: TimedNote[];
+  private staves: Stave[];
   private page = -1;
   private readonly o: Required<StaffOptions>;
-  private playhead: SVGLineElement | null = null;
+  private readonly height: number;
 
   constructor(
     private readonly tune: Tune,
@@ -51,64 +66,79 @@ export class StaffView {
       fingers: opts.fingers ?? true,
       mode: opts.mode ?? 'page',
       measuresPerPage: opts.measuresPerPage ?? 4,
-      pxPerBeat: opts.pxPerBeat ?? 62,
+      pxPerBeat: opts.pxPerBeat ?? (beatsPerMeasure(tune) === 3 ? 76 : 62),
     };
-    this.notes = timeline(tune);
+    if (tune.lh) {
+      this.staves = [
+        { clef: 'treble', bottomY: 116, notes: timeline(tune), fingerY: 18, nameY: 152 },
+        { clef: 'bass', bottomY: 240, notes: lhTimeline(tune), fingerY: 290, nameY: 270 },
+      ];
+      this.height = 300;
+    } else {
+      this.staves = [{ clef: this.o.clef, bottomY: 116, notes: timeline(tune), fingerY: 18, nameY: 178 }];
+      this.height = 186;
+    }
     this.el = document.createElement('div');
-    this.el.className = `staff staff-${this.o.mode}`;
+    this.el.className = `staff staff-${this.o.mode}${tune.lh ? ' grand' : ''}`;
     const pageBeats = this.o.measuresPerPage * beatsPerMeasure(tune);
     const width = X0 + pageBeats * this.o.pxPerBeat + 24;
     this.svg = el('svg', {
-      viewBox: `0 0 ${width} ${HEIGHT}`,
+      viewBox: `0 0 ${width} ${this.height}`,
       preserveAspectRatio: 'xMidYMid meet',
       role: 'img',
       'aria-label': `Khuông nhạc: ${tune.titleVi}`,
     });
-    this.drawStaffFrame(width);
+    for (const s of this.staves) this.drawFrame(s, width);
+    if (tune.lh) {
+      // Vạch nối khuông kép
+      this.svg.append(el('line', { x1: 8, x2: 8, y1: this.y(this.staves[0], 8), y2: this.y(this.staves[1], 0), class: 'staff-bar' }));
+    }
     this.content = el('g', { class: 'staff-content' });
     if (this.o.mode === 'scroll') {
-      // Nốt đã trôi qua vạch chơi thì ẩn đi, không đè lên khóa nhạc
-      const clipId = `staff-clip-${tune.id.replace(/[^a-z0-9]/gi, '')}-${Math.random().toString(36).slice(2, 7)}`;
+      const clipId = `staff-clip-${Math.random().toString(36).slice(2, 9)}`;
       const defs = el('defs');
       const clip = el('clipPath', { id: clipId });
-      clip.append(el('rect', { x: X0 - 16, y: 0, width: width, height: HEIGHT }));
+      clip.append(el('rect', { x: X0 - 16, y: 0, width, height: this.height }));
       defs.append(clip);
       this.svg.append(defs);
       const wrap = el('g', { 'clip-path': `url(#${clipId})` });
       wrap.append(this.content);
       this.svg.append(wrap);
-    } else {
-      this.svg.append(this.content);
-    }
-    if (this.o.mode === 'scroll') {
       this.drawAll();
-      this.playhead = el('line', { x1: X0, x2: X0, y1: 22, y2: HEIGHT - 26, class: 'staff-playhead' });
-      this.svg.append(this.playhead);
+      this.svg.append(el('line', { x1: X0, x2: X0, y1: 22, y2: this.height - 26, class: 'staff-playhead' }));
       this.setTime(0);
     } else {
+      this.svg.append(this.content);
       this.showPage(0);
     }
     this.el.append(this.svg);
   }
 
-  private drawStaffFrame(width: number): void {
+  private y(s: Stave, step: number): number {
+    return s.bottomY - (step * GAP) / 2;
+  }
+
+  private drawFrame(s: Stave, width: number): void {
     for (let i = 0; i < 5; i++) {
-      const y = yOf(i * 2);
+      const y = this.y(s, i * 2);
       this.svg.append(el('line', { x1: 8, x2: width - 8, y1: y, y2: y, class: 'staff-line' }));
     }
-    // Khóa — đơn giản hóa cho dễ nhìn
-    const clef = el('path', {
-      class: 'staff-clef',
-      d:
-        this.o.clef === 'treble'
-          ? 'M40,150 C30,150 28,138 38,136 C46,135 46,146 40,148 M40,148 C48,140 44,56 40,36 C37,22 48,18 50,32 C53,52 22,70 20,94 C18,114 44,122 56,108 C66,96 54,80 41,86 C30,92 34,108 46,105'
-          : 'M24,76 C22,58 52,56 54,76 C56,100 34,118 18,126 M62,70 a3,3 0 1 0 0.1,0 M62,84 a3,3 0 1 0 0.1,0',
-    });
-    this.svg.append(clef);
-    const ts = el('text', { x: 78, y: yOf(6) + 6, class: 'staff-time' });
-    ts.textContent = this.tune.timeSignature.split('/')[0];
-    const ts2 = el('text', { x: 78, y: yOf(2) + 6, class: 'staff-time' });
-    ts2.textContent = this.tune.timeSignature.split('/')[1];
+    const dy = s.bottomY - 116;
+    this.svg.append(
+      el('path', {
+        class: 'staff-clef',
+        transform: `translate(0 ${dy})`,
+        d:
+          s.clef === 'treble'
+            ? 'M40,150 C30,150 28,138 38,136 C46,135 46,146 40,148 M40,148 C48,140 44,56 40,36 C37,22 48,18 50,32 C53,52 22,70 20,94 C18,114 44,122 56,108 C66,96 54,80 41,86 C30,92 34,108 46,105'
+            : 'M24,76 C22,58 52,56 54,76 C56,100 34,118 18,126 M62,70 a3,3 0 1 0 0.1,0 M62,84 a3,3 0 1 0 0.1,0',
+      }),
+    );
+    const [top, bottom] = this.tune.timeSignature.split('/');
+    const ts = el('text', { x: 78, y: this.y(s, 6) + 6, class: 'staff-time' });
+    ts.textContent = top;
+    const ts2 = el('text', { x: 78, y: this.y(s, 2) + 6, class: 'staff-time' });
+    ts2.textContent = bottom;
     this.svg.append(ts, ts2);
   }
 
@@ -116,73 +146,94 @@ export class StaffView {
     return X0 + (beat - originBeat) * this.o.pxPerBeat;
   }
 
-  private drawNotes(from: number, to: number, originBeat: number): void {
+  private drawRange(from: number, to: number, originBeat: number): void {
     const bpm = beatsPerMeasure(this.tune);
     for (let m = from; m <= to; m++) {
       if (m === 0 && this.o.mode === 'page') continue;
       const x = this.xOf(m * bpm, originBeat) - 14;
-      this.content.append(el('line', { x1: x, x2: x, y1: yOf(8), y2: yOf(0), class: 'staff-bar' }));
+      for (const s of this.staves) {
+        this.content.append(el('line', { x1: x, x2: x, y1: this.y(s, 8), y2: this.y(s, 0), class: 'staff-bar' }));
+      }
     }
-    for (const n of this.notes) {
-      if (n.measure < from || n.measure >= to) continue;
-      this.content.append(this.drawNote(n, this.xOf(n.start, originBeat)));
+    for (const s of this.staves) {
+      for (const n of s.notes) {
+        if (n.measure < from || n.measure >= to) continue;
+        this.content.append(this.drawNote(s, n, this.xOf(n.start, originBeat)));
+      }
     }
     if (to >= measureCount(this.tune)) {
       const end = this.xOf(measureCount(this.tune) * bpm, originBeat) - 14;
-      this.content.append(el('line', { x1: end + 4, x2: end + 4, y1: yOf(8), y2: yOf(0), class: 'staff-bar end' }));
+      const top = this.y(this.staves[0], 8);
+      const bottom = this.y(this.staves[this.staves.length - 1], 0);
+      this.content.append(el('line', { x1: end + 4, x2: end + 4, y1: top, y2: bottom, class: 'staff-bar end' }));
     }
   }
 
-  private drawNote(n: TimedNote, x: number): SVGGElement {
+  private drawNote(s: Stave, n: TimedNote, x: number): SVGGElement {
     const g = el('g', { class: 'staff-note' });
     this.noteEls.set(n.index, g);
     if (n.rest) {
-      const y = yOf(4);
+      const y = this.y(s, 4);
       if (n.beats >= 2) {
-        g.append(el('rect', { x: x - 8, y: n.beats >= 4 ? yOf(6) : y - 6, width: 16, height: 6, class: 'staff-rest' }));
+        g.append(el('rect', { x: x - 8, y: n.beats >= 4 ? this.y(s, 6) : y - 6, width: 16, height: 6, class: 'staff-rest' }));
       } else {
         g.append(el('path', { d: `M${x - 3},${y - 18} l7,9 l-7,7 l7,9 c-6,-3 -10,1 -5,6`, class: 'staff-rest-q' }));
       }
       return g;
     }
-    const step = staffStep(n.pitch!, this.o.clef);
-    const y = yOf(step);
-    for (const ls of ledgerSteps(step)) {
-      g.append(el('line', { x1: x - 13, x2: x + 13, y1: yOf(ls), y2: yOf(ls), class: 'staff-ledger' }));
-    }
+    const pitches = pitchesOf(n);
+    const steps = pitches.map((p) => staffStep(p, s.clef));
     const hollow = n.beats >= 2;
-    g.append(
-      el('ellipse', {
-        cx: x,
-        cy: y,
-        rx: 8.5,
-        ry: 6.2,
-        transform: `rotate(-20 ${x} ${y})`,
-        class: hollow ? 'staff-head hollow' : 'staff-head',
-      }),
-    );
+    const dotted = [0.75, 1.5, 3].includes(n.beats);
+    for (const [i, p] of pitches.entries()) {
+      const step = steps[i];
+      const y = this.y(s, step);
+      for (const ls of ledgerSteps(step)) {
+        g.append(el('line', { x1: x - 13, x2: x + 13, y1: this.y(s, ls), y2: this.y(s, ls), class: 'staff-ledger' }));
+      }
+      g.append(
+        el('ellipse', {
+          cx: x,
+          cy: y,
+          rx: 8.5,
+          ry: 6.2,
+          transform: `rotate(-20 ${x} ${y})`,
+          class: hollow ? 'staff-head hollow' : 'staff-head',
+        }),
+      );
+      const acc = pitchInfo(p).accidental;
+      if (acc) {
+        const t = el('text', { x: x - 17, y: y + 6, class: 'staff-acc' });
+        t.textContent = acc === '#' ? '♯' : '♭';
+        g.append(t);
+      }
+      if (dotted) g.append(el('circle', { cx: x + 14, cy: step % 2 === 0 ? y - 4 : y, r: 2.4, class: 'staff-dot' }));
+    }
     if (n.beats < 4) {
-      const up = stemUp(step);
+      const lo = Math.min(...steps);
+      const hi = Math.max(...steps);
+      const up = stemUp((lo + hi) / 2);
       const sx = up ? x + 7.6 : x - 7.6;
-      const sy2 = up ? y - 46 : y + 46;
-      g.append(el('line', { x1: sx, x2: sx, y1: y, y2: sy2, class: 'staff-stem' }));
+      const y1 = up ? this.y(s, lo) : this.y(s, hi);
+      const y2 = up ? this.y(s, hi) - 46 : this.y(s, lo) + 46;
+      g.append(el('line', { x1: sx, x2: sx, y1, y2, class: 'staff-stem' }));
       if (n.beats < 1) {
         g.append(
-          el('path', {
-            d: up ? `M${sx},${sy2} c4,8 12,10 10,22` : `M${sx},${sy2} c4,-8 12,-10 10,-22`,
-            class: 'staff-flag',
-          }),
+          el('path', { d: up ? `M${sx},${y2} c4,8 12,10 10,22` : `M${sx},${y2} c4,-8 12,-10 10,-22`, class: 'staff-flag' }),
         );
       }
     }
-    if (this.o.fingers && n.finger) {
-      const t = el('text', { x, y: 18, class: 'staff-finger' });
-      t.textContent = String(n.finger);
-      g.append(t);
+    if (this.o.fingers) {
+      const fs = [n.finger, ...(n.also ?? []).map((a) => a.finger)].filter((f): f is number => !!f);
+      if (fs.length) {
+        const t = el('text', { x, y: s.fingerY, class: `staff-finger${n.hand === 'LH' ? ' lh' : ''}` });
+        t.textContent = fs.join('');
+        g.append(t);
+      }
     }
     if (this.o.names) {
-      const t = el('text', { x, y: HEIGHT - 8, class: 'staff-name' });
-      t.textContent = viName(n.pitch!);
+      const t = el('text', { x, y: s.nameY, class: 'staff-name' });
+      t.textContent = viName(n.pitch!).replace(' thăng', '♯').replace(' giáng', '♭');
       g.append(t);
     }
     return g;
@@ -191,7 +242,7 @@ export class StaffView {
   private drawAll(): void {
     this.content.replaceChildren();
     this.noteEls.clear();
-    this.drawNotes(0, measureCount(this.tune), 0);
+    this.drawRange(0, measureCount(this.tune), 0);
   }
 
   private showPage(p: number): void {
@@ -201,16 +252,25 @@ export class StaffView {
     this.noteEls.clear();
     const per = this.o.measuresPerPage;
     const from = p * per;
-    this.drawNotes(from, Math.min(from + per, measureCount(this.tune)), from * beatsPerMeasure(this.tune));
+    this.drawRange(from, Math.min(from + per, measureCount(this.tune)), from * beatsPerMeasure(this.tune));
   }
 
-  /** Đưa nốt `index` lên màn (lật trang nếu cần) và đánh dấu "đang tới". */
-  setCursor(index: number): void {
-    const n = this.notes[index];
-    if (!n) return;
-    if (this.o.mode === 'page') this.showPage(Math.floor(n.measure / this.o.measuresPerPage));
+  private measureOf(index: number): number | undefined {
+    for (const s of this.staves) {
+      const n = s.notes.find((x) => x.index === index);
+      if (n) return n.measure;
+    }
+    return undefined;
+  }
+
+  /** Đưa (các) nốt lên màn — lật trang nếu cần — và đánh dấu "đang tới". */
+  setCursor(index: number | number[]): void {
+    const idx = Array.isArray(index) ? index : [index];
+    const m = idx.length ? this.measureOf(idx[0]) : undefined;
+    if (m === undefined) return;
+    if (this.o.mode === 'page') this.showPage(Math.floor(m / this.o.measuresPerPage));
     this.noteEls.forEach((g) => g.classList.remove('now'));
-    this.noteEls.get(index)?.classList.add('now');
+    for (const i of idx) this.noteEls.get(i)?.classList.add('now');
   }
 
   /** Băng chuyền: đặt vị trí theo phách hiện tại (nốt trôi về vạch đỏ). */

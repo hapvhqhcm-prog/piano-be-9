@@ -1,4 +1,5 @@
-import { WEEKS, findLesson, weekPassed, weekPlan } from '../../lessons/lessonEngine';
+import { WEEKS, findLesson, levelOf, masteredSongs, weekPassed, weekPlan } from '../../lessons/lessonEngine';
+import { SONGS } from '../../music/tune';
 import { findTune } from '../../music/exercises';
 import { RATING_STARS, isEmptySession } from '../../progress/ProgressStore';
 import { CHECKLIST_ITEMS, localDateStr, type AppData, type Session, type Settings } from '../../progress/schema';
@@ -23,6 +24,7 @@ function lessonName(id: string): string {
   if (l) return `${l.emoji} ${l.title}`;
   const m = /^w\d+-song-(.+)$/.exec(id);
   if (m) return `🎵 ${findTune(m[1])?.titleVi ?? m[1]} (tự chọn)`;
+  if (/^w\d+-daily$/.test(id)) return '🔁 Luyện tập mỗi ngày';
   return id;
 }
 
@@ -177,6 +179,39 @@ export function parentScreen(app: App) {
           h('h3', {}, 'Phút luyện / ngày (7 ngày)'),
           table(['Ngày', 'Phút', 'Sao'], days),
         ),
+
+        (() => {
+          // Kỹ năng hướng tới "thành thạo"
+          const pa = d.sessions.flatMap((x) => x.parentAssessments).filter((a) => /^[A-G]/.test(a.note));
+          const mic = d.sessions.flatMap((x) => x.micAssessments);
+          const findOk = pa.filter((a) => a.result === 'correct').length + mic.filter((a) => a.firstTry).length;
+          const findAll = pa.length + mic.length;
+          const app2 = d.sessions.flatMap((x) => x.appAssessments);
+          const ear = app2.filter((a) => /^[A-G]/.test(a.expected) || ['up', 'down', 'step', 'skip', 'major', 'minor'].includes(a.expected));
+          const tempo = d.sessions.flatMap((x) => x.songRuns).filter((r) => r.mode === 'tempo' && !r.phrase);
+          const sight = d.sessions.flatMap((x) => x.songRuns).filter((r) => r.songId.startsWith('sight'));
+          const pct = (a: number, b: number) => (b ? `${Math.round((a / b) * 100)}%` : '—');
+          const mastered = masteredSongs(d);
+          return h(
+            'section',
+            { class: 'card' },
+            h('h2', {}, '🎯 Tiến tới thành thạo'),
+            h('p', {}, `${levelOf(week).name} — ${levelOf(week).goal}`),
+            table(
+              ['Kỹ năng', 'Kết quả', 'Số lần'],
+              [
+                ['Tìm đúng nốt trên đàn (bố mẹ / micro)', pct(findOk, findAll), findAll],
+                ['Nghe & đọc nốt (trò chơi)', pct(ear.filter((a) => a.correct).length, ear.length), ear.length],
+                ['Giữ nhịp cả bài', pct(tempo.filter((r) => r.passed).length, tempo.length), tempo.length],
+                ['Đọc nhạc ngẫu nhiên', pct(sight.filter((r) => r.passed).length, sight.length), sight.length],
+              ],
+            ),
+            h('p', {}, `⭐ Bài đã thuộc: `, h('b', {}, `${mastered.length}/${SONGS.length}`)),
+            mastered.length
+              ? h('p', { class: 'muted' }, mastered.map((id) => findTune(id)?.titleVi ?? id).join(' · '))
+              : h('p', { class: 'muted' }, '"Thuộc" = đàn trọn bài theo nhịp từ 60 trở lên và đạt.'),
+          );
+        })(),
 
         h(
           'section',
@@ -336,15 +371,20 @@ export function parentScreen(app: App) {
                 (v) => set({ autoAdvanceDelaySec: v }),
               )
             : null,
-          h('h3', {}, 'Tuần hiện tại (giáo trình v2: tuần 1–8) — chỉ đổi khi cần'),
-          segmented(
-            WEEKS.map((w) => ({ value: w.week, label: `${w.islandEmoji} ${w.week}` })),
-            week,
-            (v) => {
-              store.setCurrentWeek(v);
+          h('h3', {}, 'Tuần hiện tại (1–24) — chỉ đổi khi cần'),
+          (() => {
+            const sel = h('select', { class: 'text-in' }) as HTMLSelectElement;
+            for (const w of WEEKS) {
+              const o = h('option', { value: String(w.week) }, `${levelOf(w.week).name} · Tuần ${w.week} · ${w.islandEmoji} ${w.island}`);
+              if (w.week === week) o.setAttribute('selected', '');
+              sel.append(o);
+            }
+            sel.addEventListener('change', () => {
+              store.setCurrentWeek(Number(sel.value));
               render();
-            },
-          ),
+            });
+            return sel;
+          })(),
           h('h3', {}, '🎤 Nghe đàn bằng micro'),
           h(
             'p',

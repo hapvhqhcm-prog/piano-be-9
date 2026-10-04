@@ -49,3 +49,14 @@ describe('quiz v2', () => {
     expect(q2.show).not.toBe(q1.show);
   });
 });
+
+describe('quiz Cấp 3', () => {
+  it('Vui hay buồn: hợp âm trưởng có quãng 3 lớn (4 cung), thứ có quãng 3 nhỏ (3 cung)', () => {
+    for (let k = 0; k < 20; k++) {
+      const q = makeQuestion({ variant: 'majorminor', pool: ['C4', 'F4', 'G4'], rounds: 6 });
+      const third = pitchToMidi(q.play[1]) - pitchToMidi(q.play[0]);
+      expect(q.expected).toBe(third === 4 ? 'major' : 'minor');
+      expect(pitchToMidi(q.play[2]) - pitchToMidi(q.play[0])).toBe(7);
+    }
+  });
+});

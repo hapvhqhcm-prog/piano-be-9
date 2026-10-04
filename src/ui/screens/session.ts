@@ -1,6 +1,7 @@
-import { MAX_WEEK, buildSessionPlan, weekPassed, weekPlan } from '../../lessons/lessonEngine';
+import { MAX_WEEK, buildSessionPlan, levelOf, weekPassed, weekPlan } from '../../lessons/lessonEngine';
 import type { Activity, Lesson, Segment } from '../../lessons/types';
 import { findTune } from '../../music/exercises';
+import { makeSightTune } from '../../music/sightread';
 import type { App, Screen } from '../App';
 import { quizScreen } from './ear';
 import { homeScreen } from './home';
@@ -35,9 +36,12 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
       if (week < MAX_WEEK) {
         store.setCurrentWeek(week + 1);
         const next = weekPlan(week + 1);
-        banner = `🏅 Con đã qua ${weekPlan(week).island}! Chặng tiếp: ${next.islandEmoji} ${next.island}.`;
+        banner =
+          levelOf(week + 1).level !== levelOf(week).level
+            ? `🎉 Con đã lên ${levelOf(week + 1).name}! Chặng mới: ${next.islandEmoji} ${next.island}.`
+            : `🏅 Con đã qua ${weekPlan(week).island}! Chặng tiếp: ${next.islandEmoji} ${next.island}.`;
       } else {
-        banner = '🏰 Con đã chinh phục Lâu đài Âm nhạc — hoàn thành cả 8 tuần!';
+        banner = '🏆 Con đã hoàn thành cả 24 tuần — từ nay mỗi ngày có bài luyện tập mới!';
       }
     }
     app.show(
@@ -94,8 +98,32 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
           onDone: onComplete,
           onBack: onExit,
         });
+      case 'sight': {
+        // Đọc nhạc: mỗi lần một đoạn MỚI do máy sinh ra, chơi chế độ chờ
+        let k = 0;
+        const one = (): Screen => {
+          const tune = makeSightTune(
+            { position: a.position, hand: a.hand, measures: a.hand === 'LH' ? 2 : 3, rhythm: a.rhythm, timeSignature: a.timeSignature },
+            Math.random,
+            `sight:${a.position}:${a.hand}`,
+          );
+          tune.titleVi = `${a.title} (${k + 1}/${a.count})`;
+          return songScreen(
+            app,
+            tune,
+            { mode: 'wait', hints: a.hints, intro: 'Đoạn nhạc mới toanh — đọc rồi đàn nhé!' },
+            {
+              onRun: (run) => store.addSongRun(session.id, run),
+              onDone: () => (++k < a.count ? app.show(one()) : onComplete()),
+              onBack: onExit,
+            },
+          );
+        };
+        return one();
+      }
       case 'stage':
         return stageScreen(app, {
+          level: a.level ?? 1,
           onRun: (run) => store.addSongRun(session.id, run),
           onMedal: () => store.addParentAssessment(session.id, 'medal', 'correct'),
           onDone: onComplete,

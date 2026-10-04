@@ -1195,3 +1195,71 @@ p {
   align-items: flex-start;
   gap: 6px;
 }
+
+/* =========================================================
+   Cấp 2–3: khuông kép, dấu hóa, chấm dôi, cấp độ, thư viện
+   ========================================================= */
+.level-tag {
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+  background: var(--primary);
+  border-radius: 999px;
+  padding: 2px 12px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+.staff-acc {
+  font-size: 22px;
+  font-weight: 700;
+  text-anchor: middle;
+  fill: #2b2a33;
+}
+.staff-dot {
+  fill: #2b2a33;
+}
+.staff-finger.lh {
+  fill: var(--lh);
+}
+.staff.grand {
+  max-height: 330px;
+}
+.song-staff.grand {
+  flex-grow: 1.4;
+}
+.keyboard.wide .key-label {
+  font-size: 16px;
+}
+.keyboard.wide .key-badge {
+  width: 40px;
+  height: 40px;
+  font-size: 26px;
+}
+.keyboard.wide .key-press-finger {
+  width: 50px;
+  height: 50px;
+  margin-left: -25px;
+  font-size: 30px;
+}
+.range-label {
+  font-size: 22px;
+  font-weight: 700;
+  min-width: 170px;
+  text-align: center;
+}
+.library-wrap {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 16px;
+}
+.library-wrap .library {
+  overflow: visible;
+}
+.lib-level {
+  font-size: 26px;
+  padding: 10px 20px 0;
+}
+.lib-note {
+  padding: 0 20px;
+}

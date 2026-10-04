@@ -46,6 +46,43 @@ export function handRange(hand: Hand, extended = false): Pitch[] {
   return extended && hand === 'RH' ? [...base, ...Object.keys(RH_EXTENSION)] : base;
 }
 
+/**
+ * THẾ TAY (Cấp 2–3, OWNER yêu cầu hoàn thiện giáo trình 2026-10-04) — bảng số ngón cố định cho từng thế.
+ * 'C' (§6) · 'MC' Đô giữa tay trái · 'G' thế Sol · 'D' thế Rê (Fa♯) · 'Cm' Đô thứ (Mi♭) · 'Am' La thứ.
+ * Bài có `position: "free"` dùng số ngón ghi riêng từng nốt (gam luồn ngón, đổi thế, bài cổ điển).
+ */
+export type PositionId = 'C' | 'MC' | 'G' | 'D' | 'Cm' | 'Am' | 'free';
+
+export const POSITIONS: Readonly<Record<Exclude<PositionId, 'free'>, Partial<Record<Hand, Readonly<Record<Pitch, number>>>>>> =
+  Object.freeze({
+    C: { RH: RH_FINGERING, LH: LH_FINGERING },
+    // Đô giữa tay trái: ngón cái ở Đô giữa, ngón út ở Fa3
+    MC: { LH: Object.freeze({ C4: 1, B3: 2, A3: 3, G3: 4, F3: 5 }) },
+    G: {
+      RH: Object.freeze({ G4: 1, A4: 2, B4: 3, C5: 4, D5: 5 }),
+      LH: Object.freeze({ G2: 5, A2: 4, B2: 3, C3: 2, D3: 1 }),
+    },
+    D: {
+      RH: Object.freeze({ D4: 1, E4: 2, 'F#4': 3, G4: 4, A4: 5 }),
+      LH: Object.freeze({ D3: 5, E3: 4, 'F#3': 3, G3: 2, A3: 1 }),
+    },
+    Cm: {
+      RH: Object.freeze({ C4: 1, D4: 2, Eb4: 3, F4: 4, G4: 5 }),
+      LH: Object.freeze({ C3: 5, D3: 4, Eb3: 3, F3: 2, G3: 1 }),
+    },
+    Am: {
+      RH: Object.freeze({ A3: 1, B3: 2, C4: 3, D4: 4, E4: 5 }),
+      LH: Object.freeze({ A2: 5, B2: 4, C3: 3, D3: 2, E3: 1 }),
+    },
+  });
+
+/** Số ngón theo thế tay (so khớp theo cách viết nốt); 'C' kèm La duỗi khi `extended`. */
+export function fingerInPosition(pitch: Pitch, hand: Hand, position: PositionId, extended = false): number | undefined {
+  if (position === 'free') return undefined;
+  if (position === 'C') return fingerFor(pitch, hand, extended);
+  return POSITIONS[position][hand]?.[pitch];
+}
+
 /** Nốt được hiện số ngón khi chạm phím ảo: tay phải (kể cả La duỗi) và — từ tuần 6 — tay trái. */
 export function fingerOnKeyboard(pitch: Pitch, leftHandActive: boolean): { finger: number; hand: Hand } | null {
   const rh = fingerFor(pitch, 'RH', true);

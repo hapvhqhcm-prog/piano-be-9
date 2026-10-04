@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { WEEKS, buildSessionPlan, findLesson, nextLesson, weekPassed } from '../src/lessons/lessonEngine';
+import { WEEKS, buildSessionPlan, findLesson, levelOf, nextLesson, songMastered, weekPassed } from '../src/lessons/lessonEngine';
 import { findTune } from '../src/music/exercises';
+import { SONGS } from '../src/music/tune';
 import { MemoryStorage, ProgressStore } from '../src/progress/ProgressStore';
 
 const store = () => new ProgressStore(new MemoryStorage(), () => new Date(2026, 9, 4));
@@ -38,8 +39,9 @@ describe('lessonEngine', () => {
     expect([...new Set(steps)]).toEqual(['B1', 'B2', 'B3', 'B4', 'B5']);
   });
 
-  it('8 tuần, mỗi tuần có bài, khởi động, "con làm thầy" và tiêu chí; bài hát trong bài học đều tồn tại', () => {
-    expect(WEEKS).toHaveLength(8);
+  it('24 tuần (3 cấp), mỗi tuần có bài, "con làm thầy" và tiêu chí; bài hát trong bài học đều tồn tại', () => {
+    expect(WEEKS).toHaveLength(24);
+    expect(WEEKS.map((w) => w.week)).toEqual(Array.from({ length: 24 }, (_, i) => i + 1));
     for (const w of WEEKS) {
       expect(w.lessons.length).toBeGreaterThan(0);
       expect(w.teach.text.length).toBeGreaterThan(5);
@@ -50,7 +52,9 @@ describe('lessonEngine', () => {
       }
     }
     // Mọi bài hát đều được dùng trong ít nhất một bài học hoặc sân khấu/thư viện
-    expect(new Set(WEEKS.flatMap((w) => w.lessons.flatMap((l) => l.activities.flatMap((a) => (a.kind === 'song' ? [a.songId] : []))))).size).toBeGreaterThanOrEqual(15);
+    const used = new Set(WEEKS.flatMap((w) => w.lessons.flatMap((l) => l.activities.flatMap((a) => (a.kind === 'song' ? [a.songId] : [])))));
+    // Mọi bài hát đều có trong ít nhất một bài học
+    for (const s of SONGS) expect(used.has(s.id), s.id).toBe(true);
   });
 
   it('Học tiếp: bài chưa xong → bài kiểm tra → ôn', () => {
@@ -164,5 +168,63 @@ describe('tiêu chí tuần 4–8 (v2)', () => {
     expect(weekPassed(8, st.get())).toBe(false);
     st.addParentAssessment(s8.id, 'medal', 'correct');
     expect(weekPassed(8, st.get())).toBe(true);
+  });
+});
+
+describe('Cấp 2–3 & luyện tập mỗi ngày', () => {
+  const run = (o: Partial<import('../src/progress/schema').SongRun>) => ({
+    songId: 'x', mode: 'tempo' as const, level: 2 as const, bpm: 60, hints: 'names' as const,
+    phrase: null, total: 20, hits: 18, source: 'mic' as const, passed: true, ...o,
+  });
+
+  it('tiêu chí tuần 10, 15, 19, 22', () => {
+    const st = store();
+    const s10 = st.startSession('w10-l3');
+    st.addSongRun(s10.id, run({ songId: 'ode_to_joy_both', mode: 'wait' }));
+    expect(weekPassed(10, st.get())).toBe(false);
+    st.addSongRun(s10.id, run({ songId: 'ode_to_joy_both' }));
+    expect(weekPassed(10, st.get())).toBe(true);
+
+    const s15 = st.startSession('w15-l1');
+    st.addSongRun(s15.id, run({ songId: 'scale_c_rh' }));
+    expect(weekPassed(15, st.get())).toBe(false);
+    st.addSongRun(s15.id, run({ songId: 'scale_c_lh' }));
+    expect(weekPassed(15, st.get())).toBe(true);
+
+    const s19 = st.startSession('w19-l1');
+    for (let i = 0; i < 8; i++) st.addAppAssessment(s19.id, 'major', 'major');
+    for (let i = 0; i < 2; i++) st.addAppAssessment(s19.id, 'minor', 'major');
+    expect(weekPassed(19, st.get())).toBe(true);
+
+    const s22 = st.startSession('w22-l1');
+    for (let i = 0; i < 4; i++) st.addSongRun(s22.id, run({ songId: 'sight:C:RH', mode: 'wait' }));
+    expect(weekPassed(22, st.get())).toBe(false);
+    st.addSongRun(s22.id, run({ songId: 'sight:C:LH', mode: 'wait' }));
+    expect(weekPassed(22, st.get())).toBe(true);
+  });
+
+  it('bài đã thuộc = trọn bài theo nhịp ≥ 60; sau tuần 24 "Học tiếp" là luyện tập mỗi ngày', () => {
+    const st = store();
+    st.setCurrentWeek(24);
+    const s = st.startSession('w24-stage');
+    st.addSongRun(s.id, run({ songId: 'mary_lamb', bpm: 50 }));
+    expect(songMastered(st.get(), 'mary_lamb')).toBe(false);
+    st.addSongRun(s.id, run({ songId: 'mary_lamb' }));
+    expect(songMastered(st.get(), 'mary_lamb')).toBe(true);
+    expect(nextLesson(st.get()).id).toBe('w24-stage');
+    st.addParentAssessment(s.id, 'medal', 'correct');
+    const daily = nextLesson(st.get(), () => 0.4);
+    expect(daily.id).toBe('w24-daily');
+    expect(daily.activities[0].kind).toBe('sight');
+    const songIds = daily.activities.flatMap((a) => (a.kind === 'song' ? [a.songId] : []));
+    expect(songIds).toContain('mary_lamb'); // bài đã thuộc được ôn lại
+    expect(songIds.filter((x) => x !== 'mary_lamb').length).toBeGreaterThanOrEqual(2); // bài đang tập: chờ + theo nhịp
+    for (const id of songIds) expect(findTune(id)).toBeDefined();
+  });
+
+  it('cấp độ theo tuần', () => {
+    expect(levelOf(1).level).toBe(1);
+    expect(levelOf(9).level).toBe(2);
+    expect(levelOf(24).level).toBe(3);
   });
 });

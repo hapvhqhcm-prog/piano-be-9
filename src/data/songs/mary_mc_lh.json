@@ -1,0 +1,150 @@
+{
+ "id": "mary_mc_lh",
+ "title": "Mary Had a Little Lamb (middle C, left hand)",
+ "titleVi": "Chú cừu nhỏ — Đô giữa tay trái",
+ "composer": "Dân ca Mỹ (traditional)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Original simple arrangement for this app",
+ "attributionRequired": false,
+ "hand": "LH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 9,
+ "position": "MC",
+ "phrases": [
+  0,
+  4
+ ],
+ "notes": [
+  {
+   "pitch": "A3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G3",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "F3",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "G3",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "A3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "A3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "A3",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "G3",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "G3",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "G3",
+   "beats": 2,
+   "finger": 4
+  },
+  {
+   "pitch": "A3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "C4",
+   "beats": 2,
+   "finger": 1
+  },
+  {
+   "pitch": "A3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G3",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "F3",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "G3",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "A3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "A3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "A3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "A3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G3",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "G3",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "A3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G3",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "F3",
+   "beats": 4,
+   "finger": 5
+  }
+ ]
+}
