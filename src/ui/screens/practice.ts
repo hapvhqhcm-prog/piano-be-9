@@ -1,4 +1,6 @@
 import type { Segment, Target } from '../../lessons/types';
+import { mascot } from '../components/mascot';
+import { confetti } from '../components/celebrate';
 import { PianoKeyboard } from '../../piano/PianoKeyboard';
 import {
   PracticeStateMachine,
@@ -10,6 +12,7 @@ import { keyboardRangeFor, midiToPitch, noteLabel, pitchToMidi, samePitch } from
 import { fingerFor, fingerOnKeyboard } from '../../piano/fingering';
 import { leftHandActive } from '../../lessons/lessonEngine';
 import { StaffView } from '../components/staffView';
+import { HandOverlay, eventsFromTargets, playDemo } from '../components/demo';
 
 /** Khuông nhỏ hiện một nốt (tuần 7). */
 function miniStaff(pitch: string, clef: 'treble' | 'bass' = 'treble'): HTMLElement {
@@ -102,6 +105,8 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
       fingerOnPress: (p) => segFingers.get(pitchToMidi(p)) ?? fingerOnKeyboard(p, lhOn),
       onPress: (p) => void app.audio.playPitch(p),
     });
+    const overlay = new HandOverlay(kb);
+    let demo: { cancel: () => void; done: Promise<void> } | null = null;
     const fingerOf = (t: Target, pitch: string, i = t.keys.indexOf(pitch)) =>
       t.fingers?.[i] ?? fingerFor(pitch, t.hand ?? 'RH', true);
     const stage = h('div', { class: 'stage' });
@@ -186,21 +191,46 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
 
     function render(): void {
       token++;
+      if (demo) {
+        demo.cancel();
+        demo = null;
+      }
+      overlay.hide();
       const snap = sm.snapshot;
       stage.replaceChildren();
       bar.replaceChildren();
       const back = backButton(() => send('BACK'));
 
       switch (snap.state) {
-        case 'INTRO':
+        case 'INTRO': {
           kb.clear();
+          const events = eventsFromTargets(seg.targets);
+          const caption = h('div', { class: 'demo-caption' }, events.length ? '🎬 Xem thầy đàn mẫu…' : '');
           stage.append(
             h('div', { class: 'step-tag' }, seg.step),
             h('h1', { class: 'title' }, seg.title),
             h('p', { class: 'lead' }, seg.intro),
+            caption,
           );
-          bar.append(back, button({ icon: '▶', label: 'Tiếp', kind: 'primary', onTap: () => send('NEXT') }));
+          // "Video minh họa": bàn tay hoạt hình đàn mẫu cả phần bài này, tự phát khi mở
+          const playIntro = () => {
+            demo?.cancel();
+            kb.clear();
+            overlay.setGhost(false);
+            const tk = token;
+            demo = playDemo(app.audio, kb, overlay, events, { onCaption: (t) => (caption.textContent = `🎬 ${t}`) });
+            void demo.done.then(() => {
+              if (tk !== token) return;
+              demo = null;
+              caption.textContent = '✅ Xem xong — đến lượt con!';
+            });
+          };
+          if (events.length) later(playIntro, 500);
+          bar.append(back);
+          if (events.length) bar.append(button({ icon: '🎬', label: 'Xem lại', onTap: playIntro }));
+          bar.append(button({ icon: '▶', label: 'Tiếp', kind: 'primary', onTap: () => send('NEXT') }));
           break;
+        }
 
         case 'READY':
           kb.clear();
@@ -254,7 +284,7 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
           const byMic = snap.lastSource === 'mic';
           const countdown = h('div', { class: 'countdown' });
           stage.append(
-            h('div', { class: 'hero-emoji' }, ok ? '🌟' : '💪'),
+            h('div', { class: 'hero-mascot' }, mascot(ok ? 'cheer' : 'think', 110)),
             h('h1', { class: 'title' }, ok ? 'Giỏi lắm!' : 'Thử lại nhé'),
             h(
               'p',
@@ -288,13 +318,17 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
         case 'playSample': {
           const t = seg.targets[ef.index];
           const tk = token;
-          if (t.sample?.length && t.noteId.startsWith('chord:')) {
-            // Hợp âm: các nốt vang CÙNG LÚC
-            t.sample.forEach((p) => kb.flash(p, true));
-            await Promise.all(t.sample.map((p) => app.audio.playPitch(p, 1.2)));
-            t.sample.forEach((p) => kb.flash(p, false));
-          } else if (t.sample?.length) {
-            await app.audio.playSequence(t.sample, { onEach: (p, on) => kb.flash(p, on) });
+          if (t.sample?.length) {
+            // Âm mẫu kèm bàn tay hoạt hình (mờ) nhấn đúng ngón — như một video ngắn cho từng nốt
+            overlay.setGhost(true);
+            const d = playDemo(app.audio, kb, overlay, eventsFromTargets([{ ...t, keys: t.sample }]));
+            demo = d;
+            await d.done;
+            if (demo === d) demo = null;
+            if (tk === token) {
+              overlay.hide();
+              showTargetOnKeyboard(t);
+            }
           }
           if (tk === token && sm.snapshot.state === 'PLAY_SAMPLE') send('SAMPLE_END');
           break;
@@ -304,11 +338,15 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
           break;
         case 'record':
           hooks.record(seg.targets[ef.index], ef.result);
-          if (ef.result === 'correct') void app.audio.chime();
+          if (ef.result === 'correct') {
+            void app.audio.chime();
+            confetti(24);
+          }
           break;
         case 'recordMic':
           hooks.recordMic(seg.targets[ef.index], { firstHeard: firstHeard ?? '', wrongCount });
           void app.audio.chime();
+          confetti(24);
           break;
         case 'amendLast':
           hooks.amendLast(ef.result, ef.source);
@@ -394,6 +432,8 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
       unsub();
       unNote();
       unFrame();
+      demo?.cancel();
+      overlay.destroy();
       kb.destroy();
     };
   };

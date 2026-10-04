@@ -1,12 +1,13 @@
 import type { App } from '../App';
 import { backButton, button, h } from '../components/dom';
+import { postureArt, type PosturePart } from '../components/postureArt';
 
-const SHORT = { emoji: '🧘', text: 'Ngồi thẳng · chân vững · tay tròn', sub: 'Con đã quen rồi — kiểm tra nhanh nhé!' };
+const SHORT = { emoji: '🧘', part: 'all' as PosturePart, text: 'Ngồi thẳng · chân vững · tay tròn', sub: 'Con đã quen rồi — kiểm tra nhanh nhé!' };
 
 const ALL_CARDS = [
-  { emoji: '🪑', text: 'Ngồi thẳng lưng', sub: 'Ngồi nửa trước ghế' },
-  { emoji: '🦶', text: 'Hai bàn chân đặt vững', sub: 'Chạm sàn hoặc ghế kê chân' },
-  { emoji: '⚽', text: 'Tay tròn như ôm quả bóng', sub: 'Cổ tay thẳng, không gập' },
+  { emoji: '🪑', part: 'back' as PosturePart, text: 'Ngồi thẳng lưng', sub: 'Ngồi nửa trước ghế' },
+  { emoji: '🦶', part: 'feet' as PosturePart, text: 'Hai bàn chân đặt vững', sub: 'Chạm sàn hoặc ghế kê chân' },
+  { emoji: '⚽', part: 'hands' as PosturePart, text: 'Tay tròn như ôm quả bóng', sub: 'Cổ tay thẳng, không gập' },
 ];
 
 /** Tư thế (1') — mỗi màn một việc (§4). */
@@ -23,7 +24,7 @@ export function postureScreen(_app: App, hooks: { short?: boolean; onDone(): voi
       const c = CARDS[i];
       stage.replaceChildren(
         h('div', { class: 'step-tag' }, `Tư thế · ${i + 1}/${CARDS.length}`),
-        h('div', { class: 'hero-emoji huge' }, c.emoji),
+        h('div', { class: 'posture-wrap' }, postureArt(c.part)),
         h('h1', { class: 'title' }, c.text),
         h('p', { class: 'lead' }, c.sub),
       );

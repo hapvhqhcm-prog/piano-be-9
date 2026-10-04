@@ -26,6 +26,10 @@ chỉ phím, chỉ ngón, phát âm mẫu. Khi bật micro, app **nghe đàn cơ
 - **Màn bài hát**: Từng nốt (chờ bé đàn đúng) · Theo nhịp (đếm vào, máy gõ nhịp, nhạc đệm; con trỏ hoặc băng chuyền) ·
   tập từng câu · tốc độ 40/50/60 · khuông nhạc với gợi ý rút dần (phím sáng → tên nốt → chỉ khuông).
 - **Micro (tùy chọn)** chấm từng nốt và chấm nhịp; không có micro thì bố mẹ đánh giá.
+- **"Video" minh họa tự sinh**: bàn tay thầy giáo hoạt hình đàn mẫu trên chính bàn phím của màn hình (đúng ngón, đúng phím,
+  có tiếng và phụ đề) — tự phát khi mở mỗi phần bài học, nút 🎬 Xem lại / 🎬 Xem mẫu cho mọi bài hát (cả hai tay, luồn ngón).
+- **Giao diện**: nhân vật "Bé Nốt", bàn tay vẽ mới (móng, đốt ngón, số trên đầu ngón), phím đàn có chiều sâu, pháo giấy khi
+  làm đúng, tranh minh họa tư thế ngồi, bản đồ đảo — toàn bộ bằng CSS/SVG, không tải ảnh/video.
 - Chạm phím → **số ngón nảy lên** + hình bàn tay; tay trái màu cam từ tuần 6; La = ngón 5 duỗi từ tuần 7.
 
 ## Chạy trên máy (Windows)

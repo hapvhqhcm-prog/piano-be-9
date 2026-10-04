@@ -1,0 +1,555 @@
+/* =========================================================
+   GIAO DIỆN MỚI (2026-10-04): đẹp hơn, sinh động hơn — nạp SAU main.css nên ghi đè các kiểu cũ.
+   Không dùng ảnh/font ngoài: chỉ CSS + SVG.
+   ========================================================= */
+:root {
+  --bg: #fff8ee;
+  --bg2: #ffeedd;
+  --ink: #2a2740;
+  --muted: #6c6884;
+  --primary: #4a6cf7;
+  --primary-dark: #3150cf;
+  --good: #22a861;
+  --good-dark: #17824a;
+  --retry: #f0962c;
+  --card: #ffffff;
+  --line: #eadfcd;
+  --shadow: 0 6px 18px rgba(74, 60, 30, 0.12);
+  --radius: 22px;
+}
+
+body {
+  background:
+    radial-gradient(circle at 12% 18%, rgba(74, 108, 247, 0.035) 0 60px, transparent 61px),
+    radial-gradient(circle at 88% 12%, rgba(240, 150, 44, 0.045) 0 80px, transparent 81px),
+    radial-gradient(circle at 80% 85%, rgba(34, 168, 97, 0.035) 0 70px, transparent 71px),
+    linear-gradient(180deg, var(--bg) 0%, var(--bg2) 100%);
+}
+
+/* chuyển màn mượt */
+.screen {
+  animation: screen-in 0.28s ease-out;
+}
+@keyframes screen-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---------- Nút nổi khối ---------- */
+.btn {
+  border: none;
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, #ffffff 0%, #f6f1e8 100%);
+  box-shadow:
+    0 5px 0 #e0d3bd,
+    0 8px 16px rgba(74, 60, 30, 0.12);
+  font-weight: 800;
+}
+.btn:active:not(:disabled) {
+  transform: translateY(4px);
+  box-shadow:
+    0 1px 0 #e0d3bd,
+    0 2px 6px rgba(74, 60, 30, 0.12);
+}
+.btn-primary {
+  background: linear-gradient(180deg, #6b88ff 0%, var(--primary) 100%);
+  box-shadow:
+    0 5px 0 var(--primary-dark),
+    0 8px 18px rgba(74, 108, 247, 0.35);
+}
+.btn-primary:active:not(:disabled) {
+  box-shadow: 0 1px 0 var(--primary-dark);
+}
+.btn-good {
+  background: linear-gradient(180deg, #3fcf84 0%, var(--good) 100%);
+  box-shadow:
+    0 5px 0 var(--good-dark),
+    0 8px 18px rgba(34, 168, 97, 0.32);
+}
+.btn-good:active:not(:disabled) {
+  box-shadow: 0 1px 0 var(--good-dark);
+}
+.btn-retry {
+  background: linear-gradient(180deg, #fff7ea 0%, #ffe8c8 100%);
+  color: #8a520f;
+  box-shadow: 0 5px 0 #f2c98d;
+}
+.btn-big {
+  border-radius: 28px;
+}
+
+/* ---------- Thanh trên & thẻ ---------- */
+.topbar {
+  background: rgba(255, 255, 255, 0.72);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid rgba(234, 223, 205, 0.8);
+}
+.card,
+.song-card,
+.chip {
+  box-shadow: var(--shadow);
+  border-color: transparent;
+}
+.chip {
+  background: #fff;
+}
+.chip-next {
+  border-color: var(--primary);
+  box-shadow:
+    0 0 0 3px rgba(74, 108, 247, 0.18),
+    var(--shadow);
+}
+.song-card {
+  transition: transform 0.15s;
+}
+.song-card:active {
+  transform: scale(0.97);
+}
+
+/* ---------- Bé Nốt (nhân vật) ---------- */
+.hero-mascot {
+  line-height: 0;
+  animation: bob 2.4s ease-in-out infinite;
+}
+@keyframes bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+.mascot .m-stem {
+  stroke: #2f4fb8;
+  stroke-width: 6;
+  stroke-linecap: round;
+}
+.mascot .m-flag {
+  fill: #2f4fb8;
+}
+.mascot .m-eye {
+  fill: #1d2350;
+}
+.mascot .m-line {
+  fill: none;
+  stroke: #1d2350;
+  stroke-width: 3.2;
+  stroke-linecap: round;
+}
+.mascot .m-mouth {
+  fill: #c2324d;
+  stroke: #1d2350;
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+.mascot .m-heart {
+  fill: #ff5a8a;
+}
+.mascot .m-cheek {
+  fill: #ff9fb6;
+  opacity: 0.7;
+}
+.mascot .m-arm {
+  fill: none;
+  stroke: #2f4fb8;
+  stroke-width: 6;
+  stroke-linecap: round;
+}
+.mascot .wave-arm {
+  transform-origin: 28px 96px;
+  animation: wave 0.9s ease-in-out infinite;
+}
+@keyframes wave {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-18deg);
+  }
+}
+.story-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 1000px;
+}
+.story-row .mascot {
+  flex: 0 0 auto;
+}
+.story.bubble {
+  position: relative;
+  background: #fff;
+  border-radius: 20px;
+  padding: 10px 18px;
+  box-shadow: var(--shadow);
+  font-style: normal;
+  color: var(--ink);
+  text-align: left;
+}
+.story.bubble::before {
+  content: "";
+  position: absolute;
+  left: -10px;
+  top: 50%;
+  margin-top: -10px;
+  border: 10px solid transparent;
+  border-right-color: #fff;
+  border-left: 0;
+}
+
+/* ---------- Phím đàn có chiều sâu ---------- */
+.keyboard {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 24px rgba(40, 30, 20, 0.25);
+  background: #3b2b22;
+  border-top: 6px solid #3b2b22;
+}
+.key-white {
+  background: linear-gradient(180deg, #ffffff 0%, #fbfbfb 78%, #ececec 100%);
+  border: 1px solid #c9c4bd;
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+  box-shadow:
+    inset 0 -6px 0 #e3e0db,
+    inset 0 1px 0 #fff;
+}
+.key-black {
+  background: linear-gradient(180deg, #4a4752 0%, #1d1b22 70%, #111015 100%);
+  border: 1px solid #0b0a0e;
+  border-radius: 0 0 7px 7px;
+  box-shadow:
+    inset 2px 0 0 rgba(255, 255, 255, 0.12),
+    inset 0 -5px 0 #2c2a33,
+    0 4px 6px rgba(0, 0, 0, 0.35);
+}
+.key.is-pressed.key-white {
+  background: linear-gradient(180deg, #fff6c8 0%, #ffe680 100%);
+  box-shadow: inset 0 -2px 0 #e7c84e;
+}
+.key.is-pressed.key-black {
+  background: linear-gradient(180deg, #6b5a1c 0%, #3b3110 100%);
+}
+.key.is-target.hand-rh.key-white {
+  background: linear-gradient(180deg, #ecfff3 0%, #c4f2d6 100%);
+  box-shadow:
+    inset 0 0 0 4px var(--good),
+    inset 0 -6px 0 #9fe2bb;
+  animation: target-glow 1.4s ease-in-out infinite;
+}
+.key.is-target.hand-rh.key-black {
+  background: linear-gradient(180deg, #45d688 0%, #1f8f50 100%);
+  animation: target-glow 1.4s ease-in-out infinite;
+}
+.key.is-target.hand-lh.key-white {
+  background: linear-gradient(180deg, #fff6ea 0%, #ffd9b0 100%);
+  box-shadow:
+    inset 0 0 0 4px var(--lh),
+    inset 0 -6px 0 #f6c28c;
+  animation: target-glow 1.4s ease-in-out infinite;
+}
+@keyframes target-glow {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.08) saturate(1.2);
+  }
+}
+.key-badge {
+  background: radial-gradient(circle at 35% 30%, #5be39a 0%, var(--good) 70%);
+  border: 3px solid #fff;
+}
+
+/* ---------- Bàn tay minh họa (hình mới) ---------- */
+.hand-art .f-skin,
+.hand-art .palm {
+  stroke: #d29a72;
+  stroke-width: 2;
+}
+.hand-art .f-nail {
+  fill: #fff4ec;
+  opacity: 0.85;
+}
+.hand-art .f-crease,
+.hand-art .knuckles {
+  fill: none;
+  stroke: #d9a47f;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  opacity: 0.7;
+}
+.hand-art .f-badge circle {
+  fill: #fff;
+  stroke: #d29a72;
+  stroke-width: 2;
+}
+.hand-art .f-badge text {
+  font-size: 15px;
+  font-weight: 900;
+  fill: #8a5a3c;
+  font-family: inherit;
+}
+.hand-art .f-badge.hidden {
+  display: none;
+}
+.hand-art .f.on .f-badge circle {
+  stroke: none;
+}
+.hand-art .f.on .f-badge text {
+  fill: var(--ink);
+}
+.hand-art .f.on {
+  filter: drop-shadow(0 0 6px rgba(46, 158, 91, 0.75));
+}
+.hand-art.hand-lh .f.on {
+  filter: drop-shadow(0 0 6px rgba(242, 140, 40, 0.8));
+}
+.hand-art .f-inner {
+  transition: transform 0.18s;
+}
+.hand-art .f.press .f-inner {
+  transform: translateY(5px);
+  transition: transform 0.08s;
+}
+/* hình bàn tay trong màn bài học */
+.hand-art.hand {
+  width: 190px;
+  height: 182px;
+  flex: 0 0 auto;
+}
+
+/* ---------- Lớp "thầy đàn mẫu" phủ lên bàn phím ---------- */
+.hand-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  overflow: hidden;
+}
+.hand-pos {
+  position: absolute;
+  opacity: 0;
+  transition:
+    left 0.22s ease-out,
+    top 0.22s ease-out,
+    opacity 0.25s;
+}
+.hand-pos.instant {
+  transition: opacity 0.25s;
+}
+.hand-pos.show {
+  opacity: 0.95;
+}
+.hand-overlay.ghost .hand-pos.show {
+  opacity: 0.6;
+}
+.hand-pos svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 8px 10px rgba(60, 40, 20, 0.28));
+}
+.demo-caption {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--primary-dark);
+  background: #fff;
+  border-radius: 999px;
+  padding: 6px 22px;
+  box-shadow: var(--shadow);
+  min-height: 1.4em;
+}
+.demo-caption:empty {
+  display: none;
+}
+
+/* ---------- Tư thế ---------- */
+.posture-wrap {
+  width: min(420px, 60vw);
+}
+.posture-art {
+  width: 100%;
+  height: auto;
+}
+.posture-art .pa-floor {
+  fill: #e9dcc6;
+}
+.posture-art .pa-piano {
+  fill: #3b2b22;
+}
+.posture-art .pa-keys {
+  fill: #fff;
+  stroke: #3b2b22;
+}
+.posture-art .pa-black {
+  fill: #111;
+}
+.posture-art .pa-music {
+  fill: #fff7e8;
+}
+.posture-art .pa-bench {
+  fill: #a8744a;
+}
+.posture-art .pa-head {
+  fill: #ffd9bd;
+  stroke: #d29a72;
+  stroke-width: 2;
+}
+.posture-art .pa-hair {
+  fill: none;
+  stroke: #3b2b22;
+  stroke-width: 9;
+  stroke-linecap: round;
+}
+.posture-art .pa-eye {
+  fill: #2a2740;
+}
+.posture-art .pa-smile {
+  fill: none;
+  stroke: #c2324d;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+.posture-art .pa-body,
+.posture-art .pa-leg,
+.posture-art .pa-foot,
+.posture-art .pa-arm {
+  fill: none;
+  stroke: #4a6cf7;
+  stroke-width: 16;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.posture-art .pa-leg,
+.posture-art .pa-foot {
+  stroke: #3150cf;
+}
+.posture-art .pa-arm {
+  stroke: #ffc9a3;
+  stroke-width: 11;
+}
+.posture-art .pa-handball {
+  fill: #ffc9a3;
+}
+.posture-art .pa-tip {
+  display: none;
+}
+.posture-art .pa-tip text {
+  font-size: 18px;
+  font-weight: 800;
+  fill: var(--good);
+}
+.posture-art .pa-guide {
+  stroke: var(--good);
+  stroke-width: 4;
+  stroke-dasharray: 6 5;
+}
+.posture-art.focus-back .tip-back,
+.posture-art.focus-feet .tip-feet,
+.posture-art.focus-hands .tip-hands,
+.posture-art.focus-all .pa-tip {
+  display: block;
+}
+.posture-art.focus-back .part-back,
+.posture-art.focus-feet .part-feet,
+.posture-art.focus-hands .part-hands,
+.posture-art.focus-all .part-back,
+.posture-art.focus-all .part-feet,
+.posture-art.focus-all .part-hands {
+  stroke: var(--good);
+  animation: pa-pulse 1.2s ease-in-out infinite;
+}
+.posture-art.focus-hands .pa-handball,
+.posture-art.focus-all .pa-handball {
+  fill: var(--good);
+}
+@keyframes pa-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* ---------- Bản đồ đảo ---------- */
+.map {
+  background: linear-gradient(180deg, #d9efff 0%, #bfe3ff 100%);
+  border-radius: 18px;
+  margin: 6px 12px 0;
+  padding: 10px 8px;
+}
+.island {
+  background: radial-gradient(ellipse at 50% 80%, #ffe8b8 0%, #f5d38d 70%);
+  border: none;
+  border-radius: 46% 54% 50% 50% / 60% 60% 40% 40%;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.08);
+}
+.island.passed {
+  background: radial-gradient(ellipse at 50% 80%, #c9f5d9 0%, #8fdcae 70%);
+  border: none;
+}
+.island.here {
+  background: radial-gradient(ellipse at 50% 80%, #fff3c4 0%, #ffd34d 70%);
+  border: none;
+  box-shadow:
+    0 0 0 4px #fff,
+    0 6px 14px rgba(240, 150, 44, 0.45);
+}
+.island.later {
+  background: radial-gradient(ellipse at 50% 70%, #ffffff 0%, #e6eef7 70%);
+  opacity: 0.7;
+}
+
+/* ---------- Pháo giấy ---------- */
+.confetti {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 150;
+  overflow: hidden;
+}
+.confetti i {
+  position: absolute;
+  top: -20px;
+  width: 12px;
+  height: 16px;
+  border-radius: 3px;
+  animation-name: confetti-fall;
+  animation-timing-function: cubic-bezier(0.2, 0.6, 0.4, 1);
+  animation-fill-mode: forwards;
+}
+@keyframes confetti-fall {
+  to {
+    transform: translate(var(--drift), 105vh) rotate(var(--spin));
+    opacity: 0.9;
+  }
+}
+
+/* khuông nhạc trên nền trắng cho dễ đọc */
+.song-staff .staff,
+.staff-mini {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  padding: 4px 8px;
+}
+
+@media (max-height: 760px) {
+  .hand-art.hand {
+    width: 150px;
+    height: 144px;
+  }
+  .posture-wrap {
+    width: min(340px, 50vw);
+  }
+}

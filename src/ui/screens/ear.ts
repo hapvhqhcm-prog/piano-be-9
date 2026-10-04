@@ -1,4 +1,5 @@
 import { wait } from '../../audio/AudioEngine';
+import { confetti } from '../components/celebrate';
 import { fingerOnKeyboard } from '../../piano/fingering';
 import { PianoKeyboard } from '../../piano/PianoKeyboard';
 import { keyboardRangeFor, noteLabel, samePitch, viName, type Pitch } from '../../piano/pitchTable';
@@ -183,6 +184,7 @@ export function quizScreen(app: App, hooks: QuizHooks) {
       accepting = false;
       kb.clear();
       const good = score >= spec.rounds * 0.8;
+      if (good) confetti();
       stage.replaceChildren(
         h('div', { class: 'hero-emoji' }, good ? '🏆' : '👏'),
         h('h1', { class: 'title' }, `Con đúng ${score} / ${spec.rounds}`),

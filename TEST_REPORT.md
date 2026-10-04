@@ -170,3 +170,19 @@ Hạn chế đã biết:
 - Micro chỉ nghe **một nốt mỗi lúc** → bài hai tay/hợp âm được chấm "dễ" hơn (đúng một nốt trong nhóm là tính); nên để bố mẹ xác nhận.
 - Bàn phím ảo hiện tối đa 4 quãng tám (C2–C6); bài cần nhiều hơn chưa có.
 - Für Elise, Canon là bản giản lược tay phải / hai tay đơn giản, không phải bản gốc đầy đủ.
+
+---
+
+## 12. Giao diện mới & video minh họa (OWNER yêu cầu 2026-10-04)
+
+- **Video minh họa = hoạt hình thầy đàn mẫu** (`ui/components/demo.ts`): bàn tay vẽ SVG trượt trên bàn phím của màn hình,
+  nhấn đúng ngón vào đúng phím, phát tiếng, phụ đề "Fa — ngón 4 (ngón áp út)". Tự sinh cho mọi phần bài học (tự phát ở màn mở đầu,
+  nút 🎬 Xem lại), mọi lần nghe mẫu một nốt (tay mờ), và mọi bài hát (🎬 Xem mẫu — hai tay, hợp âm, luồn ngón; con trỏ khuông chạy theo).
+  Không dùng file video thật: app vẫn ~60 kB gzip và chạy offline. Đo kiểm: đầu ngón tay trùng tâm phím (lệch 0 px).
+- **Bàn tay vẽ lại** (`handArt.ts`): da chuyển màu, móng, nếp đốt, số ngón trên đầu ngón, ngón đang dùng sáng + "nhấn" xuống.
+- **Bé Nốt** (nhân vật nốt nhạc biết cười/vẫy tay), **pháo giấy** khi đúng / qua bài, **tranh tư thế ngồi** tô sáng lưng–chân–tay,
+  phím đàn có chiều sâu & phát sáng, nút nổi khối, bản đồ đảo trên biển, chuyển màn mượt (`styles/theme.css`).
+- Đã kiểm bố cục ở iPad mini (1133×744) và iPad 10,9" (1180×820): không tràn màn hình.
+
+Lưu ý: nếu muốn thêm **video quay thật** (bố mẹ hoặc giáo viên đàn mẫu), có thể làm sau: quay bằng iPad rồi nhập vào app
+(lưu trên máy, không tải lên mạng) — cần OWNER đồng ý vì sẽ dùng thêm bộ nhớ iPad.

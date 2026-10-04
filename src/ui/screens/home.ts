@@ -1,3 +1,4 @@
+import { mascot } from '../components/mascot';
 import {
   MAX_SESSIONS_PER_DAY,
   WEEKS,
@@ -88,7 +89,7 @@ export function homeScreen(app: App, banner?: string) {
           'div',
           { class: 'stage home-stage' },
           banner ? h('div', { class: 'banner' }, banner) : null,
-          h('p', { class: 'story' }, plan.story),
+          h('div', { class: 'story-row' }, mascot('happy', 64), h('p', { class: 'story bubble' }, plan.story)),
           overLimit
             ? h('div', { class: 'banner' }, '🌙 Hôm nay con học đủ rồi. Mai mình học tiếp nhé!')
             : button({

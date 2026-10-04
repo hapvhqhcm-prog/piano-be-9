@@ -1,4 +1,5 @@
 import './styles/main.css';
+import './styles/theme.css';
 import { AudioEngine } from './audio/AudioEngine';
 import { ProgressStore, type KeyValueStorage } from './progress/ProgressStore';
 import { App } from './ui/App';

@@ -36,6 +36,9 @@ export class PianoKeyboard {
   private hideTimers = new Map<number, number>();
   private low: Pitch;
   private high: Pitch;
+  /** Vị trí phím (% bề ngang) — để lớp "thầy đàn mẫu" đặt bàn tay đúng chỗ */
+  private geom = new Map<number, { center: number; black: boolean }>();
+  private whiteW = 100 / 15;
 
   constructor(private readonly opts: KeyboardOptions = {}) {
     this.el = document.createElement('div');
@@ -52,10 +55,12 @@ export class PianoKeyboard {
   private build(): void {
     this.el.replaceChildren();
     this.keys.clear();
+    this.geom.clear();
     const all = keyboardPitches(this.low, this.high);
     const whites = all.filter((p) => !p.isBlack);
     const whiteW = 100 / whites.length;
     const blackW = whiteW * 0.62;
+    this.whiteW = whiteW;
     this.el.classList.toggle('wide', whites.length > 15);
     let whiteIndex = -1;
     for (const info of all) {
@@ -63,10 +68,12 @@ export class PianoKeyboard {
       if (info.isBlack) {
         key.el.style.left = `${(whiteIndex + 1) * whiteW - blackW / 2}%`;
         key.el.style.width = `${blackW}%`;
+        this.geom.set(info.midi, { center: (whiteIndex + 1) * whiteW, black: true });
       } else {
         whiteIndex++;
         key.el.style.left = `${whiteIndex * whiteW}%`;
         key.el.style.width = `${whiteW}%`;
+        this.geom.set(info.midi, { center: (whiteIndex + 0.5) * whiteW, black: false });
         const labels = this.opts.labels ?? 'c';
         if (labels === 'all' || (labels === 'c' && info.letter === 'C')) key.setBaseLabel(viName(info.pitch));
       }
@@ -81,6 +88,20 @@ export class PianoKeyboard {
     this.low = low;
     this.high = high;
     this.build();
+  }
+
+  /** Tâm phím theo % bề ngang bàn phím (undefined nếu ngoài dải). */
+  keyCenter(pitch: Pitch): { center: number; black: boolean } | undefined {
+    try {
+      return this.geom.get(pitchToMidi(pitch));
+    } catch {
+      return undefined;
+    }
+  }
+
+  /** Bề ngang một phím trắng (% bàn phím). */
+  get whiteKeyWidth(): number {
+    return this.whiteW;
   }
 
   get range(): [Pitch, Pitch] {

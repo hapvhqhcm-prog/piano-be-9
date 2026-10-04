@@ -1,4 +1,5 @@
 import { wait } from '../../audio/AudioEngine';
+import { confetti } from '../components/celebrate';
 import { PASS_SCORE, gradeTiming, score as scoreOf, starsFor, type HeardEvent } from '../../music/timing';
 import {
   accompaniment,
@@ -15,11 +16,12 @@ import {
 } from '../../music/tune';
 import type { Hand } from '../../piano/fingering';
 import { PianoKeyboard, type KeyTarget } from '../../piano/PianoKeyboard';
-import { midiToFreq, midiToPitch, noteLabel, pitchFreq, pitchToMidi, viName } from '../../piano/pitchTable';
+import { midiToFreq, midiToPitch, noteLabel, pitchToMidi, viName } from '../../piano/pitchTable';
 import type { SongRun } from '../../progress/schema';
 import type { App } from '../App';
 import { backButton, button, h } from '../components/dom';
 import { StaffView } from '../components/staffView';
+import { HandOverlay, eventsFromTune, playDemo } from '../components/demo';
 
 export interface SongOptions {
   mode: 'wait' | 'tempo';
@@ -90,6 +92,7 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
       },
     });
 
+    const overlay = new HandOverlay(kb);
     const head = h('div', { class: 'song-head' });
     const staffBox = h('div', { class: `song-staff${full.lh ? ' grand' : ''}` });
     const status = h('div', { class: 'song-status' });
@@ -182,6 +185,9 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
     function reset(): void {
       token++;
       cancelAnimationFrame(raf);
+      demoRun?.cancel();
+      demoRun = null;
+      overlay.hide();
       app.audio.stopAll();
       state = 'idle';
       renderHead();
@@ -198,40 +204,42 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
           mode === 'wait'
             ? micOn()
               ? '🎤 Bấm Bắt đầu rồi đàn từng nốt — app nghe và tự đi tiếp.'
-              : 'Bấm Bắt đầu, đàn từng nốt rồi bấm "Nốt tiếp".'
+              : 'Bấm 🎬 Xem mẫu để xem thầy đàn, rồi Bắt đầu và đàn từng nốt.'
             : `Đếm vào rồi đàn theo tiếng "tích" (${bpm} nhịp/phút).`,
         ),
       );
       setBar(
         backButton(() => hooks.onBack()),
-        button({ icon: '🔊', label: 'Nghe mẫu', onTap: () => void demo() }),
+        button({ icon: '🎬', label: 'Xem mẫu', onTap: () => void demo() }),
         button({ icon: '▶', label: 'Bắt đầu', kind: 'primary', onTap: () => void start() }),
       );
     }
 
-    // ---------------- Nghe mẫu ----------------
+    // ---------------- Xem mẫu: "video" bàn tay thầy đàn ----------------
+    let demoRun: { cancel: () => void; done: Promise<void> } | null = null;
     async function demo(): Promise<void> {
       const tk = ++token;
       state = 'demo';
       const spb = 60 / bpm;
-      const t0 = app.audio.now() + 0.3;
-      for (const n of allTimed(tune)) {
-        for (const p of pitchesOf(n)) {
-          void app.audio.scheduleFreq(pitchFreq(p), t0 + n.start * spb, n.beats * spb * 0.95, n.hand === 'LH' && tune.lh ? 0.7 : 1);
-        }
-      }
-      scheduleAccomp(t0, spb);
+      overlay.setGhost(false);
+      kb.setTargets([]);
+      const caption = h('span', {}, '🎬 Xem thầy đàn mẫu — nhìn ngón tay nhé');
+      status.replaceChildren(caption);
       setBar(button({ icon: '⏹', label: 'Dừng', onTap: reset }));
-      status.textContent = '🔊 Nghe mẫu — nhìn con trỏ chạy nhé';
-      const total = totalBeats(tune);
-      const loop = () => {
-        if (tk !== token) return;
-        const beat = (app.audio.now() - t0) / spb;
-        follow(beat);
-        if (beat < total + 0.3) raf = requestAnimationFrame(loop);
-        else reset();
-      };
-      raf = requestAnimationFrame(loop);
+      scheduleAccomp(app.audio.now() + 0.35, spb);
+      demoRun = playDemo(app.audio, kb, overlay, eventsFromTune(tune), {
+        bpm,
+        onCaption: (t) => (caption.textContent = `🎬 ${t}`),
+        onBeat: (beat) => {
+          if (mode === 'tempo' && level === 3) staff.setTime(Math.max(0, beat));
+          const gs = groups();
+          let cur: Onset | undefined;
+          for (const g of gs) if (g.start <= beat + 0.05) cur = g;
+          if (cur) staff.setCursor(idxOf(cur));
+        },
+      });
+      await demoRun.done;
+      if (tk === token) reset();
     }
 
     function scheduleAccomp(t0: number, spb: number): void {
@@ -433,7 +441,10 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
     function showResult(s: number, text: string): void {
       state = 'result';
       const stars = starsFor(s);
-      if (s >= PASS_SCORE) void app.audio.chime();
+      if (s >= PASS_SCORE) {
+        void app.audio.chime();
+        confetti();
+      }
       if (opts.stage) app.audio.applause();
       status.replaceChildren(
         h('span', { class: 'stars small' }, '★'.repeat(stars), h('span', { class: 'stars-off' }, '★'.repeat(3 - stars))),
@@ -457,6 +468,8 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
       token++;
       cancelAnimationFrame(raf);
       unWaitNote();
+      demoRun?.cancel();
+      overlay.destroy();
       kb.destroy();
     };
   };

@@ -1,4 +1,6 @@
 import { RATING_STARS } from '../../progress/ProgressStore';
+import { mascot } from '../components/mascot';
+import { confetti } from '../components/celebrate';
 import type { SelfRating } from '../../progress/schema';
 import type { App } from '../App';
 import { backButton, button, h } from '../components/dom';
@@ -44,7 +46,9 @@ export function ratingScreen(
     const stars = (o: (typeof OPTIONS)[number]) => {
       const n = RATING_STARS[o.rating];
       void app.audio.chime();
+      if (n === 3) confetti();
       stage.replaceChildren(
+        h('div', { class: 'hero-mascot' }, mascot(n === 3 ? 'love' : 'cheer', 100)),
         h('div', { class: 'stars' }, '★'.repeat(n), h('span', { class: 'stars-off' }, '★'.repeat(3 - n))),
         h('h1', { class: 'title' }, o.praise),
       );

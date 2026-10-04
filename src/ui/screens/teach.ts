@@ -1,4 +1,5 @@
 import type { App } from '../App';
+import { mascot } from '../components/mascot';
 import { backButton, button, h } from '../components/dom';
 
 /**
@@ -18,7 +19,7 @@ export function teachScreen(
           'div',
           { class: 'stage' },
           h('div', { class: 'step-tag' }, 'Con làm thầy'),
-          h('div', { class: 'hero-emoji huge' }, o.emoji),
+          h('div', { class: 'hero-mascot' }, mascot('wave', 120)),
           h('h1', { class: 'title' }, 'Bây giờ con là thầy giáo!'),
           h('p', { class: 'lead big' }, o.text),
         ),
