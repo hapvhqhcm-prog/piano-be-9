@@ -1,5 +1,6 @@
 import type { AudioEngine } from './AudioEngine';
-import { DEFAULT_DETECT, NoteTracker, detectPitch, type HeardNote, type PitchResult } from './pitchDetect';
+import { MicAnalyzer, type AppSound, type Sensitivity } from './micAnalyzer';
+import type { HeardNote, PitchResult } from './pitchDetect';
 
 /**
  * Micro nghe đàn cơ (OWNER mở khóa ARCHITECTURE LOCK ngày 2026-10-04).
@@ -11,7 +12,14 @@ export type MicState = 'off' | 'starting' | 'on' | 'denied' | 'unsupported' | 'e
 
 export interface MicFrame {
   pitch: PitchResult | null;
+  /** Biên độ đỉnh (thô) */
   level: number;
+  /** Âm lượng sau lọc, mức ồn nền, ngưỡng nhận tiếng đàn */
+  rms: number;
+  floor: number;
+  gate: number;
+  onset: boolean;
+  app: AppSound;
 }
 
 export class MicListener {
@@ -20,20 +28,31 @@ export class MicListener {
   private analyser: AnalyserNode | null = null;
   private buf: Float32Array<ArrayBuffer> | null = null;
   private timer: number | undefined;
-  private tracker = new NoteTracker(3);
+  private analyzer = new MicAnalyzer();
+  private lastClapAt = -1;
   private noteListeners = new Set<(n: HeardNote) => void>();
   private onsetListeners = new Set<(atCtxTime: number) => void>();
-  private prevRms = 0;
-  private lastOnset = 0;
   private frameListeners = new Set<(f: MicFrame) => void>();
   private stateListeners = new Set<(s: MicState) => void>();
   private _state: MicState = 'off';
   /** Tăng mỗi lần stop() — để start() đang chờ getUserMedia biết là đã bị hủy */
   private gen = 0;
+  /** Bỏ qua cao độ thêm bao lâu sau khi app im (tiếng vang trong phòng). */
+  quietMarginMs = 200;
+
   /** Bù độ lệch dây của đàn nhà (cents), lấy từ Cài đặt. */
-  tuningCents = 0;
-  /** Bỏ qua thêm bao lâu sau khi app im (tiếng vang trong phòng). */
-  quietMarginMs = 250;
+  get tuningCents(): number {
+    return this.analyzer.tuningCents;
+  }
+  set tuningCents(c: number) {
+    this.analyzer.tuningCents = c;
+  }
+  get sensitivity(): Sensitivity {
+    return this.analyzer.sensitivity;
+  }
+  set sensitivity(s: Sensitivity) {
+    this.analyzer.sensitivity = s;
+  }
 
   constructor(private readonly audio: AudioEngine) {}
 
@@ -78,7 +97,7 @@ export class MicListener {
   /** Bỏ trạng thái nốt đang ngân — gọi khi bắt đầu chờ một nốt mới. */
   resetTracker(): void {
     // Nốt cũ còn ngân không được tính cho nốt mới
-    this.tracker.reset(true);
+    this.analyzer.reset(true);
   }
 
   /** Nên gọi trong thao tác chạm (iPad hỏi quyền micro ở lần đầu). */
@@ -121,8 +140,8 @@ export class MicListener {
     this.buf = new Float32Array(new ArrayBuffer(this.analyser.fftSize * 4));
     // KHÔNG nối ra loa → không có tiếng hú
     this.source.connect(this.analyser);
-    this.tracker.reset();
-    this.timer = window.setInterval(() => this.tick(), 40);
+    this.analyzer.reset(false);
+    this.timer = window.setInterval(() => this.tick(), 25);
     this.setState('on');
     return this._state;
   }
@@ -133,31 +152,22 @@ export class MicListener {
     const ctx = this.audio.context;
     if (!analyser || !buf || !ctx) return;
     analyser.getFloatTimeDomainData(buf);
-    const appQuiet = this.audio.msSinceSound() > this.quietMarginMs;
-    const pitch = appQuiet ? detectPitch(buf, ctx.sampleRate, DEFAULT_DETECT) : null;
-    let level = 0;
-    let sum = 0;
-    for (let i = 0; i < buf.length; i += 4) {
-      const v = Math.abs(buf[i]);
-      level = Math.max(level, v);
-      sum += v * v;
-    }
-    // Phát hiện "gõ/vỗ": RMS vượt ngưỡng và tăng vọt so với khung trước
-    const r = Math.sqrt(sum / (buf.length / 4));
-    const nowMs = performance.now();
-    if (r > 0.03 && r > this.prevRms * 2.5 && nowMs - this.lastOnset > 150) {
-      this.lastOnset = nowMs;
-      const at = ctx.currentTime - 0.06; // khung 40 ms + nửa cửa sổ phân tích
+    const since = this.audio.msSinceSound();
+    const app: AppSound = this.audio.isSounding ? 'sounding' : since < this.quietMarginMs ? 'tail' : 'quiet';
+    const f = this.analyzer.process(buf, ctx.sampleRate, ctx.currentTime, app);
+    // "Gõ/vỗ" (chấm vỗ nhịp): mốc thời gian lùi ~nửa cửa sổ phân tích + nửa bước
+    if (f.onset && ctx.currentTime - this.lastClapAt > 0.15) {
+      this.lastClapAt = ctx.currentTime;
+      const at = ctx.currentTime - 0.035;
       this.onsetListeners.forEach((fn) => fn(at));
     }
-    this.prevRms = r;
-    this.frameListeners.forEach((fn) => fn({ pitch, level }));
-    if (!appQuiet) {
-      this.tracker.reset(true);
-      return;
+    this.frameListeners.forEach((fn) =>
+      fn({ pitch: f.pitch, level: f.level, rms: f.rms, floor: f.floor, gate: f.gate, onset: f.onset, app }),
+    );
+    if (f.note) {
+      const n = f.note;
+      this.noteListeners.forEach((fn) => fn(n));
     }
-    const note = this.tracker.push(pitch, this.tuningCents);
-    if (note) this.noteListeners.forEach((fn) => fn(note));
   }
 
   stop(): void {
@@ -179,4 +189,10 @@ export class MicListener {
       this.setState('off');
     }
   }
+}
+
+/** Độ dài thanh âm lượng (0–100): theo thang log, NGƯỠNG NHẬN TIẾNG ĐÀN nằm ở giữa (50%). */
+export function meterPct(f: Pick<MicFrame, 'rms' | 'gate'>): number {
+  if (f.rms <= 0 || f.gate <= 0) return 0;
+  return Math.max(0, Math.min(100, Math.round(50 + 15 * Math.log2(f.rms / f.gate))));
 }

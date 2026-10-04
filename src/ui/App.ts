@@ -30,6 +30,7 @@ export class App {
   async ensureMic(): Promise<boolean> {
     if (!this.micWanted) return false;
     this.mic.tuningCents = this.store.settings.micTuningCents;
+    this.mic.sensitivity = this.store.settings.micSensitivity;
     return (await this.mic.start()) === 'on';
   }
 

@@ -1,3 +1,4 @@
+import { meterPct } from '../../audio/MicListener';
 import type { Segment, Target } from '../../lessons/types';
 import { mascot } from '../components/mascot';
 import { confetti } from '../components/celebrate';
@@ -462,7 +463,7 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
     // Thanh âm lượng: cho bé/bố mẹ thấy app "đang nghe"
     const unFrame = app.mic.onFrame((f) => {
       const bar = stage.querySelector<HTMLElement>('.mic-level-bar');
-      if (bar) bar.style.width = `${Math.min(100, Math.round(f.level * 250))}%`;
+      if (bar) bar.style.width = `${meterPct(f)}%`;
     });
 
     const unsub = sm.subscribe((_s, effects) => {

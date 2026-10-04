@@ -49,3 +49,9 @@ Thêm từ lần này: gỡ bộ nghe tiếng vỗ khi rời màn giữa chừng
    Bố mẹ đổi tuần thủ công được ở màn Phụ huynh.
 4. **Video quay thật** của bố mẹ/thầy cô (nhập vào app, lưu trên máy) — cần OWNER đồng ý vì tốn bộ nhớ.
 5. **Hai iPad / đồng bộ** — spec cấm backend; hiện chỉ có xuất/nhập JSON.
+
+## F. Micro (vòng 2 — sau khi OWNER thử trên đàn thật)
+
+Đo lại toàn bộ đường xử lý trên giả lập đàn cơ thật. Tìm ra **5 nguyên nhân** làm micro "không hiệu quả" và đã sửa cả 5,
+nâng tỉ lệ nhận đúng từ 87% lên 97% và giảm độ trễ từ 143 ms xuống 68 ms. Chi tiết ở TEST_REPORT §14.
+Lỗi đáng kể nhất là bé nhại lại ngay sau tiếng mẫu thì nốt **không bao giờ** được nhận. Lỗi này hay xảy ra nhất ở chế độ "Từng nốt".

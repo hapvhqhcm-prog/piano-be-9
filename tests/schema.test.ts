@@ -20,6 +20,7 @@ describe('schema v1 (§7)', () => {
       micEnabled: false, // micro mặc định TẮT
       micTuningCents: 0,
       micAutoNext: true,
+      micSensitivity: 'normal',
       accompaniment: true,
       timing: 'easy',
       lastBackupAt: 0,

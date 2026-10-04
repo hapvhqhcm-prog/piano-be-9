@@ -56,15 +56,25 @@ export function detectPitch(
   }
 
   // Điểm đầu tiên dưới ngưỡng, rồi trượt tới cực tiểu cục bộ
-  let tau = -1;
-  for (let t = tauMin; t <= tauMax; t++) {
-    if (cmnd[t] < opts.threshold) {
-      while (t + 1 <= tauMax && cmnd[t + 1] < cmnd[t]) t++;
-      tau = t;
-      break;
+  const firstDip = (th: number) => {
+    for (let t = tauMin; t <= tauMax; t++) {
+      if (cmnd[t] < th) {
+        while (t + 1 <= tauMax && cmnd[t + 1] < cmnd[t]) t++;
+        return t;
+      }
     }
+    return -1;
+  };
+  let tau = firstDip(opts.threshold);
+  if (tau < 0) {
+    // Phòng ồn: không điểm nào đạt ngưỡng chuẩn → nới ngưỡng theo cực tiểu toàn cục (vẫn lấy điểm ĐẦU TIÊN
+    // để khỏi nhầm xuống quãng 8 dưới). Quá mờ (> 0,45) thì thôi.
+    let g = Infinity;
+    for (let t = tauMin; t <= tauMax; t++) if (cmnd[t] < g) g = cmnd[t];
+    if (g > 0.45) return null;
+    tau = firstDip(Math.min(0.5, g + 0.08));
+    if (tau < 0) return null;
   }
-  if (tau < 0) return null;
 
   // Nội suy parabol cho chính xác dưới 1 mẫu
   let better = tau;
@@ -99,7 +109,8 @@ export function nearestNote(freq: number, tuningCents = 0): HeardNote {
 /**
  * Lọc kết quả từng khung thành "sự kiện nốt": một nốt chỉ được báo khi
  * ổn định ≥ stableFrames khung liên tiếp; mỗi lần nhấn phím (onset) báo đúng 1 lần.
- * Nhấn lại cùng phím được nhận ra nhờ âm lượng bật tăng (đàn cơ tắt dần rồi to lại).
+ * Lần nhấn mới được nhận ra nhờ âm lượng bật tăng — tốt nhất truyền `onset` tính từ âm lượng THÔ của mọi khung
+ * (kể cả khung lúc búa gõ chưa rõ cao độ); nếu không truyền thì tự so âm lượng giữa các khung rõ.
  */
 export class NoteTracker {
   private candidate: number | null = null;
@@ -110,8 +121,10 @@ export class NoteTracker {
   private blocked = false;
 
   constructor(
-    private readonly stableFrames = 3,
+    private readonly stableFrames = 2,
     private readonly onsetRatio = 1.6,
+    /** Độ rõ tối thiểu (1 − CMND) để tin một khung */
+    private readonly minClarity = 0.6,
   ) {}
 
   /**
@@ -126,11 +139,21 @@ export class NoteTracker {
     if (!requireOnset) this.lastRms = 0;
   }
 
-  /** Đưa vào kết quả 1 khung; trả về MIDI khi có nốt mới được đánh. */
-  push(result: PitchResult | null, tuningCents = 0): HeardNote | null {
-    if (!result || result.clarity < 0.8) {
-      // Im lặng / không rõ → cho phép báo lại nốt cũ ở lần nhấn sau
-      if (!result) {
+  /** Đưa vào kết quả 1 khung; trả về nốt khi có nốt mới được đánh. */
+  push(result: PitchResult | null, tuningCents = 0, onsetIn?: boolean, frameRms?: number, silenceBelow = 0.006): HeardNote | null {
+    const r = frameRms ?? result?.rms ?? 0;
+    const onset = onsetIn ?? (!!result && this.lastRms > 0 && result.rms > this.lastRms * this.onsetRatio);
+    if (onsetIn !== undefined || result) this.lastRms = r;
+    if (onset) {
+      // Lần nhấn mới: đếm ổn định lại từ đầu
+      this.emitted = null;
+      this.candidate = null;
+      this.count = 0;
+      this.blocked = false;
+    }
+    if (!result || result.clarity < this.minClarity) {
+      // Không rõ cao độ (tiếng búa, tiếng ồn) → chưa kết luận; im hẳn → cho báo lại nốt cũ lần sau
+      if (!result && (frameRms === undefined || frameRms < silenceBelow)) {
         this.emitted = null;
         this.lastRms = 0;
         this.blocked = false;
@@ -138,15 +161,6 @@ export class NoteTracker {
       this.candidate = null;
       this.count = 0;
       return null;
-    }
-    const onset = this.lastRms > 0 && result.rms > this.lastRms * this.onsetRatio;
-    this.lastRms = result.rms;
-    if (onset) {
-      // Lần nhấn mới: đếm ổn định lại từ đầu (bỏ qua tiếng búa gõ lúc đầu)
-      this.emitted = null;
-      this.candidate = null;
-      this.count = 0;
-      this.blocked = false;
     }
     if (this.blocked) return null;
 

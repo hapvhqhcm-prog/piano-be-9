@@ -196,3 +196,42 @@ Lưu ý: nếu muốn thêm **video quay thật** (bố mẹ hoặc giáo viên 
   24 mẹo cho bố mẹ, nhắc sao lưu, lời khen đa dạng.
 - Rà soát độc lập tìm ra **1 lỗi nghiêm trọng** (mất tiến độ khi lên tuần 9 — đã sửa + tự khôi phục) và 10 lỗi khác (đã sửa).
 - 322 test tự động PASS.
+
+## 14. Micro trên đàn cơ thật (OWNER báo 2026-10-04: "test mic chưa hiệu quả")
+
+**Cách đo:** `tests/pianoSim.ts` giả lập đàn cơ trong phòng: họa âm lệch (inharmonicity), 2–3 dây/nốt lệch vài cents,
+tiếng búa, tắt dần 2 giai đoạn, vang phòng, chưa nhả phím (legato), tiếng ồn + ù điện, lực bấm khác nhau.
+`tests/micBench.test.ts` cho bộ cũ và bộ mới chạy trên cùng tín hiệu, rồi so sánh.
+
+| Kịch bản (điều kiện thật) | Bộ cũ | Bộ mới |
+|---|---|---|
+| Đàn nhẹ (tiếng tới micro nhỏ) | 6% | **94%** |
+| Phòng rất ồn (TV, quạt) | 25% | **94%** |
+| Đàn lệch dây −35 cents | 88% | **100%** |
+| Đàn nhanh 0,35 s/nốt | 88% | 88% |
+| Tay trái trầm / nốt cao / nốt lặp / giai điệu | 100% | 100% |
+| **Tổng 14 kịch bản** | **87%** | **97%** |
+| Độ trễ nhận nốt (trung vị) | 143 ms | **68 ms** |
+
+**Nguyên nhân đã sửa:**
+1. Ngưỡng im lặng cố định 0,01. Khi đàn nhẹ hoặc iPad để xa, tiếng đàn nằm dưới ngưỡng nên cả nốt bị bỏ qua.
+   Giờ ngưỡng tự thích nghi theo tiếng ồn nền và có **độ nhạy Thấp / Vừa / Cao** chỉnh được.
+2. Tiếng ồn phòng phủ tới 24 kHz. Giờ có **lọc thông thấp 1,8 kHz** trước khi phân tích.
+3. YIN bỏ cả khung khi không đạt ngưỡng 0,15, mà trong phòng ồn thì thường không đạt.
+   Giờ YIN **nới ngưỡng theo cực tiểu toàn cục**, vẫn lấy điểm đầu tiên để tránh nhầm quãng 8.
+4. Bắt "gõ phím" bằng cách so với khung ngay trước, nên nốt lặp và đàn nhanh bị nuốt.
+   Giờ so với mức thấp nhất của 3 khung gần đây.
+5. **Bé nhại lại ngay khi app vừa đàn mẫu xong** thì lần gõ bị bỏ (micro còn chờ tiếng app tắt), và nốt không bao giờ được nhận.
+   Giờ lần gõ trong lúc tiếng app đang tắt dần được nhớ lại. Có test riêng cho cả hai chiều:
+   tiếng của chính app thì vẫn không bị tính.
+6. Bước phân tích 40 ms giảm còn 25 ms.
+
+**Màn "Thử micro" thành trình chẩn đoán:**
+- thanh âm lượng có vạch ngưỡng, giúp bố mẹ thấy tiếng đàn có vượt vạch không;
+- chọn độ nhạy ngay tại màn hình;
+- **Kiểm tra 5 nốt** (Đô → Sol): báo đúng/sai/không nghe cho từng nốt, kèm lời khuyên cụ thể
+  (tăng độ nhạy, dời iPad, chỉnh theo đàn nhà, bớt ồn);
+- **Sao chép nhật ký** (JSON: mức tiếng, ngưỡng, ồn nền, độ rõ của từng nốt) để gửi người hỗ trợ chỉnh tiếp.
+
+**Giới hạn còn lại:** đây vẫn là giả lập. Số liệu thật phụ thuộc iPad, đàn và phòng; nhật ký từ màn chẩn đoán là cách để chỉnh tiếp.
+Micro vẫn chỉ nghe được **một nốt mỗi lúc**.
