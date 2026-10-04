@@ -1,0 +1,164 @@
+{
+  "id": "ode_to_joy_easy",
+  "title": "Ode to Joy",
+  "titleVi": "Bài ca niềm vui",
+  "composer": "Ludwig van Beethoven",
+  "sourceStatus": "public-domain",
+  "arrangementBy": "Original simple 5-finger arrangement for this app",
+  "attributionRequired": false,
+  "hand": "RH",
+  "bpm": 60,
+  "timeSignature": "4/4",
+  "notes": [
+    {
+      "pitch": "E4",
+      "beats": 1,
+      "finger": 3
+    },
+    {
+      "pitch": "E4",
+      "beats": 1,
+      "finger": 3
+    },
+    {
+      "pitch": "F4",
+      "beats": 1,
+      "finger": 4
+    },
+    {
+      "pitch": "G4",
+      "beats": 1,
+      "finger": 5
+    },
+    {
+      "pitch": "G4",
+      "beats": 1,
+      "finger": 5
+    },
+    {
+      "pitch": "F4",
+      "beats": 1,
+      "finger": 4
+    },
+    {
+      "pitch": "E4",
+      "beats": 1,
+      "finger": 3
+    },
+    {
+      "pitch": "D4",
+      "beats": 1,
+      "finger": 2
+    },
+    {
+      "pitch": "C4",
+      "beats": 1,
+      "finger": 1
+    },
+    {
+      "pitch": "C4",
+      "beats": 1,
+      "finger": 1
+    },
+    {
+      "pitch": "D4",
+      "beats": 1,
+      "finger": 2
+    },
+    {
+      "pitch": "E4",
+      "beats": 1,
+      "finger": 3
+    },
+    {
+      "pitch": "E4",
+      "beats": 1,
+      "finger": 3
+    },
+    {
+      "pitch": "D4",
+      "beats": 1,
+      "finger": 2
+    },
+    {
+      "pitch": "D4",
+      "beats": 2,
+      "finger": 2
+    },
+    {
+      "pitch": "E4",
+      "beats": 1,
+      "finger": 3
+    },
+    {
+      "pitch": "E4",
+      "beats": 1,
+      "finger": 3
+    },
+    {
+      "pitch": "F4",
+      "beats": 1,
+      "finger": 4
+    },
+    {
+      "pitch": "G4",
+      "beats": 1,
+      "finger": 5
+    },
+    {
+      "pitch": "G4",
+      "beats": 1,
+      "finger": 5
+    },
+    {
+      "pitch": "F4",
+      "beats": 1,
+      "finger": 4
+    },
+    {
+      "pitch": "E4",
+      "beats": 1,
+      "finger": 3
+    },
+    {
+      "pitch": "D4",
+      "beats": 1,
+      "finger": 2
+    },
+    {
+      "pitch": "C4",
+      "beats": 1,
+      "finger": 1
+    },
+    {
+      "pitch": "C4",
+      "beats": 1,
+      "finger": 1
+    },
+    {
+      "pitch": "D4",
+      "beats": 1,
+      "finger": 2
+    },
+    {
+      "pitch": "E4",
+      "beats": 1,
+      "finger": 3
+    },
+    {
+      "pitch": "D4",
+      "beats": 1,
+      "finger": 2
+    },
+    {
+      "pitch": "C4",
+      "beats": 1,
+      "finger": 1
+    },
+    {
+      "pitch": "C4",
+      "beats": 2,
+      "finger": 1
+    }
+  ]
+}

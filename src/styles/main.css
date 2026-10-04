@@ -1,0 +1,790 @@
+/* Piano bé — iPad landscape. Chữ ≥ 24px, nút ≥ 64px. Font hệ thống, không tải gì từ mạng. */
+:root {
+  --bg: #fff8ec;
+  --ink: #2b2a33;
+  --muted: #6b6878;
+  --card: #ffffff;
+  --line: #e6dccb;
+  --primary: #3b6fd8;
+  --good: #2e9e5b;
+  --retry: #e0902b;
+  --danger: #c84040;
+  --rh: #2e9e5b;
+  --rh-soft: #c9f0d8;
+  --lh: #f28c28;
+  --lh-soft: #ffe1c2;
+  --guide: #b9cdf7;
+  --radius: 18px;
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 24px;
+  line-height: 1.3;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  position: fixed;
+  inset: 0;
+}
+
+#app {
+  position: fixed;
+  inset: 0;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
+  display: flex;
+  flex-direction: column;
+}
+
+input,
+textarea {
+  -webkit-user-select: text;
+  user-select: text;
+  font: inherit;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+/* ---------- Bố cục màn ---------- */
+.screen {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.screen.center {
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 24px;
+  text-align: center;
+}
+
+.stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 12px 24px;
+  text-align: center;
+  position: relative;
+}
+
+.keyboard-wrap {
+  flex: 0 0 38vh;
+  padding: 0 10px;
+}
+
+.actions {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  align-items: center;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  min-height: 96px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  gap: 16px;
+}
+
+.topbar-title {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+/* ---------- Chữ ---------- */
+.hero-emoji {
+  font-size: 72px;
+  line-height: 1;
+}
+.hero-emoji.huge {
+  font-size: 110px;
+}
+.hero-title {
+  font-size: 44px;
+  font-weight: 800;
+}
+.hero-sub,
+.lead {
+  font-size: 28px;
+  color: var(--muted);
+  max-width: 900px;
+}
+.title {
+  font-size: 44px;
+  font-weight: 800;
+}
+.step-tag {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--primary);
+  background: #e6eefc;
+  border-radius: 999px;
+  padding: 4px 18px;
+}
+.progress {
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  font-size: 24px;
+  color: var(--muted);
+}
+.note-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.note-big {
+  font-size: 84px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  line-height: 1.05;
+}
+.note-sub {
+  font-size: 28px;
+  color: var(--muted);
+}
+.finger-big {
+  font-size: 64px;
+  font-weight: 900;
+  line-height: 1.1;
+}
+.finger-big.hand-rh {
+  color: var(--rh);
+}
+.finger-big.hand-lh {
+  color: var(--lh);
+}
+.countdown {
+  font-size: 24px;
+  color: var(--muted);
+  min-height: 1.3em;
+}
+.banner {
+  background: #fff2c6;
+  border: 2px solid #f1d46b;
+  border-radius: var(--radius);
+  padding: 10px 20px;
+  font-size: 26px;
+  font-weight: 600;
+}
+.banner.warn {
+  background: #fde2e2;
+  border-color: #e7a0a0;
+}
+.soft-note {
+  color: var(--muted);
+}
+.muted {
+  color: var(--muted);
+  font-size: 24px;
+}
+
+/* ---------- Nút ---------- */
+.btn {
+  min-height: 72px;
+  min-width: 72px;
+  padding: 10px 26px;
+  border-radius: var(--radius);
+  border: 3px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  font-size: 26px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.08);
+  transition: transform 0.06s;
+}
+.btn:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08);
+}
+.btn:disabled {
+  opacity: 0.35;
+}
+.btn-icon {
+  font-size: 30px;
+  line-height: 1;
+}
+.btn-primary {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+.btn-good {
+  background: var(--good);
+  border-color: var(--good);
+  color: #fff;
+}
+.btn-retry {
+  background: #fff4e3;
+  border-color: var(--retry);
+  color: #8a520f;
+}
+.btn-danger {
+  background: #fff;
+  border-color: var(--danger);
+  color: var(--danger);
+}
+.btn-big {
+  min-height: 96px;
+  font-size: 32px;
+  padding: 16px 40px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  max-width: 1100px;
+}
+.chip {
+  min-height: 64px;
+  padding: 8px 20px;
+  border-radius: 999px;
+  border: 3px solid var(--line);
+  background: var(--card);
+  font: inherit;
+  font-size: 24px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink);
+}
+.chip-next {
+  border-color: var(--primary);
+}
+.chip-done {
+  color: var(--good);
+  font-weight: 800;
+}
+.home-row {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+.today-stars {
+  font-size: 28px;
+  color: #d9a400;
+}
+
+.parent-btn {
+  position: relative;
+  overflow: hidden;
+  min-height: 64px;
+  padding: 8px 20px;
+  border-radius: 999px;
+  border: 2px solid var(--line);
+  background: var(--card);
+  font: inherit;
+  font-size: 22px;
+  color: var(--muted);
+}
+.parent-btn-label {
+  position: relative;
+}
+.hold-fill {
+  position: absolute;
+  inset: 0;
+  width: 0;
+  background: #e6eefc;
+  transition-property: width;
+  transition-timing-function: linear;
+  transition-duration: 0s;
+}
+.parent-btn.holding .hold-fill {
+  width: 100%;
+}
+
+.rating-options {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.stars {
+  font-size: 110px;
+  color: #f4b400;
+  letter-spacing: 8px;
+  line-height: 1;
+}
+.stars-off {
+  color: #e8e1d3;
+}
+.end-actions {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* ---------- Bàn phím ảo ---------- */
+.keyboard {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+.keyboard.is-disabled {
+  opacity: 0.5;
+}
+.key {
+  position: absolute;
+  top: 0;
+  touch-action: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  transition: background-color 0.08s;
+}
+.key-white {
+  height: 100%;
+  background: #fff;
+  border: 2px solid #3a3a44;
+  border-radius: 0 0 12px 12px;
+  z-index: 1;
+  padding-bottom: 10px;
+}
+.key-black {
+  height: 60%;
+  background: #24232b;
+  border: 2px solid #111;
+  border-radius: 0 0 8px 8px;
+  z-index: 2;
+  padding-bottom: 8px;
+}
+.key-label {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.key-black .key-label {
+  color: #fff;
+}
+.key-badge {
+  display: none;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: var(--rh);
+  color: #fff;
+  font-size: 34px;
+  font-weight: 900;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+.key-badge.show {
+  display: flex;
+}
+.key.is-guide.key-white {
+  background: #eef3fd;
+}
+.key.is-guide.key-black {
+  background: #4c5a86;
+}
+.key.is-target.hand-rh.key-white {
+  background: var(--rh-soft);
+  border-color: var(--rh);
+  box-shadow: inset 0 0 0 4px var(--rh);
+}
+.key.is-target.hand-rh.key-black {
+  background: var(--rh);
+  box-shadow: 0 0 0 4px var(--rh-soft);
+}
+.key.is-target.hand-lh.key-white {
+  background: var(--lh-soft);
+  border-color: var(--lh);
+  box-shadow: inset 0 0 0 4px var(--lh);
+}
+.key.is-target.hand-lh .key-badge {
+  background: var(--lh);
+}
+.key.is-pressed.key-white {
+  background: #ffe58a;
+}
+.key.is-pressed.key-black {
+  background: #8a7a2a;
+}
+.key.is-good.key-white {
+  background: var(--rh-soft);
+  box-shadow: inset 0 0 0 5px var(--good);
+}
+.key.is-show.key-white,
+.key.is-show.key-black {
+  box-shadow: inset 0 0 0 5px var(--primary);
+  background: #dfe8fb;
+}
+
+/* Số ngón nảy lên khi bé chạm phím */
+.key-press-finger {
+  position: absolute;
+  left: 50%;
+  bottom: 40px;
+  width: 64px;
+  height: 64px;
+  margin-left: -32px;
+  border-radius: 50%;
+  background: var(--rh);
+  color: #fff;
+  border: 4px solid #fff;
+  font-size: 40px;
+  font-weight: 900;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  z-index: 3;
+  pointer-events: none;
+}
+.key.finger-pressed .key-badge {
+  visibility: hidden;
+}
+.key-press-finger.lh {
+  background: var(--lh);
+}
+.key-press-finger.show {
+  display: flex;
+  animation: finger-pop 0.25s ease-out;
+}
+@keyframes finger-pop {
+  0% {
+    transform: scale(0.3) translateY(20px);
+  }
+  70% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* ---------- Hình bàn tay ---------- */
+.finger-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.finger-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.finger-row.hand-rh .finger-big {
+  color: var(--rh);
+}
+.finger-row.hand-lh .finger-big {
+  color: var(--lh);
+}
+.finger-name {
+  font-size: 26px;
+  color: var(--muted);
+}
+.hand {
+  width: 220px;
+  height: 183px;
+  flex: 0 0 auto;
+}
+.hand .finger rect,
+.hand .palm {
+  fill: #ffe7d1;
+  stroke: #c99a74;
+  stroke-width: 2.5;
+}
+.hand .palm {
+  stroke: none;
+}
+.hand .finger circle {
+  fill: #fff;
+  stroke: #c99a74;
+  stroke-width: 2;
+}
+.hand .finger text {
+  font-size: 21px;
+  font-weight: 800;
+  fill: #8a6a50;
+  font-family: inherit;
+}
+.hand.hand-rh .finger.on rect {
+  fill: var(--rh);
+  stroke: #1f7a44;
+}
+.hand.hand-lh .finger.on rect {
+  fill: var(--lh);
+  stroke: #b8621a;
+}
+.hand .finger.on circle {
+  stroke: none;
+}
+.hand .finger.on text {
+  fill: var(--ink);
+}
+.hand.has-finger .finger:not(.on) {
+  opacity: 0.85;
+}
+
+/* ---------- Âm thanh bị tạm dừng ---------- */
+.audio-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(255, 248, 236, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.audio-overlay[hidden] {
+  display: none;
+}
+
+/* ---------- Cổng phụ huynh ---------- */
+.gate-q {
+  font-size: 56px;
+  font-weight: 800;
+}
+.gate-display {
+  font-size: 48px;
+  min-width: 200px;
+  min-height: 72px;
+  border-bottom: 4px solid var(--line);
+}
+.shake {
+  animation: shake 0.35s;
+}
+@keyframes shake {
+  25% {
+    transform: translateX(-10px);
+  }
+  75% {
+    transform: translateX(10px);
+  }
+}
+.keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 88px);
+  gap: 10px;
+}
+.key-btn {
+  height: 72px;
+  border-radius: 14px;
+  border: 2px solid var(--line);
+  background: var(--card);
+  font: inherit;
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.key-ok {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+/* ---------- Màn phụ huynh (được cuộn) ---------- */
+.scrollable {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
+.scrollable * {
+  touch-action: pan-y;
+}
+.parent {
+  flex: 1;
+  min-height: 0;
+  padding: 16px 24px calc(32px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.parent-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.parent-head h1 {
+  font-size: 36px;
+}
+.card {
+  background: var(--card);
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+}
+.card h2 {
+  font-size: 30px;
+}
+.card h3 {
+  font-size: 24px;
+  margin-top: 6px;
+}
+.tbl {
+  border-collapse: collapse;
+  font-size: 24px;
+}
+.tbl th,
+.tbl td {
+  border-bottom: 1px solid var(--line);
+  padding: 6px 16px 6px 0;
+  text-align: left;
+}
+.seg {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.seg-btn {
+  min-height: 64px;
+  min-width: 96px;
+  padding: 6px 18px;
+  border-radius: 14px;
+  border: 2px solid var(--line);
+  background: #faf6ee;
+  font: inherit;
+  font-size: 24px;
+  color: var(--ink);
+}
+.seg-btn.on {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+.seg-btn:disabled {
+  opacity: 0.5;
+}
+.checklist,
+.edit-list,
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.check,
+.edit-item {
+  min-height: 64px;
+  padding: 6px 18px;
+  border-radius: 14px;
+  border: 2px solid var(--line);
+  background: #faf6ee;
+  font: inherit;
+  font-size: 24px;
+  color: var(--ink);
+}
+.check.on {
+  border-color: var(--good);
+  background: var(--rh-soft);
+}
+.edit-item.correct {
+  border-color: var(--good);
+}
+.edit-item.retry {
+  border-color: var(--retry);
+}
+.text-in {
+  min-height: 64px;
+  width: min(600px, 100%);
+  padding: 8px 14px;
+  border-radius: 12px;
+  border: 2px solid var(--line);
+  font-size: 24px;
+}
+.paste {
+  height: 120px;
+}
+.hidden-file {
+  display: none;
+}
+.reset-box {
+  border: 2px dashed var(--danger);
+  border-radius: 14px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.foot {
+  text-align: center;
+  align-self: center;
+}
+
+/* iPad nhỏ / màn thấp: thu gọn chữ to một chút */
+@media (max-height: 760px) {
+  .note-big {
+    font-size: 68px;
+  }
+  .finger-big {
+    font-size: 52px;
+  }
+  .hand {
+    width: 156px;
+    height: 130px;
+  }
+  .hero-emoji {
+    font-size: 56px;
+  }
+  .title {
+    font-size: 38px;
+  }
+}
+
+/* Dọc: nhắc xoay ngang */
+@media (orientation: portrait) and (max-width: 1100px) {
+  #app::after {
+    content: '↻ Xoay iPad nằm ngang nhé';
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    font-weight: 800;
+  }
+}

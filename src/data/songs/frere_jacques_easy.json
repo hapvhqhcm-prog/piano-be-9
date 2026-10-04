@@ -1,0 +1,174 @@
+{
+  "id": "frere_jacques_easy",
+  "title": "Frère Jacques",
+  "titleVi": "Kìa con bướm vàng",
+  "composer": "Dân ca Pháp (traditional)",
+  "sourceStatus": "public-domain",
+  "arrangementBy": "Original simple 5-finger arrangement for this app",
+  "attributionRequired": false,
+  "hand": "RH",
+  "bpm": 60,
+  "timeSignature": "4/4",
+  "notes": [
+    {
+      "pitch": "C4",
+      "beats": 1,
+      "finger": 1
+    },
+    {
+      "pitch": "D4",
+      "beats": 1,
+      "finger": 2
+    },
+    {
+      "pitch": "E4",
+      "beats": 1,
+      "finger": 3
+    },
+    {
+      "pitch": "C4",
+      "beats": 1,
+      "finger": 1
+    },
+    {
+      "pitch": "C4",
+      "beats": 1,
+      "finger": 1
+    },
+    {
+      "pitch": "D4",
+      "beats": 1,
+      "finger": 2
+    },
+    {
+      "pitch": "E4",
+      "beats": 1,
+      "finger": 3
+    },
+    {
+      "pitch": "C4",
+      "beats": 1,
+      "finger": 1
+    },
+    {
+      "pitch": "E4",
+      "beats": 1,
+      "finger": 3
+    },
+    {
+      "pitch": "F4",
+      "beats": 1,
+      "finger": 4
+    },
+    {
+      "pitch": "G4",
+      "beats": 2,
+      "finger": 5
+    },
+    {
+      "pitch": "E4",
+      "beats": 1,
+      "finger": 3
+    },
+    {
+      "pitch": "F4",
+      "beats": 1,
+      "finger": 4
+    },
+    {
+      "pitch": "G4",
+      "beats": 2,
+      "finger": 5
+    },
+    {
+      "pitch": "G4",
+      "beats": 0.5,
+      "finger": 5
+    },
+    {
+      "pitch": "G4",
+      "beats": 0.5,
+      "finger": 5
+    },
+    {
+      "pitch": "G4",
+      "beats": 0.5,
+      "finger": 5
+    },
+    {
+      "pitch": "F4",
+      "beats": 0.5,
+      "finger": 4
+    },
+    {
+      "pitch": "E4",
+      "beats": 1,
+      "finger": 3
+    },
+    {
+      "pitch": "C4",
+      "beats": 1,
+      "finger": 1
+    },
+    {
+      "pitch": "G4",
+      "beats": 0.5,
+      "finger": 5
+    },
+    {
+      "pitch": "G4",
+      "beats": 0.5,
+      "finger": 5
+    },
+    {
+      "pitch": "G4",
+      "beats": 0.5,
+      "finger": 5
+    },
+    {
+      "pitch": "F4",
+      "beats": 0.5,
+      "finger": 4
+    },
+    {
+      "pitch": "E4",
+      "beats": 1,
+      "finger": 3
+    },
+    {
+      "pitch": "C4",
+      "beats": 1,
+      "finger": 1
+    },
+    {
+      "pitch": "C4",
+      "beats": 1,
+      "finger": 1
+    },
+    {
+      "pitch": "G4",
+      "beats": 1,
+      "finger": 5
+    },
+    {
+      "pitch": "C4",
+      "beats": 2,
+      "finger": 1
+    },
+    {
+      "pitch": "C4",
+      "beats": 1,
+      "finger": 1
+    },
+    {
+      "pitch": "G4",
+      "beats": 1,
+      "finger": 5
+    },
+    {
+      "pitch": "C4",
+      "beats": 2,
+      "finger": 1
+    }
+  ]
+}

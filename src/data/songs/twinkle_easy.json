@@ -1,0 +1,224 @@
+{
+  "id": "twinkle_easy",
+  "title": "Twinkle Twinkle Little Star",
+  "titleVi": "Ngôi sao nhỏ",
+  "composer": "Traditional (\"Ah! vous dirai-je, maman\")",
+  "sourceStatus": "public-domain",
+  "arrangementBy": "Original simple 5-finger arrangement for this app",
+  "attributionRequired": false,
+  "hand": "RH",
+  "bpm": 60,
+  "timeSignature": "4/4",
+  "notes": [
+    {
+      "pitch": "C4",
+      "beats": 1,
+      "finger": 1
+    },
+    {
+      "pitch": "C4",
+      "beats": 1,
+      "finger": 1
+    },
+    {
+      "pitch": "G4",
+      "beats": 1,
+      "finger": 5
+    },
+    {
+      "pitch": "G4",
+      "beats": 1,
+      "finger": 5
+    },
+    {
+      "pitch": "G4",
+      "beats": 1,
+      "finger": 5
+    },
+    {
+      "pitch": "G4",
+      "beats": 1,
+      "finger": 5
+    },
+    {
+      "pitch": "G4",
+      "beats": 2,
+      "finger": 5
+    },
+    {
+      "pitch": "F4",
+      "beats": 1,
+      "finger": 4
+    },
+    {
+      "pitch": "F4",
+      "beats": 1,
+      "finger": 4
+    },
+    {
+      "pitch": "E4",
+      "beats": 1,
+      "finger": 3
+    },
+    {
+      "pitch": "E4",
+      "beats": 1,
+      "finger": 3
+    },
+    {
+      "pitch": "D4",
+      "beats": 1,
+      "finger": 2
+    },
+    {
+      "pitch": "D4",
+      "beats": 1,
+      "finger": 2
+    },
+    {
+      "pitch": "C4",
+      "beats": 2,
+      "finger": 1
+    },
+    {
+      "pitch": "G4",
+      "beats": 1,
+      "finger": 5
+    },
+    {
+      "pitch": "G4",
+      "beats": 1,
+      "finger": 5
+    },
+    {
+      "pitch": "F4",
+      "beats": 1,
+      "finger": 4
+    },
+    {
+      "pitch": "F4",
+      "beats": 1,
+      "finger": 4
+    },
+    {
+      "pitch": "E4",
+      "beats": 1,
+      "finger": 3
+    },
+    {
+      "pitch": "E4",
+      "beats": 1,
+      "finger": 3
+    },
+    {
+      "pitch": "D4",
+      "beats": 2,
+      "finger": 2
+    },
+    {
+      "pitch": "G4",
+      "beats": 1,
+      "finger": 5
+    },
+    {
+      "pitch": "G4",
+      "beats": 1,
+      "finger": 5
+    },
+    {
+      "pitch": "F4",
+      "beats": 1,
+      "finger": 4
+    },
+    {
+      "pitch": "F4",
+      "beats": 1,
+      "finger": 4
+    },
+    {
+      "pitch": "E4",
+      "beats": 1,
+      "finger": 3
+    },
+    {
+      "pitch": "E4",
+      "beats": 1,
+      "finger": 3
+    },
+    {
+      "pitch": "D4",
+      "beats": 2,
+      "finger": 2
+    },
+    {
+      "pitch": "C4",
+      "beats": 1,
+      "finger": 1
+    },
+    {
+      "pitch": "C4",
+      "beats": 1,
+      "finger": 1
+    },
+    {
+      "pitch": "G4",
+      "beats": 1,
+      "finger": 5
+    },
+    {
+      "pitch": "G4",
+      "beats": 1,
+      "finger": 5
+    },
+    {
+      "pitch": "G4",
+      "beats": 1,
+      "finger": 5
+    },
+    {
+      "pitch": "G4",
+      "beats": 1,
+      "finger": 5
+    },
+    {
+      "pitch": "G4",
+      "beats": 2,
+      "finger": 5
+    },
+    {
+      "pitch": "F4",
+      "beats": 1,
+      "finger": 4
+    },
+    {
+      "pitch": "F4",
+      "beats": 1,
+      "finger": 4
+    },
+    {
+      "pitch": "E4",
+      "beats": 1,
+      "finger": 3
+    },
+    {
+      "pitch": "E4",
+      "beats": 1,
+      "finger": 3
+    },
+    {
+      "pitch": "D4",
+      "beats": 1,
+      "finger": 2
+    },
+    {
+      "pitch": "D4",
+      "beats": 1,
+      "finger": 2
+    },
+    {
+      "pitch": "C4",
+      "beats": 2,
+      "finger": 1
+    }
+  ]
+}
