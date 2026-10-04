@@ -18,6 +18,18 @@ try {
   process.exit(1);
 }
 
+// Repo tạm trong dist/ dùng cùng tên/email với repo chính (email ẩn danh GitHub).
+const ident = (key) => {
+  try {
+    return out(`git config ${key}`);
+  } catch {
+    return '';
+  }
+};
+const name = ident('user.name') || 'piano-be-9';
+const email = ident('user.email') || 'piano-be-9@users.noreply.github.com';
+const id = `-c user.name="${name}" -c user.email="${email}"`;
+
 run('npm test');
 run('npm run build');
 
@@ -27,7 +39,7 @@ const stamp = new Date().toISOString();
 run('git init -q', { cwd: 'dist' });
 run('git checkout -q -b gh-pages', { cwd: 'dist' });
 run('git add -A', { cwd: 'dist' });
-run(`git commit -q -m "deploy ${stamp}"`, { cwd: 'dist' });
+run(`git ${id} commit -q -m "deploy ${stamp}"`, { cwd: 'dist' });
 run(`git push -f "${origin}" gh-pages`, { cwd: 'dist' });
 rmSync('dist/.git', { recursive: true, force: true });
 console.log('\nĐã đẩy lên nhánh gh-pages. Đợi 1–2 phút rồi mở trang GitHub Pages.');
