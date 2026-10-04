@@ -14,6 +14,12 @@ import { leftHandActive } from '../../lessons/lessonEngine';
 import { StaffView } from '../components/staffView';
 import { HandOverlay, eventsFromTargets, playDemo } from '../components/demo';
 
+/** Lời khen / động viên đa dạng (không lặp một câu mãi). */
+const PRAISE = ['Giỏi lắm!', 'Tuyệt vời!', 'Xuất sắc!', 'Đúng rồi!', 'Hay quá!', 'Con làm được rồi!'];
+const PRAISE_SUB = ['Con tìm đúng rồi', 'Ngón tay con khéo quá', 'Tai con nghe giỏi ghê', 'Cứ thế tiếp nhé!'];
+const RETRY_SUB = ['Không sao, mình làm lại nào', 'Sai một chút thôi — thử lần nữa!', 'Nhìn kỹ phím đang sáng nhé', 'Từ từ thôi, con làm được mà'];
+const pick = <T,>(a: T[]): T => a[Math.floor(Math.random() * a.length)];
+
 /** Khuông nhỏ hiện một nốt (tuần 7). */
 function miniStaff(pitch: string, clef: 'treble' | 'bass' = 'treble'): HTMLElement {
   const sv = new StaffView(
@@ -106,6 +112,20 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
       onPress: (p) => void app.audio.playPitch(p),
     });
     const overlay = new HandOverlay(kb);
+    /** Số lần "Thử lại" cho từng nốt — để biết khi nào cần thầy đàn mẫu lại */
+    const retries = new Map<number, number>();
+    /** Micro nghe sai 3 lần → bàn tay mờ hiện đúng chỗ (không phát tiếng, để micro vẫn nghe bé) */
+    const showHelpHand = (t: Target) => {
+      t.keys.forEach((k, i) => {
+        const f = fingerOf(t, k, i);
+        if (f) overlay.place(t.hand ?? 'RH', k, f, true);
+      });
+      overlay.setGhost(true);
+      const first = t.keys[0];
+      const f0 = fingerOf(t, first, 0);
+      if (f0) overlay.press(t.hand ?? 'RH', f0, 1500);
+      micHint('🎤 Nhìn bàn tay mờ: ngón này đặt ở phím đang sáng nhé', 'wrong');
+    };
     let demo: { cancel: () => void; done: Promise<void> } | null = null;
     const fingerOf = (t: Target, pitch: string, i = t.keys.indexOf(pitch)) =>
       t.fingers?.[i] ?? fingerFor(pitch, t.hand ?? 'RH', true);
@@ -258,6 +278,8 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
         case 'PLAY_SAMPLE':
         case 'WAIT_PARENT': {
           const t = target();
+          // Mỗi lần vào lại một nốt (kể cả sau "Thử lại"/"Sửa") đều bắt đầu lượt nghe mới
+          if (snap.state === 'SHOW_NOTE') micForIndex = -1;
           resetMicTurn(snap.index);
           showTargetOnKeyboard(t);
           stage.append(noteView(t));
@@ -283,16 +305,35 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
           const ok = snap.lastResult === 'correct';
           const byMic = snap.lastSource === 'mic';
           const countdown = h('div', { class: 'countdown' });
+          const tries = retries.get(snap.index) ?? 0;
+          const needHelp = !ok && tries >= 2;
           stage.append(
             h('div', { class: 'hero-mascot' }, mascot(ok ? 'cheer' : 'think', 110)),
-            h('h1', { class: 'title' }, ok ? 'Giỏi lắm!' : 'Thử lại nhé'),
+            h('h1', { class: 'title' }, ok ? pick(PRAISE) : needHelp ? 'Mình xem thầy làm nhé!' : 'Thử lại nhé'),
             h(
               'p',
               { class: 'lead' },
-              ok ? (byMic ? '🎤 App nghe con đàn đúng rồi!' : 'Con tìm đúng rồi') : 'Không sao, mình làm lại nào',
+              ok
+                ? byMic
+                  ? '🎤 App nghe con đàn đúng rồi!'
+                  : pick(PRAISE_SUB)
+                : needHelp
+                  ? 'Nhìn ngón tay của thầy, rồi con làm theo'
+                  : pick(RETRY_SUB),
             ),
             countdown,
           );
+          // Trợ giúp thích ứng: sai từ 2 lần trở lên → thầy đàn mẫu lại nốt này (không mờ)
+          if (needHelp) {
+            const t = target();
+            const events = eventsFromTargets([t]);
+            if (events.length) {
+              later(() => {
+                overlay.setGhost(false);
+                demo = playDemo(app.audio, kb, overlay, events, { onCaption: (c) => (countdown.textContent = `🎬 ${c}`) });
+              }, 600);
+            }
+          }
           bar.append(
             back,
             button({ icon: '✎', label: 'Sửa', onTap: () => send('EDIT') }),
@@ -338,6 +379,7 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
           break;
         case 'record':
           hooks.record(seg.targets[ef.index], ef.result);
+          if (ef.result === 'retry') retries.set(ef.index, (retries.get(ef.index) ?? 0) + 1);
           if (ef.result === 'correct') {
             void app.audio.chime();
             confetti(24);
@@ -395,6 +437,7 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
           else micHint(`🎤 Đúng rồi! Tiếp theo…`, 'good');
         } else {
           wrongCount++;
+          if (wrongCount === 3) showHelpHand(t);
           seqPos = samePitch(heard, t.keys[0]) ? 1 : 0;
           kb.setResult(heard, 'heard');
           micHint(`🎤 Gần đúng! Đàn lại từ ${noteLabel(t.keys[0]).split(' / ')[0]} nhé`, 'wrong');
@@ -410,6 +453,7 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
       } else {
         wrongCount++;
         kb.setResult(heard, 'heard');
+        if (wrongCount === 3) showHelpHand(t);
         // Không có âm thanh/chữ tiêu cực — chỉ nhắc nhẹ phím vừa nghe (§10)
         const want = t.keys.length === 1 ? noteLabel(t.keys[0]).split(' / ')[0] : 'phím đang sáng';
         micHint(`🎤 Con vừa đàn ${noteLabel(heard).split(' / ')[0]} — tìm ${want} nhé`, 'wrong');

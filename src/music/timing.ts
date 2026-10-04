@@ -20,6 +20,13 @@ export interface NoteVerdict {
 export const EARLY = 0.45;
 export const LATE = 0.55;
 
+/** Cửa sổ chấm nhịp theo cài đặt: dễ (mặc định cho trẻ 9 tuổi) / vừa / khó (phách). */
+export const TIMING_WINDOWS: Record<'easy' | 'normal' | 'strict', { early: number; late: number }> = {
+  easy: { early: 0.5, late: 0.65 },
+  normal: { early: EARLY, late: LATE },
+  strict: { early: 0.3, late: 0.35 },
+};
+
 /**
  * Ghép mỗi nốt (hoặc NHÓM nốt cùng lúc — midi là mảng) với lần nghe khớp cao độ gần nhất trong cửa sổ;
  * mỗi lần nghe chỉ dùng một lần.

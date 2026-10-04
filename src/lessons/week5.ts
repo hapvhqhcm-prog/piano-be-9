@@ -3,7 +3,7 @@ import type { WeekPlan } from './types';
 /**
  * TUẦN 5 — Sân khấu nhỏ: "Ode to Joy" từng nốt → từng câu theo nhịp → cả bài;
  * đàn cùng bố mẹ (app đánh bè đệm). Thêm "Chuông ngân vang", "Các thánh tiến bước".
- * Tiêu chí: chơi trọn Ode to Joy ở 60 BPM (bố mẹ xác nhận, hoặc micro ≥ 80%).
+ * Tiêu chí: chơi trọn Ode to Joy ở tốc độ 60 (bố mẹ xác nhận, hoặc micro ≥ 80%).
  */
 export const WEEK5: WeekPlan = {
   week: 5,
@@ -13,7 +13,7 @@ export const WEEK5: WeekPlan = {
   story: 'Ở Sân khấu nhỏ, cả làng chờ nghe con đàn "Bài ca niềm vui". Bố mẹ sẽ đàn cùng con!',
   warmup: { variant: 'identify', pool: ['C4', 'D4', 'E4', 'F4', 'G4'], rounds: 8, reference: 'C4' },
   teach: { emoji: '👨‍🏫', text: 'Con dạy bố/mẹ câu đầu "Bài ca niềm vui": Mi Mi Fa Sol – Sol Fa Mi Rê.' },
-  criterion: { text: 'Chơi trọn "Bài ca niềm vui" ở 60 BPM', who: 'PARENT/MIC' },
+  criterion: { text: 'Chơi trọn "Bài ca niềm vui" ở tốc độ 60', who: 'PARENT/MIC' },
   lessons: [
     {
       id: 'w5-l1',

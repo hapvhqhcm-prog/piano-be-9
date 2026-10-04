@@ -1,4 +1,5 @@
 import { migrate } from './migrations';
+import { isValidPitch, samePitch } from '../piano/pitchTable';
 import {
   defaultData,
   localDateStr,
@@ -17,6 +18,9 @@ export interface KeyValueStorage {
   getItem(key: string): string | null;
   setItem(key: string, value: string): void;
   removeItem(key: string): void;
+  /** Liệt kê khóa (localStorage có sẵn qua length/key) — để tìm bản sao lưu "corrupt-*" */
+  readonly length?: number;
+  key?(index: number): string | null;
 }
 
 export const STORAGE_KEY = 'piano-be-9';
@@ -36,6 +40,12 @@ export function isEmptySession(s: Session): boolean {
 
 export class MemoryStorage implements KeyValueStorage {
   private m = new Map<string, string>();
+  get length() {
+    return this.m.size;
+  }
+  key(i: number) {
+    return [...this.m.keys()][i] ?? null;
+  }
   getItem(k: string) {
     return this.m.has(k) ? (this.m.get(k) as string) : null;
   }
@@ -53,6 +63,8 @@ export class ProgressStore {
   lastSaveError: string | null = null;
   /** Dữ liệu cũ bị hỏng và đã được sao lưu sang khóa khác khi khởi động. */
   recoveredFromCorrupt = false;
+  /** Đã tự khôi phục tiến độ từ bản sao lưu nội bộ khi khởi động */
+  recoveredFromBackup = false;
   private listeners = new Set<() => void>();
 
   constructor(
@@ -62,15 +74,46 @@ export class ProgressStore {
     this.data = this.load();
   }
 
-  private load(): AppData {
-    const raw = this.kv.getItem(STORAGE_KEY);
-    if (!raw) return defaultData(this.now());
+  private parse(raw: string | null): AppData | null {
+    if (!raw) return null;
     try {
       const d = migrate(JSON.parse(raw));
-      if (validateAppData(d).length === 0) return d;
+      return validateAppData(d).length === 0 ? d : null;
     } catch {
-      /* rơi xuống nhánh dưới */
+      return null;
     }
+  }
+
+  /** Các bản dữ liệu từng bị coi là hỏng (đã cất ở khóa "piano-be-9:corrupt-<thời điểm>"), mới nhất trước. */
+  private corruptBackups(): Array<{ key: string; data: AppData }> {
+    const out: Array<{ key: string; data: AppData; ts: number }> = [];
+    const n = this.kv.length ?? 0;
+    for (let i = 0; i < n; i++) {
+      const k = this.kv.key?.(i);
+      if (!k || !k.startsWith(`${STORAGE_KEY}:corrupt-`)) continue;
+      const d = this.parse(this.kv.getItem(k));
+      if (d) out.push({ key: k, data: d, ts: Number(k.split('-').pop()) || 0 });
+    }
+    return out.sort((a, b) => b.ts - a.ts);
+  }
+
+  private load(): AppData {
+    const raw = this.kv.getItem(STORAGE_KEY);
+    const main = this.parse(raw);
+    // Tự khôi phục: nếu dữ liệu chính trống/ít hơn một bản từng bị đặt lại do lỗi kiểm tra cũ → dùng bản đó
+    const best = this.corruptBackups().find((b) => b.data.sessions.length > (main?.sessions.length ?? 0));
+    if (best) {
+      this.recoveredFromBackup = true;
+      try {
+        this.kv.setItem(STORAGE_KEY, JSON.stringify(best.data));
+        this.kv.removeItem(best.key);
+      } catch {
+        /* bỏ qua */
+      }
+      return best.data;
+    }
+    if (main) return main;
+    if (!raw) return defaultData(this.now());
     try {
       this.kv.setItem(`${STORAGE_KEY}:corrupt-${this.now().getTime()}`, raw);
     } catch {
@@ -202,7 +245,10 @@ export class ProgressStore {
   /** APP_ASSESSMENT: trò chơi tai nghe — app biết chính xác phím nào. */
   addAppAssessment(sessionId: string, expected: string, actual: string): void {
     const s = this.session(sessionId);
-    s.appAssessments.push({ expected, actual, correct: expected === actual, ts: this.now().getTime() });
+    // Bb4 ≡ A#4: so theo cao độ khi cả hai là tên nốt
+    let correct = expected === actual;
+    if (!correct && isValidPitch(expected) && isValidPitch(actual)) correct = samePitch(expected, actual);
+    s.appAssessments.push({ expected, actual, correct, ts: this.now().getTime() });
     this.touch(s);
     this.save();
   }

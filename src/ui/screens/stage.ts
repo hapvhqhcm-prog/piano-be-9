@@ -70,6 +70,8 @@ export function stageScreen(app: App, hooks: StageHooks) {
     };
 
     const invite = () => {
+      cleanup?.();
+      cleanup = null;
       root.replaceChildren(
         h(
           'div',

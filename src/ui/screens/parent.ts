@@ -1,5 +1,6 @@
 import { WEEKS, findLesson, levelOf, masteredSongs, weekPassed, weekPlan } from '../../lessons/lessonEngine';
 import { SONGS } from '../../music/tune';
+import { parentTip } from '../../lessons/parentTips';
 import { findTune } from '../../music/exercises';
 import { RATING_STARS, isEmptySession } from '../../progress/ProgressStore';
 import { CHECKLIST_ITEMS, localDateStr, type AppData, type Session, type Settings } from '../../progress/schema';
@@ -147,6 +148,25 @@ export function parentScreen(app: App) {
           button({ icon: '←', label: 'Về màn của bé', kind: 'primary', onTap: () => app.show(homeScreen(app)) }),
         ),
         message ? h('div', { class: 'banner' }, message) : null,
+        store.recoveredFromBackup
+          ? h('div', { class: 'banner' }, '✅ App đã tự khôi phục tiến độ của bé từ bản sao lưu trong máy (do lỗi cũ khi lên tuần 9).')
+          : null,
+        h(
+          'section',
+          { class: 'card tip-card' },
+          h('h2', {}, `👪 Tuần ${week}: bố mẹ chú ý`),
+          h('p', {}, parentTip(week)),
+        ),
+        // Nhắc sao lưu: dữ liệu chỉ nằm trên iPad
+        d.sessions.length >= 3 && Date.now() - (d.settings.lastBackupAt ?? 0) > 14 * 86_400_000
+          ? h(
+              'div',
+              { class: 'banner warn' },
+              d.settings.lastBackupAt
+                ? `💾 Đã hơn 2 tuần chưa sao lưu tiến độ — kéo xuống mục "Dữ liệu" bấm "Sao chép JSON" và dán vào Ghi chú.`
+                : `💾 Chưa sao lưu lần nào — kéo xuống mục "Dữ liệu" bấm "Sao chép JSON" và dán vào Ghi chú.`,
+            )
+          : null,
         h(
           'section',
           { class: 'card version-card' },
@@ -419,6 +439,17 @@ export function parentScreen(app: App) {
                 ),
               )
             : null,
+          h('h3', {}, 'Micro chấm nhịp: mức độ'),
+          h('p', { class: 'muted' }, 'Dễ = cho phép sớm/muộn nhiều hơn (nên dùng lúc đầu). Khó = gần như chính xác tuyệt đối.'),
+          segmented(
+            [
+              { value: 'easy' as const, label: 'Dễ' },
+              { value: 'normal' as const, label: 'Vừa' },
+              { value: 'strict' as const, label: 'Khó' },
+            ],
+            s.timing ?? 'easy',
+            (v) => set({ timing: v }),
+          ),
           h('h3', {}, 'Nhạc đệm khi đàn theo nhịp ("bố mẹ đàn cùng")'),
           h('p', { class: 'muted' }, 'Khi micro đang bật, nhạc đệm tự tắt để micro nghe rõ tiếng đàn của bé.'),
           segmented(
@@ -487,6 +518,7 @@ export function parentScreen(app: App) {
                 const a = h('a', { href: url, download: `piano-be-9-${store.today()}.json` });
                 document.body.append(a);
                 a.click();
+                store.updateSettings({ lastBackupAt: Date.now() });
                 a.remove();
                 window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
               },
@@ -497,6 +529,7 @@ export function parentScreen(app: App) {
               onTap: async () => {
                 try {
                   await navigator.clipboard.writeText(store.exportJSON());
+                  store.updateSettings({ lastBackupAt: Date.now() });
                   say('✅ Đã sao chép JSON.');
                 } catch {
                   say('❌ Không sao chép được — hãy dùng "Xuất JSON".');

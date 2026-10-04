@@ -186,3 +186,13 @@ Hạn chế đã biết:
 
 Lưu ý: nếu muốn thêm **video quay thật** (bố mẹ hoặc giáo viên đàn mẫu), có thể làm sau: quay bằng iPad rồi nhập vào app
 (lưu trên máy, không tải lên mạng) — cần OWNER đồng ý vì sẽ dùng thêm bộ nhớ iPad.
+
+---
+
+## 13. Tự phản biện (2026-10-04) — xem chi tiết SELF_REVIEW.md
+
+- Cải tiến sư phạm/trải nghiệm: trợ giúp thích ứng (thầy đàn lại khi sai ≥ 2 lần), buổi gọn hơn (khởi động ≤ 6 lượt),
+  thang tốc độ 40→72, micro chấm tiếng vỗ tay, độ khắt khe chấm nhịp Dễ/Vừa/Khó, mục tiêu tuần 5 chấm + chuỗi ngày,
+  24 mẹo cho bố mẹ, nhắc sao lưu, lời khen đa dạng.
+- Rà soát độc lập tìm ra **1 lỗi nghiêm trọng** (mất tiến độ khi lên tuần 9 — đã sửa + tự khôi phục) và 10 lỗi khác (đã sửa).
+- 322 test tự động PASS.

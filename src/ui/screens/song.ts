@@ -1,6 +1,6 @@
 import { wait } from '../../audio/AudioEngine';
 import { confetti } from '../components/celebrate';
-import { PASS_SCORE, gradeTiming, score as scoreOf, starsFor, type HeardEvent } from '../../music/timing';
+import { PASS_SCORE, TIMING_WINDOWS, gradeTiming, score as scoreOf, starsFor, type HeardEvent } from '../../music/timing';
 import {
   accompaniment,
   allTimed,
@@ -68,6 +68,8 @@ function fingerMap(t: Tune): Map<number, { finger: number; hand: Hand }> {
 export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongHooks) {
   return (root: HTMLElement) => {
     const settings = app.store.settings;
+    // Độ khắt khe chấm nhịp (Cài đặt → mặc định "dễ")
+    const win = TIMING_WINDOWS[settings.timing ?? 'easy'];
     const fmap = fingerMap(full);
     const [low, high] = tuneRange(full);
     let mode = opts.mode;
@@ -264,8 +266,18 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
     }
 
     // ---------------- Bắt đầu ----------------
+    let starting = false;
     async function start(): Promise<void> {
-      await app.ensureMic(); // chạm "Bắt đầu" = thao tác người dùng
+      if (starting) return; // chạm 2 lần liền không được bắt đầu 2 lần
+      starting = true;
+      const tk = token;
+      try {
+        await app.ensureMic(); // chạm "Bắt đầu" = thao tác người dùng
+      } finally {
+        starting = false;
+      }
+      // Rời màn / bấm Dừng trong lúc chờ micro → không bắt đầu nữa
+      if (tk !== token || disposed) return;
       if (mode === 'wait') startWait();
       else startTempo();
     }
@@ -300,7 +312,8 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
       setBar(
         backButton(reset),
         hints !== 'full' ? button({ icon: '💡', label: 'Gợi ý', onTap: () => hint(g) }) : null,
-        !micOn() ? button({ icon: '✓', label: 'Nốt tiếp', kind: 'good', onTap: () => onWaitInput(midisOf(g)[0], 'parent') }) : null,
+        // Luôn có nút cho bố mẹ (kể cả khi micro bật) — phòng micro không nhận ra nốt
+        button({ icon: '✓', label: micOn() ? 'Bố mẹ: tiếp' : 'Nốt tiếp', kind: 'good', onTap: () => onWaitInput(midisOf(g)[0], 'parent') }),
         button({ icon: '⏹', label: 'Dừng', onTap: reset }),
       );
     }
@@ -316,7 +329,8 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
       const g = groups()[wIdx];
       if (!g) return;
       if (midisOf(g).includes(midi)) {
-        if (wWrongThis === 0) wHits++;
+        // Bố mẹ bấm "tiếp" khi micro đang bật: không tính là micro nghe đúng
+        if (wWrongThis === 0 && !(from === 'parent' && micOn())) wHits++;
         for (const i of idxOf(g)) staff.mark(i, 'hit');
         kb.setResult(midiToPitch(midi), 'good');
         wIdx++;
@@ -362,7 +376,7 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
       };
       const unNote = app.mic.onNote((n) => {
         heard.push({ beat: (app.audio.now() - MIC_LATENCY - t0) / spb, midi: n.midi });
-        gradeTiming(gradeInput, heard).forEach((r) => r.hit && markGroup(r.index, 'hit'));
+        gradeTiming(gradeInput, heard, win.early, win.late).forEach((r) => r.hit && markGroup(r.index, 'hit'));
       });
       app.mic.resetTracker();
       const countEl = h('div', { class: 'countin' });
@@ -372,7 +386,7 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
         if (tk !== token) return void unNote();
         const beat = (app.audio.now() - t0) / spb;
         if (beat < 0) {
-          countEl.textContent = String(bpmM - Math.ceil(-beat - 1e-6) + 1);
+          countEl.textContent = beat < -bpmM ? ' ' : String(Math.max(1, bpmM - Math.ceil(-beat - 1e-6) + 1));
         } else {
           if (state === 'countin') {
             state = 'playing';
@@ -396,7 +410,7 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
     ): void {
       kb.setTargets([]);
       if (micOn()) {
-        const v = gradeTiming(gradeInput, heard);
+        const v = gradeTiming(gradeInput, heard, win.early, win.late);
         v.forEach((r) => markGroup(r.index, r.hit ? 'hit' : 'miss'));
         const s = scoreOf(v);
         const hits = v.filter((r) => r.hit).length;
@@ -451,9 +465,15 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
         ' ',
         h('b', {}, text),
       );
+      // Thang tốc độ: đạt ở tốc độ chậm → gợi ý lên nấc tiếp (40 → 50 → 60 → 72)
+      const nextTempo = TEMPOS.find((t) => t > bpm);
+      const passedNow = s >= PASS_SCORE;
       setBar(
         opts.stage ? null : backButton(() => hooks.onBack()),
         opts.stage ? null : button({ icon: '↻', label: 'Chơi lại', onTap: reset }),
+        !opts.stage && mode === 'tempo' && passedNow && nextTempo
+          ? button({ icon: '🐇', label: `Nhanh hơn (${nextTempo})`, onTap: () => ((bpm = nextTempo), reset()) })
+          : null,
         button({ icon: '▶', label: 'Tiếp', kind: 'primary', onTap: hooks.onDone }),
       );
     }
@@ -463,8 +483,10 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
       if (state === 'playing' && mode === 'wait') onWaitInput(n.midi, 'mic');
     });
 
+    let disposed = false;
     reset();
     return () => {
+      disposed = true;
       token++;
       cancelAnimationFrame(raf);
       unWaitNote();

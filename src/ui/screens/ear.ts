@@ -2,7 +2,7 @@ import { wait } from '../../audio/AudioEngine';
 import { confetti } from '../components/celebrate';
 import { fingerOnKeyboard } from '../../piano/fingering';
 import { PianoKeyboard } from '../../piano/PianoKeyboard';
-import { keyboardRangeFor, noteLabel, samePitch, viName, type Pitch } from '../../piano/pitchTable';
+import { keyboardRangeFor, midiToPitch, noteLabel, pitchToMidi, samePitch, viName, type Pitch } from '../../piano/pitchTable';
 import { makeQuestion, referenceOf, type Question, type QuizSpec } from '../../practice/quiz';
 import type { Tune } from '../../music/tune';
 import type { App } from '../App';
@@ -40,7 +40,9 @@ export function quizScreen(app: App, hooks: QuizHooks) {
     let answered = false;
     let token = 0;
 
-    const [kbLow, kbHigh] = keyboardRangeFor(spec.variant === 'majorminor' ? [] : spec.pool);
+    // Trò Vui/buồn: dải phím phải chứa cả quãng 5 của hợp âm (vd Sol4 → Rê5)
+    const rangeNotes = spec.variant === 'majorminor' ? spec.pool.flatMap((p) => [p, midiToPitch(pitchToMidi(p) + 7)]) : spec.pool;
+    const [kbLow, kbHigh] = keyboardRangeFor(rangeNotes);
     const kb = new PianoKeyboard({
       low: kbLow,
       high: kbHigh,

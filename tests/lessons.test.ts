@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { WEEKS, buildSessionPlan, findLesson, levelOf, nextLesson, songMastered, weekPassed } from '../src/lessons/lessonEngine';
+import { WEEKS, buildSessionPlan, findLesson, levelOf, nextLesson, sessionsThisWeek, songMastered, streakDays, weekPassed } from '../src/lessons/lessonEngine';
+import { PARENT_TIPS } from '../src/lessons/parentTips';
 import { findTune } from '../src/music/exercises';
 import { SONGS } from '../src/music/tune';
 import { MemoryStorage, ProgressStore } from '../src/progress/ProgressStore';
@@ -226,5 +227,54 @@ describe('Cấp 2–3 & luyện tập mỗi ngày', () => {
     expect(levelOf(1).level).toBe(1);
     expect(levelOf(9).level).toBe(2);
     expect(levelOf(24).level).toBe(3);
+  });
+});
+
+describe('tự phản biện: buổi gọn, mục tiêu tuần, mẹo bố mẹ', () => {
+  it('khởi động tối đa 6 lượt, trừ tuần có tiêu chí tai nghe (giữ 10)', () => {
+    for (const w of WEEKS) {
+      const l = w.lessons.find((x) => !x.activities.some((a) => a.kind === 'stage'));
+      if (!l || !w.warmup) continue;
+      const q = buildSessionPlan(l).find((s) => s.kind === 'quiz');
+      if (!q || q.kind !== 'quiz') continue;
+      expect(q.quiz.rounds, `tuần ${w.week}`).toBe(w.criterion.who === 'APP' ? 10 : Math.min(w.warmup.rounds, 6));
+    }
+  });
+
+  it('đếm buổi trong tuần lịch và chuỗi ngày liền', () => {
+    const days = ['2026-09-28', '2026-10-02', '2026-10-03', '2026-10-04'];
+    let k = 0;
+    const st = new ProgressStore(new MemoryStorage(), () => {
+      const [y, m, d] = days[Math.min(k, days.length - 1)].split('-').map(Number);
+      return new Date(y, m - 1, d, 9);
+    });
+    for (k = 0; k < days.length; k++) st.finishSession(st.startSession('w1-l1').id);
+    const today = new Date(2026, 9, 4, 20);
+    expect(sessionsThisWeek(st.get(), today)).toBe(4); // thứ 2 28/9 → chủ nhật 4/10
+    expect(streakDays(st.get(), today)).toBe(3); // 2, 3, 4/10
+    expect(streakDays(st.get(), new Date(2026, 9, 5))).toBe(3); // hôm nay chưa học vẫn giữ chuỗi
+    expect(streakDays(st.get(), new Date(2026, 9, 7))).toBe(0);
+  });
+
+  it('đủ mẹo cho bố mẹ cả 24 tuần', () => {
+    for (let w = 1; w <= 24; w++) expect(PARENT_TIPS[w]?.length, `tuần ${w}`).toBeGreaterThan(20);
+  });
+});
+
+describe('sửa lỗi từ rà soát', () => {
+  it('bài kiểm tra tuần không có "Ôn nhanh" (không lẫn vào tiêu chí C4 10/10)', () => {
+    const st = store();
+    ['w1-l1', 'w1-l2', 'w1-l3', 'w1-l4'].forEach((id) => st.markLessonCompleted(id));
+    st.setCurrentWeek(2);
+    const kinds = buildSessionPlan(findLesson('w1-test')!, st.get(), { rng: () => 0.1 }).map((s) => s.kind);
+    expect(kinds).not.toContain('review');
+  });
+
+  it('APP_ASSESSMENT: Si giáng ≡ La thăng được chấm đúng', () => {
+    const st = store();
+    const s = st.startSession('w13-l1');
+    st.addAppAssessment(s.id, 'Bb4', 'A#4');
+    st.addAppAssessment(s.id, 'up', 'down');
+    expect(st.get().sessions[0].appAssessments.map((a) => a.correct)).toEqual([true, false]);
   });
 });

@@ -4,6 +4,11 @@
  */
 
 export const SCHEMA_VERSION = 1 as const;
+/**
+ * Giới hạn kiểm tra tuần (giáo trình hiện có 24 tuần; để rộng cho các cấp sau).
+ * LỖI ĐÃ SỬA 2026-10-04: trước đây giới hạn là 8 → lên tuần 9 thì dữ liệu bị coi là hỏng và bị đặt lại.
+ */
+export const MAX_WEEK_LIMIT = 52;
 
 export type ParentResult = 'correct' | 'retry';
 export type SelfRating = 'all' | 'some' | 'hard';
@@ -97,6 +102,8 @@ export interface Settings {
   micTuningCents: number; // (+) bù độ lệch dây đàn nhà, -100..100
   micAutoNext: boolean; // (+) micro nghe đúng → tự sang nốt sau ~1 giây
   accompaniment: boolean; // (+) nhạc đệm "bố mẹ đàn cùng" khi chơi theo nhịp
+  timing: 'easy' | 'normal' | 'strict'; // (+) độ khắt khe khi micro chấm nhịp (mặc định dễ — trẻ 9 tuổi)
+  lastBackupAt: number; // (+) lần xuất/sao chép JSON gần nhất (ms) — để nhắc sao lưu
 }
 
 export interface Progress {
@@ -131,6 +138,8 @@ export function defaultSettings(): Settings {
     micTuningCents: 0,
     micAutoNext: true,
     accompaniment: true,
+    timing: 'easy',
+    lastBackupAt: 0,
   };
 }
 
@@ -166,11 +175,13 @@ export function validateAppData(x: unknown): string[] {
     if (typeof tc !== 'number' || tc < -100 || tc > 100) errs.push('settings.micTuningCents');
     if (typeof st.micAutoNext !== 'boolean') errs.push('settings.micAutoNext');
     if (typeof st.accompaniment !== 'boolean') errs.push('settings.accompaniment');
+    if (!['easy', 'normal', 'strict'].includes(st.timing as string)) errs.push('settings.timing');
+    if (typeof st.lastBackupAt !== 'number') errs.push('settings.lastBackupAt');
   }
   const p = x.progress;
   if (!isObj(p)) errs.push('Thiếu progress');
   else {
-    if (typeof p.currentWeek !== 'number' || p.currentWeek < 1 || p.currentWeek > 8) errs.push('progress.currentWeek');
+    if (typeof p.currentWeek !== 'number' || p.currentWeek < 1 || p.currentWeek > MAX_WEEK_LIMIT) errs.push('progress.currentWeek');
     if (!Array.isArray(p.lessonsCompleted)) errs.push('progress.lessonsCompleted');
     if (!isObj(p.practiceDays)) errs.push('progress.practiceDays');
   }

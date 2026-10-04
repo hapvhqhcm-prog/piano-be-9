@@ -21,6 +21,8 @@ describe('schema v1 (§7)', () => {
       micTuningCents: 0,
       micAutoNext: true,
       accompaniment: true,
+      timing: 'easy',
+      lastBackupAt: 0,
     });
   });
 
@@ -120,5 +122,44 @@ describe('ProgressStore', () => {
     expect(st.recoveredFromCorrupt).toBe(true);
     expect(st.get().sessions).toEqual([]);
     expect(kv.getItem(`${STORAGE_KEY}:corrupt-${fixedNow().getTime()}`)).toBe('{hỏng');
+  });
+});
+
+describe('LỖI ĐÃ SỬA: lên tuần 9+ không được làm mất dữ liệu', () => {
+  it('lưu ở tuần 9 và tuần 24 → mở lại vẫn còn nguyên', () => {
+    for (const week of [9, 16, 24]) {
+      const kv = new MemoryStorage();
+      const a = new ProgressStore(kv, fixedNow);
+      a.setCurrentWeek(week);
+      a.finishSession(a.startSession(`w${week}-l1`).id);
+      const b = new ProgressStore(kv, fixedNow);
+      expect(b.recoveredFromCorrupt).toBe(false);
+      expect(b.get().progress.currentWeek).toBe(week);
+      expect(b.get().sessions).toHaveLength(1);
+    }
+  });
+
+  it('tự khôi phục từ bản "corrupt-*" do lỗi cũ (dữ liệu tuần 9 từng bị đặt lại)', () => {
+    const kv = new MemoryStorage();
+    const old = new ProgressStore(kv, fixedNow);
+    old.setCurrentWeek(9);
+    old.finishSession(old.startSession('w9-l1').id);
+    const saved = kv.getItem(STORAGE_KEY)!;
+    // Giả lập lỗi cũ: bản thật bị cất sang corrupt-*, bản chính là dữ liệu mới tinh
+    kv.setItem(`${STORAGE_KEY}:corrupt-123`, saved);
+    kv.setItem(STORAGE_KEY, JSON.stringify(defaultData(fixedNow())));
+    const st = new ProgressStore(kv, fixedNow);
+    expect(st.recoveredFromBackup).toBe(true);
+    expect(st.get().progress.currentWeek).toBe(9);
+    expect(st.get().sessions).toHaveLength(1);
+    expect(kv.getItem(`${STORAGE_KEY}:corrupt-123`)).toBeNull();
+  });
+
+  it('nhập JSON sao lưu ở tuần 20 được chấp nhận', () => {
+    const a = new ProgressStore(new MemoryStorage(), fixedNow);
+    a.setCurrentWeek(20);
+    const b = new ProgressStore(new MemoryStorage(), fixedNow);
+    expect(b.importJSON(a.exportJSON())).toEqual({ ok: true });
+    expect(b.get().progress.currentWeek).toBe(20);
   });
 });

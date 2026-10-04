@@ -200,7 +200,9 @@ export function playDemo(
     raf = requestAnimationFrame(loop);
   };
   if (o.onBeat) raf = requestAnimationFrame(loop);
+  let resolveDone: () => void = () => undefined;
   const done = new Promise<void>((resolve) => {
+    resolveDone = resolve;
     timers.push(
       window.setTimeout(() => {
         cancelAnimationFrame(raf);
@@ -219,6 +221,7 @@ export function playDemo(
       audio.stopAll();
       overlay.hide();
       kb.clear();
+      resolveDone();
     },
   };
 }

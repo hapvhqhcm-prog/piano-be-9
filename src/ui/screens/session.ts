@@ -81,7 +81,7 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
         });
       case 'song': {
         const tune = findTune(a.songId);
-        if (!tune) return () => onComplete();
+        if (!tune) return () => void window.setTimeout(onComplete, 0);
         return songScreen(
           app,
           tune,

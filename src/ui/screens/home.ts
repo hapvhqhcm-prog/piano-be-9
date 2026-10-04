@@ -1,5 +1,8 @@
 import { mascot } from '../components/mascot';
+import { parentTip } from '../../lessons/parentTips';
 import {
+  sessionsThisWeek,
+  streakDays,
   MAX_SESSIONS_PER_DAY,
   WEEKS,
   dailyLesson,
@@ -90,6 +93,25 @@ export function homeScreen(app: App, banner?: string) {
           { class: 'stage home-stage' },
           banner ? h('div', { class: 'banner' }, banner) : null,
           h('div', { class: 'story-row' }, mascot('happy', 64), h('p', { class: 'story bubble' }, plan.story)),
+          // Mục tiêu tuần (§1: 4–5 buổi/tuần) + chuỗi ngày + mục tiêu qua đảo
+          (() => {
+            const now = new Date();
+            const done = sessionsThisWeek(data, now);
+            const streak = streakDays(data, now);
+            return h(
+              'div',
+              { class: 'goal-row' },
+              h(
+                'div',
+                { class: 'goal-dots', title: 'Mục tiêu: 4–5 buổi mỗi tuần' },
+                'Tuần này: ',
+                ...[0, 1, 2, 3, 4].map((i) => h('span', { class: `dot${i < done ? ' on' : ''}` })),
+                ` ${Math.min(done, 9)}/5`,
+              ),
+              streak >= 2 ? h('div', { class: 'streak' }, `🔥 ${streak} ngày liền`) : null,
+              h('div', { class: 'goal-text' }, `🎯 ${plan.criterion.text}`),
+            );
+          })(),
           overLimit
             ? h('div', { class: 'banner' }, '🌙 Hôm nay con học đủ rồi. Mai mình học tiếp nhé!')
             : button({
@@ -120,6 +142,7 @@ export function homeScreen(app: App, banner?: string) {
             button({ icon: '🎹', label: 'Đàn tự do', onTap: () => app.show(freePlayScreen(app)) }),
             h('div', { class: 'today-stars' }, 'Hôm nay: ', todayStars ? '★'.repeat(Math.min(todayStars, 9)) : '—'),
           ),
+          h('p', { class: 'parent-tip' }, `👪 Bố mẹ: ${parentTip(plan.week)}`),
           todayCount >= MAX_SESSIONS_PER_DAY && !overLimit
             ? h('p', { class: 'soft-note' }, `Hôm nay con đã học ${todayCount} buổi rồi, giỏi quá! Nghỉ ngơi nhé 😊`)
             : null,

@@ -66,7 +66,7 @@ type Run = Session['songRuns'][number];
 const passedWhole = (r: Run, songId: string, tempo = false, minBpm = 0) =>
   r.songId === songId && !r.phrase && r.passed && (!tempo || r.mode === 'tempo') && r.bpm >= minBpm;
 
-/** Bé đã THUỘC bài: chơi trọn theo nhịp ≥ 60 BPM và đạt (micro ≥ 80% hoặc bố mẹ xác nhận). */
+/** Bé đã THUỘC bài: chơi trọn theo nhịp ≥ tốc độ 60 và đạt (micro ≥ 80% hoặc bố mẹ xác nhận). */
 export function songMastered(data: Readonly<AppData>, songId: string): boolean {
   return data.sessions.some((s) => s.songRuns.some((r) => passedWhole(r, songId, true, 60)));
 }
@@ -256,10 +256,14 @@ export function buildSessionPlan(
   if (!opts.replay && !isStage) {
     const completed = data?.sessions.filter((s) => s.completed).length ?? 0;
     steps.push({ kind: 'posture', short: completed >= 3 });
-    const review = data ? reviewSegment(lesson, data, opts.rng) : null;
+    // Bài kiểm tra tuần: KHÔNG ôn nhanh (để kết quả ôn không lẫn vào tiêu chí, vd C4 10/10)
+    const review = data && !lesson.isWeekTest ? reviewSegment(lesson, data, opts.rng) : null;
     if (review) steps.push({ kind: 'review', segment: review });
     if (plan.warmup) {
-      steps.push({ kind: 'quiz', title: warmupTitle(plan.warmup), intro: warmupIntro(plan.warmup), quiz: plan.warmup, warmup: true });
+      // Buổi chỉ 10–15': khởi động gọn 6 lượt; riêng tuần có tiêu chí "tai nghe 8/10" giữ đủ 10 lượt
+      const criterionQuiz = plan.criterion.who === 'APP';
+      const quiz = criterionQuiz ? plan.warmup : { ...plan.warmup, rounds: Math.min(plan.warmup.rounds, 6) };
+      steps.push({ kind: 'quiz', title: warmupTitle(quiz), intro: warmupIntro(quiz), quiz, warmup: true });
     }
   }
   lesson.activities.forEach((activity, i) =>
@@ -329,4 +333,26 @@ export function dailyLesson(data: Readonly<AppData>, rng: () => number = Math.ra
   }
   if (keep) activities.push({ kind: 'song', songId: keep.id, mode: 'tempo', level: 3, hints: 'names', intro: 'Bài con đã thuộc — chơi lại cho nhớ lâu!' });
   return { id: `w${week}-daily`, week, title: 'Luyện tập mỗi ngày', emoji: '🔁', activities };
+}
+
+/** Số buổi đã HOÀN THÀNH trong tuần lịch hiện tại (thứ 2 → chủ nhật) — mục tiêu 4–5 buổi (§1). */
+export function sessionsThisWeek(data: Readonly<AppData>, today: Date): number {
+  const d = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  const monday = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return data.sessions.filter((s) => s.completed && s.date >= monday).length;
+}
+
+/** Chuỗi ngày liên tiếp có học (tính tới hôm nay hoặc hôm qua). */
+export function streakDays(data: Readonly<AppData>, today: Date): number {
+  const days = new Set(data.sessions.filter((s) => s.completed).map((s) => s.date));
+  const key = (x: Date) => `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`;
+  const d = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  if (!days.has(key(d))) d.setDate(d.getDate() - 1);
+  let n = 0;
+  while (days.has(key(d))) {
+    n++;
+    d.setDate(d.getDate() - 1);
+  }
+  return n;
 }
