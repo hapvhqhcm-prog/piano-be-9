@@ -24,7 +24,12 @@ export function libraryScreen(app: App) {
           onClick: () => (open ? playSong(app, s) : toast(s.week ? `🔒 Bài này mở ở Tuần ${s.week} nhé` : '🔒 Bài này mở sau nhé')),
         },
         h('div', { class: 'song-card-title' }, open ? `${star ? '⭐ ' : ''}${s.titleVi}` : `🔒 ${s.titleVi}`),
-        h('div', { class: 'song-card-sub' }, `${s.title}${s.hand === 'LH' ? ' · tay trái' : s.hand === 'BOTH' ? ' · hai tay' : ''}`),
+        h(
+          'div',
+          { class: 'song-card-sub' },
+          // Dân ca: tên tiếng Việt đã ghi vùng miền — không lặp tên phiên âm tiếng Anh
+          `${s.composer?.startsWith('Dân ca') ? 'Dân ca Việt Nam' : s.title}${s.hand === 'LH' ? ' · tay trái' : s.hand === 'BOTH' ? ' · hai tay' : ''}`,
+        ),
         h('div', { class: 'song-card-week' }, star ? 'Đã thuộc!' : `Tuần ${s.week}`),
       );
     };

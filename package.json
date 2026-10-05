@@ -1,7 +1,7 @@
 {
   "name": "piano-be-9",
   "private": true,
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "Thầy giáo piano trên iPad cho bé 9 tuổi — offline-first PWA, 0 thư viện runtime.",
   "type": "module",
   "scripts": {

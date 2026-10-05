@@ -121,7 +121,7 @@ export function quizScreen(app: App, hooks: QuizHooks) {
       if (spec.variant === 'read') {
         const tune: Tune = { id: `read-${round}`, title: '', titleVi: '', hand: 'RH', bpm: 60, timeSignature: '4/4', notes: [{ pitch: q.show!, beats: 4 }] };
         const staff = new StaffView(tune, { clef: spec.clef ?? 'treble', names: false, fingers: false, measuresPerPage: 1, pxPerBeat: 30 });
-        staff.el.classList.add('staff-mini');
+        staff.el.classList.add('staff-mini', 'staff-quiz');
         stage.replaceChildren(prog, h('h1', { class: 'title' }, 'Nốt này là nốt gì?'), staff.el, h('p', { class: 'lead' }, 'Chạm đúng phím trên iPad'));
         setBar(back());
         accepting = true;

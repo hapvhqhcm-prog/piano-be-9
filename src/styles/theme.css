@@ -2278,3 +2278,11 @@ h3,
 .mic-level.with-gate::after {
   background: var(--coral-500);
 }
+
+/* Trò đọc nốt: khuông TO — đây là thứ bé phải nhìn rõ nhất (trước 260×150, nốt rất nhỏ) */
+.staff-mini.staff-quiz {
+  width: min(440px, 46vw);
+  height: min(250px, 31vh);
+  max-height: min(250px, 31vh);
+  padding: 4px 8px;
+}
