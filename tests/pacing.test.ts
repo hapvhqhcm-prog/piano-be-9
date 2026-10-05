@@ -50,10 +50,10 @@ describe('nhịp độ giáo trình (rà soát 2026-10-05)', () => {
     if (w9) expect(q2 && q2.kind === 'quiz' && q2.quiz.variant).toBe(w9.variant);
   });
 
-  it('tuần chấm bằng khởi động (tuần 20 đọc nốt cao): buổi đầu học bài TRƯỚC rồi mới khởi động-chấm', () => {
+  it('tuần chấm bằng khởi động (tuần 25 đọc nốt cao): buổi đầu học bài TRƯỚC rồi mới khởi động-chấm', () => {
     const st = store();
-    st.setCurrentWeek(20);
-    const kinds = buildSessionPlan(weekPlan(20).lessons[0], st.get()).map((s) => s.kind);
+    st.setCurrentWeek(25);
+    const kinds = buildSessionPlan(weekPlan(25).lessons[0], st.get()).map((s) => s.kind);
     const firstAct = kinds.indexOf('activity');
     const quizAt = kinds.lastIndexOf('quiz');
     expect(quizAt).toBeGreaterThan(firstAct);
@@ -62,7 +62,7 @@ describe('nhịp độ giáo trình (rà soát 2026-10-05)', () => {
   it('giả lập "bé giỏi": mọi bài thường của mọi tuần đều được học trước khi sang tuần', () => {
     const st = store();
     // Không giả lập tiêu chí; chỉ kiểm: nextLesson luôn mời bài thường chưa học trước bài kiểm tra
-    for (let w = 1; w <= 25; w++) {
+    for (let w = 1; w <= 30; w++) {
       st.setCurrentWeek(w);
       const regular = weekPlan(w).lessons.filter((l) => !l.isWeekTest);
       for (const l of regular) {
@@ -75,14 +75,14 @@ describe('nhịp độ giáo trình (rà soát 2026-10-05)', () => {
 
 import { reviewSegment } from '../src/lessons/lessonEngine';
 describe('Ôn nhanh ôn cả kiến thức gần đây (lỗi chuyên gia phát hiện)', () => {
-  it('tuần 12: ôn được nốt của thế Sol / khóa Fa, không chỉ tìm phím tuần 1–6', () => {
+  it('tuần 15: ôn được nốt của thế Sol / khóa Fa, không chỉ tìm phím tuần 1–7', () => {
     const st = store();
-    st.setCurrentWeek(12);
+    st.setCurrentWeek(15);
     const seen = new Set<string>();
     for (let k = 0; k < 40; k++) {
       let x = k + 1;
       const rng = () => ((x = (x * 9301 + 49297) % 233280) / 233280);
-      const seg = reviewSegment(weekPlan(12).lessons[0], st.get(), rng);
+      const seg = reviewSegment(weekPlan(15).lessons[0], st.get(), rng);
       seg?.targets.forEach((t) => seen.add(`${t.keys[0]}|${t.staff ? 'staff' : ''}`));
     }
     expect([...seen].some((k) => k.endsWith('|staff'))).toBe(true);

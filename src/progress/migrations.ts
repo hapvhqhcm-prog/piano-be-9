@@ -15,11 +15,11 @@ export class MigrationError extends Error {}
  * "w21-song-<bài>", buổi luyện mỗi ngày "w24-daily", sân khấu "w24-stage") được đánh số lại để tiêu chí tuần
  * (lessonEngine.sessionsOfWeek lọc theo tiền tố "w<tuần>-") và danh sách bài đã xong vẫn đúng tuần.
  * songRuns chỉ lưu mã BÀI HÁT (không có số tuần) → giữ nguyên.
- * Chạy đúng MỘT lần: dữ liệu thiếu `curriculumRev` (hoặc < 2) mới được đổi; sau đó gắn curriculumRev = 2.
  */
 const OLD_FIRST = 20;
 const OLD_LAST = 24;
 
+/** Đánh số lại một mã từ rev 1 sang rev 2. */
 export function renumberId(id: string): string {
   return id.replace(/^w(\d+)-/, (m, n: string) => {
     const w = Number(n);
@@ -27,27 +27,100 @@ export function renumberId(id: string): string {
   });
 }
 
-export function migrateCurriculum(data: Record<string, unknown>): Record<string, unknown> {
-  const rev = typeof data.curriculumRev === 'number' ? data.curriculumRev : 1;
-  if (rev >= CURRICULUM_REV) return data;
-  const out: Record<string, unknown> = { ...data, curriculumRev: CURRICULUM_REV };
-  const p = data.progress;
-  if (typeof p === 'object' && p !== null && !Array.isArray(p)) {
-    const prog = { ...(p as Record<string, unknown>) };
-    // Bé đang ở tuần 20 cũ (Minuet, chưa qua) → ở lại tuần 20 MỚI "Đọc nốt cao" để được chuẩn bị trước Minuet
-    // (bài đã làm của tuần 20 cũ vẫn chuyển sang w21- nên không mất); từ tuần 21 cũ trở đi thì +1.
-    if (typeof prog.currentWeek === 'number' && prog.currentWeek > OLD_FIRST) prog.currentWeek = prog.currentWeek + 1;
+/**
+ * GIÁO TRÌNH rev 2 (25 tuần) → rev 3 (30 tuần, giáo trình v5 — OWNER duyệt 2026-10-05).
+ * Bảng OLD→NEW: tuần cũ → tuần MỚI nơi nội dung chính của tuần cũ nay nằm. Tuần mới không có tuần cũ tương ứng:
+ * 5 (củng cố thế Đô), 9 (nhịp 2/4), 13 (củng cố hai tay), 18 (móc kép), 22 (dòng kẻ phụ & khuông lớn).
+ */
+export const REV3_WEEK_MAP: Readonly<Record<number, number>> = Object.freeze({
+  1: 1, 2: 2, 3: 3, 4: 4,
+  5: 6, // Sân khấu nhỏ (Bài ca niềm vui, to – nhỏ)
+  6: 7, // Hồ Tấm Gương (tay trái)
+  7: 8, // Thư viện Nốt (đọc khuông, nốt La)
+  8: 10, // Lâu đài Âm nhạc (biểu diễn Cấp 1)
+  9: 11, // Cầu Hai Tay
+  10: 12, // Thung lũng Song Ca
+  11: 14, // Núi Sol
+  12: 15, // Vũ hội Valse
+  13: 16, // Hang Phím Đen
+  14: 17, // Sa mạc Nhịp Chấm
+  15: 19, // Thác Gam
+  16: 20, // Nhà hát Cấp 2
+  17: 21, // Rừng Hợp Âm
+  18: 23, // Biển Đổi Thế
+  19: 24, // Thung lũng Vui Buồn
+  20: 25, // Tháp Nốt Cao
+  21: 28, // Cung điện Minuet
+  22: 29, // Vườn Beethoven (Für Elise)
+  23: 26, // Thư viện Lớn (đọc nhạc hai khóa)
+  24: 27, // Đỉnh Hai Tay
+  25: 30, // Đại hòa nhạc
+});
+
+/** Bài học được CHUYỂN sang tuần khác với tuần của nó (không theo bảng tuần). */
+export const REV3_LESSON_MAP: Readonly<Record<string, string>> = Object.freeze({
+  'w14-bkt': 'w18-bkt', // "Bắc kim thang" (có móc kép) → tuần 18 "Suối Móc Kép"
+});
+
+/** Đánh số lại một mã từ rev 2 sang rev 3 (mã bài học, "#hoạt động", "-song-", "-daily", "-stage"…). */
+export function renumberIdRev3(id: string): string {
+  const hash = id.indexOf('#');
+  const base = hash >= 0 ? id.slice(0, hash) : id;
+  const rest = hash >= 0 ? id.slice(hash) : '';
+  if (REV3_LESSON_MAP[base]) return REV3_LESSON_MAP[base] + rest;
+  return id.replace(/^w(\d+)-/, (m, n: string) => {
+    const w = REV3_WEEK_MAP[Number(n)];
+    return w ? `w${w}-` : m;
+  });
+}
+
+const isObj = (x: unknown): x is Record<string, unknown> => typeof x === 'object' && x !== null && !Array.isArray(x);
+
+/** Đổi mã trong progress.lessonsCompleted và sessions[].lessonId; `week` đổi progress.currentWeek. */
+function renumberAll(
+  data: Record<string, unknown>,
+  rev: number,
+  id: (x: string) => string,
+  week: (w: number) => number,
+  keepDone: (x: string) => boolean = () => true,
+): Record<string, unknown> {
+  const out: Record<string, unknown> = { ...data, curriculumRev: rev };
+  if (isObj(data.progress)) {
+    const prog = { ...data.progress };
+    if (typeof prog.currentWeek === 'number') prog.currentWeek = week(prog.currentWeek);
     if (Array.isArray(prog.lessonsCompleted)) {
-      prog.lessonsCompleted = prog.lessonsCompleted.map((x) => (typeof x === 'string' ? renumberId(x) : x));
+      prog.lessonsCompleted = prog.lessonsCompleted
+        .filter((x) => typeof x !== 'string' || keepDone(x))
+        .map((x) => (typeof x === 'string' ? id(x) : x));
     }
     out.progress = prog;
   }
   if (Array.isArray(data.sessions)) {
     out.sessions = data.sessions.map((s) =>
-      typeof s === 'object' && s !== null && typeof (s as Record<string, unknown>).lessonId === 'string'
-        ? { ...s, lessonId: renumberId((s as Record<string, unknown>).lessonId as string) }
-        : s,
+      isObj(s) && typeof s.lessonId === 'string' ? { ...s, lessonId: id(s.lessonId) } : s,
     );
+  }
+  return out;
+}
+
+/**
+ * Chạy đúng MỘT lần cho mỗi bậc: dữ liệu thiếu `curriculumRev` = rev 1. rev 1 → 2 → 3 lần lượt; dữ liệu đã ở rev hiện tại
+ * được trả về NGUYÊN (cùng object) — idempotent.
+ */
+export function migrateCurriculum(data: Record<string, unknown>): Record<string, unknown> {
+  const rev = typeof data.curriculumRev === 'number' ? data.curriculumRev : 1;
+  if (rev >= CURRICULUM_REV) return data;
+  let out = data;
+  if (rev < 2) {
+    // Bé đang ở tuần 20 cũ (Minuet, chưa qua) → ở lại tuần 20 MỚI "Đọc nốt cao" để được chuẩn bị trước Minuet
+    // (bài đã làm của tuần 20 cũ vẫn chuyển sang w21- nên không mất); từ tuần 21 cũ trở đi thì +1.
+    out = renumberAll(out, 2, renumberId, (w) => (w > OLD_FIRST ? w + 1 : w));
+  }
+  if (rev < 3) {
+    // Bé đang học dở tuần cũ X → sang tuần MỚI chứa nội dung của X (REV3_WEEK_MAP). Tuần mới chèn TRƯỚC đó coi như đã qua
+    // (bé đã có kỹ năng — vẫn mở trong Thư viện/ôn tập). Dấu "đã xong một phần bài" ("<bài>#<i>") bị BỎ: nhiều bài được
+    // thêm hoạt động khởi động kỹ thuật ở đầu nên số thứ tự hoạt động đã đổi — bài dở sẽ học lại trọn (an toàn hơn đánh dấu sai).
+    out = renumberAll(out, 3, renumberIdRev3, (w) => REV3_WEEK_MAP[w] ?? (w > 25 ? w + 5 : w), (x) => !x.includes('#'));
   }
   return out;
 }

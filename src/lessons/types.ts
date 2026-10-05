@@ -47,7 +47,14 @@ export interface Segment {
  */
 export type TechniqueDrill = 'arm-drop' | 'wrist-circle' | 'finger-tap' | 'five-finger' | 'thumb-under' | 'hand-shape';
 
-export type RhythmSymbol = 'walk' | 'run' | 'long' | 'long3' | 'dotted' | 'rest';
+/**
+ * v5 (OWNER duyệt 2026-10-05 — dạy nhịp TRƯỚC bài dùng nhịp đó; tuần 18 "Suối Móc Kép"):
+ * run4 = bốn móc kép "Chạy-chạy-chạy-chạy" (1 phách) · run3 = móc đơn + 2 móc kép "Chạy chạy-chạy" (1 phách)
+ * dotted8 = móc đơn chấm + móc kép "Tập-tễnh" (1 phách: vỗ ở 0 và 0,75)
+ * tie = hai nốt đen nối bằng DÂY NỐI "Đi‿đi" (2 phách, vỗ MỘT lần) · sync = nghịch phách "Chạy-Đi-chạy" (2 phách: vỗ 0, 0,5, 1,5).
+ * Nhịp 2/4 (tuần 9): mẫu dài 2 phách dùng các ký hiệu sẵn có.
+ */
+export type RhythmSymbol = 'walk' | 'run' | 'long' | 'long3' | 'dotted' | 'rest' | 'run4' | 'run3' | 'dotted8' | 'tie' | 'sync';
 
 export type Activity =
   | { kind: 'notes'; segment: Segment }

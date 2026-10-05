@@ -1,0 +1,166 @@
+{
+ "id": "grand_duet",
+ "title": "Grand Staff Duet",
+ "titleVi": "Song ca hai khóa",
+ "composer": "Bài tự sáng tác cho app (piano-be-9)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Bài tự sáng tác cho app (piano-be-9)",
+ "attributionRequired": false,
+ "hand": "BOTH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 22,
+ "phrases": [
+  0,
+  4
+ ],
+ "notes": [
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3,
+   "dyn": "mf"
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "C4",
+   "beats": 2,
+   "finger": 1
+  },
+  {
+   "rest": true,
+   "beats": 4
+  },
+  {
+   "rest": true,
+   "beats": 4
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5,
+   "dyn": "p"
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 2,
+   "finger": 2
+  },
+  {
+   "rest": true,
+   "beats": 4
+  },
+  {
+   "rest": true,
+   "beats": 4
+  }
+ ],
+ "lh": [
+  {
+   "rest": true,
+   "beats": 4
+  },
+  {
+   "rest": true,
+   "beats": 4
+  },
+  {
+   "pitch": "A3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "B3",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "A3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G3",
+   "beats": 4,
+   "finger": 4
+  },
+  {
+   "rest": true,
+   "beats": 4
+  },
+  {
+   "rest": true,
+   "beats": 4
+  },
+  {
+   "pitch": "F3",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "A3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G3",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "B3",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 4,
+   "finger": 1
+  }
+ ],
+ "lhPosition": "MC"
+}

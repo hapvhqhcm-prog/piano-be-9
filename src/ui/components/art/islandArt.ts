@@ -332,11 +332,70 @@ const PROPS: Record<number, { base: Base; art: string }> = {
   },
 };
 
+/* ---------- 5 đảo của các tuần mới trong giáo trình v5 (30 tuần) ---------- */
+const NEW_PROPS: Record<number, { base: Base; art: string }> = {
+  // 5 · Đồi Năm Ngón — đồi xanh với 5 bông hoa (5 ngón)
+  5: {
+    base: 'grass',
+    art: `
+      <path d="M18 50 Q34 26 52 38 Q66 28 80 50 Z" fill="${P.grassDark}"/>
+      ${[24, 36, 48, 60, 72]
+        .map((x, i) => `<path d="M${x} 50 V${42 - (i % 2) * 4}" stroke="${P.grassDark}" stroke-width="1.4"/><circle cx="${x}" cy="${40 - (i % 2) * 4}" r="3.4" fill="${[P.coral, P.sun, P.pink, P.violetLight, P.orange][i]}"/>`)
+        .join('')}
+      ${sparkle(50, 14, 2.6, P.sun)}`,
+  },
+  // 9 · Bến Đò Nhịp Hai — sông và con đò
+  9: {
+    base: 'sand',
+    art: `
+      <path d="M14 46 Q48 40 82 46 L82 52 Q48 48 14 52 Z" fill="${P.water}"/>
+      <path d="M30 42 Q48 50 66 42 L62 38 H34 Z" fill="${P.wood}"/>
+      <path d="M48 38 V18" stroke="${P.ink}" stroke-opacity=".7" stroke-width="1.4" stroke-linecap="round"/>
+      <path d="M49 19 L62 34 H49 Z" fill="#fff"/>
+      ${noteGlyph(70, 24, 3, P.indigo)}${noteGlyph(26, 22, 3, P.coral)}`,
+  },
+  // 13 · Vườn Tháp Chuông — tháp chuông nhỏ
+  13: {
+    base: 'grass',
+    art: `
+      <rect x="38" y="24" width="20" height="28" rx="2" fill="${P.lavender}"/>
+      <path d="M34 25 L48 10 L62 25 Z" fill="${P.indigo}"/>
+      <path d="M43 32 Q48 26 53 32 V38 H43 Z" fill="${P.sun}"/>
+      <circle cx="48" cy="39" r="1.6" fill="${P.orange}"/>
+      ${sparkle(28, 22, 2.4, P.sun)}${sparkle(70, 18, 2.4, P.mint)}`,
+  },
+  // 18 · Suối Móc Kép — dòng suối chảy với chùm nốt nhanh
+  18: {
+    base: 'rock',
+    art: `
+      <path d="M30 14 Q38 26 34 34 Q30 42 40 52 H54 Q46 42 50 34 Q54 26 46 14 Z" fill="${P.water}"/>
+      <path d="M36 22 Q40 30 38 36 M46 26 Q48 34 46 42" stroke="#fff" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+      ${beamedNotes(62, 30, 3.4, P.indigo)}`,
+  },
+  // 22 · Cầu Vạch Phụ — cây cầu có các vạch kẻ phụ như khuông nhạc
+  22: {
+    base: 'grass',
+    art: `
+      <path d="M16 44 Q48 20 80 44" fill="none" stroke="${P.wood}" stroke-width="4" stroke-linecap="round"/>
+      ${[26, 36, 48, 60, 70].map((x) => `<path d="M${x - 5} ${44 - 22 * Math.sin((Math.PI * (x - 16)) / 64)} h10" stroke="${P.ink}" stroke-opacity=".75" stroke-width="1.4" stroke-linecap="round"/>`).join('')}
+      <ellipse cx="48" cy="18" rx="4.2" ry="3.2" fill="${P.ink}" transform="rotate(-20 48 18)"/>`,
+  },
+};
+
+/**
+ * Giáo trình v5 (30 tuần): tuần MỚI → hình của tuần CŨ cùng nội dung (theo bảng chuyển dữ liệu
+ * src/progress/migrations.ts). Hình vẽ PROPS vẫn đánh số theo giáo trình 25 tuần cũ.
+ */
+const ART_OF_WEEK: Record<number, number> = {
+  1: 1, 2: 2, 3: 3, 4: 4, 6: 5, 7: 6, 8: 7, 10: 8, 11: 9, 12: 10, 14: 11, 15: 12, 16: 13, 17: 14,
+  19: 15, 20: 16, 21: 17, 23: 18, 24: 19, 25: 20, 26: 23, 27: 24, 28: 21, 29: 22, 30: 25,
+};
+
 const FALLBACK = { base: 'grass' as Base, art: beamedNotes(40, 46, 4, P.violet) };
 
-/** Biểu tượng đảo tuần `week` (1–25) ở trạng thái `state`. */
+/** Biểu tượng đảo tuần `week` (1–30, giáo trình v5) ở trạng thái `state`. */
 export function islandIcon(week: number, state: IslandState): SVGElement {
-  const p = PROPS[week] ?? FALLBACK;
+  const p = NEW_PROPS[week] ?? PROPS[ART_OF_WEEK[week] ?? -1] ?? FALLBACK;
   const body = `<g stroke="rgba(61,52,102,.3)" stroke-width="1.1" stroke-linejoin="round">${base(p.base)}${p.art}</g>`;
   let inner: string;
   if (state === 'locked') {
@@ -364,12 +423,12 @@ export function islandIcon(week: number, state: IslandState): SVGElement {
   return svg;
 }
 
-/** Bảng xem thử toàn bộ 25 đảo × 3 trạng thái (chỉ để phát triển / chụp màn hình). */
+/** Bảng xem thử toàn bộ 30 đảo × 3 trạng thái (chỉ để phát triển / chụp màn hình). */
 export function islandArtPreview(): HTMLElement {
   const wrap = document.createElement('div');
   wrap.setAttribute('style', 'display:grid;grid-template-columns:repeat(8,1fr);gap:6px;padding:8px;background:#fff8ee');
   const states: IslandState[] = ['current', 'done', 'locked'];
-  for (let w = 1; w <= 25; w++) {
+  for (let w = 1; w <= 30; w++) {
     const cell = document.createElement('div');
     cell.setAttribute('style', 'display:flex;flex-direction:column;align-items:center;font:12px sans-serif;color:#3d3466');
     const icon = islandIcon(w, states[w % 3]);

@@ -16,6 +16,8 @@ import { sessionEndScreen } from './sessionEnd';
 import { songScreen } from './song';
 import { stageScreen } from './stage';
 import { teachScreen } from './teach';
+import { techniqueScreen } from './technique';
+import { improvScreen } from './improv';
 
 /**
  * Chạy một buổi (v2): Tư thế → Ôn nhanh → Khởi động tai/đọc nốt → Bài mới → Con làm thầy → Tổng kết.
@@ -142,6 +144,27 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
         };
         return one();
       }
+      case 'technique':
+        // v5 — khởi động kỹ thuật: mỗi bài ghi PARENT_ASSESSMENT `tech:${drill}`
+        return techniqueScreen(app, {
+          title: a.title,
+          drills: a.drills,
+          record: (id, r) => store.addParentAssessment(session.id, id, r),
+          onDone: onComplete,
+          onBack: onExit,
+        });
+      case 'improv':
+        // v5 — sáng tạo: xong trò ghi PARENT_ASSESSMENT `improv:${mode}`; sáng tác lưu bài vào store.compositions
+        return improvScreen(app, {
+          title: a.title,
+          intro: a.intro,
+          mode: a.mode,
+          position: a.position,
+          bars: a.bars,
+          record: (id, r) => store.addParentAssessment(session.id, id, r),
+          onDone: onComplete,
+          onBack: onExit,
+        });
       case 'stage':
         return stageScreen(app, {
           level: a.level ?? 1,

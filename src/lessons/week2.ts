@@ -2,8 +2,11 @@ import { echo, notes, rhNote, rhNotes } from './targets';
 import type { WeekPlan } from './types';
 
 /**
- * TUẦN 2 — Làng Đô Rê Mi: ngón 1-2-3, Nhại lại 2 nốt, bài "Bánh nóng", tai nghe "Lên hay xuống?",
- * vỗ tay "Đi – Đi" (chuẩn bị nhịp tuần 4). Tiêu chí: 2 buổi liền bé chọn "Đàn được hết" (SELF).
+ * TUẦN 2 — Làng Đô Rê Mi: ngón 1-2-3, Nhại lại 2 nốt, bài "Bánh nóng" & "Ba chú gà con", tai nghe "Lên hay xuống?",
+ * vỗ tay "Đi – Đi" (chuẩn bị nhịp tuần 4).
+ * v5 (OWNER duyệt 2026-10-05): "Lý cây đa" (có móc kép) dời sang tuần 18 — sau khi học nhịp "Chạy-chạy" và móc kép.
+ * Tiêu chí v5: đàn trọn "Bánh nóng" (chế độ chờ) ĐẠT ở 2 NGÀY khác nhau — micro hoặc phiếu 3 ý của bố mẹ
+ * (thay tiêu chí cũ "bé tự chọn Đàn được hết" — tự đánh giá không phải bằng chứng).
  */
 export const WEEK2: WeekPlan = {
   week: 2,
@@ -13,7 +16,7 @@ export const WEEK2: WeekPlan = {
   story: 'Ở Làng Đô Rê Mi, ba bạn Đô, Rê, Mi sống cạnh nhau. Ngón 1, 2, 3 của con sẽ đến thăm từng nhà!',
   warmup: { variant: 'updown', pool: ['C4', 'D4', 'E4'], rounds: 8 },
   teach: { emoji: '👨‍🏫', text: 'Con dạy bố/mẹ: ngón nào đánh Đô, ngón nào đánh Rê, ngón nào đánh Mi?' },
-  criterion: { text: '2 buổi liền bé tự chọn "Đàn được hết"', who: 'SELF' },
+  criterion: { text: 'Đàn trọn "Bánh nóng" (chế độ chờ) — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
   lessons: [
     {
       id: 'w2-l1',
@@ -21,6 +24,7 @@ export const WEEK2: WeekPlan = {
       title: 'Đô – Rê – Mi',
       emoji: '🎵',
       activities: [
+        { kind: 'technique', title: 'Cánh tay cầu vồng 🌈', drills: ['arm-drop', 'hand-shape'] },
         notes({
           id: 'w2-l1-a',
           step: 'Bài mới',
@@ -56,12 +60,12 @@ export const WEEK2: WeekPlan = {
     {
       id: 'w2-l3',
       week: 2,
-      title: 'Bài hát: Bánh nóng & Lý cây đa',
+      title: 'Bài hát: Bánh nóng',
       emoji: '🥐',
       activities: [
         { kind: 'song', songId: 'hot_cross_buns', mode: 'wait', hints: 'full', intro: 'Bài hát đầu tiên của con — chỉ cần Mi, Rê, Đô!' },
-        // Dân ca Việt Nam (OWNER yêu cầu 2026-10-05): câu đầu "Lý cây đa" cũng chỉ có Đô Rê Mi
-        { kind: 'song', songId: 'ly_cay_da', mode: 'wait', hints: 'full', intro: 'Một bài dân ca quan họ Bắc Ninh — cũng chỉ có Đô, Rê, Mi thôi! Ô đầu có chỗ nghỉ: chờ một chút rồi mới đàn Đô.' },
+        // v5: bài tự sáng tác cùng kỹ năng (chỉ Đô Rê Mi, nốt đen/trắng) — thay "Lý cây đa" (móc kép, dời sang tuần 18)
+        { kind: 'song', songId: 'three_chicks', mode: 'wait', hints: 'full', intro: 'Ba chú gà con Đô, Rê, Mi đi dạo — cũng chỉ có ba nốt thôi!' },
       ],
     },
   ],

@@ -1,78 +1,70 @@
-import { echo, lhNote, lhNotes, notes } from './targets';
 import type { WeekPlan } from './types';
 
 /**
- * TUẦN 6 — Tấm gương: tay trái = "tấm gương" của tay phải (ngón 5→1 trên C3–G3, §6).
- * Lặp bài tuần 2–3 bằng tay trái. Tiêu chí: như tuần 3 — tai nghe đúng 8/10 (APP), dải tay trái.
+ * TUẦN 6 (tuần 5 cũ — v5 dời sau tuần củng cố) — Sân khấu nhỏ: "Ode to Joy" từng nốt → từng câu theo nhịp → cả bài;
+ * đàn cùng bố mẹ (app đánh bè đệm). Thêm "Chuông ngân vang", "Các thánh tiến bước".
+ * Tiêu chí: chơi trọn Ode to Joy ở tốc độ 60 (phiếu 3 ý của bố mẹ, hoặc micro ≥ 80%) — v5: ở 2 NGÀY khác nhau.
+ * SẮC THÁI (OWNER duyệt 2026-10-05): trò "To hay nhỏ?" (f = to, p = nhỏ) mở đầu bài 1 — từ đây bài hát có dấu p / mf / f.
  */
 export const WEEK6: WeekPlan = {
   week: 6,
-  island: 'Hồ Tấm Gương',
-  islandEmoji: '🪞',
-  title: 'Tay trái',
-  story: 'Ở Hồ Tấm Gương, tay trái là cái bóng của tay phải: ngón út (5) đứng ở Đô, ngón cái (1) đứng ở Sol.',
-  leftHand: true,
-  warmup: { variant: 'identify', pool: ['C3', 'D3', 'E3', 'F3', 'G3'], rounds: 10, reference: 'C3' },
-  teach: { emoji: '👨‍🏫', text: 'Con giơ hai tay lên và chỉ cho bố/mẹ: ngón số 1 của tay trái và tay phải ở đâu?' },
-  criterion: { text: 'Tai nghe tay trái (có mốc Đô) đúng 8/10', who: 'APP' },
+  island: 'Sân khấu nhỏ',
+  islandEmoji: '🎪',
+  title: 'Bài hát đầu tiên',
+  story: 'Ở Sân khấu nhỏ, cả làng chờ nghe con đàn "Bài ca niềm vui". Bố mẹ sẽ đàn cùng con!',
+  warmup: { variant: 'identify', pool: ['C4', 'D4', 'E4', 'F4', 'G4'], rounds: 8, reference: 'C4' },
+  teach: { emoji: '👨‍🏫', text: 'Con dạy bố/mẹ câu đầu "Bài ca niềm vui": Mi Mi Fa Sol – Sol Fa Mi Rê. Đàn một lần TO (f), một lần NHỎ (p)!' },
+  criterion: { text: 'Chơi trọn "Bài ca niềm vui" ở tốc độ 60 — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
   lessons: [
     {
       id: 'w6-l1',
       week: 6,
-      title: 'Tay trái tìm nhà',
-      emoji: '🫲',
+      title: 'Bài ca niềm vui — từng nốt',
+      emoji: '🎶',
       activities: [
-        notes({
-          id: 'w6-l1-a',
-          step: 'Bài mới',
-          title: 'Ngón 5 tay trái ở Đô',
-          intro: 'Tay trái đặt ngón 5 (ngón út) lên Đô trầm, ngón 1 (ngón cái) lên Sol.',
-          targets: [lhNote('C3', 'Ngón 5 — ngón út'), lhNote('D3'), lhNote('E3'), lhNote('F3'), lhNote('G3', 'Ngón 1 — ngón cái')],
-        }),
-        notes({
-          id: 'w6-stairs',
-          step: 'Bài mới',
-          title: 'Leo cầu thang tay trái',
-          intro: 'Leo lên Đô → Sol bằng ngón 5-4-3-2-1, rồi leo xuống.',
-          targets: lhNotes(['C3', 'D3', 'E3', 'F3', 'G3', 'F3', 'E3', 'D3', 'C3']),
-        }),
-        notes({
-          id: 'w6-echo',
-          step: 'Nhại lại',
-          title: 'Con vẹt tay trái 🦜',
-          intro: 'App đàn — con đàn lại bằng tay trái.',
-          targets: [echo(['E3', 'D3', 'C3'], 'LH'), echo(['C3', 'E3', 'G3'], 'LH'), echo(['G3', 'F3', 'E3'], 'LH')],
-        }),
+        { kind: 'technique', title: 'Năm ngón to – nhỏ 🦁🐭', drills: ['five-finger', 'finger-tap'] },
+        {
+          kind: 'dynamics',
+          title: 'To hay nhỏ? 🦁🐭',
+          intro: 'Đàn TO như sư tử (f — "forte"): ngón chắc, ấn sâu hơn. Đàn NHỎ như chú chuột (p — "piano"): chạm phím thật nhẹ. Thầy đàn mẫu, con đàn lại!',
+          mode: 'loud-soft',
+          rounds: [
+            { pitches: ['C4'], want: 'f', fingers: [1], hand: 'RH' },
+            { pitches: ['C4'], want: 'p', fingers: [1], hand: 'RH' },
+            { pitches: ['E4', 'D4', 'C4'], want: 'f', fingers: [3, 2, 1], hand: 'RH' },
+            { pitches: ['E4', 'D4', 'C4'], want: 'p', fingers: [3, 2, 1], hand: 'RH' },
+            { pitches: ['C4', 'D4', 'E4', 'F4', 'G4'], want: 'p', fingers: [1, 2, 3, 4, 5], hand: 'RH' },
+            { pitches: ['G4', 'F4', 'E4', 'D4', 'C4'], want: 'f', fingers: [5, 4, 3, 2, 1], hand: 'RH' },
+          ],
+        },
+        { kind: 'song', songId: 'ode_to_joy_easy', mode: 'wait', hints: 'full', intro: 'Bài của nhạc sĩ Beethoven! Dấu "mf" ở đầu bài = đàn VỪA, không to không nhỏ. Mình tập từng nốt trước.' },
       ],
     },
     {
       id: 'w6-l2',
       week: 6,
-      title: 'Bánh nóng — tay trái',
-      emoji: '🥐',
-      activities: [
-        { kind: 'song', songId: 'hot_cross_buns_lh', mode: 'wait', hints: 'full', intro: 'Trò tiếng vọng: ô 1 đàn TO (f), ô 2 đàn NHỎ (p) như tiếng vọng trong hang!' },
-        { kind: 'song', songId: 'hot_cross_buns_lh', mode: 'tempo', level: 2, hints: 'full' },
-      ],
+      title: 'Bài ca niềm vui — theo nhịp',
+      emoji: '🎼',
+      activities: [{ kind: 'song', songId: 'ode_to_joy_easy', mode: 'tempo', level: 2, hints: 'full', intro: 'Tập từng câu, rồi cả bài. Bật nhạc đệm để bố mẹ "đàn cùng"!' }],
     },
     {
       id: 'w6-l3',
       week: 6,
-      title: 'Cừu & Trăng — tay trái',
-      emoji: '🐑',
+      title: 'Chuông ngân vang',
+      emoji: '🔔',
       activities: [
-        { kind: 'song', songId: 'mary_lamb_lh', mode: 'wait', hints: 'full' },
-        { kind: 'song', songId: 'au_clair_lh', mode: 'wait', hints: 'full' },
+        { kind: 'song', songId: 'jingle_bells', mode: 'wait', hints: 'full' },
+        { kind: 'song', songId: 'jingle_bells', mode: 'tempo', level: 2, hints: 'full' },
       ],
     },
     {
       id: 'w6-l4',
       week: 6,
-      title: 'Khúc Largo (tay phải)',
-      emoji: '🏡',
+      title: 'Các thánh tiến bước',
+      emoji: '🎺',
       activities: [
-        { kind: 'song', songId: 'largo_new_world', mode: 'wait', hints: 'full', intro: 'Một giai điệu rất hay của nhạc sĩ Dvořák. Dấu p = đàn NHỎ — chậm và êm nhé.' },
-        { kind: 'song', songId: 'largo_new_world', mode: 'tempo', level: 3, hints: 'full' },
+        { kind: 'song', songId: 'saints', mode: 'wait', hints: 'full', intro: 'Bài này có chỗ "Suỵt" (nghỉ) ở đầu mỗi câu — nhớ chờ nhé!' },
+        { kind: 'song', songId: 'saints', mode: 'tempo', level: 3, hints: 'full' },
       ],
     },
   ],

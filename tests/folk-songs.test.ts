@@ -9,12 +9,13 @@ import { pitchToMidi } from '../src/piano/pitchTable';
  * Ghi đúng nhịp 2/4 và trường độ bản gốc (có móc kép) — mỗi ô bản ký âm = một ô. Mỗi bài nằm trong đúng tuần học được.
  */
 const FOLK: Array<{ id: string; week: number; lessonId: string }> = [
-  { id: 'ly_cay_da', week: 2, lessonId: 'w2-l3' },
-  { id: 'inh_la_oi', week: 7, lessonId: 'w7-l3' },
-  { id: 'xoe_hoa', week: 8, lessonId: 'w8-l1' },
-  { id: 'bac_kim_thang', week: 14, lessonId: 'w14-bkt' },
-  { id: 'ly_ngua_o', week: 18, lessonId: 'w18-l1' },
-  { id: 'ly_cay_bong', week: 23, lessonId: 'w23-l1' },
+  // v5 (OWNER duyệt 2026-10-05): mỗi bài đặt SAU tuần dạy nhịp của nó — 2/4 (tuần 9), móc kép (tuần 18)
+  { id: 'ly_cay_da', week: 18, lessonId: 'w18-l2' },
+  { id: 'inh_la_oi', week: 9, lessonId: 'w9-l2' },
+  { id: 'xoe_hoa', week: 9, lessonId: 'w9-l4' },
+  { id: 'bac_kim_thang', week: 18, lessonId: 'w18-bkt' },
+  { id: 'ly_ngua_o', week: 23, lessonId: 'w23-l1' },
+  { id: 'ly_cay_bong', week: 26, lessonId: 'w26-l1' },
 ];
 
 const lessonSongs = (lessonId: string) =>
@@ -128,13 +129,13 @@ describe.each(FOLK)('dân ca $id — đúng từng nốt với bản ký âm 2/4
 });
 
 describe('dân ca — giai điệu & vị trí trong giáo trình', () => {
-  it('Lý cây đa (tuần 2) chỉ dùng Đô Rê Mi, thế Đô', () => {
+  it('Lý cây đa (tuần 18, v5) chỉ dùng Đô Rê Mi, thế Đô — bài để tập nhịp móc kép', () => {
     const t = findSong('ly_cay_da')!;
     expect(new Set(melody(t).map((x) => x.split(':')[0]))).toEqual(new Set(['C4', 'D4', 'E4']));
     expect(t.position ?? 'C').toBe('C');
   });
 
-  it('Bắc kim thang: lấy đà 2 móc đơn → ô 0 bắt đầu bằng lặng đen; có nhịp đơn chấm – móc kép (tuần 14)', () => {
+  it('Bắc kim thang: lấy đà 2 móc đơn → ô 0 bắt đầu bằng lặng đen; có nhịp đơn chấm – móc kép (tuần 18)', () => {
     const t = findSong('bac_kim_thang')!;
     expect(t.notes[0]).toMatchObject({ rest: true, beats: 1 });
     expect(melody(t).slice(0, 4)).toEqual(['A4:0.5', 'G4:0.5', 'F4:0.75', 'C4:0.25']);
@@ -155,6 +156,6 @@ describe('dân ca — giai điệu & vị trí trong giáo trình', () => {
 
   it('"Cầu London — chấm dôi" (bài lặp) đã được thay bằng "Bắc kim thang"', () => {
     expect(findSong('london_bridge_dotted')).toBeUndefined();
-    expect(lessonSongs('w14-bkt')).toEqual(['bac_kim_thang', 'bac_kim_thang']);
+    expect(lessonSongs('w18-bkt')).toEqual(['bac_kim_thang', 'bac_kim_thang']);
   });
 });

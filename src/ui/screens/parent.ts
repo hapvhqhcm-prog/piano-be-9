@@ -1,4 +1,4 @@
-import { MAX_WEEK, WEEKS, findLesson, levelOf, masteredSongs, weekPassed, weekPlan } from '../../lessons/lessonEngine';
+import { LEFT_HAND_WEEK, MAX_WEEK, WEEKS, findLesson, levelOf, masteredSongs, weekPassed, weekPlan } from '../../lessons/lessonEngine';
 import { SONGS } from '../../music/tune';
 import { parentTip } from '../../lessons/parentTips';
 import { findTune } from '../../music/exercises';
@@ -550,10 +550,10 @@ export function parentScreen(app: App) {
             s.accompaniment ? 'on' : 'off',
             (v) => set({ accompaniment: v === 'on' }),
           ),
-          h('h3', {}, 'Tay trái — tự bật từ tuần 6'),
+          h('h3', {}, `Tay trái — tự bật từ tuần ${LEFT_HAND_WEEK}`),
           segmented(
             [
-              { value: 'auto', label: 'Tự động (tuần 6)' },
+              { value: 'auto', label: `Tự động (tuần ${LEFT_HAND_WEEK})` },
               { value: 'on', label: 'Bật ngay' },
             ],
             s.leftHandEnabled ? 'on' : 'auto',

@@ -367,3 +367,31 @@ Ba chuyên gia đánh giá độc lập: sư phạm piano thiếu nhi, khoa họ
 - **Lặp câu** đến khi "3 lần đúng liên tiếp".
 - **Nhắc hát tên nốt** theo thầy trước bài mới; "Đếm to theo nhé!" khi đếm vào; trò vỗ nhịp xen kẽ đọc âm tiết và đếm số.
 - 698 test qua.
+
+## 20. Giáo trình v5 — 30 tuần (OWNER duyệt 2026-10-05 theo phản biện chuyên gia sư phạm)
+
+- **30 tuần:** 3 cấp × 10 tuần, thêm 5 tuần củng cố/chuẩn bị (5, 9, 13, 18, 22) và 14 bài sáng tác mới; tổng 70 bài.
+  - Minuet và Für Elise dời về tuần 28–29.
+  - Mục tiêu ghi trung thực: "≈ hoàn thành Faber cấp 1 / đầu cấp 2".
+- **Nhịp đúng thứ tự:**
+  - móc đơn ở tuần 4; nhịp 2/4 ở tuần 9;
+  - móc kép, móc đơn chấm + móc kép, nghịch phách, dấu nối ở tuần 18, trước mọi bài dùng chúng;
+  - Lý cây đa dời từ tuần 2 sang tuần 18;
+  - trò vỗ nhịp đếm "1 – 2" cho mẫu 2/4 và chậm lại (48) với mẫu móc kép.
+- **Đọc nhạc theo quãng và nốt mốc:**
+  - trò "giống / bước / nhảy, lên / xuống" (tới quãng 5 ở cấp sau);
+  - nốt mốc khóa Sol và khóa Fa; tuần "Cầu Vạch Phụ" về dòng kẻ phụ và khuông đôi;
+  - đọc nhạc ngẫu nhiên bắt đầu ở nốt bất kỳ, có quãng 4–5.
+- **Khởi động kỹ thuật 1 phút** (thả cánh tay, xoay cổ tay, gõ ngón, 5 ngón p/f, luồn ngón cái, tay tròn) có hình động và giọng đọc.
+- **Sáng tạo:**
+  - ứng tấu phím đen trên nền ngũ cung;
+  - đối đáp hỏi–đáp (kết về Đô);
+  - sáng tác 4 ô nhịp, lưu vào "🎼 Bài của con" trong Thư viện.
+- **Bài kiểm tra tuần chặt hơn:**
+  - phải đạt ở 2 ngày khác nhau;
+  - không có micro thì bố mẹ chấm phiếu 3 ý (đúng nốt · đều nhịp · đúng ngón & dáng tay);
+  - tuần 2 bỏ tự chấm;
+  - tuần 1 cho phép sai 1 lần.
+- **Chuyển dữ liệu tự động** (curriculumRev 3) theo bảng tuần cũ → mới. Lượt bố mẹ chấm trước 06/10/2026 vẫn được tính.
+- **Bản đồ đảo:** ảnh gắn lại theo tuần mới, thêm 5 đảo cho 5 tuần mới.
+- 853 test qua.

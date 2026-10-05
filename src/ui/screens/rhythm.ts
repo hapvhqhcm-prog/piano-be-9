@@ -3,15 +3,23 @@ import type { ParentResult } from '../../progress/schema';
 import type { App } from '../App';
 import { backButton, button, h } from '../components/dom';
 import { confetti } from '../components/celebrate';
+import { RHYTHM_CHECKS, parentChecklist } from '../components/parentCheck';
 import { TIMING_WINDOWS, countWords, gradeTiming } from '../../music/timing';
 
-const SYMBOL: Record<RhythmSymbol, { label: string; emoji: string; beats: number; hits: number[] }> = {
+/** Từ vựng nhịp: độ dài (phách) và các tiếng vỗ (phách, tính từ đầu ô) — dùng cả để vẽ, đếm số và chấm micro. */
+export const SYMBOL: Record<RhythmSymbol, { label: string; emoji: string; beats: number; hits: number[] }> = {
   walk: { label: 'Đi', emoji: '👣', beats: 1, hits: [0] },
   run: { label: 'Chạy-chạy', emoji: '🏃', beats: 1, hits: [0, 0.5] },
   long: { label: 'Đi-i', emoji: '🐢', beats: 2, hits: [0] },
   long3: { label: 'Đi-i-i', emoji: '🐌', beats: 3, hits: [0] },
   dotted: { label: 'Đi-chấm chạy', emoji: '🐪', beats: 2, hits: [0, 1.5] },
   rest: { label: 'Suỵt', emoji: '🤫', beats: 1, hits: [] },
+  // v5 (tuần 18): móc kép, nghịch phách, dây nối
+  run4: { label: 'Chạy-chạy-chạy-chạy', emoji: '🐇', beats: 1, hits: [0, 0.25, 0.5, 0.75] },
+  run3: { label: 'Chạy chạy-chạy', emoji: '🐎', beats: 1, hits: [0, 0.5, 0.75] },
+  dotted8: { label: 'Tập-tễnh', emoji: '🦘', beats: 1, hits: [0, 0.75] },
+  tie: { label: 'Đi‿đi (dây nối)', emoji: '🔗', beats: 2, hits: [0] },
+  sync: { label: 'Chạy-Đi-chạy', emoji: '💃', beats: 2, hits: [0, 0.5, 1.5] },
 };
 
 export interface RhythmHooks {
@@ -41,8 +49,16 @@ export function rhythmScreen(app: App, hooks: RhythmHooks) {
     root.append(h('div', { class: 'screen' }, stage, bar));
     const setBar = (...b: (HTMLElement | null)[]) => bar.replaceChildren(...b.filter((x): x is HTMLElement => !!x));
 
-    const BPM = 60;
-    const spb = 60 / BPM;
+    /** Số phách mỗi ô của mẫu hiện tại: mẫu 2 phách (nhịp 2/4) → đếm "1 – 2", 3 phách → "1 – 2 – 3" */
+    const meterOf = (p: RhythmSymbol[]) => {
+      const b = p.reduce((a, sym) => a + SYMBOL[sym].beats, 0);
+      return b === 2 || b === 3 ? b : 4;
+    };
+    /** Mẫu có tiếng vỗ cách nhau dưới nửa phách (móc kép) → chậm lại (48) cho bé vỗ kịp */
+    const bpmOf = (p: RhythmSymbol[]) =>
+      p.some((sym) => SYMBOL[sym].hits.some((h, k, a) => k > 0 && h - a[k - 1] < 0.5 - 1e-9)) ? 48 : 60;
+    let meter = 4;
+    let spb = 1;
 
     /**
      * v5 (sư phạm): xen kẽ hai cách đọc theo mẫu — mẫu lẻ "đọc vần" (Đi / Chạy-chạy), mẫu chẵn "đếm số" (1 – 2 – 3 – 4).
@@ -59,7 +75,12 @@ export function rhythmScreen(app: App, hooks: RhythmHooks) {
         starts.push(b);
         b += SYMBOL[sym].beats;
       }
-      const words = counting() ? countWords(seq.map((sym, k) => ({ start: starts[k], beats: SYMBOL[sym].beats, hits: SYMBOL[sym].hits }))) : null;
+      const words = counting()
+        ? countWords(
+            seq.map((sym, k) => ({ start: starts[k], beats: SYMBOL[sym].beats, hits: SYMBOL[sym].hits })),
+            meterOf(p),
+          )
+        : null;
       seq.forEach((sym, k) => {
         const s = SYMBOL[sym];
         els.push(
@@ -75,7 +96,10 @@ export function rhythmScreen(app: App, hooks: RhythmHooks) {
     }
 
     /** Lời nhắc theo cách đọc của mẫu hiện tại */
-    const sayHow = () => (counting() ? 'Vỗ tay và đếm to: 1 – 2 – 3 – 4' : 'Vỗ tay và đọc to: Đi, Chạy-chạy…');
+    const sayHow = () =>
+      counting()
+        ? `Vỗ tay và đếm to: ${Array.from({ length: meterOf(hooks.patterns[i]) }, (_, k) => k + 1).join(' – ')}`
+        : 'Vỗ tay và đọc to: Đi, Chạy-chạy…';
 
     function intro(): void {
       token++;
@@ -130,11 +154,15 @@ export function rhythmScreen(app: App, hooks: RhythmHooks) {
         countEl,
       );
       setBar(button({ icon: '⏹', label: 'Dừng', onTap: () => (app.audio.stopAll(), show()) }));
-      const t0 = app.audio.now() + 0.4 + 4 * spb;
+      meter = meterOf(p);
+      spb = 60 / bpmOf(p);
+      // Đếm vào 1 ô (4 tiếng) — nhịp 2/4 đếm vào 2 ô ("1 2 1 2") cho đủ 4 tiếng
+      const countIn = meter === 2 ? 4 : meter;
+      const t0 = app.audio.now() + 0.4 + countIn * spb;
       const seq = [...p, ...p];
       const total = starts.length ? starts[starts.length - 1] + SYMBOL[seq[starts.length - 1]].beats : 4;
       // Đếm vào 4 tiếng; khi micro chấm thì phần sau chỉ có nhịp nháy (không tiếng tích)
-      for (let b = -4; b < (useMic ? 0 : total); b++) app.audio.click(t0 + b * spb, ((b % 4) + 4) % 4 === 0);
+      for (let b = -countIn; b < (useMic ? 0 : total); b++) app.audio.click(t0 + b * spb, ((b % meter) + meter) % meter === 0);
       if (demo) {
         seq.forEach((sym, k) => {
           for (const hb of SYMBOL[sym].hits) void app.audio.scheduleFreq(196, t0 + (starts[k] + hb) * spb, 0.09, 0.9);
@@ -147,9 +175,9 @@ export function rhythmScreen(app: App, hooks: RhythmHooks) {
       const loop = () => {
         if (tk !== token) return void unOnset();
         const beat = (app.audio.now() - t0) / spb;
-        if (beat < 0) countEl.textContent = String(4 - Math.ceil(-beat - 1e-6) + 1);
+        if (beat < 0) countEl.textContent = String(((countIn - Math.ceil(-beat - 1e-6)) % meter) + 1);
         else {
-          countEl.textContent = useMic ? (Math.floor(beat) % 4 === 0 ? '●' : '•') : ' ';
+          countEl.textContent = useMic ? (Math.floor(beat) % meter === 0 ? '●' : '•') : ' ';
           els.forEach((e, k) => e.classList.toggle('now', beat >= starts[k] && (k + 1 >= starts.length || beat < starts[k + 1])));
         }
         if (beat < total + 0.4) raf = requestAnimationFrame(loop);
@@ -212,31 +240,17 @@ export function rhythmScreen(app: App, hooks: RhythmHooks) {
     function askParent(): void {
       const p = hooks.patterns[i];
       const id = `rhythm:${p.join('-')}`;
-      stage.replaceChildren(h('h1', { class: 'title' }, '👪 Bố mẹ: con vỗ đều chưa?'), cells(p).row);
-      setBar(
-        backButton(show),
-        button({
-          icon: '✓',
-          label: 'Đều rồi',
-          kind: 'good',
-          onTap: () => {
-            hooks.record(id, 'correct');
-            void app.audio.chime();
-            i++;
-            if (i >= hooks.patterns.length) done();
-            else show();
-          },
-        }),
-        button({
-          icon: '↻',
-          label: 'Thử lại',
-          kind: 'retry',
-          onTap: () => {
-            hooks.record(id, 'retry');
-            show();
-          },
-        }),
-      );
+      // v5 — bố mẹ chấm 2 ý (Đúng tiếng vỗ · Đều nhịp); đạt khi cả hai được tích
+      const { row, done: doneBtn } = parentChecklist(RHYTHM_CHECKS, (_v, all) => {
+        hooks.record(id, all ? 'correct' : 'retry');
+        if (!all) return show();
+        void app.audio.chime();
+        i++;
+        if (i >= hooks.patterns.length) done();
+        else show();
+      });
+      stage.replaceChildren(h('h1', { class: 'title' }, '👪 Bố mẹ: con vỗ thế nào?'), cells(p).row, h('p', { class: 'lead' }, 'Chạm các ý con làm được:'), row);
+      setBar(backButton(show), doneBtn);
     }
 
     function done(): void {

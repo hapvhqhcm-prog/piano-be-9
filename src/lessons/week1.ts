@@ -4,7 +4,8 @@ import type { WeekPlan } from './types';
 /**
  * TUẦN 1 — Đảo Phím Đen: định hướng bàn phím (v2, OWNER duyệt 2026-10-04).
  * B1 anh em sinh đôi & sinh ba · B2 nhà Đô · B3 Đô giữa · B4 Đô trầm/cao + Thám tử Đô · B5 tư thế, ngón 1–5.
- * Tiêu chí: tìm C4 đúng 10/10 (bố mẹ xác nhận hoặc micro).
+ * Tiêu chí: tìm C4 đúng 10 lần, được phép trượt tối đa 1 lần (chuyên gia UX, v5) — bố mẹ xác nhận hoặc micro.
+ * v5 (OWNER duyệt 2026-10-05): giữ nguyên nội dung tuần 1; thêm 1' khởi động kỹ thuật (thả rơi cánh tay, tay tròn) ở bài tư thế.
  */
 const TWINS3 = ['C#3', 'D#3'];
 const TWINS4 = ['C#4', 'D#4'];
@@ -20,7 +21,7 @@ export const WEEK1: WeekPlan = {
     'Trên Đảo Phím Đen có hai gia đình: anh em SINH ĐÔI (2 phím đen) và anh em SINH BA (3 phím đen). Nhà của bạn Đô ở ngay cạnh anh em sinh đôi!',
   warmup: { variant: 'updown', pool: ['C3', 'G3', 'C4', 'G4', 'C5'], rounds: 6 },
   teach: { emoji: '👨‍🏫', text: 'Con chỉ cho bố/mẹ: anh em sinh đôi ở đâu? Nhà Đô ở đâu?' },
-  criterion: { text: 'Tìm Đô giữa (C4) đúng 10/10', who: 'PARENT/MIC' },
+  criterion: { text: 'Tìm Đô giữa (C4) đúng 10 lần (trượt tối đa 1 lần)', who: 'PARENT/MIC' },
   lessons: [
     {
       id: 'w1-l1',
@@ -124,6 +125,7 @@ export const WEEK1: WeekPlan = {
       title: 'Ngón tay bí ẩn',
       emoji: '✋',
       activities: [
+        { kind: 'technique', title: 'Cánh tay cầu vồng 🌈', drills: ['arm-drop', 'hand-shape'] },
         notes({
           id: 'w1-b5a',
           step: 'B5',

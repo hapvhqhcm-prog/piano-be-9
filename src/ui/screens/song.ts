@@ -27,6 +27,7 @@ import type { App } from '../App';
 import { backButton, button, h } from '../components/dom';
 import { StaffView } from '../components/staffView';
 import { HandOverlay, eventsFromTune, playDemo } from '../components/demo';
+import { SONG_CHECKS, parentChecklist } from '../components/parentCheck';
 import '../../styles/pedagogy.css';
 
 export interface SongOptions {
@@ -665,35 +666,25 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
     }
 
     // ----- Kết quả -----
-    function record(r: Pick<SongRun, 'mode' | 'total' | 'hits' | 'source' | 'passed'>): void {
+    function record(r: Pick<SongRun, 'mode' | 'total' | 'hits' | 'source' | 'passed' | 'checklist'>): void {
       const sh = solo();
       hooks.onRun({ songId: full.id, ...r, level: r.mode === 'tempo' ? level : undefined, bpm, hints: hints, phrase, ...(sh ? { hand: sh } : {}) });
     }
 
+    /**
+     * v5 — Không micro: bố mẹ chấm 3 ý (Đúng nốt · Đều nhịp · Đúng ngón & dáng tay) → SongRun.checklist;
+     * lượt "đạt" khi cả 3 đều được tích (OWNER duyệt 2026-10-05).
+     */
     function askParent(question: string, total: number): void {
       state = 'rate';
-      status.replaceChildren(h('b', {}, `👪 Bố mẹ: ${question}`));
-      setBar(
-        backButton(reset),
-        button({
-          icon: '✓',
-          label: 'Rồi!',
-          kind: 'good',
-          onTap: () => {
-            record({ mode, total, hits: total, source: 'parent', passed: true });
-            showResult(1, 'Bố mẹ khen con đàn tốt!');
-          },
-        }),
-        button({
-          icon: '↻',
-          label: 'Chưa',
-          kind: 'retry',
-          onTap: () => {
-            record({ mode, total, hits: 0, source: 'parent', passed: false });
-            showResult(0.5, 'Không sao — tập thêm chút nữa nhé!');
-          },
-        }),
-      );
+      const { row, done } = parentChecklist(SONG_CHECKS, (v, all) => {
+        record({ mode, total, hits: v.notes ? total : 0, source: 'parent', passed: all, checklist: v });
+        if (all) return showResult(1, 'Bố mẹ khen con đàn tốt!');
+        const miss = SONG_CHECKS.filter((c) => !v[c.key]).map((c) => c.label.toLowerCase());
+        showResult(0.5, `Lần sau mình chú ý thêm: ${miss.join(', ')} nhé!`);
+      });
+      status.replaceChildren(h('div', { class: 'pcheck-ask' }, h('b', {}, `👪 Bố mẹ: ${question} Chạm các ý con làm được:`), row));
+      setBar(backButton(reset), done);
     }
 
     function showResult(s: number, text: string): void {

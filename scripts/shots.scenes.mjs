@@ -233,3 +233,110 @@ export const SCENES = [
          app.store.recomputePracticeDays(); const m = await import('/src/ui/screens/home.ts'); app.show(m.homeScreen(app));`,
   },
 ];
+
+/** v5 — chờ tới khi nút có chữ `t` (trong thanh nút hoặc màn) bấm được rồi bấm. */
+const tapAny = `
+  const tapAny = async (t, sel = 'button') => { for (let i = 0; i < 80; i++) { await new Promise((r) => setTimeout(r, 120));
+    const b = [...document.querySelectorAll(sel)].find((x) => x.textContent.includes(t) && !x.disabled); if (b) { b.click(); return true; } } return false; };
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));`;
+const quiz = (spec, extra = '') => `${tapAny}
+  const m = await import('/src/ui/screens/ear.ts');
+  app.show(m.quizScreen(app, { title: 'Đọc quãng', intro: 'Nhìn 2 nốt', quiz: ${spec}, onAnswer() {}, onDone() {}, onBack() {} }));
+  await tapAny('Bắt đầu'); await sleep(300); ${extra}`;
+const tech = (drills, extra = '') => `${tapAny}
+  const m = await import('/src/ui/screens/technique.ts');
+  app.show(m.techniqueScreen(app, { title: 'Khởi động tay', drills: ${drills}, record() {}, onDone() {}, onBack() {} })); ${extra}`;
+const improv = (mode, extra = '') => `${tapAny}
+  const m = await import('/src/ui/screens/improv.ts');
+  app.show(m.improvScreen(app, { title: 'Sáng tạo', intro: 'Con tự sáng tác nhạc!', mode: '${mode}', record() {}, onDone() {}, onBack() {} })); ${extra}`;
+const press = `const press = async (p) => { const k = document.querySelector('.keyboard [data-pitch="' + p + '"]');
+  k.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerId: 7 })); window.dispatchEvent(new PointerEvent('pointerup', { pointerId: 7 })); await sleep(80); };`;
+const seedComp = `app.store.addComposition({ id: 'c1', title: 'Bài của con số 1', createdAt: Date.now(), timeSignature: '4/4',
+    notes: [{ pitch: 'C4', beats: 1, finger: 1 }, { pitch: 'E4', beats: 1, finger: 3 }, { pitch: 'G4', beats: 2, finger: 5 }, { pitch: 'C4', beats: 4, finger: 1 }] });
+  app.store.addComposition({ id: 'c2', title: 'Mưa rơi tí tách', createdAt: Date.now() - 86400000, timeSignature: '4/4',
+    notes: [{ pitch: 'G4', beats: 2, finger: 5 }, { pitch: 'E4', beats: 2, finger: 3 }, { pitch: 'C4', beats: 4, finger: 1 }] });`;
+
+export const V5_SCENES = [
+  { name: 'v5-quiz-interval', js: quiz(`{ variant: 'interval', pool: ['C4','D4','E4','F4','G4'], rounds: 5, maxInterval: 3 }`) },
+  {
+    name: 'v5-quiz-interval-answer',
+    js: quiz(`{ variant: 'interval', pool: ['C4','D4','E4','F4','G4'], rounds: 5, maxInterval: 3 }`, `document.querySelector('.iv-answers button').click(); await sleep(500);`),
+  },
+  { name: 'v5-quiz-interval5', js: quiz(`{ variant: 'interval', pool: ['C4','D4','E4','F4','G4','A4','B4','C5'], rounds: 5, maxInterval: 5 }`) },
+  {
+    name: 'v5-quiz-interval5-dir',
+    js: quiz(`{ variant: 'interval', pool: ['C4','D4','E4','F4','G4','A4','B4','C5'], rounds: 5, maxInterval: 5 }`, `await tapAny('Nhảy xa 4', '.iv-answers button'); await sleep(200);`),
+  },
+  { name: 'v5-quiz-landmark', js: quiz(`{ variant: 'landmark', pool: ['C3','F3','C4','G4','C5'], rounds: 5 }`) },
+  {
+    name: 'v5-quiz-landmark-answer',
+    js: quiz(`{ variant: 'landmark', pool: ['C3','F3','C4','G4','C5','A5'], rounds: 5 }`, `document.querySelector('.lm-choices button').click(); await sleep(500);`),
+  },
+  { name: 'v5-tech-intro', js: tech(`['arm-drop','wrist-circle','finger-tap','five-finger','thumb-under','hand-shape']`) },
+  ...['arm-drop', 'wrist-circle', 'finger-tap', 'thumb-under', 'hand-shape'].map((d) => ({
+    name: `v5-tech-${d}`,
+    js: tech(`['${d}']`, `await tapAny('Bắt đầu'); await sleep(1200);`),
+  })),
+  { name: 'v5-tech-five', js: tech(`['five-finger']`, `await tapAny('Bắt đầu'); await sleep(2500);`) },
+  { name: 'v5-tech-timer', js: tech(`['arm-drop']`, `await tapAny('Bắt đầu'); await tapAny('Con làm nào'); await sleep(5000);`) },
+  { name: 'v5-tech-ask', js: tech(`['hand-shape']`, `await tapAny('Bắt đầu'); await tapAny('Con làm nào'); await tapAny('Con xong rồi');`) },
+  { name: 'v5-improv-black-intro', js: improv('black-keys') },
+  {
+    name: 'v5-improv-black',
+    js: improv('black-keys', `await tapAny('Bắt đầu'); await sleep(400); ${press} for (const p of ['C#5','D#5','F#5','G#4','A#4']) { await press(p); await sleep(120); } await sleep(300);`),
+  },
+  {
+    name: 'v5-improv-qa',
+    js: improv('question-answer', `await tapAny('Bắt đầu'); await sleep(1500);`),
+  },
+  {
+    name: 'v5-improv-qa-answer',
+    js: improv('question-answer', `await tapAny('Bắt đầu'); await sleep(7800); ${press} await sleep(200); for (const p of ['E4','D4','C4']) await press(p); await sleep(200);`),
+  },
+  {
+    name: 'v5-improv-compose',
+    js: improv('compose', `await tapAny('Bắt đầu'); await sleep(300); ${press}
+      for (const p of ['C4','E4','G4','E4']) await press(p);
+      document.querySelectorAll('.iv-rh')[1].click(); await sleep(50); for (const p of ['F4','D4']) await press(p);
+      document.querySelectorAll('.iv-rh')[2].click(); await sleep(50); for (const p of ['E4','F4','G4','A4']) await press(p); await sleep(300);`),
+  },
+  { name: 'v5-improv-compose-empty', js: improv('compose', `await tapAny('Bắt đầu'); await sleep(300);`) },
+  {
+    name: 'v5-improv-compose-full',
+    js: improv('compose', `await tapAny('Bắt đầu'); await sleep(300); ${press}
+      document.querySelectorAll('.iv-rh')[1].click(); await sleep(50); for (const p of ['C4','E4','G4','E4','D4','F4','E4','C4']) await press(p); await sleep(300);`),
+  },
+  {
+    name: 'v5-improv-name',
+    js: improv('compose', `await tapAny('Bắt đầu'); await sleep(300); ${press}
+      document.querySelectorAll('.iv-rh')[1].click(); await sleep(50); for (const p of ['C4','E4','G4','E4','D4','F4','E4','C4']) await press(p);
+      await tapAny('Lưu bài'); await sleep(300);`),
+  },
+  {
+    name: 'v5-improv-saved',
+    js: improv('compose', `await tapAny('Bắt đầu'); await sleep(300); ${press}
+      document.querySelectorAll('.iv-rh')[1].click(); await sleep(50); for (const p of ['C4','E4','G4','E4','D4','F4','E4','C4']) await press(p);
+      await tapAny('Lưu bài'); await tapAny('Lưu vào Thư viện'); await sleep(400);`),
+  },
+  {
+    name: 'v5-library-mine',
+    js: `${seedComp} app.store.setCurrentWeek(3); const m = await import('/src/ui/screens/library.ts'); app.show(m.libraryScreen(app));`,
+  },
+  {
+    name: 'v5-song-checklist',
+    js: `${tapAny} ${seedComp}
+      const c = await import('/src/practice/compose.ts'); const s = await import('/src/ui/screens/song.ts');
+      app.show(s.songScreen(app, c.compositionToTune(app.store.findComposition('c2')), { mode: 'wait', hints: 'full', free: true }, { onRun() {}, onDone() {}, onBack() {} }));
+      await tapAny('Bắt đầu'); for (let k = 0; k < 3; k++) await tapAny('Bố mẹ: tiếp');
+      await sleep(200); document.querySelectorAll('.pcheck-item')[0].click(); document.querySelectorAll('.pcheck-item')[2].click(); await sleep(200);`,
+  },
+  {
+    name: 'v5-rhythm-checklist',
+    js: `${tapAny} const r = await import('/src/ui/screens/rhythm.ts');
+      app.show(r.rhythmScreen(app, { title: 'Nhịp', intro: 'Vỗ theo nhé', patterns: [['walk', 'run']], record() {}, onDone() {}, onBack() {} }));
+      app.audio.now = () => performance.now() / 1000; // headless: AudioContext đứng yên → dùng đồng hồ trang
+      await tapAny('Bắt đầu'); await tapAny('Con vỗ'); await sleep(9500); document.querySelectorAll('.pcheck-item')[0].click(); await sleep(200);`,
+  },
+];
+
+SCENES.push(...V5_SCENES);

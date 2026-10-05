@@ -6,6 +6,7 @@ import {
   validateAppData,
   type AppData,
   type ChecklistKey,
+  type Composition,
   type ParentResult,
   type Session,
   type SelfRating,
@@ -383,6 +384,25 @@ export class ProgressStore {
   setChecklist(sessionId: string, key: ChecklistKey, value: boolean): void {
     this.session(sessionId).checklist[key] = value;
     this.save();
+  }
+
+  /** (v5) Bài bé tự sáng tác — trò "Sáng tác"; hiện trong Thư viện mục "Bài của con". */
+  addComposition(c: Composition): void {
+    const list = (this.data.compositions ??= []);
+    const i = list.findIndex((x) => x.id === c.id);
+    const copy: Composition = { ...c, notes: c.notes.map((n) => ({ ...n })) };
+    if (i >= 0) list[i] = copy;
+    else list.push(copy);
+    this.save();
+  }
+
+  /** Các bài bé sáng tác (cũ → mới). */
+  compositions(): readonly Composition[] {
+    return this.data.compositions ?? [];
+  }
+
+  findComposition(id: string): Composition | undefined {
+    return this.data.compositions?.find((c) => c.id === id);
   }
 
   markLessonCompleted(lessonId: string): void {

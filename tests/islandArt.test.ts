@@ -45,9 +45,9 @@ function balanced(markup: string): boolean {
 }
 
 describe('islandIcon', () => {
-  it('trả về <svg> cho mọi tuần 1–25 và mọi trạng thái', async () => {
+  it('trả về <svg> cho mọi tuần 1–30 và mọi trạng thái', async () => {
     const { islandIcon } = await import('../src/ui/components/art/islandArt');
-    for (let w = 1; w <= 25; w++) {
+    for (let w = 1; w <= 30; w++) {
       for (const s of ['done', 'current', 'locked'] as const) {
         const el = islandIcon(w, s) as unknown as FakeEl;
         expect(el.tagName).toBe('svg');
@@ -65,8 +65,8 @@ describe('islandIcon', () => {
   it('mỗi tuần có hình riêng; khóa có bộ lọc mờ, xong có ngôi sao', async () => {
     const { islandIcon } = await import('../src/ui/components/art/islandArt');
     const arts = new Set<string>();
-    for (let w = 1; w <= 25; w++) arts.add((islandIcon(w, 'current') as unknown as FakeEl).innerHTML);
-    expect(arts.size).toBe(25);
+    for (let w = 1; w <= 30; w++) arts.add((islandIcon(w, 'current') as unknown as FakeEl).innerHTML);
+    expect(arts.size).toBe(30);
     const locked = (islandIcon(3, 'locked') as unknown as FakeEl).innerHTML;
     expect(locked).toContain('feColorMatrix');
     const done = (islandIcon(3, 'done') as unknown as FakeEl).innerHTML;

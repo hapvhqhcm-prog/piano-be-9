@@ -5,6 +5,7 @@ import type { WeekPlan } from './types';
  * TUẦN 3 — Cầu thang Sol: ngón 4-5, Leo cầu thang, "Bước hay nhảy?", Nhại lại 3 nốt,
  * bài "Chú cừu nhỏ" & "Dưới ánh trăng". Tai nghe: đoán nốt có mốc Đô.
  * Tiêu chí: tai nghe đúng 8/10 (APP).
+ * v5: khởi động kỹ thuật (xoay cổ tay, tay tròn) đầu tuần; trò SÁNG TẠO đầu tiên — ứng tấu trên phím đen (ngũ cung).
  */
 export const WEEK3: WeekPlan = {
   week: 3,
@@ -22,6 +23,7 @@ export const WEEK3: WeekPlan = {
       title: 'Fa và Sol',
       emoji: '🖐',
       activities: [
+        { kind: 'technique', title: 'Cổ tay mềm 🌀', drills: ['wrist-circle', 'hand-shape'] },
         notes({
           id: 'w3-l1-a',
           step: 'Bài mới',
@@ -73,7 +75,15 @@ export const WEEK3: WeekPlan = {
       week: 3,
       title: 'Bài hát: Dưới ánh trăng',
       emoji: '🌙',
-      activities: [{ kind: 'song', songId: 'au_clair', mode: 'wait', hints: 'full' }],
+      activities: [
+        { kind: 'song', songId: 'au_clair', mode: 'wait', hints: 'full' },
+        {
+          kind: 'improv',
+          title: 'Nhạc sĩ phím đen 🎨',
+          intro: 'App đàn nền nhè nhẹ. Con đàn BẤT KỲ phím đen nào con thích — chậm hay nhanh, to hay nhỏ. Trên phím đen, nốt nào cũng hay!',
+          mode: 'black-keys',
+        },
+      ],
     },
   ],
 };

@@ -142,9 +142,9 @@ describe('sổ sticker', () => {
     expect(earned(repeat).has('dyn-stac-leg')).toBe(false);
   });
 
-  it('huy chương cấp: bố mẹ trao huy chương ở buổi sân khấu tuần 8 / 16 / 25', () => {
+  it('huy chương cấp: bố mẹ trao huy chương ở buổi sân khấu tuần 10 / 20 / 30 (v5)', () => {
     const medal = (week: number) => session({ lessonId: `w${week}-stage`, parentAssessments: [{ note: 'medal', result: 'correct', ts: 0 }] });
-    const e = earned(data([medal(8), medal(16)], 17));
+    const e = earned(data([medal(10), medal(20)], 21));
     expect(e.has('medal-1') && e.has('medal-2')).toBe(true);
     expect(e.has('medal-3')).toBe(false);
   });

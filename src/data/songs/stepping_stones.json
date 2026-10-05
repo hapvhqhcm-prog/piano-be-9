@@ -1,0 +1,142 @@
+{
+ "id": "stepping_stones",
+ "title": "Stepping Stones",
+ "titleVi": "Bước qua vạch phụ",
+ "composer": "Bài tự sáng tác cho app (piano-be-9)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Bài tự sáng tác cho app (piano-be-9)",
+ "attributionRequired": false,
+ "hand": "RH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 22,
+ "position": "Am",
+ "phrases": [
+  0,
+  4
+ ],
+ "notes": [
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 3,
+   "dyn": "mf"
+  },
+  {
+   "pitch": "B3",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "A3",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "B3",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "E4",
+   "beats": 2,
+   "finger": 5
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "B3",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "A3",
+   "beats": 4,
+   "finger": 1
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 5,
+   "dyn": "p"
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "B3",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "A3",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "B3",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "B3",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "B3",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "A3",
+   "beats": 4,
+   "finger": 1
+  }
+ ]
+}

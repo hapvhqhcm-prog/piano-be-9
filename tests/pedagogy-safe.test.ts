@@ -62,26 +62,35 @@ describe('1. Tập tách tay (bài hai tay)', () => {
     expect(otherHandNotes(tune, null)).toEqual([]);
   });
 
-  it('lượt TÁCH TAY không tính "đã thuộc" / tiêu chí tuần 10; lượt hai tay thì tính', () => {
-    const { st } = clockStore();
-    st.setCurrentWeek(10);
-    const s = st.startSession('w10-l1');
-    st.addSongRun(s.id, run('ode_to_joy_both', { hand: 'RH' }));
-    st.addSongRun(s.id, run('ode_to_joy_both', { hand: 'LH' }));
+  it('lượt TÁCH TAY không tính "đã thuộc" / tiêu chí tuần 12; lượt hai tay thì tính (v5: ở 2 ngày)', () => {
+    const { st, at } = clockStore();
+    st.setCurrentWeek(12);
+    // v5: lượt bố mẹ phải có phiếu 3 ý đều đạt
+    const ok = { checklist: { notes: true, beat: true, fingers: true } };
+    for (const day of [0, 1]) {
+      at(day);
+      const s = st.startSession('w12-l1');
+      st.addSongRun(s.id, run('ode_to_joy_both', { hand: 'RH', ...ok }));
+      st.addSongRun(s.id, run('ode_to_joy_both', { hand: 'LH', ...ok }));
+    }
     expect(validateAppData(st.get())).toEqual([]);
     expect(songMastered(st.get(), 'ode_to_joy_both')).toBe(false);
-    expect(weekPassed(10, st.get())).toBe(false);
-    st.addSongRun(s.id, run('ode_to_joy_both'));
+    expect(weekPassed(12, st.get())).toBe(false);
+    at(0);
+    st.addSongRun(st.startSession('w12-l1').id, run('ode_to_joy_both', ok));
     expect(songMastered(st.get(), 'ode_to_joy_both')).toBe(true);
-    expect(weekPassed(10, st.get())).toBe(true);
+    expect(weekPassed(12, st.get())).toBe(false); // mới 1 ngày
+    at(1);
+    st.addSongRun(st.startSession('w12-l1').id, run('ode_to_joy_both', ok));
+    expect(weekPassed(12, st.get())).toBe(true);
   });
 
-  it('tiêu chí tuần 5 (theo nhịp ≥ 60) cũng bỏ qua lượt có cờ tách tay', () => {
+  it('tiêu chí tuần 6 (theo nhịp ≥ 60) cũng bỏ qua lượt có cờ tách tay', () => {
     const { st } = clockStore();
-    st.setCurrentWeek(5);
-    const s = st.startSession('w5-l1');
+    st.setCurrentWeek(6);
+    const s = st.startSession('w6-l1');
     st.addSongRun(s.id, run('ode_to_joy_easy', { hand: 'RH' }));
-    expect(weekPassed(5, st.get())).toBe(false);
+    expect(weekPassed(6, st.get())).toBe(false);
   });
 
   it('schema: hand chỉ nhận RH / LH (không có = hai tay)', () => {
@@ -275,8 +284,8 @@ describe('6. Ôn nhanh có trọng số (Leitner)', () => {
 
   it('nốt hay sai được chọn nhiều hơn hẳn; cùng rng → cùng kết quả', () => {
     const { st } = clockStore();
-    st.setCurrentWeek(12);
-    const lesson = weekPlan(12).lessons[0];
+    st.setCurrentWeek(15);
+    const lesson = weekPlan(15).lessons[0];
     const seeded = (k: number) => {
       let x = k + 1;
       return () => (x = (x * 9301 + 49297) % 233280) / 233280;

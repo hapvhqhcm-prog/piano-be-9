@@ -4,7 +4,8 @@ import type { WeekPlan } from './types';
  * TUẦN 4 — Rừng Nhịp (§11 giữ 3 mức + ngôn ngữ nhịp v2):
  * Mức 1 vỗ tay theo metronome 60 · Mức 2 đánh theo nhịp, nốt đứng yên con trỏ nhảy ·
  * Mức 3 băng chuyền nốt chạy (sau khi Mức 2 ổn).
- * Tiêu chí: giữ nhịp đều 8 ô nhịp ở Mức 2 (bố mẹ xác nhận, hoặc micro ≥ 80%).
+ * Tiêu chí: giữ nhịp đều 8 ô nhịp ở Mức 2 (bố mẹ xác nhận bằng phiếu 3 ý, hoặc micro ≥ 80%) — v5: ở 2 NGÀY khác nhau.
+ * v5: đây là tuần dạy móc đơn "Chạy-chạy" (nửa phách) — mọi bài có móc đơn chơi THEO NHỊP chỉ từ tuần này.
  */
 export const WEEK4: WeekPlan = {
   week: 4,
@@ -14,7 +15,7 @@ export const WEEK4: WeekPlan = {
   story: 'Trong Rừng Nhịp, mọi con vật đều đi theo tiếng "tích – tích" của bác Gõ Kiến. Đi đều thì không ai lạc!',
   warmup: { variant: 'stepskip', pool: ['C4', 'D4', 'E4', 'F4', 'G4'], rounds: 8 },
   teach: { emoji: '👨‍🏫', text: 'Con vỗ một mẫu nhịp "Đi – Chạy-chạy – Đi-i" rồi bắt bố/mẹ vỗ lại.' },
-  criterion: { text: 'Giữ nhịp đều 8 ô nhịp ở Mức 2', who: 'PARENT/MIC' },
+  criterion: { text: 'Giữ nhịp đều 8 ô nhịp ở Mức 2 — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
   lessons: [
     {
       id: 'w4-l1',
@@ -22,6 +23,7 @@ export const WEEK4: WeekPlan = {
       title: 'Mức 1: Vỗ tay theo nhịp',
       emoji: '👏',
       activities: [
+        { kind: 'technique', title: 'Ngón tay gõ cửa 🚪', drills: ['finger-tap', 'arm-drop'] },
         {
           kind: 'rhythm',
           title: 'Ngôn ngữ nhịp',

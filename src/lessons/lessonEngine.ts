@@ -14,21 +14,41 @@ import { WEEK5 } from './week5';
 import { WEEK6 } from './week6';
 import { WEEK7 } from './week7';
 import { WEEK8 } from './week8';
+import { WEEK9 } from './week9';
+import { WEEK10 } from './week10';
 
 /**
- * Giáo trình — Cấp 1 (tuần 1–8, v2), Cấp 2 (9–16), Cấp 3 (17–25). OWNER duyệt 2026-10-04;
- * 2026-10-05: chèn tuần 20 "Đọc nốt cao Đô5–Sol5" (25 tuần — dữ liệu cũ đánh số lại ở progress/migrations.ts).
+ * Giáo trình v5 (OWNER duyệt 2026-10-05, theo rà soát của chuyên gia sư phạm) — 30 tuần, 3 cấp × 10 tuần:
+ * Cấp 1 (1–10), Cấp 2 (11–20), Cấp 3 (21–30). Thêm tuần CỦNG CỐ (5, 13, 22) và tuần dạy nhịp/đọc nhạc trước bài cần
+ * (9 nhịp 2/4, 18 móc kép & nghịch phách); khởi động kỹ thuật đầu tuần; trò sáng tạo; tiêu chí bài hát cần 2 NGÀY.
+ * Dữ liệu cũ (rev 2 — 25 tuần) đánh số lại ở progress/migrations.ts (bảng OLD→NEW).
+ * Mục tiêu cuối nói thật: ≈ hoàn thành Faber cấp 1 / đầu cấp 2 (không phải "thành thạo" theo nghĩa nhạc viện).
  */
 export const WEEKS: readonly WeekPlan[] = [
-  WEEK1, WEEK2, WEEK3, WEEK4, WEEK5, WEEK6, WEEK7, WEEK8,
+  WEEK1, WEEK2, WEEK3, WEEK4, WEEK5, WEEK6, WEEK7, WEEK8, WEEK9, WEEK10,
   ...LEVEL2_WEEKS,
   ...LEVEL3_WEEKS,
 ];
 
 export const LEVELS: readonly LevelInfo[] = [
-  { level: 1, name: 'Cấp 1 · Làm quen', goal: 'Thế Đô hai tay, nhịp cơ bản, đọc nốt khóa Sol, 21 bài hát', weeks: [1, 8] },
-  { level: 2, name: 'Cấp 2 · Hai tay', goal: 'Đô giữa, thế Sol, phím đen, nhịp 3/4 & chấm dôi, gam, hai tay cùng lúc', weeks: [9, 16] },
-  { level: 3, name: 'Cấp 3 · Thành thạo', goal: 'Hợp âm, đổi thế, trưởng/thứ, nốt cao, cổ điển, đọc nhạc hai khóa', weeks: [17, 25] },
+  {
+    level: 1,
+    name: 'Cấp 1 · Làm quen',
+    goal: 'Thế Đô hai tay, nhịp Đi – Chạy-chạy – 2/4, đọc nốt khóa Sol theo nốt mốc & quãng, ứng tấu phím đen',
+    weeks: [1, 10],
+  },
+  {
+    level: 2,
+    name: 'Cấp 2 · Hai tay',
+    goal: 'Đô giữa & khóa Fa, hai tay cùng lúc, thế Sol, phím đen, nhịp 3/4, chấm dôi, móc kép, gam, sáng tác 4 ô nhịp',
+    weeks: [11, 20],
+  },
+  {
+    level: 3,
+    name: 'Cấp 3 · Vững vàng',
+    goal: 'Hợp âm, dòng kẻ phụ & khuông lớn, đổi thế, trưởng/thứ, đọc hai khóa, Minuet & Für Elise giản lược — ≈ hoàn thành Faber cấp 1 / đầu cấp 2',
+    weeks: [21, 30],
+  },
 ];
 
 export function levelOf(week: number): LevelInfo {
@@ -53,9 +73,12 @@ export function findLesson(id: string): Lesson | undefined {
   return undefined;
 }
 
-/** Tay trái được kích hoạt từ tuần 6 (§6). */
+/** Tuần bắt đầu dùng tay trái (Hồ Tấm Gương) — v5: tuần 7 (trước đây tuần 6, §6). */
+export const LEFT_HAND_WEEK = 7;
+
+/** Tay trái được kích hoạt từ tuần LEFT_HAND_WEEK. */
 export function leftHandActive(data: Readonly<AppData>): boolean {
-  return data.progress.currentWeek >= 6 || data.settings.leftHandEnabled;
+  return data.progress.currentWeek >= LEFT_HAND_WEEK || data.settings.leftHandEnabled;
 }
 
 export function sessionsOfWeek(data: Readonly<AppData>, week: number): Session[] {
@@ -63,8 +86,10 @@ export function sessionsOfWeek(data: Readonly<AppData>, week: number): Session[]
 }
 
 const isPitch = (s: string) => /^[A-G](#|b)?\d$/.test(s);
-/** Tuần 20: năm nốt cao thế Đô cao */
+/** Tuần 25: năm nốt cao thế Đô cao */
 const HIGH_NOTES = ['C5', 'D5', 'E5', 'F5', 'G5'];
+/** Tuần 22: nốt có dòng kẻ phụ (khởi động-chấm điểm của tuần) */
+const LEDGER_NOTES = ['A3', 'B3', 'C4', 'G5', 'A5'];
 
 type Run = Session['songRuns'][number];
 /** Lượt chơi đủ tay (không phải tập tách tay một bè của bài hai tay). */
@@ -113,13 +138,52 @@ function ear8of10(sessions: Session[], accept: (a: AppAssessment) => boolean): b
   });
 }
 
-/** Tiêu chí qua tuần (§11, v2). Hàm thuần — có test. */
+/**
+ * v5 — Lượt chơi được tính làm BẰNG CHỨNG cho tiêu chí tuần (OWNER duyệt 2026-10-05, chuyên gia sư phạm:
+ * "tiêu chí cũ qua được mà chưa thật sự có kỹ năng"):
+ * - micro (source 'mic'): lượt ĐẠT (≥ 80% nốt đúng lúc);
+ * - bố mẹ (source 'parent'): lượt ĐẠT và có PHIẾU 3 Ý (đúng nốt · đều nhịp · đúng ngón) — cả 3 đều đạt.
+ * Dữ liệu CŨ: lượt "bố mẹ" ghi TRƯỚC LEGACY_RUN_CUTOFF (ngày phát hành v5) không có phiếu → vẫn tính như cũ,
+ * để tuần bé đang học dở không bị tụt bằng chứng. (Tuần ĐÃ qua không bị đánh giá lại: bản đồ/sticker coi mọi tuần
+ * < currentWeek là đã qua — weekPassed chỉ thật sự quyết định ở tuần hiện tại.) Lượt mới không phiếu → không tính.
+ */
+export const LEGACY_RUN_CUTOFF = new Date(2026, 9, 6).getTime();
+
+export function runIsEvidence(r: Run): boolean {
+  if (!r.passed) return false;
+  if (r.source === 'mic') return true;
+  if (r.checklist) return r.checklist.notes && r.checklist.beat && r.checklist.fingers;
+  return r.ts < LEGACY_RUN_CUTOFF;
+}
+
+/** Tiêu chí bài hát cần đạt ở ít nhất ngần này NGÀY khác nhau (v5 — một lần "ăn may" không đủ). */
+export const CRITERION_DAYS = 2;
+
+/** Có lượt hợp lệ (runIsEvidence) thỏa `ok` ở ít nhất `days` ngày KHÁC NHAU (theo session.date). */
+export function passedOnDays(sessions: readonly Session[], ok: (r: Run) => boolean, days = CRITERION_DAYS): boolean {
+  const dates = new Set(sessions.filter((s) => s.songRuns.some((r) => ok(r) && runIsEvidence(r))).map((s) => s.date));
+  return dates.size >= days;
+}
+
+/** Tuần có tiêu chí "huy chương" (buổi biểu diễn cuối mỗi cấp). */
+const MEDAL_WEEKS = new Set(LEVELS.map((l) => l.weeks[1]));
+
+/**
+ * Tiêu chí qua tuần (§11; v5 — OWNER duyệt 2026-10-05). Hàm thuần — có test.
+ * Tiêu chí BÀI HÁT: lượt chơi trọn bài (không tập một câu, không tách tay) đạt ở 2 NGÀY khác nhau (passedOnDays).
+ * Tiêu chí APP (tai nghe / đọc nốt 8/10) và huy chương giữ như cũ.
+ */
 export function weekPassed(week: number, data: Readonly<AppData>): boolean {
   const sessions = sessionsOfWeek(data, week);
-  const runs = sessions.flatMap((s) => s.songRuns);
+  /** Bài `songId` trọn bài đạt ở 2 ngày (tempo: theo nhịp; minBpm: tốc độ tối thiểu). */
+  const song2 = (songId: string, tempo = false, minBpm = 0) => passedOnDays(sessions, (r) => passedWhole(r, songId, tempo, minBpm));
+  if (MEDAL_WEEKS.has(week)) {
+    return sessions.some((s) => s.parentAssessments.some((a) => a.note === 'medal' && a.result === 'correct'));
+  }
   switch (week) {
     case 1:
-      // Tìm C4 đúng 10/10 — bố mẹ xác nhận (PARENT) hoặc micro (MIC, đúng ngay lần đầu, không bị sửa)
+      // Tìm C4 ≥ 10 lần đúng, trượt TỐI ĐA 1 lần (v5 — chuyên gia UX: 10/10 tuyệt đối làm bé căng thẳng)
+      // — bố mẹ xác nhận (PARENT) hoặc micro (MIC, đúng ngay lần đầu, không bị sửa)
       return sessions.some((s) => {
         if (s.lessonId !== 'w1-test') return false;
         const c4 = s.parentAssessments.filter((a) => a.note === 'C4');
@@ -127,69 +191,74 @@ export function weekPassed(week: number, data: Readonly<AppData>): boolean {
         const micOk = (a: (typeof mic)[number]) => (a.parentOverride ? a.parentOverride === 'correct' : a.firstTry);
         const correct = c4.filter((a) => a.result === 'correct').length + mic.filter(micOk).length;
         const misses = c4.filter((a) => a.result === 'retry').length + mic.filter((a) => !micOk(a)).length;
-        return correct >= 10 && misses === 0;
+        return correct >= 10 && misses <= 1;
       });
-    case 2: {
-      // SELF: 2 buổi liền đều "Đàn được hết"
-      const rated = sessions.filter((s) => s.selfRating !== null);
-      for (let i = 1; i < rated.length; i++) {
-        if (rated[i - 1].selfRating === 'all' && rated[i].selfRating === 'all') return true;
-      }
-      return false;
-    }
+    case 2:
+      // v5: thay "bé tự chọn Đàn được hết" (SELF) bằng bằng chứng: "Bánh nóng" trọn bài (chế độ chờ được tính) — 2 ngày
+      return song2('hot_cross_buns');
     case 3:
       // APP: đoán nốt (có mốc Đô) đúng ≥ 8/10
       return ear8of10(sessions, (a) => isPitch(a.expected));
     case 4:
-      // Giữ nhịp đều ≥ 8 ô nhịp ở Mức 2 (ô 2/4 ngắn bằng nửa ô 4/4 → cần 16 ô)
-      return runs.some((r) => {
+      // Giữ nhịp đều ≥ 8 ô nhịp ở Mức 2 (ô 2/4 ngắn bằng nửa ô 4/4 → cần 16 ô) — 2 ngày
+      return passedOnDays(sessions, (r) => {
         const t = findTune(r.songId);
-        return r.mode === 'tempo' && r.level === 2 && !r.phrase && together(r) && r.passed && !!t && measureCount(t) >= (beatsPerMeasure(t) < 3 ? 16 : 8);
+        return r.mode === 'tempo' && r.level === 2 && !r.phrase && together(r) && !!t && measureCount(t) >= (beatsPerMeasure(t) < 3 ? 16 : 8);
       });
     case 5:
-      return runs.some((r) => r.songId === 'ode_to_joy_easy' && r.mode === 'tempo' && r.bpm >= 60 && !r.phrase && together(r) && r.passed);
+      return song2('frog_hop', true);
     case 6:
+      return song2('ode_to_joy_easy', true, 60);
+    case 7:
       // Như tuần 3, dải tay trái
       return ear8of10(sessions, (a) => isPitch(a.expected) && a.expected.endsWith('3'));
-    case 7:
-      return runs.some(
-        (r) => r.songId === 'ode_to_joy_easy' && r.mode === 'tempo' && r.hints === 'staff' && !r.phrase && together(r) && r.passed,
-      );
     case 8:
-    case 16:
-    case 25:
-      return sessions.some((s) => s.parentAssessments.some((a) => a.note === 'medal' && a.result === 'correct'));
+      return passedOnDays(sessions, (r) => passedWhole(r, 'ode_to_joy_easy', true) && r.hints === 'staff');
     case 9:
-      return runs.some((r) => passedWhole(r, 'question_answer'));
-    case 10:
-      return runs.some((r) => passedWhole(r, 'ode_to_joy_both', true));
+      return song2('inh_la_oi', true);
     case 11:
-      return runs.some((r) => passedWhole(r, 'ode_to_joy_g', true, 60));
+      return song2('question_answer');
     case 12:
-      return runs.some((r) => passedWhole(r, 'waltz_cat', true));
+      return song2('ode_to_joy_both', true);
     case 13:
-      return runs.some((r) => passedWhole(r, 'ode_to_joy_d', true, 60));
+      return song2('bell_tower', true);
     case 14:
-      return runs.some((r) => passedWhole(r, 'ode_to_joy_original', true, 60));
+      return song2('ode_to_joy_g', true, 60);
     case 15:
-      return runs.some((r) => passedWhole(r, 'scale_c_rh', true)) && runs.some((r) => passedWhole(r, 'scale_c_lh', true));
+      return song2('waltz_cat', true);
+    case 16:
+      return song2('ode_to_joy_d', true, 60);
     case 17:
-      return runs.some((r) => passedWhole(r, 'ode_to_joy_chords', true));
+      return song2('ode_to_joy_original', true, 60);
     case 18:
-      return runs.some((r) => passedWhole(r, 'silent_night'));
+      // Bài có móc kép khởi đầu ở tốc độ 40 — tiêu chí là ĐÚNG NHỊP, không đòi nhanh
+      return song2('ly_cay_da', true);
     case 19:
+      return song2('scale_c_rh', true) && song2('scale_c_lh', true);
+    case 21:
+      return song2('ode_to_joy_chords', true);
+    case 22:
+      // APP: đọc nốt có dòng kẻ phụ đúng ≥ 8/10
+      return ear8of10(sessions, (a) => LEDGER_NOTES.includes(a.expected));
+    case 23:
+      return song2('silent_night');
+    case 24:
       return ear8of10(sessions, (a) => a.expected === 'major' || a.expected === 'minor');
-    case 20:
+    case 25:
       // APP: đọc nốt cao (Đô5–Sol5) đúng ≥ 8/10
       return ear8of10(sessions, (a) => HIGH_NOTES.includes(a.expected));
-    case 21:
-      return runs.some((r) => passedWhole(r, 'minuet_g'));
-    case 22:
-      return runs.some((r) => passedWhole(r, 'fur_elise'));
-    case 23:
-      return runs.filter((r) => r.songId.startsWith('sight') && r.passed).length >= 5;
-    case 24:
-      return runs.some((r) => passedWhole(r, 'saints_both', true));
+    case 26: {
+      // Đọc nhạc ngẫu nhiên: ≥ 5 đoạn đạt (bằng chứng hợp lệ), trải trên ≥ 2 ngày
+      const sight = (r: Run) => r.songId.startsWith('sight');
+      const n = sessions.flatMap((s) => s.songRuns).filter((r) => sight(r) && runIsEvidence(r)).length;
+      return n >= 5 && passedOnDays(sessions, sight);
+    }
+    case 27:
+      return song2('saints_both', true);
+    case 28:
+      return song2('minuet_g');
+    case 29:
+      return song2('fur_elise');
     default:
       return false;
   }
@@ -451,6 +520,53 @@ export function buildSessionPlan(
 }
 
 /**
+ * v5 — Ước lượng THÔ thời lượng một buổi (phút), để kiểm "buổi ≤ 15 phút" (test pacing). Không dùng để hẹn giờ.
+ * Phần cố định: tư thế 1 · ôn nhanh 1 · khởi động 1,5 · con làm thầy 1 · tổng kết 0,5.
+ * Hoạt động: kỹ thuật 1 · từng nốt 0,3/việc · trò nghe/đọc 0,2/lượt · nhịp 0,4/mẫu · đọc nhạc 1/đoạn
+ * · sáng tạo 2 (sáng tác 3) · sắc thái 0,3/lượt · bài hát chờ 3 giây/nốt + 0,5 · theo nhịp 2 lượt cả bài + 0,5.
+ */
+export function estimateLessonMinutes(lesson: Lesson): number {
+  if (lesson.activities.some((a) => a.kind === 'stage')) return 0;
+  let m = 5;
+  for (const a of lesson.activities) {
+    switch (a.kind) {
+      case 'technique':
+        m += 1;
+        break;
+      case 'notes':
+        m += 0.3 * a.segment.targets.length;
+        break;
+      case 'quiz':
+        m += 0.2 * a.quiz.rounds;
+        break;
+      case 'rhythm':
+        m += 0.4 * a.patterns.length;
+        break;
+      case 'sight':
+        m += a.count;
+        break;
+      case 'improv':
+        m += a.mode === 'compose' ? 3 : 2;
+        break;
+      case 'dynamics':
+        m += 0.3 * a.rounds.length;
+        break;
+      case 'song': {
+        const t = findTune(a.songId);
+        if (!t) break;
+        const notes = [...t.notes, ...(t.lh ?? [])].filter((n) => !n.rest).length;
+        const beats = t.notes.reduce((x, n) => x + n.beats, 0);
+        m += a.mode === 'wait' ? (notes * 3) / 60 + 0.5 : (2 * beats) / Math.max(40, t.bpm) + 0.5;
+        break;
+      }
+      default:
+        break;
+    }
+  }
+  return Math.round(m * 10) / 10;
+}
+
+/**
  * Chọn bài cho bước "Ôn bài cũ": bài của tuần (lesson.week − 4 … lesson.week − 2), không có trong bài hôm nay.
  * Ưu tiên: đã thuộc nhưng không còn "tươi" (> FRESH_DAYS ngày) → lượt cả bài gần nhất KHÔNG đạt → lâu chưa chơi nhất.
  * Hoà điểm → rng. Tốc độ: 60 nếu bài đã thuộc, còn lại 50.
@@ -488,7 +604,7 @@ export function reviewSongStep(
     phrase: [a, b],
     bpm: best.mastered ? 60 : 50,
     level: 2,
-    hints: lesson.week >= 7 ? 'names' : 'full',
+    hints: lesson.week >= 8 ? 'names' : 'full',
     intro: '🔁 Ôn bài cũ — đàn lại câu đầu cho nhớ lâu nhé!',
   };
 }
@@ -510,6 +626,8 @@ export function warmupTitle(q: QuizSpec): string {
     identify: 'Nốt nào đây? 👂',
     read: q.clef === 'bass' ? 'Đọc nốt khóa Fa 📖' : 'Đọc nốt 📖',
     majorminor: 'Vui hay buồn? 😊😢',
+    interval: 'Bước hay nhảy trên khuông? 👣🐸',
+    landmark: 'Nốt mốc 🏠',
   }[q.variant];
 }
 
@@ -520,6 +638,8 @@ function warmupIntro(q: QuizSpec): string {
     identify: 'Đầu tiên app đàn nốt Đô làm mốc, rồi đàn một nốt bí ẩn. Con chạm đúng phím nhé!',
     read: 'Nốt hiện trên khuông — con chạm đúng phím trên iPad.',
     majorminor: 'App rải một hợp âm. Nghe VUI (trưởng) hay BUỒN (thứ)?',
+    interval: 'Khuông hiện 2 nốt. Nốt sau GIỐNG, BƯỚC hay NHẢY so với nốt trước — đi lên hay đi xuống?',
+    landmark: 'Nhìn nốt trên khuông — đó là nốt mốc nào? Chọn tên hoặc chạm phím.',
   }[q.variant];
 }
 
@@ -533,7 +653,7 @@ export function minutesToday(data: Readonly<AppData>, today: string): number {
 }
 
 /**
- * LUYỆN TẬP MỖI NGÀY (sau tuần cuối MAX_WEEK, hoặc bất cứ lúc nào từ Cấp 2):
+ * LUYỆN TẬP MỖI NGÀY (sau tuần cuối MAX_WEEK, hoặc bất cứ lúc nào từ Cấp 2). Ngưỡng tuần theo giáo trình v5 (30 tuần):
  * ôn đọc nhạc + 1 bài CHƯA thuộc (từng nốt → theo nhịp) + 1 bài ĐÃ thuộc (giữ phong độ — ôn ngắt quãng).
  * v5: bài đã thuộc ưu tiên bài KHÔNG còn "tươi" (songFresh — lâu chưa chơi lại) = "ôn bài cũ".
  */
@@ -542,7 +662,7 @@ export function dailyLesson(data: Readonly<AppData>, rng: () => number = Math.ra
   const open = SONGS.filter((s) => (s.week ?? 1) <= week);
   const mastered = new Set(masteredSongs(data));
   const pick = <T,>(arr: T[]): T | undefined => arr[Math.floor(rng() * arr.length) % Math.max(1, arr.length)];
-  // Ưu tiên bài GẦN trình độ hiện tại (8 tuần gần nhất) — tránh tuần 25 lại tập bài tay trái tuần 1
+  // Ưu tiên bài GẦN trình độ hiện tại (8 tuần gần nhất) — tránh tuần 30 lại tập bài tay trái tuần 7
   const recent = open.filter((s) => (s.week ?? 1) >= week - 8);
   const notMastered = open.filter((s) => !mastered.has(s.id));
   const recentNotMastered = notMastered.filter((s) => recent.includes(s));
@@ -553,7 +673,7 @@ export function dailyLesson(data: Readonly<AppData>, rng: () => number = Math.ra
   // Một lần rng như trước: có bài "phai" thì chọn trong đó
   const keep = pick(stale.length ? stale : keepable);
   const keepStale = !!keep && stale.includes(keep);
-  const positions = week >= 20 ? (['C', 'G', 'C5'] as const) : week >= 11 ? (['C', 'G'] as const) : (['C'] as const);
+  const positions = week >= 25 ? (['C', 'G', 'C5'] as const) : week >= 14 ? (['C', 'G'] as const) : (['C'] as const);
   const position = positions[Math.floor(rng() * positions.length) % positions.length];
   const activities: Activity[] = [
     {
@@ -561,25 +681,25 @@ export function dailyLesson(data: Readonly<AppData>, rng: () => number = Math.ra
       title: 'Đọc nhạc mỗi ngày',
       position,
       // Thế Đô cao chỉ có tay phải
-      hand: week >= 9 && rng() < 0.3 && position !== 'C5' ? 'LH' : 'RH',
+      hand: week >= 11 && rng() < 0.3 && position !== 'C5' ? 'LH' : 'RH',
       count: 2,
-      rhythm: week >= 14 ? 2 : 1,
-      timeSignature: week >= 12 && rng() < 0.3 ? '3/4' : '4/4',
-      hints: week >= 18 ? 'staff' : 'names',
+      rhythm: week >= 17 ? 2 : 1,
+      timeSignature: week >= 15 && rng() < 0.3 ? '3/4' : '4/4',
+      hints: week >= 23 ? 'staff' : 'names',
     },
   ];
   if (learning) {
-    activities.push({ kind: 'song', songId: learning.id, mode: 'wait', hints: week >= 18 ? 'names' : 'full', intro: 'Bài đang tập — từng nốt trước nhé.' });
-    activities.push({ kind: 'song', songId: learning.id, mode: 'tempo', level: 2, hints: week >= 18 ? 'names' : 'full' });
+    activities.push({ kind: 'song', songId: learning.id, mode: 'wait', hints: week >= 23 ? 'names' : 'full', intro: 'Bài đang tập — từng nốt trước nhé.' });
+    activities.push({ kind: 'song', songId: learning.id, mode: 'tempo', level: 2, hints: week >= 23 ? 'names' : 'full' });
   }
   // Xen kẽ cho đỡ nhàm: thường là ôn bài đã thuộc; thỉnh thoảng trò tai nghe hoặc to/nhỏ – ngắt/liền
   const extra = rng();
-  if (extra < 0.2 && week >= 5) {
+  if (extra < 0.2 && week >= 6) {
     activities.push({
       kind: 'dynamics',
-      title: week >= 10 && rng() < 0.5 ? 'Ngắt hay liền?' : 'To hay nhỏ?',
+      title: week >= 12 && rng() < 0.5 ? 'Ngắt hay liền?' : 'To hay nhỏ?',
       intro: 'Thầy đàn mẫu — con đàn lại thật rõ kiểu nhé!',
-      ...(week >= 10 && rng() < 0.5
+      ...(week >= 12 && rng() < 0.5
         ? {
             mode: 'stac-leg' as const,
             rounds: [
@@ -601,7 +721,7 @@ export function dailyLesson(data: Readonly<AppData>, rng: () => number = Math.ra
     });
   } else if (extra < 0.35 && week >= 3) {
     const quiz: QuizSpec =
-      week >= 19 && rng() < 0.5
+      week >= 24 && rng() < 0.5
         ? { variant: 'majorminor', pool: ['C4', 'D4', 'F4', 'G4', 'A4'], rounds: 6 }
         : { variant: 'identify', pool: ['C4', 'D4', 'E4', 'F4', 'G4'], rounds: 6 };
     activities.push({ kind: 'quiz', title: quiz.variant === 'majorminor' ? 'Vui hay buồn? 😊😢' : 'Nốt nào đây? 👂', intro: 'Đôi tai giỏi — nghe rồi chọn nhé!', quiz });

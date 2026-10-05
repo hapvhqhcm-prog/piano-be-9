@@ -1,0 +1,187 @@
+{
+ "id": "echo_valley",
+ "title": "Echo Valley",
+ "titleVi": "Thung lũng tiếng vọng",
+ "composer": "Bài tự sáng tác cho app (piano-be-9)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Bài tự sáng tác cho app (piano-be-9)",
+ "attributionRequired": false,
+ "hand": "BOTH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 13,
+ "phrases": [
+  0,
+  4
+ ],
+ "notes": [
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1,
+   "dyn": "f",
+   "slur": "start"
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4,
+   "slur": "end"
+  },
+  {
+   "pitch": "G4",
+   "beats": 2,
+   "finger": 5
+  },
+  {
+   "pitch": "G4",
+   "beats": 2,
+   "finger": 5
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1,
+   "dyn": "p",
+   "slur": "start"
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4,
+   "slur": "end"
+  },
+  {
+   "pitch": "G4",
+   "beats": 2,
+   "finger": 5
+  },
+  {
+   "pitch": "G4",
+   "beats": 2,
+   "finger": 5
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5,
+   "dyn": "f",
+   "stac": true
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4,
+   "stac": true
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3,
+   "stac": true
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2,
+   "stac": true
+  },
+  {
+   "pitch": "C4",
+   "beats": 4,
+   "finger": 1
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5,
+   "dyn": "p",
+   "stac": true
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4,
+   "stac": true
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3,
+   "stac": true
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2,
+   "stac": true
+  },
+  {
+   "pitch": "C4",
+   "beats": 4,
+   "finger": 1
+  }
+ ],
+ "lh": [
+  {
+   "pitch": "C3",
+   "beats": 4,
+   "finger": 5
+  },
+  {
+   "pitch": "C3",
+   "beats": 4,
+   "finger": 5
+  },
+  {
+   "pitch": "C3",
+   "beats": 4,
+   "finger": 5
+  },
+  {
+   "pitch": "C3",
+   "beats": 4,
+   "finger": 5
+  },
+  {
+   "pitch": "G3",
+   "beats": 4,
+   "finger": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 4,
+   "finger": 5
+  },
+  {
+   "pitch": "G3",
+   "beats": 4,
+   "finger": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 4,
+   "finger": 5
+  }
+ ]
+}

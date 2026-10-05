@@ -1,5 +1,7 @@
 import { LEVELS, songFresh, songMastered } from '../../lessons/lessonEngine';
 import { SONGS, type Tune } from '../../music/tune';
+import { compositionToTune } from '../../practice/compose';
+import type { Composition } from '../../progress/schema';
 import type { App } from '../App';
 import { actionBar, backButton, h, toast } from '../components/dom';
 import { homeScreen } from './home';
@@ -39,6 +41,22 @@ export function libraryScreen(app: App) {
         h('div', { class: 'song-card-week' }, faded ? 'Ôn lại nhé!' : star ? 'Đã thuộc!' : `Tuần ${s.week}`),
       );
     };
+    // v5 — "🎼 Bài của con": bài bé tự sáng tác (trò Sáng tác), mới nhất trước; chạm để chơi như bài hát
+    const mine = [...(data.compositions ?? [])].sort((a, b) => b.createdAt - a.createdAt);
+    const compCard = (c: Composition) => {
+      const d = new Date(c.createdAt);
+      const bars = Math.round(c.notes.reduce((s, n) => s + n.beats, 0) / (Number(c.timeSignature.split('/')[0]) || 4));
+      return h(
+        'button',
+        { class: 'song-card comp-card', type: 'button', onClick: () => playSong(app, compositionToTune(c)) },
+        h('div', { class: 'song-card-title' }, h('span', {}, '🎼 ', c.title)),
+        h('div', { class: 'song-card-sub' }, `Con sáng tác · ${bars} ô nhịp`),
+        h('div', { class: 'song-card-week' }, `${d.getDate()}/${d.getMonth() + 1}`),
+      );
+    };
+    const mineSection = mine.length
+      ? h('section', { class: 'lib-mine' }, h('h2', { class: 'lib-level' }, '🎼 Bài của con'), h('div', { class: 'library' }, ...mine.map(compCard)))
+      : null;
     root.append(
       h(
         'div',
@@ -48,6 +66,7 @@ export function libraryScreen(app: App) {
           'div',
           { class: 'library-wrap scrollable' },
           h('p', { class: 'muted lib-note' }, `⭐ Đã thuộc ${SONGS.filter((x) => songMastered(data, x.id)).length}/${SONGS.length} bài — thuộc = đàn trọn bài theo nhịp từ 60 trở lên.`),
+          mineSection,
           ...LEVELS.map((lv) =>
             h(
               'section',
@@ -80,7 +99,8 @@ export function playSong(app: App, s: Tune): void {
       app,
       s,
       // Bài mới (của tuần này/tuần trước) có gợi ý đầy đủ; bài cũ thì chỉ tên nốt (đổi được trong màn bài hát)
-      { mode: 'wait', hints: week >= 7 && (s.week ?? 1) < week - 1 ? 'names' : 'full', free: true },
+      // Bài con tự sáng tác (không có tuần) → luôn gợi ý đầy đủ
+      { mode: 'wait', hints: week >= 7 && (s.week ?? week) < week - 1 ? 'names' : 'full', free: true },
       { onRun: (run) => store.addSongRun(session.id, run), onDone: leave, onBack: leave },
     ),
   );

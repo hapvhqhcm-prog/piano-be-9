@@ -1,0 +1,112 @@
+{
+ "id": "ferry_song",
+ "title": "Ferry Song",
+ "titleVi": "Đò qua sông",
+ "composer": "Bài tự sáng tác cho app (piano-be-9)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Bài tự sáng tác cho app (piano-be-9)",
+ "attributionRequired": false,
+ "hand": "RH",
+ "bpm": 60,
+ "timeSignature": "2/4",
+ "week": 9,
+ "extension": "A4",
+ "position": "free",
+ "phrases": [
+  0,
+  4
+ ],
+ "notes": [
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 3,
+   "dyn": "p"
+  },
+  {
+   "pitch": "F4",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 2,
+   "finger": 1
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "F4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "F4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "C4",
+   "beats": 2,
+   "finger": 1
+  }
+ ]
+}

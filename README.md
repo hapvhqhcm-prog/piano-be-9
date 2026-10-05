@@ -1,4 +1,4 @@
-# Piano bé — PIANO-BE-9-TUOI (3 cấp · 25 tuần · luyện tập mỗi ngày)
+# Piano bé — PIANO-BE-9-TUOI (3 cấp · 30 tuần · luyện tập mỗi ngày)
 
 **Bản đang chạy:** https://hapvhqhcm-prog.github.io/piano-be-9/
 
@@ -13,15 +13,19 @@ chỉ phím, chỉ ngón, phát âm mẫu. Khi bật micro, app **nghe đàn cơ
 
 ## Có gì trong app
 
-- **3 cấp, 25 tuần** (bản đồ đảo mỗi cấp), sau đó **Luyện tập mỗi ngày** không có điểm dừng:
-  - **Cấp 1 · Làm quen** (1–8): bàn phím, thế Đô hai tay, nhịp cơ bản, đọc nốt khóa Sol, to/nhỏ (p/f), nốt La (Sol–La ngón 4-5).
-  - **Cấp 2 · Hai tay** (9–16): Đô giữa tay trái & khóa Fa, hai tay luân phiên → cùng lúc, thế Sol, nhịp 3/4,
-    phím đen (Fa♯, Mi♭), nốt chấm dôi & móc đơn, gam Đô trưởng luồn ngón, ngắt tiếng/luyến, hòa nhạc Cấp 2.
-  - **Cấp 3 · Thành thạo** (17–25): hợp âm I–IV–V tay trái, đổi thế tay, trưởng/thứ, đọc nốt cao Đô5–Sol5, Minuet, Für Elise, Canon,
-    đọc nhạc hai khóa chỉ nhìn khuông, Đại hòa nhạc.
+- **3 cấp × 10 tuần = 30 tuần** (giáo trình v5, OWNER duyệt 2026-10-05), sau đó **Luyện tập mỗi ngày** không có điểm dừng.
+  **Mục tiêu cuối nói thật: ≈ hoàn thành Faber cấp 1 / đầu cấp 2** (không phải "thành thạo" theo nghĩa nhạc viện).
+  - **Cấp 1 · Làm quen** (1–10): bàn phím, thế Đô hai tay, nhịp Đi / Chạy-chạy (tuần 4) / 2/4 (tuần 9), đọc nốt khóa Sol theo
+    NỐT MỐC & QUÃNG, to/nhỏ (p/f), nốt La (Sol–La ngón 4-5), ứng tấu phím đen, Hỏi – Đáp; tuần củng cố 5; hòa nhạc tuần 10.
+  - **Cấp 2 · Hai tay** (11–20): Đô giữa tay trái & khóa Fa (nốt mốc), hai tay luân phiên → cùng lúc, củng cố hai tay (tuần 13),
+    thế Sol, nhịp 3/4, phím đen (Fa♯, Mi♭), chấm dôi, MÓC KÉP & NGHỊCH PHÁCH & DÂY NỐI (tuần 18), gam luồn ngón (tuần 19), sáng tác 4 ô nhịp.
+  - **Cấp 3 · Vững vàng** (21–30): hợp âm I–IV–V, DÒNG KẺ PHỤ & KHUÔNG LỚN (tuần 22), đổi thế, trưởng/thứ, nốt cao Đô5–Sol5,
+    đọc nhạc hai khóa, bài hai tay, rồi Minuet (tuần 28), Für Elise (tuần 29), Đại hòa nhạc (tuần 30).
+- **Khởi động kỹ thuật 1'** đầu tuần (thả rơi cánh tay, xoay cổ tay, tay tròn, gõ ngón, 5 ngón p/f, luồn ngón cái).
+- **Tiêu chí qua tuần** bằng bài hát: đạt ở **2 ngày khác nhau** (micro, hoặc phiếu 3 ý của bố mẹ: đúng nốt · đều nhịp · đúng ngón).
 - **Mỗi buổi 10–15'**: Tư thế → Ôn nhanh → Khởi động tai/đọc nốt → Bài mới → Con làm thầy → Tự đánh giá.
-- **Trò chơi**: Lên hay xuống? · Bước hay nhảy? · Nốt nào đây? (có mốc) · Đọc nốt khóa Sol/Fa · Vui hay buồn? (trưởng/thứ) · Nhại lại · Vỗ nhịp.
-- **49 bài hát** public domain / tự sáng tác + 2 bài tập nhịp; **Thư viện** (⭐ bài đã thuộc) để bé tự chọn bài.
+- **Trò chơi**: Lên hay xuống? · Bước hay nhảy? · Nốt nào đây? (có mốc) · Đọc nốt khóa Sol/Fa · Nốt mốc · Giống/bước/nhảy trên khuông (quãng) · Vui hay buồn? · Nhại lại · Vỗ nhịp · Sáng tạo (phím đen, hỏi – đáp, sáng tác).
+- **70 bài hát** public domain / dân ca Việt Nam / tự sáng tác + 2 bài tập nhịp; **Thư viện** (⭐ bài đã thuộc) để bé tự chọn bài.
 - **Đọc nhạc ngẫu nhiên**: app sinh đoạn nhạc mới mỗi lần (đúng thế tay, nhịp 4/4 hoặc 3/4) — luyện đọc vô hạn.
 - **Màn bài hát**: Từng nốt (chờ bé đàn đúng) · Theo nhịp (đếm vào, máy gõ nhịp, nhạc đệm; con trỏ hoặc băng chuyền) ·
   tập từng câu · tốc độ 40/50/60 · khuông nhạc với gợi ý rút dần (phím sáng → tên nốt → chỉ khuông).
@@ -30,7 +34,7 @@ chỉ phím, chỉ ngón, phát âm mẫu. Khi bật micro, app **nghe đàn cơ
   có tiếng và phụ đề) — tự phát khi mở mỗi phần bài học, nút 🎬 Xem lại / 🎬 Xem mẫu cho mọi bài hát (cả hai tay, luồn ngón).
 - **Giao diện**: nhân vật "Bé Nốt", bàn tay vẽ mới (móng, đốt ngón, số trên đầu ngón), phím đàn có chiều sâu, pháo giấy khi
   làm đúng, tranh minh họa tư thế ngồi, bản đồ đảo — toàn bộ bằng CSS/SVG, không tải ảnh/video.
-- Chạm phím → **số ngón nảy lên** + hình bàn tay; tay trái màu cam từ tuần 6; La = ngón 5 duỗi từ tuần 7.
+- Chạm phím → **số ngón nảy lên** + hình bàn tay; tay trái màu cam từ tuần 7; La = ngón 5 duỗi từ tuần 8.
 
 ## Chạy trên máy (Windows)
 
@@ -107,9 +111,9 @@ Các trường:
 ```
 
 Luật (test `tests/song-validation.test.ts` kiểm tra tự động):
-- RH: mọi nốt trong C4–G4, ngón đúng §6 (C4=1 D4=2 E4=3 F4=4 G4=5); bài có `"extension": "A4"` thêm A4 = ngón 5 duỗi (chỉ tuần 7–8).
+- RH: mọi nốt trong C4–G4, ngón đúng §6 (C4=1 D4=2 E4=3 F4=4 G4=5); bài có `"extension": "A4"` thêm A4 = ngón 5 duỗi (từ tuần 8).
 - LH: C3–G3 (C3=5 D3=4 E3=3 F3=2 G3=1).
-- Tổng phách chia hết cho 4. Không thêm trường lạ.
+- Tổng phách tròn ô nhịp. Không thêm trường lạ. p/mf/f từ tuần 6, ngắt/luyến từ tuần 12, nhịp 2/4 từ tuần 9, móc kép từ tuần 18 (gen-songs.py tự kiểm).
 - Mọi thay đổi bài hát cần OWNER duyệt (CURRICULUM LOCK). Thêm bài thì sửa số lượng trong `tests/song-validation.test.ts`.
 - Muốn bài xuất hiện trong giáo trình: thêm `{ kind: 'song', songId: '…' }` vào bài học trong `src/lessons/weekN.ts`.
   Mọi bài tự xuất hiện trong **Thư viện** từ tuần `week`.
@@ -121,8 +125,8 @@ src/audio/        AudioEngine.ts (tiếng giống piano, gõ nhịp), pitchDetec
 src/music/        tune.ts (bài hát, câu, nhạc đệm), timing.ts (chấm nhịp), staff.ts (khuông), exercises.ts
 src/piano/        pitchTable.ts, fingering.ts (khóa cứng §6 + A4 duỗi), PianoKey.ts, PianoKeyboard.ts
 src/practice/     PracticeStateMachine.ts (§5), quiz.ts (trò nghe/đọc)
-src/lessons/      lessonEngine.ts (kế hoạch buổi, tiêu chí 8 tuần), week1–8.ts, types.ts, targets.ts
-src/progress/     schema.ts (v1), migrations.ts, ProgressStore.ts
+src/lessons/      lessonEngine.ts (kế hoạch buổi, tiêu chí 30 tuần), week1–10.ts, level2.ts, level3.ts, types.ts, targets.ts
+src/progress/     schema.ts (v1, CURRICULUM_REV 3), migrations.ts (rev 1→2→3, bảng tuần OLD→NEW), ProgressStore.ts
 src/ui/           App.ts, screens/, components/
 src/pwa/          sw-template.js (vite.config.ts sinh dist/sw.js)
 tests/            test tự động: ngón, cao độ, schema, bài hát, state machine, giáo trình, micro, nhịp, khuông, trò chơi

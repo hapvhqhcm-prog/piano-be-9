@@ -21,12 +21,13 @@ const ALLOWED = [
   'hand', 'bpm', 'timeSignature', 'week', 'extension', 'position', 'lh', 'lhPosition', 'phrases', 'notes',
 ];
 
-it('có 56 bài hát, id không trùng, đủ tuần 2–24 (trừ 16 — hòa nhạc)', () => {
+it('có 70 bài hát (56 cũ + 14 bài tự sáng tác v5), id không trùng, đủ tuần 2–29 (trừ 20 — hòa nhạc Cấp 2)', () => {
   // 51 bài + 6 bài dân ca Việt Nam − "Cầu London — chấm dôi" (bài lặp, thay bằng "Bắc kim thang") — OWNER yêu cầu 2026-10-05
-  expect(SONGS).toHaveLength(56);
-  expect(new Set(SONGS.map((s) => s.id)).size).toBe(56);
+  // v5 (OWNER duyệt 2026-10-05): + 14 bài tự sáng tác cho tuần củng cố / tuần nhịp mới (giữ đủ 56 bài cũ)
+  expect(SONGS).toHaveLength(70);
+  expect(new Set(SONGS.map((s) => s.id)).size).toBe(70);
   const weeks = new Set(SONGS.map((s) => s.week));
-  for (const w of [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22, 23, 24]) expect(weeks.has(w)).toBe(true);
+  for (let w = 2; w <= 29; w++) if (w !== 20) expect(weeks.has(w), `tuần ${w}`).toBe(true);
 });
 
 it('giảm bài lặp (OWNER duyệt 2026-10-05): Bài ca niềm vui ≤ 6, Chú cừu ≤ 3; có 4 bài tự sáng tác mới', () => {
@@ -50,7 +51,7 @@ describe.each(SONGS.map((s) => [s.id, s] as const))('bài hát %s', (_id, song: 
     expect(song.bpm).toBe(has16th ? 40 : 60);
   });
 
-  it('sắc thái / ngắt / luyến (v4) hợp lệ: p/mf/f từ tuần 5, ngắt & luyến từ tuần 10, luyến đóng mở đúng', () => {
+  it('sắc thái / ngắt / luyến (v4) hợp lệ: p/mf/f từ tuần 6, ngắt & luyến từ tuần 12, luyến đóng mở đúng', () => {
     for (const v of [song.notes, song.lh ?? []]) {
       let open = false;
       let cur: string | undefined;
@@ -60,13 +61,13 @@ describe.each(SONGS.map((s) => [s.id, s] as const))('bài hát %s', (_id, song: 
           expect(['p', 'mf', 'f']).toContain(n.dyn);
           expect(n.dyn).not.toBe(cur); // không ghi lặp cùng một sắc thái
           cur = n.dyn;
-          expect(song.week).toBeGreaterThanOrEqual(5);
+          expect(song.week).toBeGreaterThanOrEqual(6);
         }
         if (n.rest) {
           expect(n.stac ?? n.slur).toBeUndefined();
           continue;
         }
-        if (n.stac !== undefined || n.slur !== undefined) expect(song.week).toBeGreaterThanOrEqual(10);
+        if (n.stac !== undefined || n.slur !== undefined) expect(song.week).toBeGreaterThanOrEqual(12);
         if (n.stac !== undefined) {
           expect(n.stac).toBe(true);
           expect(open).toBe(false); // không ngắt trong dấu luyến
@@ -90,13 +91,13 @@ describe.each(SONGS.map((s) => [s.id, s] as const))('bài hát %s', (_id, song: 
     expect(validateTune(song)).toEqual([]);
   });
 
-  it('nốt La duỗi chỉ ở thế Đô từ tuần 7; tay trái / hai tay đúng tuần', () => {
+  it('nốt La duỗi chỉ ở thế Đô từ tuần 8; tay trái / hai tay đúng tuần', () => {
     if ((song.position ?? 'C') === 'C' && song.notes.some((n) => n.pitch === 'A4')) {
       expect(song.extension).toBe('A4');
-      expect(song.week).toBeGreaterThanOrEqual(7);
+      expect(song.week).toBeGreaterThanOrEqual(8);
     }
-    if (song.hand === 'LH') expect(song.week).toBeGreaterThanOrEqual(6);
-    if (song.hand === 'BOTH') expect(song.week).toBeGreaterThanOrEqual(9);
+    if (song.hand === 'LH') expect(song.week).toBeGreaterThanOrEqual(7);
+    if (song.hand === 'BOTH') expect(song.week).toBeGreaterThanOrEqual(11);
   });
 
   it('câu nhạc phủ kín bài; bàn phím ảo chứa mọi nốt', () => {

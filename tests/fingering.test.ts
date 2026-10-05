@@ -23,20 +23,20 @@ describe('fingering (§6 — khóa cứng)', () => {
     expect(Object.isFrozen(LH_FINGERING)).toBe(true);
   });
 
-  it('mọi nốt có số ngón trong bài học khớp bảng thế tay (§6 tuần 1–8; thế mới từ tuần 9)', () => {
+  it('mọi nốt có số ngón trong bài học khớp bảng thế tay (§6 Cấp 1 tuần 1–10; thế mới từ tuần 11)', () => {
     const POS = ['C', 'MC', 'G', 'D', 'Cm', 'Am', 'C5'] as const;
-    // Tuần 1–8: bảng thế Đô; từ tuần 7 thêm "thế Đô nhích lên" Sol–La = 4-5 (OWNER duyệt 2026-10-05)
+    // Cấp 1 (tuần 1–10, v5): bảng thế Đô; từ tuần 8 thêm "thế Đô nhích lên" Sol–La = 4-5 (OWNER duyệt 2026-10-05)
     const okFinger = (pitch: string, hand: 'RH' | 'LH', f: number | undefined, week: number) =>
-      week <= 8
-        ? f === fingerFor(pitch, hand, true) || (week >= 7 && hand === 'RH' && RH_SOL_LA[pitch] === f)
+      week <= 10
+        ? f === fingerFor(pitch, hand, true) || (week >= 8 && hand === 'RH' && RH_SOL_LA[pitch] === f)
         : POS.some((p) => fingerInPosition(pitch, hand, p, true) === f);
     for (const w of PHASE1_WEEKS) {
       for (const l of w.lessons) {
         for (const a of l.activities) {
           if (a.kind !== 'notes') continue;
           for (const t of a.segment.targets) {
-            if (t.hand === 'LH') expect(w.week).toBeGreaterThanOrEqual(6);
-            if (t.keys.includes('A4')) expect(w.week).toBeGreaterThanOrEqual(7);
+            if (t.hand === 'LH') expect(w.week).toBeGreaterThanOrEqual(7);
+            if (t.keys.includes('A4')) expect(w.week).toBeGreaterThanOrEqual(8);
             if (t.sequence || t.fingers) {
               t.keys.forEach((k, i) => {
                 const f = t.fingers?.[i] ?? fingerFor(k, t.hand ?? 'RH', true);
@@ -69,8 +69,8 @@ describe('Sol–La ngón 4-5 (OWNER duyệt 2026-10-05)', () => {
     expect(Object.isFrozen(RH_SOL_LA)).toBe(true);
   });
 
-  it('tuần 1–6 không có La và Sol luôn là ngón 5', () => {
-    for (const w of PHASE1_WEEKS.filter((x) => x.week <= 6)) {
+  it('tuần 1–7 không có La và Sol luôn là ngón 5', () => {
+    for (const w of PHASE1_WEEKS.filter((x) => x.week <= 7)) {
       for (const l of w.lessons) {
         for (const a of l.activities) {
           if (a.kind === 'notes') {
@@ -85,14 +85,14 @@ describe('Sol–La ngón 4-5 (OWNER duyệt 2026-10-05)', () => {
         }
       }
     }
-    for (const s of SONGS.filter((x) => (x.week ?? 0) <= 6)) {
+    for (const s of SONGS.filter((x) => (x.week ?? 0) <= 7)) {
       expect(s.notes.some((n) => n.pitch === 'A4'), s.id).toBe(false);
       for (const n of s.notes) if (n.pitch === 'G4' && s.hand !== 'LH') expect(n.finger, s.id).toBe(5);
     }
   });
 
-  it('tuần 7 dạy Sol–La–Sol bằng ngón 4-5-4', () => {
-    const w7 = PHASE1_WEEKS.find((w) => w.week === 7)!;
+  it('tuần 8 dạy Sol–La–Sol bằng ngón 4-5-4', () => {
+    const w7 = PHASE1_WEEKS.find((w) => w.week === 8)!;
     const targets = w7.lessons.flatMap((l) => l.activities.flatMap((a) => (a.kind === 'notes' ? a.segment.targets : [])));
     const gag = targets.find((t) => t.sequence && t.keys.join() === 'G4,A4,G4');
     expect(gag?.fingers).toEqual([4, 5, 4]);

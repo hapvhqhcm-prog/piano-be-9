@@ -8,10 +8,12 @@ export const SCHEMA_VERSION = 1 as const;
  * (+) Phiên bản GIÁO TRÌNH (khác schemaVersion — chỉ đổi cách đánh số tuần / mã bài học, không đổi cấu trúc).
  * 1 = 24 tuần (trước 2026-10-05) · 2 = 25 tuần: chèn tuần 20 "Đọc nốt cao Đô5–Sol5", tuần 20–24 cũ thành 21–25
  * (OWNER duyệt 2026-10-05). Dữ liệu thiếu trường này = rev 1 → migrations.ts đánh số lại một lần.
+ * 3 = 30 tuần (giáo trình v5, OWNER duyệt 2026-10-05): 3 cấp × 10 tuần, thêm tuần củng cố / nhịp 2/4 / móc kép /
+ * dòng kẻ phụ, Minuet & Für Elise dời xuống cuối Cấp 3 — bảng đánh số OLD→NEW trong migrations.ts (rev 1 đi qua rev 2 trước).
  */
-export const CURRICULUM_REV = 2;
+export const CURRICULUM_REV = 3;
 /**
- * Giới hạn kiểm tra tuần (giáo trình hiện có 25 tuần; để rộng cho các cấp sau).
+ * Giới hạn kiểm tra tuần (giáo trình hiện có 30 tuần; để rộng cho các cấp sau).
  * LỖI ĐÃ SỬA 2026-10-04: trước đây giới hạn là 8 → lên tuần 9 thì dữ liệu bị coi là hỏng và bị đặt lại.
  */
 export const MAX_WEEK_LIMIT = 52;
@@ -274,6 +276,32 @@ export function validateAppData(x: unknown): string[] {
           if (!isObj(a) || typeof a.firstTry !== 'boolean') errs.push(`sessions[${i}].micAssessments[${j}]`);
         });
     });
+  }
+  // (+ v5) Bài bé sáng tác — không có = []
+  if (x.compositions !== undefined) {
+    if (!Array.isArray(x.compositions)) errs.push('compositions');
+    else
+      x.compositions.forEach((c, i) => {
+        if (
+          !isObj(c) ||
+          typeof c.id !== 'string' ||
+          typeof c.title !== 'string' ||
+          typeof c.createdAt !== 'number' ||
+          !['4/4', '3/4'].includes(c.timeSignature as string) ||
+          !Array.isArray(c.notes) ||
+          !c.notes.every(
+            (n) =>
+              isObj(n) &&
+              typeof n.beats === 'number' &&
+              Number.isFinite(n.beats) &&
+              n.beats > 0 &&
+              (n.pitch === undefined || (typeof n.pitch === 'string' && /^[A-G](#|b)?-?\d$/.test(n.pitch))) &&
+              (n.pitch !== undefined || n.rest === true),
+          )
+        ) {
+          errs.push(`compositions[${i}]`);
+        }
+      });
   }
   return errs;
 }
