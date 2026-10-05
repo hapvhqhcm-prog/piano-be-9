@@ -12,8 +12,12 @@ import { spawn } from 'node:child_process';
 import { mkdirSync, writeFileSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { SCENES, SIZES } from './shots.scenes.mjs';
+import { pathToFileURL } from 'node:url';
 
+// SHOTS_SCENES=<tệp .mjs> để dùng danh sách cảnh khác (vd cảnh đo đạc tạm thời)
+const { SCENES, SIZES } = await import(
+  process.env.SHOTS_SCENES ? pathToFileURL(resolve(process.env.SHOTS_SCENES)).href : './shots.scenes.mjs'
+);
 const OUT = resolve(process.argv[2] ?? 'shots');
 const FILTER = process.argv[3] ?? '';
 const URL = process.env.SHOTS_URL ?? 'http://localhost:5173/piano-be-9/';

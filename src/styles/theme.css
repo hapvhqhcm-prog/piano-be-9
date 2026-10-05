@@ -576,10 +576,12 @@ h3,
 .hand-art.hand-lh .f.on {
   filter: drop-shadow(0 0 6px rgba(242, 140, 40, 0.8));
 }
-.hand-art .f-inner {
+/* Hiệu ứng "nhấn" đặt ở lớp NGOÀI (.f): lớp trong (.f-inner) giữ thuộc tính xoay của ngón cái —
+   trước đây transform CSS ở .f-inner GHI ĐÈ góc xoay → ngón cái dựng đứng, chồng lên ngón 2 khi được nhấn */
+.hand-art .f {
   transition: transform 0.18s;
 }
-.hand-art .f.press .f-inner {
+.hand-art .f.press {
   transform: translateY(5px);
   transition: transform 0.08s;
 }

@@ -12,7 +12,8 @@ const SVG = 'http://www.w3.org/2000/svg';
  */
 export const HAND_VIEW = { w: 220, h: 210, tipY: 34, spacing: 33 };
 /** x đầu ngón tay phải 1..5 (index 0 = ngón 1) */
-export const RH_TIP_X = [51, 80, 113, 146, 179];
+// Đầu ngón (tâm) theo trục x — ngón cái: gốc cao hơn, chĩa ra ngoài 26° (tâm đầu ngón ≈ x 47, y 64 — gần hàng đầu các ngón)
+export const RH_TIP_X = [47, 80, 113, 146, 179];
 
 interface FingerGeom {
   n: number;
@@ -24,7 +25,9 @@ interface FingerGeom {
 }
 
 const FINGERS: FingerGeom[] = [
-  { n: 1, cx: 88, w: 31, ty: 62, by: 152, rot: { deg: -27.7, x: 88, y: 152 } },
+  // Ngón cái dài & chĩa ra ngoài hơn (trước: ty 62, −27,7°) — để phần lớn ngón LÒI RA khỏi lòng bàn tay,
+  // không bị che khi bàn tay mờ phủ trên phím đàn
+  { n: 1, cx: 84, w: 31, ty: 40, by: 140, rot: { deg: -26, x: 84, y: 140 } },
   { n: 2, cx: 80, w: 29, ty: 30, by: 112 },
   { n: 3, cx: 113, w: 30, ty: 18, by: 112 },
   { n: 4, cx: 146, w: 28, ty: 28, by: 112 },
@@ -106,7 +109,8 @@ export function handArt(
     inner.append(el('path', { d: `M${f.cx - f.w * 0.28},${crease} q${f.w * 0.28},4 ${f.w * 0.56},0`, class: 'f-crease' }));
     // số ngón
     const b = el('g', { class: 'f-badge' });
-    const by = f.ty + f.w * 0.62 + 22;
+    // Số ngón cái đặt gần đầu ngón (phần nằm ngoài lòng bàn tay)
+    const by = f.n === 1 ? f.by - 82 : f.ty + f.w * 0.62 + 22;
     b.append(el('circle', { cx: f.cx, cy: by, r: 12 }));
     const t = el('text', {
       x: f.cx,
