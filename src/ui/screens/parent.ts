@@ -10,6 +10,7 @@ import { homeScreen } from './home';
 import { micTestScreen } from './micTest';
 import { APP_VERSION, checkForUpdate, isUpdateReady } from '../../pwa/updater';
 import { startScreen } from './start';
+import { onboardingScreen } from './onboarding';
 
 const RATING_LABEL = { all: '😄 Đàn được hết', some: '🙂 Còn vấp vài chỗ', hard: '😅 Khó quá' } as const;
 
@@ -150,7 +151,12 @@ export function parentScreen(app: App) {
           'header',
           { class: 'parent-head' },
           h('h1', {}, '👪 Phụ huynh'),
-          button({ icon: '←', label: 'Về màn của bé', kind: 'primary', onTap: () => app.show(homeScreen(app)) }),
+          h(
+            'div',
+            { class: 'parent-head-actions' },
+            button({ icon: '📖', label: 'Hướng dẫn', onTap: () => app.show(onboardingScreen(app, { onDone: () => app.show(parentScreen(app)) })) }),
+            button({ icon: '←', label: 'Về màn của bé', kind: 'primary', onTap: () => app.show(homeScreen(app)) }),
+          ),
         ),
         message ? h('div', { class: 'banner' }, message) : null,
         store.recoveredFromBackup

@@ -13,10 +13,10 @@ describe('đọc nhạc ngẫu nhiên', () => {
   ];
   it.each(cases)('$position/$hand: hợp lệ theo thế tay, đủ ô nhịp, kết thúc ở nốt chủ', (c) => {
     for (let k = 0; k < 25; k++) {
-      for (const ts of ['4/4', '3/4'] as const) {
+      for (const ts of ['4/4', '3/4', '2/4'] as const) {
         const t = makeSightTune({ ...c, measures: 3, rhythm: 2, timeSignature: ts });
         expect(validateTune(t)).toEqual([]);
-        expect(totalBeats(t)).toBe(ts === '3/4' ? 9 : 12);
+        expect(totalBeats(t)).toBe(ts === '3/4' ? 9 : ts === '2/4' ? 6 : 12);
         expect(t.notes[t.notes.length - 1].pitch).toBe(t.notes[0].pitch);
       }
     }

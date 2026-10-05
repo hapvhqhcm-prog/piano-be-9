@@ -1,7 +1,7 @@
 import { wait } from '../../audio/AudioEngine';
 import { matchHeard } from '../../audio/match';
 import { confetti } from '../components/celebrate';
-import { PASS_SCORE, TIMING_WINDOWS, gradeTiming, score as scoreOf, starsFor, type HeardEvent } from '../../music/timing';
+import { PASS_SCORE, TIMING_WINDOWS, countInBeats, countInLabel, gradeTiming, score as scoreOf, starsFor, type HeardEvent } from '../../music/timing';
 import {
   DYN_VOLUME,
   accompaniment,
@@ -453,9 +453,11 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
       staff.clearMarks();
       const spb = 60 / bpm;
       const bpmM = beatsPerMeasure(tune);
-      const t0 = app.audio.now() + 0.4 + bpmM * spb; // phách 0 của bài
+      const lead = countInBeats(bpmM);
+      const t0 = app.audio.now() + 0.4 + lead * spb; // phách 0 của bài
       const total = totalBeats(tune);
-      for (let b = -bpmM; b < total; b++) app.audio.click(t0 + b * spb, ((b % bpmM) + bpmM) % bpmM === 0);
+      // Tiếng "tích" nhấn mạnh ở phách 1 mỗi ô (2/4: mạnh–nhẹ, 3/4: mạnh–nhẹ–nhẹ, 4/4: mạnh–nhẹ–nhẹ–nhẹ)
+      for (let b = -lead; b < total; b++) app.audio.click(t0 + b * spb, ((b % bpmM) + bpmM) % bpmM === 0);
       scheduleAccomp(t0, spb);
       const heard: HeardEvent[] = [];
       const gs = groups();
@@ -481,7 +483,7 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
         if (tk !== token) return void unNote();
         const beat = (app.audio.now() - t0) / spb;
         if (beat < 0) {
-          countEl.textContent = beat < -bpmM ? ' ' : String(Math.max(1, bpmM - Math.ceil(-beat - 1e-6) + 1));
+          countEl.textContent = beat < -lead ? ' ' : String(countInLabel(beat, bpmM, lead));
         } else {
           if (state === 'countin') {
             state = 'playing';

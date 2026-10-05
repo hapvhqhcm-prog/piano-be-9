@@ -1,3 +1,4 @@
+import { earnedStickerIds } from '../../lessons/stickers';
 import { MAX_WEEK, activityDoneId, buildSessionPlan, levelOf, weekComplete, weekPlan } from '../../lessons/lessonEngine';
 import type { Activity, Lesson, Segment } from '../../lessons/types';
 import { findTune } from '../../music/exercises';
@@ -24,6 +25,8 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
   const store = app.store;
   // Đã qua tuần hiện tại TRƯỚC buổi này chưa — để 🏆 tuần cuối chỉ hiện đúng buổi vừa qua, không lặp mãi
   const passedBefore = weekComplete(store.get().progress.currentWeek, store.get());
+  // Sticker đã có trước buổi — màn kết thúc so sánh để chúc mừng sticker MỚI
+  const stickersBefore = earnedStickerIds(store.get());
   const session = store.startSession(lesson.id);
   const steps = buildSessionPlan(lesson, store.get(), opts);
   const wrapUp = steps.findIndex((s) => s.kind === 'teach' || s.kind === 'rating');
@@ -52,6 +55,7 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
     app.show(
       sessionEndScreen(app, {
         banner,
+        stickersBefore,
         onReplay: () => startSession(app, lesson, { replay: true }),
         onHome: () => app.show(homeScreen(app)),
       }),

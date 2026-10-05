@@ -13,7 +13,7 @@ export interface SightOptions {
   measures?: number;
   /** 1 = chỉ nốt đen/trắng; 2 = thêm móc đơn & nốt trắng chấm; */
   rhythm?: 1 | 2;
-  timeSignature?: '4/4' | '3/4';
+  timeSignature?: '4/4' | '3/4' | '2/4';
 }
 
 function positionMap(pos: Exclude<PositionId, 'free'>, hand: Hand): Record<Pitch, number> {
@@ -27,6 +27,10 @@ const RHYTHMS_44: Record<1 | 2, number[][]> = {
   1: [[1, 1, 1, 1], [1, 1, 2], [2, 1, 1], [2, 2], [1, 1, 1, 1]],
   2: [[1, 1, 1, 1], [0.5, 0.5, 1, 2], [1, 0.5, 0.5, 1, 1], [1.5, 0.5, 2], [2, 0.5, 0.5, 1]],
 };
+const RHYTHMS_24: Record<1 | 2, number[][]> = {
+  1: [[1, 1], [2], [1, 1]],
+  2: [[1, 1], [0.5, 0.5, 1], [1, 0.5, 0.5], [1.5, 0.5]],
+};
 const RHYTHMS_34: Record<1 | 2, number[][]> = {
   1: [[1, 1, 1], [2, 1], [1, 2]],
   2: [[1, 1, 1], [2, 1], [0.5, 0.5, 1, 1], [1.5, 0.5, 1]],
@@ -39,13 +43,13 @@ export function makeSightTune(o: SightOptions, rng: () => number = Math.random, 
   const tonicIdx = o.position === 'MC' ? keys.length - 1 : 0;
   const measures = o.measures ?? 2;
   const ts = o.timeSignature ?? '4/4';
-  const per = ts === '3/4' ? 3 : 4;
-  const bank = ts === '3/4' ? RHYTHMS_34[o.rhythm ?? 1] : RHYTHMS_44[o.rhythm ?? 1];
+  const per = Number(ts.split('/')[0]);
+  const bank = (per === 3 ? RHYTHMS_34 : per === 2 ? RHYTHMS_24 : RHYTHMS_44)[o.rhythm ?? 1];
   const notes: TuneNote[] = [];
   let idx = tonicIdx;
   for (let m = 0; m < measures; m++) {
     const last = m === measures - 1;
-    const pattern = last ? [per === 3 ? 1 : 2, per === 3 ? 2 : 2] : bank[Math.floor(rng() * bank.length) % bank.length];
+    const pattern = last ? (per === 2 ? [2] : [per === 3 ? 1 : 2, 2]) : bank[Math.floor(rng() * bank.length) % bank.length];
     pattern.forEach((beats, k) => {
       const isFinal = last && k === pattern.length - 1;
       if (isFinal) idx = tonicIdx;

@@ -69,7 +69,7 @@ export type Activity =
       count: number;
       measures?: number;
       rhythm?: 1 | 2;
-      timeSignature?: '4/4' | '3/4';
+      timeSignature?: '4/4' | '3/4' | '2/4';
       /** names = có tên nốt (Cấp 2), staff = chỉ khuông (Cấp 3) */
       hints: 'names' | 'staff';
     }

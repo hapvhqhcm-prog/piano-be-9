@@ -2,6 +2,7 @@ import type { App } from '../App';
 import { heroArt } from '../components/art/heroArt';
 import { button, h } from '../components/dom';
 import { homeScreen } from './home';
+import { onboardingScreen } from './onboarding';
 import { markSafePoint } from '../../pwa/updater';
 
 /** Màn đầu tiên: AudioContext CHỈ được tạo sau khi chạm "Bắt đầu" (§3). */
@@ -27,7 +28,11 @@ export function startScreen(app: App) {
           onTap: async () => {
             await app.audio.unlock();
             app.started = true;
-            app.show(homeScreen(app));
+            // Lần đầu dùng app (chưa có buổi học nào, chưa xem hướng dẫn) → hướng dẫn nhanh cho bố mẹ
+            const d = app.store.get();
+            if (!d.settings.onboardedAt && d.sessions.length === 0) {
+              app.show(onboardingScreen(app, { onDone: () => app.show(homeScreen(app)) }));
+            } else app.show(homeScreen(app));
           },
         }),
       ),

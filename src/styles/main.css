@@ -1047,6 +1047,11 @@ p {
   stroke-width: 2;
   fill: none;
 }
+/* Gạch nối móc đơn / móc kép (như bản in) */
+.staff-beam {
+  fill: #2b2a33;
+  stroke: none;
+}
 .staff-rest,
 .staff-rest-q {
   fill: #2b2a33;

@@ -44,8 +44,10 @@ describe.each(SONGS.map((s) => [s.id, s] as const))('bài hát %s', (_id, song: 
     for (const k of Object.keys(song)) expect(ALLOWED).toContain(k);
     expect(song.sourceStatus).toBe('public-domain');
     expect(song.attributionRequired).toBe(false);
-    expect(['4/4', '3/4']).toContain(song.timeSignature);
-    expect(song.bpm).toBe(60);
+    expect(['4/4', '3/4', '2/4']).toContain(song.timeSignature);
+    // Tốc độ theo nốt đen, trên thang 40–50–60–72; bài có móc kép (dân ca 2/4) khởi đầu chậm ở 40
+    const has16th = [...song.notes, ...(song.lh ?? [])].some((n) => n.beats < 0.5);
+    expect(song.bpm).toBe(has16th ? 40 : 60);
   });
 
   it('sắc thái / ngắt / luyến (v4) hợp lệ: p/mf/f từ tuần 5, ngắt & luyến từ tuần 10, luyến đóng mở đúng', () => {

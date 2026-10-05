@@ -14,6 +14,20 @@ const song = (id, opts) => `
   const { songScreen } = await import('/src/ui/screens/song.ts');
   app.show(songScreen(app, findSong('${id}'), ${opts}, ${hooks}));`;
 
+
+/** Dữ liệu mẫu cho Sổ sticker: tuần 12, 6 bài đã thuộc (có dân ca), chuỗi 8 ngày, huy chương cấp 1, trò To/nhỏ. */
+const seedStickers = `
+  const d = app.store.get(); d.progress.currentWeek = 12;
+  const { SONGS } = await import('/src/music/tune.ts');
+  const ids = ['ly_cay_da', ...SONGS.slice(0, 5).map((t) => t.id)];
+  const base = { parentAssessments: [], appAssessments: [], micAssessments: [], songRuns: [], selfRating: 'all', startedAt: 0, endedAt: 0, minutes: 12, completed: true, checklist: {} };
+  for (let i = 0; i < 8; i++) {
+    const day = new Date(2026, 8, 1 + i); const date = day.getFullYear() + '-' + String(day.getMonth() + 1).padStart(2, '0') + '-' + String(day.getDate()).padStart(2, '0');
+    d.sessions.push({ ...base, id: 'seed' + i, date, lessonId: 'w' + (i < 2 ? 8 : 9) + '-l1',
+      songRuns: i === 0 ? ids.map((id) => ({ songId: id, mode: 'tempo', bpm: 64, hints: 'full', total: 20, hits: 19, source: 'parent', passed: true, ts: 0 })) : [],
+      parentAssessments: i === 1 ? [{ note: 'medal', result: 'correct', ts: 0 }, ...[0, 1, 2].map((k) => ({ note: 'dyn:loud-soft:' + k, result: 'correct', ts: 0 }))] : [] });
+  }`;
+
 export const SCENES = [
   { name: 'start', js: `` },
   { name: 'home-w1', js: `const m = await import('/src/ui/screens/home.ts'); app.show(m.homeScreen(app));` },
@@ -120,5 +134,48 @@ export const SCENES = [
   {
     name: 'home-goalmet',
     js: `const s = app.store; s.setCurrentWeek(2); const m = await import('/src/ui/screens/home.ts'); app.show(m.homeScreen(app, '🏅 Con đã qua Đảo Phím Đen! Chặng tiếp: 🏠 Nhà Đô.'));`,
+  },
+  {
+    name: 'onboarding-1',
+    js: `const o = await import('/src/ui/screens/onboarding.ts'); app.show(o.onboardingScreen(app, { onDone() {} }));`,
+  },
+  ...[2, 3, 4].map((n) => ({
+    name: `onboarding-${n}`,
+    js: `const o = await import('/src/ui/screens/onboarding.ts'); app.show(o.onboardingScreen(app, { onDone() {} }));
+         for (let k = 1; k < ${n}; k++) { await new Promise((r) => setTimeout(r, 120)); [...document.querySelectorAll('.actions button')].pop()?.click(); }`,
+  })),
+  {
+    name: 'stickers-empty',
+    js: `const m = await import('/src/ui/screens/stickers.ts'); app.show(m.stickersScreen(app));`,
+  },
+  {
+    name: 'stickers',
+    js: `${seedStickers} const m = await import('/src/ui/screens/stickers.ts'); app.show(m.stickersScreen(app));`,
+  },
+  {
+    name: 'stickers-scrolled',
+    js: `${seedStickers} const m = await import('/src/ui/screens/stickers.ts'); app.show(m.stickersScreen(app));
+         await new Promise((r) => setTimeout(r, 200)); document.querySelector('.sticker-wrap').scrollTop = 9999;`,
+  },
+  {
+    name: 'home-stickers',
+    js: `${seedStickers} const m = await import('/src/ui/screens/home.ts'); app.show(m.homeScreen(app));`,
+  },
+  {
+    name: 'session-end-sticker',
+    js: `const st = await import('/src/lessons/stickers.ts');
+         ${seedStickers}
+         const before = st.earnedStickerIds(app.store.get()).filter((id) => !['island-11', 'streak-7'].includes(id));
+         const m = await import('/src/ui/screens/sessionEnd.ts');
+         app.show(m.sessionEndScreen(app, { banner: '🏅 Con đã qua Đảo Phím Đen! Chặng tiếp: 🏠 Nhà Đô.', stickersBefore: before, onReplay() {}, onHome() {} }));
+         await new Promise((r) => setTimeout(r, 3000));`,
+  },
+  {
+    name: 'session-end-sticker1',
+    js: `const st = await import('/src/lessons/stickers.ts'); app.store.setCurrentWeek(2); const before = st.earnedStickerIds(app.store.get());
+         app.store.setCurrentWeek(3);
+         const m = await import('/src/ui/screens/sessionEnd.ts');
+         app.show(m.sessionEndScreen(app, { stickersBefore: before, onReplay() {}, onHome() {} }));
+         await new Promise((r) => setTimeout(r, 3000));`,
   },
 ];

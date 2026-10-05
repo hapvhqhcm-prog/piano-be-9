@@ -1,5 +1,5 @@
 import { findTune } from '../music/exercises';
-import { measureCount } from '../music/tune';
+import { beatsPerMeasure, measureCount } from '../music/tune';
 import type { QuizSpec } from '../practice/quiz';
 import type { AppAssessment, AppData, Session } from '../progress/schema';
 import type { Activity, LevelInfo, Lesson, Segment, Target, WeekPlan } from './types';
@@ -119,10 +119,10 @@ export function weekPassed(week: number, data: Readonly<AppData>): boolean {
       // APP: đoán nốt (có mốc Đô) đúng ≥ 8/10
       return ear8of10(sessions, (a) => isPitch(a.expected));
     case 4:
-      // Giữ nhịp đều ≥ 8 ô nhịp ở Mức 2
+      // Giữ nhịp đều ≥ 8 ô nhịp ở Mức 2 (ô 2/4 ngắn bằng nửa ô 4/4 → cần 16 ô)
       return runs.some((r) => {
         const t = findTune(r.songId);
-        return r.mode === 'tempo' && r.level === 2 && !r.phrase && r.passed && !!t && measureCount(t) >= 8;
+        return r.mode === 'tempo' && r.level === 2 && !r.phrase && r.passed && !!t && measureCount(t) >= (beatsPerMeasure(t) < 3 ? 16 : 8);
       });
     case 5:
       return runs.some((r) => r.songId === 'ode_to_joy_easy' && r.mode === 'tempo' && r.bpm >= 60 && !r.phrase && r.passed);

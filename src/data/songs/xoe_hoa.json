@@ -4,11 +4,11 @@
  "titleVi": "Xòe hoa (dân ca Thái)",
  "composer": "Dân ca Thái",
  "sourceStatus": "public-domain",
- "arrangementBy": "Ký âm đơn giản cho app từ các bản ký âm dân ca phổ biến (trường độ gấp đôi: 2/4 → 4/4)",
+ "arrangementBy": "Ký âm đơn giản cho app từ các bản ký âm dân ca phổ biến (nhịp 2/4, trường độ như bản gốc)",
  "attributionRequired": false,
  "hand": "RH",
  "bpm": 60,
- "timeSignature": "4/4",
+ "timeSignature": "2/4",
  "week": 8,
  "position": "free",
  "phrases": [
@@ -18,83 +18,88 @@
  "notes": [
   {
    "rest": true,
-   "beats": 3
+   "beats": 1.5
   },
   {
    "pitch": "C4",
-   "beats": 1,
+   "beats": 0.5,
    "finger": 1,
    "dyn": "mf"
   },
   {
    "pitch": "F4",
-   "beats": 2,
+   "beats": 1,
    "finger": 3
   },
   {
    "pitch": "A4",
-   "beats": 2,
+   "beats": 1,
    "finger": 5
   },
   {
    "pitch": "G4",
-   "beats": 2,
-   "finger": 4
-  },
-  {
-   "pitch": "G4",
    "beats": 1,
    "finger": 4
   },
   {
    "pitch": "G4",
-   "beats": 1,
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.5,
    "finger": 4
   },
   {
    "pitch": "A4",
-   "beats": 2,
+   "beats": 1,
    "finger": 5
   },
   {
    "pitch": "D4",
-   "beats": 1,
+   "beats": 0.5,
    "finger": 2
   },
   {
    "pitch": "F4",
-   "beats": 1,
+   "beats": 0.5,
    "finger": 3
   },
   {
    "pitch": "F4",
-   "beats": 2,
+   "beats": 1,
    "finger": 3
   },
   {
    "pitch": "G4",
-   "beats": 1,
+   "beats": 0.5,
    "finger": 4
   },
   {
    "pitch": "A4",
-   "beats": 1,
+   "beats": 0.5,
    "finger": 5
   },
   {
    "pitch": "G4",
-   "beats": 1,
+   "beats": 0.5,
    "finger": 4
   },
   {
    "pitch": "F4",
-   "beats": 1,
+   "beats": 0.5,
    "finger": 3
   },
   {
    "pitch": "D4",
-   "beats": 1,
+   "beats": 0.5,
    "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 0.5,
+   "finger": 1
   },
   {
    "pitch": "C4",
@@ -102,78 +107,73 @@
    "finger": 1
   },
   {
-   "pitch": "C4",
-   "beats": 2,
-   "finger": 1
-  },
-  {
    "pitch": "G4",
-   "beats": 1,
+   "beats": 0.5,
    "finger": 4
   },
   {
    "pitch": "A4",
-   "beats": 1,
+   "beats": 0.5,
    "finger": 5
   },
   {
    "pitch": "D4",
-   "beats": 1,
+   "beats": 0.5,
    "finger": 2
   },
   {
    "pitch": "F4",
-   "beats": 1,
+   "beats": 0.5,
    "finger": 3
   },
   {
    "pitch": "G4",
-   "beats": 1,
+   "beats": 0.5,
    "finger": 4
   },
   {
    "pitch": "F4",
-   "beats": 1,
+   "beats": 0.5,
    "finger": 3
   },
   {
    "pitch": "D4",
-   "beats": 2,
+   "beats": 1,
    "finger": 2
   },
   {
    "pitch": "G4",
-   "beats": 1,
+   "beats": 0.5,
    "finger": 4
   },
   {
    "pitch": "A4",
-   "beats": 1,
+   "beats": 0.5,
    "finger": 5
   },
   {
    "pitch": "G4",
-   "beats": 1,
+   "beats": 0.5,
    "finger": 4
   },
   {
    "pitch": "F4",
-   "beats": 1,
+   "beats": 0.5,
    "finger": 3
   },
   {
    "pitch": "D4",
-   "beats": 1,
+   "beats": 0.5,
    "finger": 2
   },
   {
    "pitch": "C4",
-   "beats": 1,
+   "beats": 0.5,
    "finger": 1
   },
   {
    "pitch": "F4",
-   "beats": 4,
+   "beats": 2,
    "finger": 3
   }
  ]

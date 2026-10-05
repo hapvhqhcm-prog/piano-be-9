@@ -143,8 +143,8 @@ def song(id, title, titleVi, composer, week, hand, seq, phrases=None, ext=None, 
 
 ORIG = "Bài tự sáng tác cho app (piano-be-9)"
 # Dân ca Việt Nam (OWNER yêu cầu 2026-10-05): giai điệu truyền thống, đối chiếu ≥ 2 bản ký âm độc lập.
-# Bản gốc nhịp 2/4 (có móc kép); app ghi TRƯỜNG ĐỘ GẤP ĐÔI ở nhịp 4/4 (như sách giáo khoa vẫn làm):
-# móc kép → móc đơn, móc đơn → nốt đen, đen chấm → trắng chấm… — tỉ lệ nhịp giữ nguyên, mỗi ô 2/4 = một ô 4/4.
+# Ghi ĐÚNG NHỊP 2/4 và trường độ của bản gốc (móc kép = 0.25 phách, đơn chấm = 0.75): mỗi ô 2/4 của bản ký âm = một ô.
+# Khuông nhạc vẽ gạch nối theo phách như bản in. Tốc độ vẫn tính theo nốt đen (thang 40–50–60–72).
 # Nhịp lấy đà: dấu lặng ở đầu ô 0 cho tròn ô nhịp. Bỏ nốt hoa mỹ (luyến láy) như các bản ký âm đã bỏ.
 # Bàn tay NGŨ CUNG (Fa trưởng ngũ cung Đô Rê Fa Sol La): Đô1 Rê2 Fa3 Sol4 La5 — mỗi ngón một phím, không dời tay
 # (Rê–Fa cách một phím bằng ngón 2-3; Sol–La vẫn là 4-5 như quy tắc tuần 7).
@@ -165,7 +165,7 @@ def fingered(seq, table):
         out.append(head + body + tail)
     return " ".join(out)
 
-FOLK = "Ký âm đơn giản cho app từ các bản ký âm dân ca phổ biến (trường độ gấp đôi: 2/4 → 4/4)"
+FOLK = "Ký âm đơn giản cho app từ các bản ký âm dân ca phổ biến (nhịp 2/4, trường độ như bản gốc)"
 S = []
 # ---------------------------------------------------------------- CẤP 1 (tuần 2–8)
 S += [
@@ -208,17 +208,19 @@ S += [
  # ---- Dân ca Việt Nam (Cấp 1)
  # Tuần 2 — chỉ Đô Rê Mi. Câu đầu bài quan họ (hạ một quãng tám: Đô4–Mi4). Ô 9→10 vốn là Đô nối dài: đàn lại Đô.
  song("ly_cay_da","Ly Cay Da (Vietnamese folk song)","Lý cây đa (dân ca quan họ Bắc Ninh)","Dân ca quan họ Bắc Ninh",2,"RH",
-  "R:2 C4:2  D4:2 D4 C4:0.5 D4:0.5  E4:2 D4 C4:0.5 D4:0.5  E4 E4:0.5 D4:0.5 C4 D4  C4 C4 D4 C4:0.5 D4:0.5  "
-  "E4 E4:0.5 D4:0.5 C4 D4  C4 C4 D4 C4:0.5 D4:0.5  E4 E4:0.5 D4:0.5 C4 D4  C4:4  C4:2 R:2",[0,3,5,7],arr=FOLK),
+  "R C4  D4 D4:0.5 C4:0.25 D4:0.25  E4 D4:0.5 C4:0.25 D4:0.25  E4:0.5 E4:0.25 D4:0.25 C4:0.5 D4:0.5  C4:0.5 C4:0.5 D4:0.5 C4:0.25 D4:0.25  "
+  "E4:0.5 E4:0.25 D4:0.25 C4:0.5 D4:0.5  C4:0.5 C4:0.5 D4:0.5 C4:0.25 D4:0.25  E4:0.5 E4:0.25 D4:0.25 C4:0.5 D4:0.5  C4:2  C4 R",
+  [0,3,5,7],ts="2/4",arr=FOLK),
  # Tuần 7 — Rê Mi Sol La (giọng La ngũ cung, bản gốc): bàn tay "thế Đô nhích lên" Rê1 Mi2 (Fa3) Sol4 La5 — Sol–La = 4-5.
  song("inh_la_oi","Inh La Oi (Vietnamese folk song)","Inh lả ơi (dân ca Thái Tây Bắc)","Dân ca Thái (Tây Bắc)",7,"RH",
-  "mf A4:2/5 E4/2 G4/4  A4:4/5  G4:2/4 E4:2/2  D4:4/1  A4:2/5 E4:2/2  D4:2/1 E4:2/2  A4:2/5 A4/5 G4/4  E4:2/2 G4:2/4  "
-  "D4:2/1 E4:2/2  A4:2/5 E4:2/2  G4:2/4 G4/4 E4/2  D4:4/1  p A4:2/5 E4/2 G4/4  A4:4/5  G4:2/4 G4/4 E4/2  G4:4/4",[0,4,8,12],
-  pos="free",arr=FOLK),
+  "mf A4/5 E4:0.5/2 G4:0.5/4  A4:2/5  G4/4 E4/2  D4:2/1  A4/5 E4/2  D4/1 E4/2  A4/5 A4:0.5/5 G4:0.5/4  E4/2 G4/4  "
+  "D4/1 E4/2  A4/5 E4/2  G4/4 G4:0.5/4 E4:0.5/2  D4:2/1  p A4/5 E4:0.5/2 G4:0.5/4  A4:2/5  G4/4 G4:0.5/4 E4:0.5/2  G4:2/4",[0,4,8,12],
+  pos="free",ts="2/4",arr=FOLK),
  # Tuần 8 — Fa trưởng ngũ cung (Đô Rê Fa Sol La, không có Si♭): bàn tay ngũ cung Đô1 Rê2 Fa3 Sol4 La5. Lấy đà một phách (Đô).
  song("xoe_hoa","Xoe Hoa (Vietnamese folk song)","Xòe hoa (dân ca Thái)","Dân ca Thái",8,"RH",fingered(
-  "mf R:3 C4  F4:2 A4:2  G4:2 G4 G4  A4:2 D4 F4  F4:2 G4 A4  G4 F4 D4 C4  C4:2 G4 A4  D4 F4 G4 F4  D4:2 G4 A4  G4 F4 D4 C4  F4:4",PENTA_F),
-  [0,5],pos="free",arr=FOLK),
+  "mf R:1.5 C4:0.5  F4 A4  G4 G4:0.5 G4:0.5  A4 D4:0.5 F4:0.5  F4 G4:0.5 A4:0.5  G4:0.5 F4:0.5 D4:0.5 C4:0.5  C4 G4:0.5 A4:0.5  "
+  "D4:0.5 F4:0.5 G4:0.5 F4:0.5  D4 G4:0.5 A4:0.5  G4:0.5 F4:0.5 D4:0.5 C4:0.5  F4:2",PENTA_F),
+  [0,5],pos="free",ts="2/4",arr=FOLK),
 ]
 # ---------------------------------------------------------------- CẤP 2 (tuần 9–16): hai tay, thế mới, phím đen, nhịp
 S += [
@@ -276,9 +278,10 @@ S += [
  # Dân ca (thay "Cầu London — chấm dôi", bài lặp): Bắc kim thang — hạ một cung xuống Fa trưởng ngũ cung (Đô Rê Fa Sol La,
  # toàn phím trắng), bàn tay ngũ cung Đô1 Rê2 Fa3 Sol4 La5 (như "Xòe hoa"). Nhịp chấm dôi "Đi-chấm chạy" ở ô 1, 3, 5, 7, 9; dấu luyến theo bản ký âm gốc.
  song("bac_kim_thang","Bac Kim Thang (Vietnamese folk song)","Bắc kim thang (dân ca Nam Bộ)","Dân ca Nam Bộ",14,"RH",fingered(
-  "mf R:2 A4 G4  F4:1.5 C4:0.5 F4 (G4:0.5 F4:0.5)  D4:2 D4 F4  C4:1.5 C4:0.5 C4 F4  D4:2 A4 A4  C4:1.5 D4:0.5 C4 D4  "
-  "A4:2 A4 A4  A4:1.5 A4:0.5 D4 (D4:0.5 F4:0.5)  G4:2 G4 G4  G4:1.5 A4:0.5 A4 (D4:0.5 F4:0.5)  C4:2 F4 C4  "
-  "D4 (D4:0.5 F4:0.5) C4 A4  F4 C4 F4 R",PENTA_F),[0,6],pos="free",arr=FOLK),
+  "mf R A4:0.5 G4:0.5  F4:0.75 C4:0.25 F4:0.5 (G4:0.25 F4:0.25)  D4 D4:0.5 F4:0.5  C4:0.75 C4:0.25 C4:0.5 F4:0.5  D4 A4:0.5 A4:0.5  "
+  "C4:0.75 D4:0.25 C4:0.5 D4:0.5  A4 A4:0.5 A4:0.5  A4:0.75 A4:0.25 D4:0.5 (D4:0.25 F4:0.25)  G4 G4:0.5 G4:0.5  "
+  "G4:0.75 A4:0.25 A4:0.5 (D4:0.25 F4:0.25)  C4 F4:0.5 C4:0.5  D4:0.5 (D4:0.25 F4:0.25) C4:0.5 A4:0.5  F4:0.5 C4:0.5 F4:0.5 R:0.5",PENTA_F),
+  [0,6],pos="free",ts="2/4",arr=FOLK),
  song("twinkle_run","Twinkle variation (running)","Ngôi sao nhỏ — biến tấu Chạy-chạy","Dân ca Pháp (traditional)",14,"RH",
   "mf C4:0.5 C4:0.5 C4:0.5 C4:0.5 G4:0.5 G4:0.5 G4:0.5 G4:0.5  A4:0.5 A4:0.5 A4:0.5 A4:0.5 G4:2  F4:0.5 F4:0.5 F4:0.5 F4:0.5 E4:0.5 E4:0.5 E4:0.5 E4:0.5  D4:0.5 D4:0.5 D4:0.5 D4:0.5 C4:2",[0,2],"A4"),
  # Tuần 15 — gam Đô trưởng, luồn ngón cái
@@ -309,11 +312,14 @@ S += [
   "p (G4:1.5/2 A4:0.5/3 G4/2)  E4:3/1  (G4:1.5/2 A4:0.5/3 G4/2)  E4:3/1  D5:2/5 D5/5  B4:3/3  C5:2/4 C5/4  G4:3/1  "
   "mf A4:2/3 A4/3  C5:1.5/5 B4:0.5/4 A4/3  G4:1.5/2 A4:0.5/3 G4/2  E4:3/1  A4:2/3 A4/3  C5:1.5/5 B4:0.5/4 A4/3  G4:1.5/2 A4:0.5/3 G4/2  E4:3/1  "
   "p D5:2/3 D5/3  F5:1.5/5 D5:0.5/3 B4/1  C5:3/2  E5:3/4  C5:1.5/4 G4:0.5/1 E4/3  G4:1.5/5 F4:0.5/4 D4/2  C4:3/1",[0,4,8,12,16,20],pos="free",ts="3/4"),
- # Tuần 18 — dân ca: Lý ngựa ô (12 ô đầu, Đô trưởng ngũ cung Rê Fa Sol La Đô — tầm quãng 7).
- # Bàn tay MỞ RỘNG, mỗi ngón một phím: Rê1 Fa2 Sol3 La4 Đô5 — không dời tay, không ngón nào đánh hai phím.
- song("ly_ngua_o","Ly Ngua O (Vietnamese folk song)","Lý ngựa ô (dân ca Nam Bộ)","Dân ca Nam Bộ",18,"RH",
-  "mf R:2 C5/5 A4/4  D4/1 F4/2 D4/1 F4/2  G4:4/3  R:4  R:2 C5/5 A4/4  D4/1 F4/2 D4/1 F4/2  G4:3/3 F4/2  G4:2/3 G4:2/3  "
-  "C5:3/5 G4/3  C5/5 A4/4 D4/1 F4/2  G4:4/3  A4/4 G4/3 F4/2 A4/4  G4:4/3",[0,4,9],pos="free",arr=FOLK),
+ # Tuần 18 — dân ca: Lý ngựa ô (12 ô đầu, Đô trưởng ngũ cung Rê Fa Sol La Đô — tầm quãng 7: quá rộng cho MỘT bàn tay bé).
+ # Chia theo âm vực, hai tay LUÂN PHIÊN (như "Lý cây bông"): tay phải thế Sol (Sol1 La2 Đô4), tay trái giữ Rê–Fa
+ # (Fa ngón cái, Rê ngón 3 — "Rê Fa Rê Fa" trọn trong tay trái). Mỗi ngón một phím, không bàn tay nào rộng quá quãng 4.
+ song("ly_ngua_o","Ly Ngua O (Vietnamese folk song)","Lý ngựa ô (dân ca Nam Bộ)","Dân ca Nam Bộ",18,"BOTH",
+  "mf R C5:0.5 A4:0.5  R:2  G4:2  R:2  R C5:0.5 A4:0.5  R:2  G4:1.5 R:0.5  G4 G4  "
+  "C5:1.5 G4:0.5  C5:0.5 A4:0.5 R  G4:2  A4:0.5 G4:0.5 R:0.5 A4:0.5  G4:2",[0,4,9],pos="G",
+  lh="R:2  D4:0.5/3 F4:0.5/1 D4:0.5/3 F4:0.5/1  R:2  R:2  R:2  D4:0.5/3 F4:0.5/1 D4:0.5/3 F4:0.5/1  R:1.5 F4:0.5/1  R:2  "
+  "R:2  R D4:0.5/3 F4:0.5/1  R:2  R F4:0.5/1 R:0.5  R:2",lhpos="free",ts="2/4",arr=FOLK),
  # Tuần 19 — trưởng & thứ: bài tự sáng tác giọng La thứ (thay "Bài ca niềm vui — La thứ"): NHỎ, NGẮT, ô cuối TO
  song("ninja_tiptoe","Tiptoe Ninja","Ninja rón rén",ORIG,19,"RH",
   "p A3' A3' C4' A3'  B3' B3' D4' B3'  A3' C4' E4' C4'  B3:2 R:2  A3' A3' C4' A3'  B3' D4' C4' B3'  "
@@ -341,13 +347,13 @@ S += [
  # Chia theo âm vực, hai tay LUÂN PHIÊN (không đánh cùng lúc): Mi4 trở lên tay phải "thế Mi" (Mi1 Sol2 La3 Đô5 — như
  # "Đêm thánh vô cùng"), Rê4 trở xuống tay trái thế Sol giữa (Sol3=5 La3=4 Đô4=2 Rê4=1). Mỗi ngón chỉ một phím.
  song("ly_cay_bong","Ly Cay Bong (Vietnamese folk song)","Lý cây bông (dân ca Nam Bộ)","Dân ca Nam Bộ",23,"BOTH",
-  "mf R:2 A4/3 G4/2  A4:2/3 A4/3 G4:0.5/2 A4:0.5/3  C5/5 E4/1 G4/2 E4/1  G4:2/2 A4:0.5/3 G4:0.5/2 E4:0.5/1 G4:0.5/2  A4:3/3 A4/3  "
-  "A4/3 G4/2 R G4/2  E4:1.5/1 G4:0.5/2 A4:0.5/3 G4:0.5/2 E4:0.5/1 G4:0.5/2  A4:3/3 R  "
-  "p E4:1.5/1 G4:0.5/2 E4:0.5/1 R:0.5 R  R:4  R:2 R R:0.5 E4:0.5/1  R:4  E4:1.5/1 G4:0.5/2 E4/1 R  R:4  R:2 R R:0.5 E4:0.5/1  R:4",
+  "mf R A4:0.5/3 G4:0.5/2  A4/3 A4:0.5/3 G4:0.25/2 A4:0.25/3  C5:0.5/5 E4:0.5/1 G4:0.5/2 E4:0.5/1  G4/2 A4:0.25/3 G4:0.25/2 E4:0.25/1 G4:0.25/2  A4:1.5/3 A4:0.5/3  "
+  "A4:0.5/3 G4:0.5/2 R:0.5 G4:0.5/2  E4:0.75/1 G4:0.25/2 A4:0.25/3 G4:0.25/2 E4:0.25/1 G4:0.25/2  A4:1.5/3 R:0.5  "
+  "p E4:0.75/1 G4:0.25/2 E4:0.25/1 R:0.25 R:0.5  R:2  R R:0.5 R:0.25 E4:0.25/1  R:2  E4:0.75/1 G4:0.25/2 E4:0.5/1 R:0.5  R:2  R R:0.5 R:0.25 E4:0.25/1  R:2",
   [0,8],pos="free",
-  lh="R:4  R:4  R:4  R:4  R:4  R:2 C4/2 R  R:4  R:2 R D4/1  "
-  "R:2 R:0.5 D4:0.5/1 C4/2  A3:4/4  C4/2 G3/5 A3:0.5/4 C4:0.5/2 D4:0.5/1 R:0.5  D4:3/1 D4/1  R:2 R D4:0.5/1 C4:0.5/2  A3:4/4  "
-  "C4/2 G3/5 A3:0.5/4 C4:0.5/2 D4:0.5/1 R:0.5  D4:4/1",lhpos="free",arr=FOLK),
+  lh="R:2  R:2  R:2  R:2  R:2  R C4:0.5/2 R:0.5  R:2  R R:0.5 D4:0.5/1  "
+  "R R:0.25 D4:0.25/1 C4:0.5/2  A3:2/4  C4:0.5/2 G3:0.5/5 A3:0.25/4 C4:0.25/2 D4:0.25/1 R:0.25  D4:1.5/1 D4:0.5/1  R R:0.5 D4:0.25/1 C4:0.25/2  A3:2/4  "
+  "C4:0.5/2 G3:0.5/5 A3:0.25/4 C4:0.25/2 D4:0.25/1 R:0.25  D4:2/1",lhpos="free",ts="2/4",arr=FOLK),
  # Tuần 24 — bài hai tay
  song("saints_both","When the Saints (hands together)","Các thánh tiến bước — hai tay","Spiritual (traditional)",24,"BOTH",
   "f R C4 E4 F4  G4:4  R C4 E4 F4  G4:4  R C4 E4 F4  G4:2 E4:2  C4:2 E4:2  D4:4  R E4 E4 D4  C4:3 C4  E4:2 G4 G4  F4:4  E4 F4 G4:2  E4:2 C4:2  D4:4  C4:4",[0,4,8,12],
@@ -366,7 +372,10 @@ for d in S:
     per = int(d["timeSignature"].split("/")[0])
     assert len(set(beats)) == 1, (d["id"], beats)
     assert beats[0] % per == 0, (d["id"], beats)
+    # Bài có nốt móc kép (< nửa phách): tốc độ khởi đầu 40 (thang 40–50–60–72) — ở 60 là 4 nốt/giây, quá nhanh cho bé
+    # mới học; muốn "thuộc" (⭐) vẫn phải đàn trọn bài từ 60 trở lên như mọi bài.
+    if any(n["beats"] < 0.5 for v in voices for n in v): d["bpm"] = 40
     with open(f"src/data/songs/{d['id']}.json", "w", encoding="utf-8") as fh:
         json.dump(d, fh, ensure_ascii=False, indent=1); fh.write("\n")
-    print(f"{d['id']:24} w{d['week']:<2} {d['hand']:4} {d.get('position','C'):4} {beats[0]//per:>3} ô nhịp")
+    print(f"{d['id']:24} w{d['week']:<2} {d['hand']:4} {d.get('position','C'):4} {int(beats[0]//per):>3} ô nhịp")
 print(len(S), "bài")

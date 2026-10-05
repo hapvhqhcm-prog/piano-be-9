@@ -22,7 +22,8 @@ const OUT = resolve(process.argv[2] ?? 'shots');
 const FILTER = process.argv[3] ?? '';
 const URL = process.env.SHOTS_URL ?? 'http://localhost:5173/piano-be-9/';
 const EDGE = process.env.EDGE ?? 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe';
-const PORT = 9333;
+// SHOTS_PORT: chạy nhiều phiên chụp cùng lúc thì mỗi phiên một cổng
+const PORT = Number(process.env.SHOTS_PORT ?? 9333);
 
 mkdirSync(OUT, { recursive: true });
 const profile = mkdtempSync(join(tmpdir(), 'piano-shots-'));

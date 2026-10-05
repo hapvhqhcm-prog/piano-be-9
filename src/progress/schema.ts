@@ -111,6 +111,7 @@ export interface Settings {
   accompaniment: boolean; // (+) nhạc đệm "bố mẹ đàn cùng" khi chơi theo nhịp
   timing: 'easy' | 'normal' | 'strict'; // (+) độ khắt khe khi micro chấm nhịp (mặc định dễ — trẻ 9 tuổi)
   lastBackupAt: number; // (+) lần xuất/sao chép JSON gần nhất (ms) — để nhắc sao lưu
+  onboardedAt: number; // (+) lúc bố mẹ xem xong/bỏ qua hướng dẫn lần đầu (ms); 0 = chưa xem
 }
 
 export interface Progress {
@@ -150,6 +151,7 @@ export function defaultSettings(): Settings {
     accompaniment: true,
     timing: 'easy',
     lastBackupAt: 0,
+    onboardedAt: 0,
   };
 }
 
@@ -196,6 +198,7 @@ export function validateAppData(x: unknown): string[] {
     if (typeof st.accompaniment !== 'boolean') errs.push('settings.accompaniment');
     if (!['easy', 'normal', 'strict'].includes(st.timing as string)) errs.push('settings.timing');
     if (typeof st.lastBackupAt !== 'number') errs.push('settings.lastBackupAt');
+    if (typeof st.onboardedAt !== 'number') errs.push('settings.onboardedAt');
   }
   const p = x.progress;
   if (!isObj(p)) errs.push('Thiếu progress');

@@ -4,11 +4,11 @@
  "titleVi": "Bắc kim thang (dân ca Nam Bộ)",
  "composer": "Dân ca Nam Bộ",
  "sourceStatus": "public-domain",
- "arrangementBy": "Ký âm đơn giản cho app từ các bản ký âm dân ca phổ biến (trường độ gấp đôi: 2/4 → 4/4)",
+ "arrangementBy": "Ký âm đơn giản cho app từ các bản ký âm dân ca phổ biến (nhịp 2/4, trường độ như bản gốc)",
  "attributionRequired": false,
  "hand": "RH",
- "bpm": 60,
- "timeSignature": "4/4",
+ "bpm": 40,
+ "timeSignature": "2/4",
  "week": 14,
  "position": "free",
  "phrases": [
@@ -18,99 +18,109 @@
  "notes": [
   {
    "rest": true,
-   "beats": 2
+   "beats": 1
   },
   {
    "pitch": "A4",
-   "beats": 1,
+   "beats": 0.5,
    "finger": 5,
    "dyn": "mf"
   },
   {
    "pitch": "G4",
-   "beats": 1,
+   "beats": 0.5,
    "finger": 4
   },
   {
    "pitch": "F4",
-   "beats": 1.5,
+   "beats": 0.75,
    "finger": 3
   },
   {
    "pitch": "C4",
-   "beats": 0.5,
+   "beats": 0.25,
    "finger": 1
   },
   {
    "pitch": "F4",
-   "beats": 1,
+   "beats": 0.5,
    "finger": 3
   },
   {
    "pitch": "G4",
-   "beats": 0.5,
+   "beats": 0.25,
    "finger": 4,
    "slur": "start"
   },
   {
    "pitch": "F4",
-   "beats": 0.5,
+   "beats": 0.25,
    "finger": 3,
    "slur": "end"
   },
   {
    "pitch": "D4",
-   "beats": 2,
+   "beats": 1,
    "finger": 2
   },
   {
    "pitch": "D4",
-   "beats": 1,
+   "beats": 0.5,
    "finger": 2
   },
   {
    "pitch": "F4",
-   "beats": 1,
+   "beats": 0.5,
    "finger": 3
   },
   {
    "pitch": "C4",
-   "beats": 1.5,
+   "beats": 0.75,
+   "finger": 1
+  },
+  {
+   "pitch": "C4",
+   "beats": 0.25,
    "finger": 1
   },
   {
    "pitch": "C4",
    "beats": 0.5,
-   "finger": 1
-  },
-  {
-   "pitch": "C4",
-   "beats": 1,
    "finger": 1
   },
   {
    "pitch": "F4",
-   "beats": 1,
+   "beats": 0.5,
    "finger": 3
   },
   {
    "pitch": "D4",
-   "beats": 2,
+   "beats": 1,
    "finger": 2
   },
   {
    "pitch": "A4",
-   "beats": 1,
+   "beats": 0.5,
    "finger": 5
   },
   {
    "pitch": "A4",
-   "beats": 1,
+   "beats": 0.5,
    "finger": 5
   },
   {
    "pitch": "C4",
-   "beats": 1.5,
+   "beats": 0.75,
+   "finger": 1
+  },
+  {
+   "pitch": "D4",
+   "beats": 0.25,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 0.5,
    "finger": 1
   },
   {
@@ -119,33 +129,8 @@
    "finger": 2
   },
   {
-   "pitch": "C4",
-   "beats": 1,
-   "finger": 1
-  },
-  {
-   "pitch": "D4",
-   "beats": 1,
-   "finger": 2
-  },
-  {
-   "pitch": "A4",
-   "beats": 2,
-   "finger": 5
-  },
-  {
    "pitch": "A4",
    "beats": 1,
-   "finger": 5
-  },
-  {
-   "pitch": "A4",
-   "beats": 1,
-   "finger": 5
-  },
-  {
-   "pitch": "A4",
-   "beats": 1.5,
    "finger": 5
   },
   {
@@ -154,124 +139,139 @@
    "finger": 5
   },
   {
-   "pitch": "D4",
-   "beats": 1,
-   "finger": 2
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.75,
+   "finger": 5
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.25,
+   "finger": 5
   },
   {
    "pitch": "D4",
    "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "D4",
+   "beats": 0.25,
    "finger": 2,
    "slur": "start"
   },
   {
    "pitch": "F4",
-   "beats": 0.5,
+   "beats": 0.25,
    "finger": 3,
    "slur": "end"
   },
   {
    "pitch": "G4",
-   "beats": 2,
-   "finger": 4
-  },
-  {
-   "pitch": "G4",
    "beats": 1,
    "finger": 4
   },
   {
    "pitch": "G4",
-   "beats": 1,
+   "beats": 0.5,
    "finger": 4
   },
   {
    "pitch": "G4",
-   "beats": 1.5,
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.75,
    "finger": 4
   },
   {
    "pitch": "A4",
-   "beats": 0.5,
+   "beats": 0.25,
    "finger": 5
   },
   {
    "pitch": "A4",
-   "beats": 1,
+   "beats": 0.5,
    "finger": 5
   },
   {
    "pitch": "D4",
-   "beats": 0.5,
+   "beats": 0.25,
    "finger": 2,
    "slur": "start"
   },
   {
    "pitch": "F4",
-   "beats": 0.5,
+   "beats": 0.25,
    "finger": 3,
    "slur": "end"
   },
   {
    "pitch": "C4",
-   "beats": 2,
+   "beats": 1,
    "finger": 1
   },
   {
    "pitch": "F4",
-   "beats": 1,
+   "beats": 0.5,
    "finger": 3
   },
   {
    "pitch": "C4",
-   "beats": 1,
+   "beats": 0.5,
    "finger": 1
   },
   {
    "pitch": "D4",
-   "beats": 1,
+   "beats": 0.5,
    "finger": 2
   },
   {
    "pitch": "D4",
-   "beats": 0.5,
+   "beats": 0.25,
    "finger": 2,
    "slur": "start"
   },
   {
    "pitch": "F4",
-   "beats": 0.5,
+   "beats": 0.25,
    "finger": 3,
    "slur": "end"
   },
   {
    "pitch": "C4",
-   "beats": 1,
+   "beats": 0.5,
    "finger": 1
   },
   {
    "pitch": "A4",
-   "beats": 1,
+   "beats": 0.5,
    "finger": 5
   },
   {
    "pitch": "F4",
-   "beats": 1,
+   "beats": 0.5,
    "finger": 3
   },
   {
    "pitch": "C4",
-   "beats": 1,
+   "beats": 0.5,
    "finger": 1
   },
   {
    "pitch": "F4",
-   "beats": 1,
+   "beats": 0.5,
    "finger": 3
   },
   {
    "rest": true,
-   "beats": 1
+   "beats": 0.5
   }
  ]
 }

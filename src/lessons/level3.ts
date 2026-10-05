@@ -78,8 +78,8 @@ export const WEEK18: WeekPlan = {
     { id: 'w18-l1', week: 18, title: 'Đọc nhạc nhiều thế · Lý ngựa ô', emoji: '📖', activities: [
       { kind: 'sight', title: 'Đọc nhạc thế Đô', position: 'C', hand: 'RH', count: 2, rhythm: 2, hints: 'staff' },
       { kind: 'sight', title: 'Đọc nhạc thế Sol', position: 'G', hand: 'RH', count: 2, rhythm: 2, hints: 'staff' },
-      // Dân ca Việt Nam (OWNER yêu cầu 2026-10-05): một thế tay mới — bàn tay mở rộng
-      song('ly_ngua_o', 'wait', 2, 'names', 'Dân ca Nam Bộ! Bàn tay MỞ RỘNG: Rê 1, Fa 2, Sol 3, La 4, Đô cao 5 — mỗi ngón một phím, không cần dời tay. Bài bắt đầu bằng hai nốt lấy đà.'),
+      // Dân ca Việt Nam (OWNER yêu cầu 2026-10-05): hai tay luân phiên (bàn tay mở rộng Rê–Đô cao quá rộng cho bé)
+      song('ly_ngua_o', 'wait', 2, 'names', 'Dân ca Nam Bộ, nhịp 2/4! Hai tay thay nhau: tay trái "Rê Fa Rê Fa" (ngón 3 và ngón cái), tay phải thế Sol: Sol 1, La 2, Đô cao 4. Bài bắt đầu bằng hai nốt lấy đà.'),
     ] },
     trio('w18-l2', 18, 'Đêm thánh vô cùng', '🌟', 'silent_night', 'Nhịp 3, có chấm dôi và dời tay ở câu 3.'),
   ],

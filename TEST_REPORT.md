@@ -307,3 +307,22 @@ Mỗi bài đối chiếu ≥ 2 nguồn ký âm độc lập; nốt và tiết t
   - Tuần 17 đọc nốt hợp âm khóa Fa thay vì "vui/buồn" (tuần 19 mới dạy).
 - **Luyện tập mỗi ngày:** ưu tiên bài gần trình độ; thỉnh thoảng có trò tai nghe hoặc to/nhỏ; lời "Con làm thầy" đổi theo ngày.
 - 521 test qua (thêm tests/pacing.test.ts).
+
+## 18. Tiếng đàn mới, ký hiệu nhạc chuẩn, hướng dẫn bố mẹ, sổ sticker (2026-10-05)
+
+- **Tiếng đàn tổng hợp mới** (OWNER nghe so sánh, chọn bản mới):
+  - âm sắc theo búa gõ, 2 "dây" lệch nhẹ, tiếng búa;
+  - độ sáng giảm dần theo thời gian, tắt dần 2 giai đoạn, vang phòng nhẹ;
+  - bass nghe rõ trên loa iPad;
+  - micro vẫn bỏ qua tiếng app (cộng thêm 150 ms cho đuôi vang);
+  - từ nốt thứ 8 trở đi giảm bớt thành phần để đỡ tốn CPU.
+- **Ký hiệu nhạc:**
+  - thêm nốt móc kép, móc đơn chấm, gạch nối nốt móc theo phách (gồm gạch nối một phần), dấu lặng đủ loại;
+  - khoảng cách nốt theo trường độ;
+  - hỗ trợ nhịp 2/4 trọn vẹn: đếm vào 2 ô, chấm nhịp ghép nốt gần nhất trước.
+- **6 bài dân ca** về đúng nhịp 2/4 gốc, đối chiếu từng nốt với bản ký âm.
+  - Bài có nốt móc kép khởi đầu ở tốc độ 40; muốn "thuộc" vẫn phải đạt 60.
+  - Lý ngựa ô chia cho hai tay (không tay nào mở quá quãng 4).
+- **Hướng dẫn nhanh cho bố mẹ:** 4 thẻ, hiện ở lần đầu (cài mới), mở lại ở Phụ huynh → 📖.
+- **Sổ sticker:** 41 sticker suy ra từ dữ liệu có sẵn (đảo, huy chương, số bài thuộc, chuỗi ngày, dân ca, đàn chuẩn qua micro, trò to/nhỏ – ngắt/liền). Kết thúc buổi học báo sticker mới.
+- 639 test qua.

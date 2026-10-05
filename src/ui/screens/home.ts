@@ -19,6 +19,8 @@ import { button, h, toast } from '../components/dom';
 import { parentButton } from '../components/longPress';
 import { freePlayScreen } from './freePlay';
 import { libraryScreen } from './library';
+import { stickersScreen } from './stickers';
+import { earnedStickerIds } from '../../lessons/stickers';
 import { parentGateScreen } from './parentGate';
 import { startSession } from './session';
 import { markSafePoint } from '../../pwa/updater';
@@ -226,8 +228,18 @@ export function homeScreen(app: App, banner?: string) {
           { class: 'home-dock' },
           button({ icon: '🎵', label: 'Bài hát', kind: 'sun', onTap: () => app.show(libraryScreen(app)) }),
           button({ icon: '🎹', label: 'Đàn tự do', kind: 'mint', onTap: () => app.show(freePlayScreen(app)) }),
+          stickerDockButton(app),
         ),
       ),
     );
   };
+}
+
+/** Nút "Sổ sticker" ở thanh dưới (họ nút hồng riêng) — kèm số sticker đã có. */
+function stickerDockButton(app: App): HTMLButtonElement {
+  const b = button({ icon: '🌟', label: 'Sticker', onTap: () => app.show(stickersScreen(app)) });
+  b.classList.add('btn-pink');
+  const n = earnedStickerIds(app.store.get()).length;
+  if (n) b.append(h('span', { class: 'dock-count', 'aria-label': `${n} sticker` }, String(n)));
+  return b;
 }

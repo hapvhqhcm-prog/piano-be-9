@@ -145,6 +145,15 @@ describe('tiêu chí tuần 4–8 (v2)', () => {
     expect(weekPassed(4, st.get())).toBe(true);
   });
 
+  it('tuần 4: ô 2/4 ngắn — bài 2/4 phải ≥ 16 ô (bằng 8 ô 4/4)', () => {
+    const st = store();
+    const s = st.startSession('w4-l2');
+    st.addSongRun(s.id, run({ songId: 'ly_cay_da' })); // 10 ô 2/4 = 5 ô 4/4 — chưa đủ
+    expect(weekPassed(4, st.get())).toBe(false);
+    st.addSongRun(s.id, run({ songId: 'inh_la_oi' })); // 16 ô 2/4
+    expect(weekPassed(4, st.get())).toBe(true);
+  });
+
   it('tuần 5: Ode to Joy trọn bài, 60 BPM; tuần 7: chỉ nhìn khuông', () => {
     const st = store();
     const s5 = st.startSession('w5-l2');

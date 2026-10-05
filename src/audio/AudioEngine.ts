@@ -1,8 +1,20 @@
 import { pitchFreq, type Pitch } from '../piano/pitchTable';
+import {
+  cutoffEvents,
+  gainEvents,
+  harmonicTable,
+  roomImpulse,
+  thumpNoise,
+  voiceParams,
+  waveKey,
+  waveKeyFreq,
+  type ParamEvent,
+} from './pianoVoice';
 
 /**
  * AudioEngine — tiếng đàn tổng hợp "giống piano" (OWNER chọn thay cho sample Salamander):
- * 3 họa âm + tắt dần; tiếng gõ nhịp; hẹn giờ nốt theo đồng hồ AudioContext.
+ * 2 dây lệch nhẹ (PeriodicWave) + tiếng búa → lọc tối dần → bao biên 2 giai đoạn (xem pianoVoice.ts),
+ * hồi âm phòng nhỏ ở bus chính; tiếng gõ nhịp; hẹn giờ nốt theo đồng hồ AudioContext.
  * Không phụ thuộc DOM: chỉ cần một AudioContext (được tiêm vào để test).
  * AudioContext chỉ được tạo/resume trong unlock(), gọi từ thao tác chạm.
  */
@@ -58,15 +70,35 @@ function defaultFactory(): AudioContext {
 }
 
 interface Voice {
-  osc: OscillatorNode;
-  gain: GainNode;
-  extra?: OscillatorNode[];
-  extraGains?: GainNode[];
+  /** Bao biên âm lượng chính (stopAll() kéo về 0). */
+  env: GainNode;
+  sources: AudioScheduledSourceNode[];
+  nodes: AudioNode[];
+}
+
+/** Từ bao nhiêu nốt chồng nhau thì bỏ dây 2 + tiếng búa (đỡ CPU iPad cũ khi hợp âm/bè đệm dày). */
+const LIGHT_VOICE_THRESHOLD = 8;
+/** Hồi âm còn nghe sau khi nốt tắt hẳn → cộng vào "app vừa im" để micro không bắt nhầm đuôi vang. */
+export const REVERB_GUARD_MS = 150;
+/** Mức gửi hồi âm (ướt) — nhỏ, chỉ cho "có phòng". */
+const REVERB_WET = 0.14;
+
+function applyEvents(param: AudioParam, events: ParamEvent[], t0: number): void {
+  for (const e of events) {
+    const t = t0 + e.t;
+    if (e.kind === 'set') param.setValueAtTime(e.v, t);
+    else if (e.kind === 'ramp') param.linearRampToValueAtTime(e.v, t);
+    else param.setTargetAtTime(e.v, t, e.tau);
+  }
 }
 
 export class AudioEngine {
   private ctx: AudioContext | null = null;
   private master: GainNode | null = null;
+  /** Bus khô (không hồi âm) cho tiếng tích nhịp — đuôi vang của tích sẽ lọt vào micro. */
+  private dry: GainNode | null = null;
+  private waves = new Map<number, PeriodicWave | null>();
+  private noiseBuf: AudioBuffer | null = null;
   private voices = new Set<Voice>();
   /** Mọi nốt đã hẹn (kể cả bè đệm không chặn micro) — để stopAll() dừng hết. */
   private allVoices = new Set<Voice>();
@@ -117,7 +149,8 @@ export class AudioEngine {
 
   /** Số ms kể từ khi app im hẳn (0 nếu đang phát). */
   msSinceSound(now = Date.now()): number {
-    return this.isSounding ? 0 : now - this.lastSoundEnd;
+    // lastSoundEnd đã cộng REVERB_GUARD_MS (đuôi hồi âm) → có thể ở tương lai gần.
+    return this.isSounding ? 0 : Math.max(0, now - this.lastSoundEnd);
   }
 
   private lastSoundEnd = 0;
@@ -141,11 +174,43 @@ export class AudioEngine {
     this.setAudioSessionType(this.sessionType);
     if (!this.ctx) {
       this.ctx = this.factory();
-      const master = this.ctx.createGain();
-      master.gain.value = 0.8;
-      const comp = this.ctx.createDynamicsCompressor();
+      const ctx = this.ctx;
+      const master = ctx.createGain();
+      master.gain.value = 0.72;
+      // Nén nhẹ, chỉ chặn đỉnh (mặc định −24 dB/12:1 bóp mất độ tắt dần tự nhiên của tiếng đàn)
+      const comp = ctx.createDynamicsCompressor();
+      try {
+        comp.threshold.value = -12;
+        comp.knee.value = 6;
+        comp.ratio.value = 4;
+        comp.attack.value = 0.003;
+        comp.release.value = 0.25;
+      } catch {
+        /* bỏ qua */
+      }
       master.connect(comp);
-      comp.connect(this.ctx.destination);
+      comp.connect(ctx.destination);
+      const dry = ctx.createGain();
+      dry.gain.value = 0.8;
+      dry.connect(comp);
+      this.dry = dry;
+      // Hồi âm phòng nhỏ (một ConvolverNode dùng chung, IR sinh thủ tục — offline, không tải gì)
+      try {
+        if (typeof ctx.createConvolver === 'function') {
+          const ir = roomImpulse(ctx.sampleRate);
+          const buf = ctx.createBuffer(1, ir.length, ctx.sampleRate);
+          buf.getChannelData(0).set(ir);
+          const conv = ctx.createConvolver();
+          conv.buffer = buf;
+          const wet = ctx.createGain();
+          wet.gain.value = REVERB_WET;
+          master.connect(conv);
+          conv.connect(wet);
+          wet.connect(comp);
+        }
+      } catch {
+        /* không có hồi âm cũng được */
+      }
       this.master = master;
       this.ctx.onstatechange = () => this.emit();
     }
@@ -180,9 +245,41 @@ export class AudioEngine {
     return this.scheduleFreq(freq, ctx.currentTime + 0.01, duration, volume);
   }
 
+  /** PeriodicWave "dây đàn" theo dải âm vực (cache); null nếu trình duyệt không hỗ trợ. */
+  private waveFor(ctx: AudioContext, freq: number): PeriodicWave | null {
+    const key = waveKey(freq);
+    let w = this.waves.get(key);
+    if (w === undefined) {
+      try {
+        const { real, imag } = harmonicTable(waveKeyFreq(key));
+        w = typeof ctx.createPeriodicWave === 'function' ? ctx.createPeriodicWave(real, imag) : null;
+      } catch {
+        w = null;
+      }
+      this.waves.set(key, w);
+    }
+    return w;
+  }
+
+  /** Buffer nhiễu tiếng búa — tạo một lần, dùng chung. */
+  private noise(ctx: AudioContext): AudioBuffer | null {
+    if (!this.noiseBuf) {
+      try {
+        const data = thumpNoise(ctx.sampleRate);
+        const buf = ctx.createBuffer(1, data.length, ctx.sampleRate);
+        buf.getChannelData(0).set(data);
+        this.noiseBuf = buf;
+      } catch {
+        return null;
+      }
+    }
+    return this.noiseBuf;
+  }
+
   /**
-   * Hẹn giờ một nốt "giống piano" tại thời điểm `when` (giây, đồng hồ AudioContext):
-   * 3 họa âm (tam giác + sin bậc 2, 3), búa gõ nhanh rồi tắt dần; nốt trầm ngân lâu hơn nốt cao.
+   * Hẹn giờ một nốt "giống piano" tại thời điểm `when` (giây, đồng hồ AudioContext) — mô hình ở pianoVoice.ts:
+   * 2 dây lệch ~1 cent + tiếng búa → lọc thông thấp tối dần → bao biên 2 giai đoạn, nhả phím có giảm chấn.
+   * Mỗi nốt 7 nút (3 nút khi đã có ≥ 8 nốt chồng nhau); nốt trầm ngân lâu hơn nốt cao.
    * track=false: không tính là "app đang phát" (để micro vẫn nghe được) — dùng cho bè đệm xa cao độ.
    */
   scheduleFreq(freq: number, when: number, duration = 0.9, volume = 1, track = true): Promise<void> {
@@ -190,53 +287,62 @@ export class AudioEngine {
     const master = this.master;
     if (!ctx || !master) return Promise.resolve();
     const start = Math.max(when, ctx.currentTime);
-    const peak = DEFAULT_ENVELOPE.peak * volume;
-    // Thời gian tắt tự nhiên: ~2,4 s ở C3, ~1,1 s ở C5
-    const decayT = Math.max(0.8, Math.min(2.6, 2.4 * Math.pow(130.8 / freq, 0.55)));
-    const release = 0.12;
-    const offAt = start + Math.min(duration, decayT);
-    const end = offAt + release;
+    const p = voiceParams(freq, volume, duration);
+    const end = start + p.tEnd;
+    const light = this.allVoices.size >= LIGHT_VOICE_THRESHOLD;
+    const wave = this.waveFor(ctx, freq);
 
-    const partials: Array<{ mult: number; type: OscillatorType; amp: number; speed: number }> = [
-      { mult: 1, type: 'triangle', amp: 1, speed: 1 },
-      { mult: 2.0016, type: 'sine', amp: 0.32, speed: 1.6 },
-      { mult: 3.004, type: 'sine', amp: 0.12, speed: 2.4 },
-    ];
-    const oscs: OscillatorNode[] = [];
-    const gains: GainNode[] = [];
-    for (const p of partials) {
+    const env = ctx.createGain();
+    applyEvents(env.gain, gainEvents(p), start);
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.Q.value = 0;
+    applyEvents(lp.frequency, cutoffEvents(p), start);
+    lp.connect(env);
+    env.connect(master);
+
+    const sources: AudioScheduledSourceNode[] = [];
+    const nodes: AudioNode[] = [env, lp];
+    const addString = (f: number, gain: number): void => {
       const osc = ctx.createOscillator();
-      osc.type = p.type;
-      osc.frequency.value = freq * p.mult;
-      const g = ctx.createGain();
-      const a = peak * p.amp;
-      const t = decayT / p.speed;
-      const env = g.gain;
-      env.setValueAtTime(0, start);
-      env.linearRampToValueAtTime(a, start + 0.005);
-      // Tắt dần kiểu hàm mũ, xấp xỉ bằng các đoạn thẳng
-      const pts: Array<[number, number]> = [
-        [0.08, 0.62],
-        [0.3, 0.38],
-        [0.6, 0.2],
-        [1, 0.07],
-      ];
-      for (const [ft, fv] of pts) {
-        const at = start + 0.005 + ft * t;
-        if (at >= offAt) break;
-        env.linearRampToValueAtTime(a * fv, at);
+      if (wave) osc.setPeriodicWave(wave);
+      else osc.type = 'triangle';
+      osc.frequency.value = f;
+      if (gain === 1) osc.connect(lp);
+      else {
+        const g = ctx.createGain();
+        g.gain.value = gain;
+        osc.connect(g);
+        g.connect(lp);
+        nodes.push(g);
       }
-      env.linearRampToValueAtTime(a * 0.05, offAt);
-      env.linearRampToValueAtTime(0, end);
-      osc.connect(g);
-      g.connect(master);
       osc.start(start);
       osc.stop(end + 0.02);
-      oscs.push(osc);
-      gains.push(g);
+      sources.push(osc);
+      nodes.push(osc);
+    };
+    addString(freq, 1);
+    if (!light) {
+      addString(freq * Math.pow(2, p.detuneCents / 1200), p.string2Gain);
+      const nb = p.thumpGain > 0 ? this.noise(ctx) : null;
+      if (nb) {
+        const src = ctx.createBufferSource();
+        src.buffer = nb;
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(0, start);
+        g.gain.linearRampToValueAtTime(p.thumpGain, start + 0.002);
+        g.gain.setTargetAtTime(0, start + 0.002, p.thumpTau);
+        src.connect(g);
+        g.connect(lp);
+        // Lệch điểm đọc theo phím → các nốt trong hợp âm không trùng nhiễu
+        src.start(start, (Math.round(freq * 7) % 40) / 1000);
+        src.stop(start + Math.min(0.08, p.tEnd));
+        sources.push(src);
+        nodes.push(src, g);
+      }
     }
 
-    const voice: Voice = { osc: oscs[0], gain: gains[0], extra: oscs.slice(1), extraGains: gains.slice(1) };
+    const voice: Voice = { env, sources, nodes };
     if (track) this.voices.add(voice);
     this.allVoices.add(voice);
     return new Promise((resolve) => {
@@ -247,17 +353,16 @@ export class AudioEngine {
         this.allVoices.delete(voice);
         if (track) {
           this.voices.delete(voice);
-          this.lastSoundEnd = Date.now();
+          this.lastSoundEnd = Date.now() + REVERB_GUARD_MS;
         }
         try {
-          oscs.forEach((o) => o.disconnect());
-          gains.forEach((g) => g.disconnect());
+          nodes.forEach((n) => n.disconnect());
         } catch {
           /* bỏ qua */
         }
         resolve();
       };
-      oscs[0].onended = finish;
+      sources[0].onended = finish;
       // Phòng khi context bị treo (onended không bao giờ tới).
       setTimeout(finish, (end - ctx.currentTime) * 1000 + 250);
     });
@@ -269,7 +374,7 @@ export class AudioEngine {
    */
   click(when: number, accent = false): void {
     const ctx = this.ctx;
-    const master = this.master;
+    const master = this.dry ?? this.master;
     if (!ctx || !master) return;
     const t = Math.max(when, ctx.currentTime);
     this.clickTimes = this.clickTimes.filter((c) => c > ctx.currentTime - 1);
@@ -395,15 +500,15 @@ export class AudioEngine {
     this.clicks.clear();
     this.clickTimes = [];
     for (const v of this.allVoices) {
-      const gs = [v.gain, ...(v.extraGains ?? [])];
-      const os = [v.osc, ...(v.extra ?? [])];
+      const g = v.env.gain as AudioParam & { cancelAndHoldAtTime?: (t: number) => AudioParam };
       try {
-        for (const g of gs) {
-          g.gain.cancelScheduledValues(now);
-          g.gain.setValueAtTime(g.gain.value, now);
-          g.gain.linearRampToValueAtTime(0, now + 0.04);
+        if (typeof g.cancelAndHoldAtTime === 'function') g.cancelAndHoldAtTime(now);
+        else {
+          g.cancelScheduledValues(now);
+          g.setValueAtTime(g.value, now);
         }
-        for (const o of os) o.stop(now + 0.05);
+        g.setTargetAtTime(0, now, 0.012); // tắt nhanh nhưng không "tách"
+        for (const s of v.sources) s.stop(now + 0.08);
       } catch {
         /* bỏ qua */
       }

@@ -24,6 +24,7 @@ describe('schema v1 (§7)', () => {
       accompaniment: true,
       timing: 'easy',
       lastBackupAt: 0,
+      onboardedAt: 0,
     });
   });
 
@@ -36,6 +37,7 @@ describe('schema v1 (§7)', () => {
     const raw = { schemaVersion: 1, sessions: [{ id: 'a', date: '2026-10-04', lessonId: 'w1-l1' }] };
     const d = migrate(raw);
     expect(d.settings.autoAdvance).toBe(false);
+    expect(d.settings.onboardedAt).toBe(0); // dữ liệu cũ chưa có trường hướng dẫn → 0
     expect(d.sessions[0].parentAssessments).toEqual([]);
     expect(validateAppData(d)).toEqual([]);
   });

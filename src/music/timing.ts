@@ -29,8 +29,9 @@ export const TIMING_WINDOWS: Record<'easy' | 'normal' | 'strict', { early: numbe
 };
 
 /**
- * Ghép mỗi nốt (hoặc NHÓM nốt cùng lúc — midi là mảng) với lần nghe khớp cao độ gần nhất trong cửa sổ;
- * mỗi lần nghe chỉ dùng một lần.
+ * Ghép mỗi nốt (hoặc NHÓM nốt cùng lúc — midi là mảng) với một lần nghe khớp cao độ trong cửa sổ;
+ * mỗi lần nghe chỉ dùng một lần. Ghép theo cặp LỆCH ÍT NHẤT trước (toàn bài) — nốt móc kép (2/4) đứng sát nhau,
+ * cửa sổ chồng lên nhau: lần nghe thuộc về nốt gần nó nhất, không bị nốt trước "giành" mất.
  */
 export function gradeTiming(
   notes: Array<Pick<TimedNote, 'index' | 'start'> & { midi: number | number[] }>,
@@ -38,24 +39,26 @@ export function gradeTiming(
   early = EARLY,
   late = LATE,
 ): NoteVerdict[] {
-  const used = new Set<number>();
-  return notes.map((n) => {
-    let best = -1;
-    let bestAbs = Infinity;
-    heard.forEach((h, i) => {
+  const pairs: Array<{ n: number; h: number; off: number }> = [];
+  notes.forEach((n, ni) => {
+    heard.forEach((h, hi) => {
       const ok = Array.isArray(n.midi) ? matchHeard(h.midi, n.midi) !== 'none' : h.midi === n.midi;
-      if (used.has(i) || !ok) return;
       const off = h.beat - n.start;
-      if (off < -early || off > late) return;
-      if (Math.abs(off) < bestAbs) {
-        bestAbs = Math.abs(off);
-        best = i;
-      }
+      if (ok && off >= -early && off <= late) pairs.push({ n: ni, h: hi, off });
     });
-    if (best < 0) return { index: n.index, hit: false };
-    used.add(best);
-    return { index: n.index, hit: true, offset: heard[best].beat - n.start };
   });
+  // Lệch ít nhất trước; bằng nhau → nốt trước, lần nghe trước (ổn định)
+  pairs.sort((x, y) => Math.abs(x.off) - Math.abs(y.off) || x.n - y.n || x.h - y.h);
+  const usedH = new Set<number>();
+  const got = new Map<number, number>();
+  for (const p of pairs) {
+    if (usedH.has(p.h) || got.has(p.n)) continue;
+    usedH.add(p.h);
+    got.set(p.n, p.off);
+  }
+  return notes.map((n, ni) =>
+    got.has(ni) ? { index: n.index, hit: true, offset: got.get(ni)! } : { index: n.index, hit: false },
+  );
 }
 
 export function score(verdicts: NoteVerdict[]): number {
@@ -69,4 +72,15 @@ export const PASS_SCORE = 0.8;
 /** 3/2/1 sao theo điểm — chỉ để phản hồi (§10). */
 export function starsFor(s: number): 1 | 2 | 3 {
   return s >= 0.9 ? 3 : s >= 0.6 ? 2 : 1;
+}
+
+/** Số phách đếm vào: một ô nhịp; nhịp 2/4 (ô ngắn) đếm HAI ô — "1 2 1 2" — cho bé kịp vào nhịp. */
+export function countInBeats(beatsPerMeasure: number): number {
+  return beatsPerMeasure < 3 ? beatsPerMeasure * 2 : beatsPerMeasure;
+}
+
+/** Số hiện trên màn lúc đếm vào (phách < 0): thứ tự phách trong ô — 1 2 3 4 / 1 2 3 / 1 2 1 2. */
+export function countInLabel(beat: number, beatsPerMeasure: number, lead = countInBeats(beatsPerMeasure)): number {
+  const k = Math.max(0, lead - Math.ceil(-beat - 1e-6)); // phách thứ k (từ 0) của phần đếm vào
+  return (k % beatsPerMeasure) + 1;
 }
