@@ -1,8 +1,11 @@
-import { notes, rhNote, staffNote } from './targets';
+import { echo, notes, rhNote, staffNote } from './targets';
+import { RH_SOL_LA } from '../piano/fingering';
 import type { WeekPlan } from './types';
 
 /**
- * TUẦN 7 — Thư viện Nốt: đọc nốt khóa Sol C4–G4 (+ La duỗi ngón 5).
+ * TUẦN 7 — Thư viện Nốt: đọc nốt khóa Sol C4–G4 (+ nốt La).
+ * Ngón Sol–La (OWNER duyệt 2026-10-05): Sol–La = ngón 4-5 (tay nhích sang phải một phím, xem fingering.ts RH_SOL_LA);
+ * tuần 1–6 Sol vẫn là ngón 5 ở thế Đô.
  * Gợi ý rút dần: khuông + tên + phím sáng → khuông + tên → chỉ khuông.
  * Tiêu chí: chơi bài tuần 5 chỉ nhìn khuông (bố mẹ xác nhận, hoặc micro ≥ 80%).
  */
@@ -51,17 +54,23 @@ export const WEEK7: WeekPlan = {
     {
       id: 'w7-l3',
       week: 7,
-      title: 'Ngón 5 duỗi tới La',
+      title: 'Nốt La: Sol–La ngón 4-5',
       emoji: '🤸',
       activities: [
         notes({
           id: 'w7-a4',
           step: 'Bài mới',
           title: 'Nốt La',
-          intro: 'Ngón cái vẫn ở Đô. Ngón 5 DUỖI ra một chút là tới La — ngay bên phải Sol. Trong bài hát, khi Sol và La đi liền nhau (Sol–La–Sol), bàn tay nhích sang phải: ngón 4 Sol, ngón 5 La — nhìn số ngón trên nốt nhé!',
-          targets: [rhNote('G4', 'Ngón 5'), rhNote('A4', 'Ngón 5 duỗi ra'), rhNote('G4'), rhNote('A4'), staffNote('A4', 'Ở khe 2')],
+          intro: 'Nốt mới La ở ngay bên phải Sol. Khi Sol và La đi cùng nhau, bàn tay NHÍCH sang phải một phím: ngón 4 đánh Sol, ngón 5 đánh La (Sol–La–Sol = 4-5-4). Nhìn số ngón trên nốt nhé!',
+          targets: [
+            rhNote('G4', 'Thế Đô: Sol vẫn là ngón 5'),
+            rhNote('A4', 'La — ngón 5'),
+            { ...echo(['G4', 'A4', 'G4']), subtitle: 'Tay nhích sang phải: ngón 4-5-4', fingers: ['G4', 'A4', 'G4'].map((p) => RH_SOL_LA[p]) },
+            { ...echo(['G4', 'A4', 'G4', 'F4']), subtitle: 'Ngón 4-5-4-3', fingers: ['G4', 'A4', 'G4', 'F4'].map((p) => RH_SOL_LA[p]) },
+            staffNote('A4', 'Ở khe 2'),
+          ],
         }),
-        { kind: 'song', songId: 'frere_jacques_easy', mode: 'wait', hints: 'full' },
+        { kind: 'song', songId: 'frere_jacques_easy', mode: 'wait', hints: 'full', intro: 'Mỗi câu hát hai lần: lần đầu TO (f), lần sau NHỎ (p) như tiếng vọng.' },
       ],
     },
     {

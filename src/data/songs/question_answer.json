@@ -18,7 +18,8 @@
   {
    "pitch": "C4",
    "beats": 1,
-   "finger": 1
+   "finger": 1,
+   "dyn": "f"
   },
   {
    "pitch": "D4",
@@ -104,7 +105,8 @@
   {
    "pitch": "C4",
    "beats": 1,
-   "finger": 1
+   "finger": 1,
+   "dyn": "p"
   },
   {
    "pitch": "B3",

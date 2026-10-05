@@ -235,3 +235,22 @@ tiếng búa, tắt dần 2 giai đoạn, vang phòng, chưa nhả phím (legato
 
 **Giới hạn còn lại:** đây vẫn là giả lập. Số liệu thật phụ thuộc iPad, đàn và phòng; nhật ký từ màn chẩn đoán là cách để chỉnh tiếp.
 Micro vẫn chỉ nghe được **một nốt mỗi lúc**.
+
+## 15. Giáo trình v4 (OWNER đồng ý 2026-10-05): sắc thái, ngắt/liền, tuần 20 mới, bớt bài lặp
+
+- **Định dạng bài v4:** `dyn` (p/mf/f), `stac` (ngắt tiếng), `slur` (luyến).
+  Khuông nhạc vẽ đủ ký hiệu, app đàn mẫu đúng to/nhỏ và ngắt/liền. Màn bài hát có chú giải ngắn.
+- **Trò chơi mới "dynamics":**
+  - 🦁 TO / 🐭 NHỎ: tuần 5. Micro so với tiếng "vừa" của chính bé, phải to hơn hoặc nhỏ hơn ×1,5.
+  - 🐇 NGẮT / 🐢 LIỀN: tuần 10. Micro đo lượng tiếng còn lại 0,25 s sau khi gõ phím.
+  - Không có micro thì bố mẹ chấm. Micro trượt 2 lần thì có nút "Bố mẹ: qua".
+  - Đo trên giả lập đàn cơ (tests/expression.test.ts): phân biệt đúng ở mọi tổ hợp đã thử.
+  - Giới hạn: khi các nốt cách nhau trên ~0,6 s, chỉ phân biệt chắc chắn được ngắt và liền với nhau, không tách được "liền" với "nhả phím muộn".
+- **Ngón Sol–La = 4-5 từ tuần 7.** Tuần 1–6 giữ nguyên Sol = ngón 5.
+- **Tuần 20 mới "Tháp Nốt Cao" (Đô5–Sol5).** Giáo trình thành 25 tuần, Cấp 3 = tuần 17–25.
+  Dữ liệu cũ được chuyển tự động một lần (`curriculumRev`): tuần ≥ 20 → +1, mã bài `w20-`…`w24-` → `w21-`…`w25-`. Có test chạy hai lần không đổi gì thêm.
+- **Bài hát:** 51 bài.
+  - Thêm 4 bài sáng tác: Rô-bốt đi đều, Siêu nhân bay, Ninja rón rén, Thuyền trôi.
+  - Bớt bản trùng: Ode to Joy, Mary.
+  - **Chưa thêm dân ca Việt Nam:** chưa xác minh chắc chắn giai điệu và tiết tấu. Cần bản nhạc tin cậy từ OWNER.
+- 460 test qua.

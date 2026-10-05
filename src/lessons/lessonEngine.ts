@@ -15,7 +15,10 @@ import { WEEK6 } from './week6';
 import { WEEK7 } from './week7';
 import { WEEK8 } from './week8';
 
-/** Giáo trình — Cấp 1 (tuần 1–8, v2), Cấp 2 (9–16), Cấp 3 (17–24). OWNER duyệt 2026-10-04. */
+/**
+ * Giáo trình — Cấp 1 (tuần 1–8, v2), Cấp 2 (9–16), Cấp 3 (17–25). OWNER duyệt 2026-10-04;
+ * 2026-10-05: chèn tuần 20 "Đọc nốt cao Đô5–Sol5" (25 tuần — dữ liệu cũ đánh số lại ở progress/migrations.ts).
+ */
 export const WEEKS: readonly WeekPlan[] = [
   WEEK1, WEEK2, WEEK3, WEEK4, WEEK5, WEEK6, WEEK7, WEEK8,
   ...LEVEL2_WEEKS,
@@ -25,7 +28,7 @@ export const WEEKS: readonly WeekPlan[] = [
 export const LEVELS: readonly LevelInfo[] = [
   { level: 1, name: 'Cấp 1 · Làm quen', goal: 'Thế Đô hai tay, nhịp cơ bản, đọc nốt khóa Sol, 18 bài hát', weeks: [1, 8] },
   { level: 2, name: 'Cấp 2 · Hai tay', goal: 'Đô giữa, thế Sol, phím đen, nhịp 3/4 & chấm dôi, gam, hai tay cùng lúc', weeks: [9, 16] },
-  { level: 3, name: 'Cấp 3 · Thành thạo', goal: 'Hợp âm, đổi thế, trưởng/thứ, cổ điển, đọc nhạc hai khóa', weeks: [17, 24] },
+  { level: 3, name: 'Cấp 3 · Thành thạo', goal: 'Hợp âm, đổi thế, trưởng/thứ, nốt cao, cổ điển, đọc nhạc hai khóa', weeks: [17, 25] },
 ];
 
 export function levelOf(week: number): LevelInfo {
@@ -60,6 +63,8 @@ export function sessionsOfWeek(data: Readonly<AppData>, week: number): Session[]
 }
 
 const isPitch = (s: string) => /^[A-G](#|b)?\d$/.test(s);
+/** Tuần 20: năm nốt cao thế Đô cao */
+const HIGH_NOTES = ['C5', 'D5', 'E5', 'F5', 'G5'];
 
 type Run = Session['songRuns'][number];
 /** Lượt chơi đạt cả bài (không phải tập một câu). */
@@ -130,7 +135,7 @@ export function weekPassed(week: number, data: Readonly<AppData>): boolean {
       );
     case 8:
     case 16:
-    case 24:
+    case 25:
       return sessions.some((s) => s.parentAssessments.some((a) => a.note === 'medal' && a.result === 'correct'));
     case 9:
       return runs.some((r) => passedWhole(r, 'question_answer'));
@@ -153,12 +158,15 @@ export function weekPassed(week: number, data: Readonly<AppData>): boolean {
     case 19:
       return ear8of10(sessions, (a) => a.expected === 'major' || a.expected === 'minor');
     case 20:
-      return runs.some((r) => passedWhole(r, 'minuet_g'));
+      // APP: đọc nốt cao (Đô5–Sol5) đúng ≥ 8/10
+      return ear8of10(sessions, (a) => HIGH_NOTES.includes(a.expected));
     case 21:
-      return runs.some((r) => passedWhole(r, 'fur_elise'));
+      return runs.some((r) => passedWhole(r, 'minuet_g'));
     case 22:
-      return runs.filter((r) => r.songId.startsWith('sight') && r.passed).length >= 5;
+      return runs.some((r) => passedWhole(r, 'fur_elise'));
     case 23:
+      return runs.filter((r) => r.songId.startsWith('sight') && r.passed).length >= 5;
+    case 24:
       return runs.some((r) => passedWhole(r, 'saints_both', true));
     default:
       return false;
@@ -168,7 +176,7 @@ export function weekPassed(week: number, data: Readonly<AppData>): boolean {
 /** Bài "Học tiếp": bài đầu tiên chưa xong → bài kiểm tra tuần (nếu chưa qua) → bài cuối để ôn. */
 export function nextLesson(data: Readonly<AppData>, rng: () => number = Math.random): Lesson {
   const plan = weekPlan(data.progress.currentWeek);
-  // Đã xong cả 24 tuần → luyện tập mỗi ngày, không có điểm dừng
+  // Đã xong cả giáo trình (MAX_WEEK tuần) → luyện tập mỗi ngày, không có điểm dừng
   if (plan.week === MAX_WEEK && weekPassed(MAX_WEEK, data)) return dailyLesson(data, rng);
   const done = new Set(data.progress.lessonsCompleted);
   const regular = plan.lessons.filter((l) => !l.isWeekTest);
@@ -304,7 +312,7 @@ export function minutesToday(data: Readonly<AppData>, today: string): number {
 }
 
 /**
- * LUYỆN TẬP MỖI NGÀY (sau tuần 24, hoặc bất cứ lúc nào từ Cấp 2):
+ * LUYỆN TẬP MỖI NGÀY (sau tuần cuối MAX_WEEK, hoặc bất cứ lúc nào từ Cấp 2):
  * ôn đọc nhạc + 1 bài CHƯA thuộc (từng nốt → theo nhịp) + 1 bài ĐÃ thuộc (giữ phong độ — ôn ngắt quãng).
  */
 export function dailyLesson(data: Readonly<AppData>, rng: () => number = Math.random): Lesson {
@@ -314,13 +322,15 @@ export function dailyLesson(data: Readonly<AppData>, rng: () => number = Math.ra
   const pick = <T,>(arr: T[]): T | undefined => arr[Math.floor(rng() * arr.length) % Math.max(1, arr.length)];
   const learning = pick(open.filter((s) => !mastered.has(s.id))) ?? pick(open);
   const keep = pick(open.filter((s) => mastered.has(s.id) && s.id !== learning?.id));
-  const positions = week >= 11 ? (['C', 'G'] as const) : (['C'] as const);
+  const positions = week >= 20 ? (['C', 'G', 'C5'] as const) : week >= 11 ? (['C', 'G'] as const) : (['C'] as const);
+  const position = positions[Math.floor(rng() * positions.length) % positions.length];
   const activities: Activity[] = [
     {
       kind: 'sight',
       title: 'Đọc nhạc mỗi ngày',
-      position: positions[Math.floor(rng() * positions.length) % positions.length],
-      hand: week >= 9 && rng() < 0.3 ? 'LH' : 'RH',
+      position,
+      // Thế Đô cao chỉ có tay phải
+      hand: week >= 9 && rng() < 0.3 && position !== 'C5' ? 'LH' : 'RH',
       count: 2,
       rhythm: week >= 14 ? 2 : 1,
       timeSignature: week >= 12 && rng() < 0.3 ? '3/4' : '4/4',

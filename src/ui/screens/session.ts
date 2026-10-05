@@ -4,6 +4,7 @@ import { findTune } from '../../music/exercises';
 import { makeSightTune } from '../../music/sightread';
 import type { App, Screen } from '../App';
 import { quizScreen } from './ear';
+import { dynamicsScreen } from './dynamics';
 import { homeScreen } from './home';
 import { postureScreen } from './posture';
 import { practiceScreen } from './practice';
@@ -96,6 +97,17 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
           title: a.title,
           intro: a.intro,
           patterns: a.patterns,
+          record: (id, r) => store.addParentAssessment(session.id, id, r),
+          onDone: onComplete,
+          onBack: onExit,
+        });
+      case 'dynamics':
+        // v4 — sắc thái to/nhỏ, ngắt/liền: mỗi lượt ghi PARENT_ASSESSMENT `dyn:${mode}:${i}`
+        return dynamicsScreen(app, {
+          title: a.title,
+          intro: a.intro,
+          mode: a.mode,
+          rounds: a.rounds,
           record: (id, r) => store.addParentAssessment(session.id, id, r),
           onDone: onComplete,
           onBack: onExit,

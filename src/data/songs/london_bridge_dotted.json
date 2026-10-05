@@ -20,7 +20,8 @@
   {
    "pitch": "G4",
    "beats": 1.5,
-   "finger": 4
+   "finger": 4,
+   "dyn": "f"
   },
   {
    "pitch": "A4",

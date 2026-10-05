@@ -21,11 +21,21 @@ const ALLOWED = [
   'hand', 'bpm', 'timeSignature', 'week', 'extension', 'position', 'lh', 'lhPosition', 'phrases', 'notes',
 ];
 
-it('có 50 bài hát, id không trùng, đủ tuần 2–23', () => {
-  expect(SONGS).toHaveLength(50);
-  expect(new Set(SONGS.map((s) => s.id)).size).toBe(50);
+it('có 51 bài hát, id không trùng, đủ tuần 2–24 (trừ 16 — hòa nhạc)', () => {
+  expect(SONGS).toHaveLength(51);
+  expect(new Set(SONGS.map((s) => s.id)).size).toBe(51);
   const weeks = new Set(SONGS.map((s) => s.week));
-  for (const w of [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22, 23]) expect(weeks.has(w)).toBe(true);
+  for (const w of [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22, 23, 24]) expect(weeks.has(w)).toBe(true);
+});
+
+it('giảm bài lặp (OWNER duyệt 2026-10-05): Bài ca niềm vui ≤ 6, Chú cừu ≤ 3; có 4 bài tự sáng tác mới', () => {
+  expect(SONGS.filter((s) => s.id.startsWith('ode_to_joy')).length).toBeLessThanOrEqual(6);
+  expect(SONGS.filter((s) => s.id.startsWith('mary')).length).toBeLessThanOrEqual(3);
+  for (const id of ['robot_march', 'superhero_fly', 'ninja_tiptoe', 'drifting_boat']) {
+    const s = SONGS.find((x) => x.id === id);
+    expect(s, id).toBeDefined();
+    expect(s!.arrangementBy).toContain('tự sáng tác');
+  }
 });
 
 describe.each(SONGS.map((s) => [s.id, s] as const))('bài hát %s', (_id, song: Tune) => {
@@ -35,6 +45,42 @@ describe.each(SONGS.map((s) => [s.id, s] as const))('bài hát %s', (_id, song: 
     expect(song.attributionRequired).toBe(false);
     expect(['4/4', '3/4']).toContain(song.timeSignature);
     expect(song.bpm).toBe(60);
+  });
+
+  it('sắc thái / ngắt / luyến (v4) hợp lệ: p/mf/f từ tuần 5, ngắt & luyến từ tuần 10, luyến đóng mở đúng', () => {
+    for (const v of [song.notes, song.lh ?? []]) {
+      let open = false;
+      let cur: string | undefined;
+      let prev: string | undefined;
+      for (const n of v) {
+        if (n.dyn !== undefined) {
+          expect(['p', 'mf', 'f']).toContain(n.dyn);
+          expect(n.dyn).not.toBe(cur); // không ghi lặp cùng một sắc thái
+          cur = n.dyn;
+          expect(song.week).toBeGreaterThanOrEqual(5);
+        }
+        if (n.rest) {
+          expect(n.stac ?? n.slur).toBeUndefined();
+          continue;
+        }
+        if (n.stac !== undefined || n.slur !== undefined) expect(song.week).toBeGreaterThanOrEqual(10);
+        if (n.stac !== undefined) {
+          expect(n.stac).toBe(true);
+          expect(open).toBe(false); // không ngắt trong dấu luyến
+        }
+        // Trong dấu luyến không lặp cùng một phím (không thể đàn liền hai lần cùng phím)
+        if (open && n.slur !== 'start') expect(n.pitch, `${song.id}: luyến lặp phím`).not.toBe(prev);
+        prev = n.pitch;
+        if (n.slur === 'start') {
+          expect(open).toBe(false);
+          open = true;
+        } else if (n.slur === 'end') {
+          expect(open).toBe(true);
+          open = false;
+        }
+      }
+      expect(open).toBe(false);
+    }
   });
 
   it('mọi nốt đúng thế tay & số ngón (§6 + thế mới); hai bè dài bằng nhau', () => {

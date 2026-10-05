@@ -18,7 +18,8 @@
   {
    "pitch": "E3",
    "beats": 1,
-   "finger": 3
+   "finger": 3,
+   "dyn": "f"
   },
   {
    "pitch": "D3",
@@ -33,7 +34,8 @@
   {
    "pitch": "E3",
    "beats": 1,
-   "finger": 3
+   "finger": 3,
+   "dyn": "p"
   },
   {
    "pitch": "D3",
@@ -48,7 +50,8 @@
   {
    "pitch": "C3",
    "beats": 0.5,
-   "finger": 5
+   "finger": 5,
+   "dyn": "mf"
   },
   {
    "pitch": "C3",
@@ -88,7 +91,8 @@
   {
    "pitch": "E3",
    "beats": 1,
-   "finger": 3
+   "finger": 3,
+   "dyn": "f"
   },
   {
    "pitch": "D3",

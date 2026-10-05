@@ -3,9 +3,12 @@ import { matchHeard } from '../../audio/match';
 import { confetti } from '../components/celebrate';
 import { PASS_SCORE, TIMING_WINDOWS, gradeTiming, score as scoreOf, starsFor, type HeardEvent } from '../../music/timing';
 import {
+  DYN_VOLUME,
   accompaniment,
   allTimed,
   beatsPerMeasure,
+  dynAtBeat,
+  expressionUsed,
   onsets,
   phraseRanges,
   pitchesOf,
@@ -59,6 +62,24 @@ function fingerMap(t: Tune): Map<number, { finger: number; hand: Hand }> {
     }
   }
   return m;
+}
+
+/**
+ * v4 — Chú thích nhỏ khi bài có ký hiệu sắc thái / ngắt / luyến (chữ ít, dễ hiểu cho bé).
+ * Micro vẫn chỉ chấm cao độ & nhịp — không trừ điểm sắc thái.
+ */
+function expressionLegend(t: Tune): HTMLElement | null {
+  const u = expressionUsed(t);
+  if (!u.dyn && !u.stac && !u.slur) return null;
+  const item = (sym: HTMLElement, text: string) => h('span', { class: 'legend-item' }, sym, ' ', text);
+  return h(
+    'div',
+    { class: 'song-legend' },
+    u.dyn ? item(h('i', { class: 'legend-dyn' }, 'p'), '= nhỏ 🐭') : null,
+    u.dyn ? item(h('i', { class: 'legend-dyn' }, 'f'), '= to 🦁') : null,
+    u.stac ? item(h('b', { class: 'legend-sym' }, '•'), 'chấm = ngắt tiếng 🐇') : null,
+    u.slur ? item(h('b', { class: 'legend-sym' }, '⌒'), 'dấu luyến = đàn liền 🐢') : null,
+  );
 }
 
 /**
@@ -151,6 +172,8 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
         ranges.forEach(([a, b], i) => opt.append(chip(`Câu ${i + 1}`, !!phrase && phrase[0] === a, () => ((phrase = [a, b]), reset()))));
       }
       if (opt.childElementCount) rows.push(opt);
+      const legend = expressionLegend(full);
+      if (legend) rows.push(legend);
       head.replaceChildren(...rows);
     }
 
@@ -252,7 +275,10 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
     function scheduleAccomp(t0: number, spb: number): void {
       if (!settings.accompaniment || micOn()) return;
       for (const a of accompaniment(tune)) {
-        void app.audio.scheduleFreq(midiToFreq(a.midi), t0 + a.start * spb, a.beats * spb * 0.9, 0.45, false);
+        // v4: bè đệm to/nhỏ theo sắc thái của giai điệu (mf = như cũ)
+        const d = dynAtBeat(tune, a.start);
+        const vol = 0.45 * (d ? DYN_VOLUME[d] / DYN_VOLUME.mf : 1);
+        void app.audio.scheduleFreq(midiToFreq(a.midi), t0 + a.start * spb, a.beats * spb * 0.9, vol, false);
       }
     }
 

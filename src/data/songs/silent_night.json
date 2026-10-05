@@ -23,7 +23,9 @@
   {
    "pitch": "G4",
    "beats": 1.5,
-   "finger": 2
+   "finger": 2,
+   "dyn": "p",
+   "slur": "start"
   },
   {
    "pitch": "A4",
@@ -33,7 +35,8 @@
   {
    "pitch": "G4",
    "beats": 1,
-   "finger": 2
+   "finger": 2,
+   "slur": "end"
   },
   {
    "pitch": "E4",
@@ -43,7 +46,8 @@
   {
    "pitch": "G4",
    "beats": 1.5,
-   "finger": 2
+   "finger": 2,
+   "slur": "start"
   },
   {
    "pitch": "A4",
@@ -53,7 +57,8 @@
   {
    "pitch": "G4",
    "beats": 1,
-   "finger": 2
+   "finger": 2,
+   "slur": "end"
   },
   {
    "pitch": "E4",
@@ -93,52 +98,8 @@
   {
    "pitch": "A4",
    "beats": 2,
-   "finger": 3
-  },
-  {
-   "pitch": "A4",
-   "beats": 1,
-   "finger": 3
-  },
-  {
-   "pitch": "C5",
-   "beats": 1.5,
-   "finger": 5
-  },
-  {
-   "pitch": "B4",
-   "beats": 0.5,
-   "finger": 4
-  },
-  {
-   "pitch": "A4",
-   "beats": 1,
-   "finger": 3
-  },
-  {
-   "pitch": "G4",
-   "beats": 1.5,
-   "finger": 2
-  },
-  {
-   "pitch": "A4",
-   "beats": 0.5,
-   "finger": 3
-  },
-  {
-   "pitch": "G4",
-   "beats": 1,
-   "finger": 2
-  },
-  {
-   "pitch": "E4",
-   "beats": 3,
-   "finger": 1
-  },
-  {
-   "pitch": "A4",
-   "beats": 2,
-   "finger": 3
+   "finger": 3,
+   "dyn": "mf"
   },
   {
    "pitch": "A4",
@@ -181,9 +142,55 @@
    "finger": 1
   },
   {
-   "pitch": "D5",
+   "pitch": "A4",
    "beats": 2,
    "finger": 3
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "C5",
+   "beats": 1.5,
+   "finger": 5
+  },
+  {
+   "pitch": "B4",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 1.5,
+   "finger": 2
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 3,
+   "finger": 1
+  },
+  {
+   "pitch": "D5",
+   "beats": 2,
+   "finger": 3,
+   "dyn": "p"
   },
   {
    "pitch": "D5",

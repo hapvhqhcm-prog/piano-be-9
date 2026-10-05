@@ -51,7 +51,7 @@ export const WEEK6: WeekPlan = {
       title: 'Bánh nóng — tay trái',
       emoji: '🥐',
       activities: [
-        { kind: 'song', songId: 'hot_cross_buns_lh', mode: 'wait', hints: 'full' },
+        { kind: 'song', songId: 'hot_cross_buns_lh', mode: 'wait', hints: 'full', intro: 'Trò tiếng vọng: ô 1 đàn TO (f), ô 2 đàn NHỎ (p) như tiếng vọng trong hang!' },
         { kind: 'song', songId: 'hot_cross_buns_lh', mode: 'tempo', level: 2, hints: 'full' },
       ],
     },
@@ -71,7 +71,7 @@ export const WEEK6: WeekPlan = {
       title: 'Khúc Largo (tay phải)',
       emoji: '🏡',
       activities: [
-        { kind: 'song', songId: 'largo_new_world', mode: 'wait', hints: 'full', intro: 'Một giai điệu rất hay của nhạc sĩ Dvořák — đàn chậm và êm nhé.' },
+        { kind: 'song', songId: 'largo_new_world', mode: 'wait', hints: 'full', intro: 'Một giai điệu rất hay của nhạc sĩ Dvořák. Dấu p = đàn NHỎ — chậm và êm nhé.' },
         { kind: 'song', songId: 'largo_new_world', mode: 'tempo', level: 3, hints: 'full' },
       ],
     },

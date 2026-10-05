@@ -5,6 +5,8 @@ import type { Activity, Lesson, WeekPlan } from './types';
  * CẤP 2 — "Hai tay & đọc nhạc" (tuần 9–16). OWNER yêu cầu hoàn thiện giáo trình tới mức thành thạo (2026-10-04).
  * Thế tay mới (số ngón theo bảng POSITIONS trong fingering.ts): Đô giữa tay trái, thế Sol, thế Rê (Fa♯), Đô thứ (Mi♭),
  * gam Đô trưởng luồn ngón; nhịp 3/4, nốt chấm dôi, móc đơn; hai tay luân phiên → hai tay cùng lúc.
+ * KIỂU ĐÀN (OWNER duyệt 2026-10-05): tuần 10 trò "Ngắt hay liền?" — NGẮT (staccato, dấu chấm trên nốt) và
+ * LIỀN (legato, dấu luyến cong); từ đây các bài có dấu chấm ngắt / dấu luyến.
  */
 
 const song = (songId: string, mode: 'wait' | 'tempo', level: 2 | 3 = 2, hints: 'full' | 'names' | 'staff' = 'full', intro?: string): Activity => ({
@@ -77,11 +79,35 @@ export const WEEK10: WeekPlan = {
   story: 'Trong Thung lũng Song Ca, hai tay hát CÙNG LÚC: tay trái giữ một nốt dài làm nền, tay phải hát giai điệu.',
   leftHand: true,
   warmup: { variant: 'identify', pool: ['C3', 'D3', 'E3', 'F3', 'G3'], rounds: 8, reference: 'C3' },
-  teach: { emoji: '👨‍🏫', text: 'Con chỉ bố/mẹ: tay trái bấm Đô và GIỮ, tay phải đàn Mi Rê Đô.' },
+  teach: { emoji: '👨‍🏫', text: 'Con chỉ bố/mẹ: tay trái bấm Đô và GIỮ, tay phải đàn Mi Rê Đô. Rồi đàn Đô Rê Mi NGẮT (nảy như bóng) và LIỀN (nối như dòng nước).' },
   criterion: { text: 'Chơi trọn "Bài ca niềm vui — hai tay" theo nhịp', who: 'PARENT/MIC' },
   lessons: [
     pair('w10-l1', 10, 'Bánh nóng — hai tay', '🥐', 'hot_cross_buns_both', 'full', 'Tay trái giữ Đô thật lâu, tay phải đàn bài quen.'),
-    pair('w10-l2', 10, 'Chú cừu — hai tay', '🐑', 'mary_lamb_both'),
+    {
+      // OWNER duyệt 2026-10-05: thay "Chú cừu — hai tay" (bài lặp) bằng bài kiểu đàn ngắt / liền
+      id: 'w10-l2',
+      week: 10,
+      title: 'Ngắt & liền',
+      emoji: '🤖',
+      activities: [
+        {
+          kind: 'dynamics',
+          title: 'Ngắt hay liền? 🏀🌊',
+          intro: 'NGẮT (dấu chấm trên nốt): chạm rồi nhấc ngón lên ngay, như quả bóng nảy. LIỀN (dấu luyến cong): giữ nốt này tới khi nốt sau vang lên, như dòng nước chảy. Thầy đàn mẫu, con đàn lại!',
+          mode: 'stac-leg',
+          rounds: [
+            { pitches: ['C4', 'D4', 'E4'], want: 'leg', fingers: [1, 2, 3], hand: 'RH' },
+            { pitches: ['C4', 'D4', 'E4'], want: 'stac', fingers: [1, 2, 3], hand: 'RH' },
+            { pitches: ['G4', 'F4', 'E4', 'D4', 'C4'], want: 'leg', fingers: [5, 4, 3, 2, 1], hand: 'RH' },
+            { pitches: ['C4', 'E4', 'G4'], want: 'stac', fingers: [1, 3, 5], hand: 'RH' },
+            { pitches: ['E4', 'F4', 'G4'], want: 'leg', fingers: [3, 4, 5], hand: 'RH' },
+            { pitches: ['G4', 'G4', 'G4'], want: 'stac', fingers: [5, 5, 5], hand: 'RH' },
+          ],
+        },
+        song('robot_march', 'wait', 2, 'full', 'Rô-bốt đi đều: mọi nốt có dấu chấm — đàn NGẮT và TO (f). Ô 5 rô-bốt đi xa: NHỎ (p)!'),
+        song('robot_march', 'tempo', 2, 'full'),
+      ],
+    },
     pair('w10-l3', 10, 'Bài ca niềm vui — hai tay', '🎶', 'ode_to_joy_both'),
   ],
 };
@@ -186,7 +212,7 @@ export const WEEK12: WeekPlan = {
       ],
     },
     pair('w12-l2', 12, 'Điệu valse con mèo', '🐱', 'waltz_cat'),
-    pair('w12-l3', 12, 'Điệu valse mưa rơi', '🌧️', 'waltz_rain'),
+    pair('w12-l3', 12, 'Điệu valse mưa rơi', '🌧️', 'waltz_rain', 'full', 'Dấu luyến cong: đàn LIỀN, nốt nọ nối nốt kia. Dấu p: NHỎ như mưa phùn.'),
     pair('w12-l4', 12, 'Chúc mừng sinh nhật', '🎂', 'birthday_both', 'full', 'Bài bắt đầu ở phách 3 ("Hap-py" lấy đà). Câu 1 tay trái hát trọn; các câu sau tay trái mở đầu, tay phải nối tiếp!'),
   ],
 };
@@ -224,7 +250,8 @@ export const WEEK13: WeekPlan = {
       ],
     },
     pair('w13-l2', 13, 'Bài ca niềm vui — thế Rê', '🎶', 'ode_to_joy_d', 'names'),
-    pair('w13-l3', 13, 'Chú cừu — thế Rê', '🐑', 'mary_lamb_d', 'names'),
+    // OWNER duyệt 2026-10-05: thay "Chú cừu — thế Rê" (bài lặp) bằng bài tự sáng tác ở thế Rê
+    pair('w13-l3', 13, 'Siêu nhân bay', '🦸', 'superhero_fly', 'names', 'Thế Rê có Fa thăng. Nhảy Rê – Fa♯ – La thật TO (f) như siêu nhân cất cánh!'),
     {
       id: 'w13-l4',
       week: 13,

@@ -19,7 +19,8 @@
   {
    "pitch": "C5",
    "beats": 2,
-   "finger": 5
+   "finger": 5,
+   "dyn": "f"
   },
   {
    "pitch": "B4",

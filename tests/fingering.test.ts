@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { LH_FINGERING, RH_FINGERING, fingerFor, fingerInPosition } from '../src/piano/fingering';
+import { LH_FINGERING, RH_FINGERING, RH_SOL_LA, fingerFor, fingerInPosition } from '../src/piano/fingering';
+import { SONGS } from '../src/music/tune';
 import { PHASE1_WEEKS } from '../src/lessons/lessonEngine';
 
 describe('fingering (§6 — khóa cứng)', () => {
-  it('La duỗi ngón 5 (A4=5) chỉ khi cho phép mở rộng', () => {
+  it('La (A4=5) chỉ khi cho phép mở rộng', () => {
     expect(fingerFor('A4', 'RH')).toBeUndefined();
     expect(fingerFor('A4', 'RH', true)).toBe(5);
     expect(fingerFor('A4', 'LH', true)).toBeUndefined();
@@ -23,9 +24,12 @@ describe('fingering (§6 — khóa cứng)', () => {
   });
 
   it('mọi nốt có số ngón trong bài học khớp bảng thế tay (§6 tuần 1–8; thế mới từ tuần 9)', () => {
-    const POS = ['C', 'MC', 'G', 'D', 'Cm', 'Am'] as const;
+    const POS = ['C', 'MC', 'G', 'D', 'Cm', 'Am', 'C5'] as const;
+    // Tuần 1–8: bảng thế Đô; từ tuần 7 thêm "thế Đô nhích lên" Sol–La = 4-5 (OWNER duyệt 2026-10-05)
     const okFinger = (pitch: string, hand: 'RH' | 'LH', f: number | undefined, week: number) =>
-      week <= 8 ? f === fingerFor(pitch, hand, true) : POS.some((p) => fingerInPosition(pitch, hand, p, true) === f);
+      week <= 8
+        ? f === fingerFor(pitch, hand, true) || (week >= 7 && hand === 'RH' && RH_SOL_LA[pitch] === f)
+        : POS.some((p) => fingerInPosition(pitch, hand, p, true) === f);
     for (const w of PHASE1_WEEKS) {
       for (const l of w.lessons) {
         for (const a of l.activities) {
@@ -57,6 +61,57 @@ describe('fingering (§6 — khóa cứng)', () => {
   });
 });
 
+describe('Sol–La ngón 4-5 (OWNER duyệt 2026-10-05)', () => {
+  it('thế Đô nhích lên: Sol=4, La=5; thế Đô thuần vẫn Sol=5', () => {
+    expect(RH_SOL_LA.G4).toBe(4);
+    expect(RH_SOL_LA.A4).toBe(5);
+    expect(fingerFor('G4', 'RH')).toBe(5);
+    expect(Object.isFrozen(RH_SOL_LA)).toBe(true);
+  });
+
+  it('tuần 1–6 không có La và Sol luôn là ngón 5', () => {
+    for (const w of PHASE1_WEEKS.filter((x) => x.week <= 6)) {
+      for (const l of w.lessons) {
+        for (const a of l.activities) {
+          if (a.kind === 'notes') {
+            for (const t of a.segment.targets) {
+              expect(t.keys).not.toContain('A4');
+              t.keys.forEach((k, i) => {
+                if (k === 'G4' && t.hand !== 'LH') expect(t.fingers?.[i] ?? t.finger ?? 5, l.id).toBe(5);
+              });
+            }
+          }
+          if (a.kind === 'dynamics') for (const r of a.rounds) r.pitches.forEach((p, i) => p === 'G4' && expect(r.fingers?.[i] ?? 5).toBe(5));
+        }
+      }
+    }
+    for (const s of SONGS.filter((x) => (x.week ?? 0) <= 6)) {
+      expect(s.notes.some((n) => n.pitch === 'A4'), s.id).toBe(false);
+      for (const n of s.notes) if (n.pitch === 'G4' && s.hand !== 'LH') expect(n.finger, s.id).toBe(5);
+    }
+  });
+
+  it('tuần 7 dạy Sol–La–Sol bằng ngón 4-5-4', () => {
+    const w7 = PHASE1_WEEKS.find((w) => w.week === 7)!;
+    const targets = w7.lessons.flatMap((l) => l.activities.flatMap((a) => (a.kind === 'notes' ? a.segment.targets : [])));
+    const gag = targets.find((t) => t.sequence && t.keys.join() === 'G4,A4,G4');
+    expect(gag?.fingers).toEqual([4, 5, 4]);
+  });
+
+  it('bài thế Đô có La: Sol đứng liền La luôn là ngón 4 (không lặp ngón 5)', () => {
+    for (const s of SONGS.filter((x) => x.extension === 'A4')) {
+      const ns = s.notes.filter((n) => !n.rest);
+      for (let i = 0; i + 1 < ns.length; i++) {
+        const pair = [ns[i].pitch, ns[i + 1].pitch].join();
+        if (pair === 'G4,A4' || pair === 'A4,G4') {
+          const g = ns[i].pitch === 'G4' ? ns[i] : ns[i + 1];
+          expect(g.finger, `${s.id} nốt ${i}`).toBe(4);
+        }
+      }
+    }
+  });
+});
+
 describe('thế tay Cấp 2–3', () => {
   it('thế Sol, Đô giữa, thế Rê, Đô thứ, La thứ đúng cách bấm chuẩn', () => {
     expect(['G4', 'A4', 'B4', 'C5', 'D5'].map((p) => fingerInPosition(p, 'RH', 'G'))).toEqual([1, 2, 3, 4, 5]);
@@ -65,5 +120,6 @@ describe('thế tay Cấp 2–3', () => {
     expect(fingerInPosition('Eb4', 'RH', 'Cm')).toBe(3);
     expect(['A3', 'B3', 'C4', 'D4', 'E4'].map((p) => fingerInPosition(p, 'RH', 'Am'))).toEqual([1, 2, 3, 4, 5]);
     expect(fingerInPosition('F4', 'RH', 'D')).toBeUndefined();
+    expect(['C5', 'D5', 'E5', 'F5', 'G5'].map((p) => fingerInPosition(p, 'RH', 'C5'))).toEqual([1, 2, 3, 4, 5]);
   });
 });

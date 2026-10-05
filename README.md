@@ -1,4 +1,4 @@
-# Piano bé — PIANO-BE-9-TUOI (3 cấp · 24 tuần · luyện tập mỗi ngày)
+# Piano bé — PIANO-BE-9-TUOI (3 cấp · 25 tuần · luyện tập mỗi ngày)
 
 **Bản đang chạy:** https://hapvhqhcm-prog.github.io/piano-be-9/
 

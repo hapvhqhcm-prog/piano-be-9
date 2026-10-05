@@ -19,7 +19,8 @@
   {
    "pitch": "D5",
    "beats": 1,
-   "finger": 5
+   "finger": 5,
+   "dyn": "mf"
   },
   {
    "pitch": "B4",
@@ -49,7 +50,8 @@
   {
    "pitch": "G4",
    "beats": 1,
-   "finger": 1
+   "finger": 1,
+   "slur": "start"
   },
   {
    "pitch": "A4",
@@ -64,7 +66,8 @@
   {
    "pitch": "C5",
    "beats": 1,
-   "finger": 4
+   "finger": 4,
+   "slur": "end"
   },
   {
    "pitch": "D5",

@@ -19,7 +19,8 @@
   {
    "pitch": "B2",
    "beats": 1,
-   "finger": 3
+   "finger": 3,
+   "dyn": "f"
   },
   {
    "pitch": "A2",
@@ -34,7 +35,8 @@
   {
    "pitch": "B2",
    "beats": 1,
-   "finger": 3
+   "finger": 3,
+   "dyn": "p"
   },
   {
    "pitch": "A2",
@@ -49,7 +51,8 @@
   {
    "pitch": "G2",
    "beats": 0.5,
-   "finger": 5
+   "finger": 5,
+   "dyn": "mf"
   },
   {
    "pitch": "G2",
@@ -89,7 +92,8 @@
   {
    "pitch": "B2",
    "beats": 1,
-   "finger": 3
+   "finger": 3,
+   "dyn": "f"
   },
   {
    "pitch": "A2",

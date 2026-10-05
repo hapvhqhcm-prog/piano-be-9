@@ -5,7 +5,13 @@
 
 export const SCHEMA_VERSION = 1 as const;
 /**
- * Giới hạn kiểm tra tuần (giáo trình hiện có 24 tuần; để rộng cho các cấp sau).
+ * (+) Phiên bản GIÁO TRÌNH (khác schemaVersion — chỉ đổi cách đánh số tuần / mã bài học, không đổi cấu trúc).
+ * 1 = 24 tuần (trước 2026-10-05) · 2 = 25 tuần: chèn tuần 20 "Đọc nốt cao Đô5–Sol5", tuần 20–24 cũ thành 21–25
+ * (OWNER duyệt 2026-10-05). Dữ liệu thiếu trường này = rev 1 → migrations.ts đánh số lại một lần.
+ */
+export const CURRICULUM_REV = 2;
+/**
+ * Giới hạn kiểm tra tuần (giáo trình hiện có 25 tuần; để rộng cho các cấp sau).
  * LỖI ĐÃ SỬA 2026-10-04: trước đây giới hạn là 8 → lên tuần 9 thì dữ liệu bị coi là hỏng và bị đặt lại.
  */
 export const MAX_WEEK_LIMIT = 52;
@@ -115,6 +121,8 @@ export interface Progress {
 
 export interface AppData {
   schemaVersion: 1;
+  /** (+) Phiên bản giáo trình — xem CURRICULUM_REV */
+  curriculumRev: number;
   learner: { name: string; createdAt: string };
   settings: Settings;
   progress: Progress;
@@ -148,6 +156,7 @@ export function defaultSettings(): Settings {
 export function defaultData(now: Date = new Date()): AppData {
   return {
     schemaVersion: SCHEMA_VERSION,
+    curriculumRev: CURRICULUM_REV,
     learner: { name: '', createdAt: localDateStr(now) },
     settings: defaultSettings(),
     progress: { currentWeek: 1, lessonsCompleted: [], practiceDays: {} },
@@ -162,6 +171,10 @@ export function validateAppData(x: unknown): string[] {
   const errs: string[] = [];
   if (!isObj(x)) return ['Dữ liệu không phải object'];
   if (x.schemaVersion !== SCHEMA_VERSION) errs.push('schemaVersion phải là 1');
+  // Không có = dữ liệu cũ (rev 1) — migrate() sẽ điền; có thì phải là số nguyên ≥ 1
+  if (x.curriculumRev !== undefined && (!Number.isInteger(x.curriculumRev) || (x.curriculumRev as number) < 1)) {
+    errs.push('curriculumRev');
+  }
   if (!isObj(x.learner)) errs.push('Thiếu learner');
   const st = x.settings;
   if (!isObj(st)) errs.push('Thiếu settings');

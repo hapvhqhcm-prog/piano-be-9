@@ -19,7 +19,9 @@
   {
    "pitch": "C3",
    "beats": 1,
-   "finger": 5
+   "finger": 5,
+   "dyn": "mf",
+   "slur": "start"
   },
   {
    "pitch": "D3",
@@ -54,12 +56,14 @@
   {
    "pitch": "C4",
    "beats": 1,
-   "finger": 1
+   "finger": 1,
+   "slur": "end"
   },
   {
    "pitch": "C4",
    "beats": 1,
-   "finger": 1
+   "finger": 1,
+   "slur": "start"
   },
   {
    "pitch": "B3",
@@ -94,7 +98,8 @@
   {
    "pitch": "C3",
    "beats": 1,
-   "finger": 5
+   "finger": 5,
+   "slur": "end"
   }
  ]
 }

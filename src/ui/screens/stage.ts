@@ -1,3 +1,4 @@
+import { LEVELS } from '../../lessons/lessonEngine';
 import { songsUpToWeek, type Tune } from '../../music/tune';
 import type { SongRun } from '../../progress/schema';
 import type { App } from '../App';
@@ -20,7 +21,8 @@ export interface StageHooks {
 export function stageScreen(app: App, hooks: StageHooks) {
   return (root: HTMLElement) => {
     const level = hooks.level ?? 1;
-    const upTo = level === 1 ? 8 : level === 2 ? 16 : 24;
+    // Tuần cuối của cấp (Cấp 3 = tuần 17–25 từ 2026-10-05)
+    const upTo = LEVELS[level - 1].weeks[1];
     // Cấp 1: bài tay phải; Cấp 2–3: mọi bài đã mở (ưu tiên bài mới của cấp đó lên đầu)
     const choices = songsUpToWeek(upTo)
       .filter((s) => level > 1 || s.hand === 'RH')

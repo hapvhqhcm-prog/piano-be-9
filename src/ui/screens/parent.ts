@@ -1,4 +1,4 @@
-import { WEEKS, findLesson, levelOf, masteredSongs, weekPassed, weekPlan } from '../../lessons/lessonEngine';
+import { MAX_WEEK, WEEKS, findLesson, levelOf, masteredSongs, weekPassed, weekPlan } from '../../lessons/lessonEngine';
 import { SONGS } from '../../music/tune';
 import { parentTip } from '../../lessons/parentTips';
 import { findTune } from '../../music/exercises';
@@ -396,7 +396,7 @@ export function parentScreen(app: App) {
                 (v) => set({ autoAdvanceDelaySec: v }),
               )
             : null,
-          h('h3', {}, 'Tuần hiện tại (1–24) — chỉ đổi khi cần'),
+          h('h3', {}, `Tuần hiện tại (1–${MAX_WEEK}) — chỉ đổi khi cần`),
           (() => {
             const sel = h('select', { class: 'text-in' }) as HTMLSelectElement;
             for (const w of WEEKS) {

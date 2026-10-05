@@ -139,9 +139,43 @@ export function phraseRanges(t: Tune): Array<[number, number]> {
 }
 
 function sliceVoice(notes: TuneNote[], bpm: number, from: number, to: number): TuneNote[] {
-  return timed(notes, bpm, 'RH', 0)
-    .filter((n) => n.start >= from * bpm - 1e-9 && n.start < to * bpm - 1e-9)
-    .map(({ pitch, beats, finger, rest, also }) => ({ pitch, beats, finger, rest, also }));
+  const all = timed(notes, bpm, 'RH', 0);
+  const inside = all.filter((n) => n.start >= from * bpm - 1e-9 && n.start < to * bpm - 1e-9);
+  const out: TuneNote[] = inside.map(({ pitch, beats, finger, rest, also, dyn, stac, slur }) => {
+    const n: TuneNote = { pitch, beats, finger, rest, also };
+    if (dyn) n.dyn = dyn;
+    if (stac) n.stac = stac;
+    if (slur) n.slur = slur;
+    return n;
+  });
+  if (!inside.length) return out;
+  const before = all.slice(0, inside[0].index);
+  // v4: câu bắt đầu giữa chừng → mang theo sắc thái đang có hiệu lực
+  const first = out.find((n) => !n.rest);
+  const dynBefore = [...before].reverse().find((n) => n.dyn)?.dyn;
+  if (first && !first.dyn && dynBefore) first.dyn = dynBefore;
+  // v4: dấu luyến bị cắt ngang → mở/đóng lại ở mép câu
+  const openBefore = slurOpen(before);
+  if (openBefore && first) {
+    if (first.slur === 'end') delete first.slur;
+    else if (!first.slur) first.slur = 'start';
+  }
+  if (slurOpen(out)) {
+    const last = [...out].reverse().find((n) => !n.rest);
+    if (last?.slur === 'start') delete last.slur;
+    else if (last) last.slur = 'end';
+  }
+  return out;
+}
+
+/** Có dấu luyến đang mở (chưa đóng) ở cuối dãy nốt không. */
+function slurOpen(notes: TuneNote[]): boolean {
+  let open = false;
+  for (const n of notes) {
+    if (n.slur === 'start') open = true;
+    else if (n.slur === 'end') open = false;
+  }
+  return open;
 }
 
 /** Cắt một đoạn ô nhịp thành bài con (để tập từng câu). */
@@ -264,6 +298,84 @@ export function accompaniment(t: Tune): AccompNote[] {
     out.push({ start: m * bpm, beats: Math.min(2, bpm), midi: root });
     if (bpm >= 3) out.push({ start: m * bpm + 2, beats: Math.min(2, bpm - 2), midi: root + 7 });
   }
+  return out;
+}
+
+// ---------------- v4: Sắc thái & kiểu đàn (khi phát mẫu) ----------------
+
+/** Âm lượng tương đối khi phát mẫu: p nhỏ, mf vừa, f to. */
+export const DYN_VOLUME: Record<Dynamic, number> = { p: 0.45, mf: 0.75, f: 1 };
+/** Nốt ngắt tiếng chỉ kêu ~35% độ dài viết */
+export const STAC_FRACTION = 0.35;
+/** Nốt thường: nhấc phím sớm một chút (như trước v4) */
+const NORMAL_FRACTION = 0.95;
+
+export interface NoteStyle {
+  /** Sắc thái đang có hiệu lực (null = bài không ghi sắc thái) */
+  dyn: Dynamic | null;
+  /** Âm lượng tương đối (1 = như bài không ghi sắc thái) */
+  vol: number;
+  /** Độ dài thật sự kêu (phách) */
+  len: number;
+  /** Nằm trong dấu luyến (đàn liền) */
+  slurred: boolean;
+}
+
+/** Bài có dùng ký hiệu sắc thái / ngắt / luyến không (để hiện chú thích). */
+export function expressionUsed(t: Tune): { dyn: boolean; stac: boolean; slur: boolean } {
+  const all = [...t.notes, ...(t.lh ?? [])];
+  return { dyn: all.some((n) => !!n.dyn), stac: all.some((n) => !!n.stac), slur: all.some((n) => !!n.slur) };
+}
+
+/** Kiểu đàn của từng nốt (theo TimedNote.index, cả hai bè). */
+export function noteStyles(t: Tune): Map<number, NoteStyle> {
+  const out = new Map<number, NoteStyle>();
+  const anyDyn = expressionUsed(t).dyn;
+  for (const voice of [timeline(t), lhTimeline(t)]) {
+    // Bài có ghi sắc thái: trước dấu đầu tiên coi như mf
+    let cur: Dynamic | null = anyDyn ? 'mf' : null;
+    let open = false;
+    for (const n of voice) {
+      if (n.dyn) cur = n.dyn;
+      if (n.rest) continue;
+      if (n.slur === 'start') open = true;
+      const ending = n.slur === 'end';
+      const slurred = open || ending;
+      // Trong dấu luyến: giữ phím tới tận nốt sau (chồng nhẹ cho liền tiếng); nốt cuối luyến nhấc tay
+      const frac = n.stac ? STAC_FRACTION : open && !ending ? 1.02 : ending ? 0.85 : NORMAL_FRACTION;
+      out.set(n.index, { dyn: cur, vol: cur ? DYN_VOLUME[cur] : 1, len: n.beats * frac, slurred });
+      if (ending) open = false;
+    }
+  }
+  return out;
+}
+
+/** Sắc thái của bè chính tại phách `beat` (null = bài không ghi sắc thái). */
+export function dynAtBeat(t: Tune, beat: number): Dynamic | null {
+  if (!expressionUsed(t).dyn) return null;
+  let cur: Dynamic = 'mf';
+  for (const n of timeline(t)) {
+    if (n.start > beat + 1e-9) break;
+    if (n.dyn) cur = n.dyn;
+  }
+  return cur;
+}
+
+/** Các cặp dấu luyến [nốt đầu, nốt cuối] (TimedNote.index) trong một bè. Dấu luyến chưa đóng → tới nốt cuối bè. */
+export function slurSpans(voice: TimedNote[]): Array<[number, number]> {
+  const out: Array<[number, number]> = [];
+  let from = -1;
+  let last = -1;
+  for (const n of voice) {
+    if (n.rest) continue;
+    last = n.index;
+    if (n.slur === 'start' && from < 0) from = n.index;
+    else if (n.slur === 'end' && from >= 0) {
+      if (n.index > from) out.push([from, n.index]);
+      from = -1;
+    }
+  }
+  if (from >= 0 && last > from) out.push([from, last]);
   return out;
 }
 

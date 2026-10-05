@@ -1,4 +1,4 @@
-import { SCHEMA_VERSION, defaultData, defaultSettings, type AppData, type Session } from './schema';
+import { CURRICULUM_REV, SCHEMA_VERSION, defaultData, defaultSettings, type AppData, type Session } from './schema';
 
 /**
  * Migration theo schemaVersion. Hiện chỉ có v1 → chưa có bước nào.
@@ -8,6 +8,47 @@ type Migration = (data: Record<string, unknown>) => Record<string, unknown>;
 export const MIGRATIONS: Record<number, Migration> = {};
 
 export class MigrationError extends Error {}
+
+/**
+ * GIÁO TRÌNH rev 1 → rev 2 (OWNER duyệt 2026-10-05): chèn tuần 20 mới "Đọc nốt cao Đô5–Sol5".
+ * Tuần 20–24 cũ → 21–25. Mọi mã có dạng "w<tuần>-…" (mã bài học "w20-l1", bài tự chọn ở thư viện
+ * "w21-song-<bài>", buổi luyện mỗi ngày "w24-daily", sân khấu "w24-stage") được đánh số lại để tiêu chí tuần
+ * (lessonEngine.sessionsOfWeek lọc theo tiền tố "w<tuần>-") và danh sách bài đã xong vẫn đúng tuần.
+ * songRuns chỉ lưu mã BÀI HÁT (không có số tuần) → giữ nguyên.
+ * Chạy đúng MỘT lần: dữ liệu thiếu `curriculumRev` (hoặc < 2) mới được đổi; sau đó gắn curriculumRev = 2.
+ */
+const OLD_FIRST = 20;
+const OLD_LAST = 24;
+
+export function renumberId(id: string): string {
+  return id.replace(/^w(\d+)-/, (m, n: string) => {
+    const w = Number(n);
+    return w >= OLD_FIRST && w <= OLD_LAST ? `w${w + 1}-` : m;
+  });
+}
+
+export function migrateCurriculum(data: Record<string, unknown>): Record<string, unknown> {
+  const rev = typeof data.curriculumRev === 'number' ? data.curriculumRev : 1;
+  if (rev >= CURRICULUM_REV) return data;
+  const out: Record<string, unknown> = { ...data, curriculumRev: CURRICULUM_REV };
+  const p = data.progress;
+  if (typeof p === 'object' && p !== null && !Array.isArray(p)) {
+    const prog = { ...(p as Record<string, unknown>) };
+    if (typeof prog.currentWeek === 'number' && prog.currentWeek >= OLD_FIRST) prog.currentWeek = prog.currentWeek + 1;
+    if (Array.isArray(prog.lessonsCompleted)) {
+      prog.lessonsCompleted = prog.lessonsCompleted.map((x) => (typeof x === 'string' ? renumberId(x) : x));
+    }
+    out.progress = prog;
+  }
+  if (Array.isArray(data.sessions)) {
+    out.sessions = data.sessions.map((s) =>
+      typeof s === 'object' && s !== null && typeof (s as Record<string, unknown>).lessonId === 'string'
+        ? { ...s, lessonId: renumberId((s as Record<string, unknown>).lessonId as string) }
+        : s,
+    );
+  }
+  return out;
+}
 
 /** Nâng dữ liệu thô lên phiên bản hiện tại và điền mặc định cho trường thiếu. */
 export function migrate(raw: unknown): AppData {
@@ -24,6 +65,8 @@ export function migrate(raw: unknown): AppData {
     data = step(data);
     v = data.schemaVersion as number;
   }
+  // Trước fillDefaults (mặc định đã là rev mới — phải đọc rev của dữ liệu THÔ)
+  data = migrateCurriculum(data);
   return fillDefaults(data);
 }
 

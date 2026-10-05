@@ -1,6 +1,6 @@
 import type { AudioEngine } from '../../audio/AudioEngine';
 import type { Target } from '../../lessons/types';
-import { onsets, type Tune } from '../../music/tune';
+import { noteStyles, onsets, type Tune } from '../../music/tune';
 import type { Hand } from '../../piano/fingering';
 import type { PianoKeyboard } from '../../piano/PianoKeyboard';
 import { pitchFreq, pitchToMidi, viName, type Pitch } from '../../piano/pitchTable';
@@ -17,6 +17,10 @@ export interface DemoNote {
   pitch: Pitch;
   finger?: number;
   hand: Hand;
+  /** v4 — âm lượng tương đối (sắc thái p/mf/f); mặc định 1 */
+  vol?: number;
+  /** v4 — độ dài thật sự kêu (phách): ngắt tiếng ngắn, luyến giữ liền; mặc định 95% độ dài sự kiện */
+  len?: number;
 }
 
 export interface DemoEvent {
@@ -35,11 +39,16 @@ const captionOf = (ns: DemoNote[]) => {
 
 /** Sự kiện từ bài hát: mỗi nhóm nốt cùng lúc (cả hai tay, hợp âm). */
 export function eventsFromTune(t: Tune): DemoEvent[] {
+  const styles = noteStyles(t);
   return onsets(t).map((o) => {
-    const notes: DemoNote[] = o.notes.flatMap((n) => [
-      { pitch: n.pitch!, finger: n.finger, hand: n.hand },
-      ...(n.also ?? []).map((a) => ({ pitch: a.pitch, finger: a.finger, hand: n.hand })),
-    ]);
+    const notes: DemoNote[] = o.notes.flatMap((n) => {
+      const st = styles.get(n.index);
+      const style = st ? { vol: st.vol, len: st.len } : {};
+      return [
+        { pitch: n.pitch!, finger: n.finger, hand: n.hand, ...style },
+        ...(n.also ?? []).map((a) => ({ pitch: a.pitch, finger: a.finger, hand: n.hand, ...style })),
+      ];
+    });
     const dur = Math.min(...o.notes.map((n) => n.beats));
     return { time: o.start, dur, notes, caption: captionOf(notes) };
   });
@@ -172,25 +181,31 @@ export function playDemo(
   }
   for (const ev of events) {
     if (o.sound !== false) {
-      for (const n of ev.notes) void audio.scheduleFreq(pitchFreq(n.pitch), t0 + ev.time * spb, ev.dur * spb * 0.95);
+      for (const n of ev.notes) {
+        void audio.scheduleFreq(pitchFreq(n.pitch), t0 + ev.time * spb, (n.len ?? ev.dur * 0.95) * spb, n.vol ?? 1);
+      }
     }
     const at = ev.time * spb * 1000;
+    // Ngắt tiếng: phím sáng / ngón nhấn ngắn theo đúng độ dài kêu
+    const lenOf = (n: DemoNote) => Math.min(ev.dur * 0.9, n.len ?? ev.dur);
     timers.push(
       window.setTimeout(() => {
         if (cancelled) return;
         for (const n of ev.notes) {
           if (n.finger) {
             overlay.place(n.hand, n.pitch, n.finger);
-            overlay.press(n.hand, n.finger, Math.max(180, ev.dur * spb * 800));
+            overlay.press(n.hand, n.finger, Math.max(140, lenOf(n) * spb * 890));
           }
           kb.flash(n.pitch, true);
         }
         if (ev.caption) o.onCaption?.(ev.caption, ev);
       }, Math.max(0, wall0 - performance.now() + at)),
-      window.setTimeout(() => {
-        for (const n of ev.notes) kb.flash(n.pitch, false);
-      }, Math.max(0, wall0 - performance.now() + at + ev.dur * spb * 900)),
     );
+    for (const n of ev.notes) {
+      timers.push(
+        window.setTimeout(() => kb.flash(n.pitch, false), Math.max(0, wall0 - performance.now() + at + lenOf(n) * spb * 1000)),
+      );
+    }
   }
   const end = events.length ? Math.max(...events.map((e) => e.time + e.dur)) : 0;
   let raf = 0;

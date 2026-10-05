@@ -1,9 +1,11 @@
 import { ledgerSteps, staffStep, stemUp, type Clef } from '../../music/staff';
 import {
   beatsPerMeasure,
+  expressionUsed,
   lhTimeline,
   measureCount,
   pitchesOf,
+  slurSpans,
   timeline,
   type TimedNote,
   type Tune,
@@ -40,7 +42,12 @@ interface Stave {
   notes: TimedNote[];
   fingerY: number;
   nameY: number;
+  /** v4 — hàng chữ sắc thái (p / mf / f) */
+  dynY: number;
 }
+
+/** v4 — chỗ dành thêm cho hàng chữ sắc thái (chỉ khi bài có ghi sắc thái) */
+const DYN_PAD = 30;
 
 /**
  * Khuông nhạc SVG: khuông đơn (Sol hoặc Fa) hoặc khuông KÉP cho bài hai tay.
@@ -68,15 +75,17 @@ export class StaffView {
       measuresPerPage: opts.measuresPerPage ?? 4,
       pxPerBeat: opts.pxPerBeat ?? (beatsPerMeasure(tune) === 3 ? 76 : 62),
     };
+    // Bài có sắc thái: chừa một hàng dưới khuông (khuông kép: giữa hai khuông, như bản nhạc piano thật)
+    const pad = expressionUsed(tune).dyn ? DYN_PAD : 0;
     if (tune.lh) {
       this.staves = [
-        { clef: 'treble', bottomY: 116, notes: timeline(tune), fingerY: 18, nameY: 152 },
-        { clef: 'bass', bottomY: 240, notes: lhTimeline(tune), fingerY: 290, nameY: 270 },
+        { clef: 'treble', bottomY: 116, notes: timeline(tune), fingerY: 18, nameY: 152, dynY: 184 },
+        { clef: 'bass', bottomY: 240 + pad, notes: lhTimeline(tune), fingerY: 290 + pad, nameY: 270 + pad, dynY: 184 },
       ];
-      this.height = 300;
+      this.height = 300 + pad;
     } else {
-      this.staves = [{ clef: this.o.clef, bottomY: 116, notes: timeline(tune), fingerY: 18, nameY: 178 }];
-      this.height = 186;
+      this.staves = [{ clef: this.o.clef, bottomY: 116, notes: timeline(tune), fingerY: 18, nameY: 178 + pad, dynY: 180 }];
+      this.height = 186 + pad;
     }
     this.el = document.createElement('div');
     this.el.className = `staff staff-${this.o.mode}${tune.lh ? ' grand' : ''}`;
@@ -155,11 +164,22 @@ export class StaffView {
         this.content.append(el('line', { x1: x, x2: x, y1: this.y(s, 8), y2: this.y(s, 0), class: 'staff-bar' }));
       }
     }
+    const dynAt = new Set<number>();
     for (const s of this.staves) {
       for (const n of s.notes) {
         if (n.measure < from || n.measure >= to) continue;
-        this.content.append(this.drawNote(s, n, this.xOf(n.start, originBeat)));
+        const x = this.xOf(n.start, originBeat);
+        this.content.append(this.drawNote(s, n, x));
+        // v4: chữ sắc thái ở nốt có ghi `dyn` (khuông kép: một hàng chung giữa hai khuông)
+        const key = Math.round(n.start * 1000);
+        if (n.dyn && !dynAt.has(key)) {
+          dynAt.add(key);
+          const t = el('text', { x: x - 2, y: s.dynY, class: 'staff-dyn' });
+          t.textContent = n.dyn;
+          this.content.append(t);
+        }
       }
+      this.drawSlurs(s, from, to, originBeat);
     }
     if (to >= measureCount(this.tune)) {
       const end = this.xOf(measureCount(this.tune) * bpm, originBeat) - 14;
@@ -209,10 +229,16 @@ export class StaffView {
       }
       if (dotted) g.append(el('circle', { cx: x + 14, cy: step % 2 === 0 ? y - 4 : y, r: 2.4, class: 'staff-dot' }));
     }
+    const lo = Math.min(...steps);
+    const hi = Math.max(...steps);
+    const up = stemUp((lo + hi) / 2);
+    if (n.stac) {
+      // v4: chấm ngắt tiếng — phía đầu nốt (ngược phía đuôi nốt), tránh nằm đè lên dòng kẻ
+      const step = up ? lo - 2 : hi + 2;
+      const yy = this.y(s, step % 2 === 0 ? step + (up ? -1 : 1) : step);
+      g.append(el('circle', { cx: x, cy: yy, r: 3.8, class: 'staff-stac' }));
+    }
     if (n.beats < 4) {
-      const lo = Math.min(...steps);
-      const hi = Math.max(...steps);
-      const up = stemUp((lo + hi) / 2);
       const sx = up ? x + 7.6 : x - 7.6;
       const y1 = up ? this.y(s, lo) : this.y(s, hi);
       const y2 = up ? this.y(s, hi) - 46 : this.y(s, lo) + 46;
@@ -237,6 +263,48 @@ export class StaffView {
       g.append(t);
     }
     return g;
+  }
+
+  /**
+   * v4 — Dấu luyến: đường cong từ nốt đầu tới nốt cuối, phía đầu nốt (ngược đuôi nốt), vượt qua các nốt ở giữa.
+   * Trang chỉ có một nửa dấu luyến (câu vắt qua trang) → vẽ tới mép trang.
+   */
+  private drawSlurs(s: Stave, from: number, to: number, originBeat: number): void {
+    const bpm = beatsPerMeasure(this.tune);
+    const byIndex = new Map(s.notes.map((n) => [n.index, n]));
+    for (const [a, b] of slurSpans(s.notes)) {
+      const na = byIndex.get(a)!;
+      const nb = byIndex.get(b)!;
+      if (nb.measure < from || na.measure >= to) continue;
+      const span = s.notes.filter((n) => !n.rest && n.index >= a && n.index <= b && n.measure >= from && n.measure < to);
+      if (!span.length) continue;
+      const steps = span.flatMap((n) => pitchesOf(n).map((p) => staffStep(p, s.clef)));
+      const avg = steps.reduce((x, y) => x + y, 0) / steps.length;
+      const below = stemUp(avg); // đuôi nốt hướng lên → dấu luyến nằm dưới
+      const headY = (n: TimedNote) => {
+        const st = pitchesOf(n).map((p) => staffStep(p, s.clef));
+        return this.y(s, below ? Math.min(...st) : Math.max(...st));
+      };
+      const aIn = na.measure >= from;
+      const bIn = nb.measure < to;
+      const x1 = aIn ? this.xOf(na.start, originBeat) + 2 : X0 - 20;
+      const x2 = bIn ? this.xOf(nb.start, originBeat) - 2 : this.xOf(to * bpm, originBeat) - 22;
+      if (x2 - x1 < 8) continue;
+      const off = below ? 13 : -13;
+      const y1 = (aIn ? headY(na) : headY(span[0])) + off;
+      const y2 = (bIn ? headY(nb) : headY(span[span.length - 1])) + off;
+      const ys = span.map(headY);
+      const bulge = Math.min(34, 14 + (x2 - x1) * 0.06);
+      const cy = below ? Math.max(...ys) + 13 + bulge : Math.min(...ys) - 13 - bulge;
+      const cx = (x1 + x2) / 2;
+      const th = below ? -4.5 : 4.5; // độ dày ở giữa (hình lưỡi liềm cho dễ nhìn)
+      this.content.append(
+        el('path', {
+          d: `M${x1},${y1} Q${cx},${cy} ${x2},${y2} Q${cx},${cy + th} ${x1},${y1} Z`,
+          class: 'staff-slur',
+        }),
+      );
+    }
   }
 
   private drawAll(): void {

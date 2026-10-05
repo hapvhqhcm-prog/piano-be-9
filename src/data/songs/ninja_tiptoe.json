@@ -1,0 +1,207 @@
+{
+ "id": "ninja_tiptoe",
+ "title": "Tiptoe Ninja",
+ "titleVi": "Ninja rón rén",
+ "composer": "Bài tự sáng tác cho app (piano-be-9)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Bài tự sáng tác cho app (piano-be-9)",
+ "attributionRequired": false,
+ "hand": "RH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 19,
+ "position": "Am",
+ "phrases": [
+  0,
+  4
+ ],
+ "notes": [
+  {
+   "pitch": "A3",
+   "beats": 1,
+   "finger": 1,
+   "dyn": "p",
+   "stac": true
+  },
+  {
+   "pitch": "A3",
+   "beats": 1,
+   "finger": 1,
+   "stac": true
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 3,
+   "stac": true
+  },
+  {
+   "pitch": "A3",
+   "beats": 1,
+   "finger": 1,
+   "stac": true
+  },
+  {
+   "pitch": "B3",
+   "beats": 1,
+   "finger": 2,
+   "stac": true
+  },
+  {
+   "pitch": "B3",
+   "beats": 1,
+   "finger": 2,
+   "stac": true
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 4,
+   "stac": true
+  },
+  {
+   "pitch": "B3",
+   "beats": 1,
+   "finger": 2,
+   "stac": true
+  },
+  {
+   "pitch": "A3",
+   "beats": 1,
+   "finger": 1,
+   "stac": true
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 3,
+   "stac": true
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 5,
+   "stac": true
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 3,
+   "stac": true
+  },
+  {
+   "pitch": "B3",
+   "beats": 2,
+   "finger": 2
+  },
+  {
+   "rest": true,
+   "beats": 2
+  },
+  {
+   "pitch": "A3",
+   "beats": 1,
+   "finger": 1,
+   "stac": true
+  },
+  {
+   "pitch": "A3",
+   "beats": 1,
+   "finger": 1,
+   "stac": true
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 3,
+   "stac": true
+  },
+  {
+   "pitch": "A3",
+   "beats": 1,
+   "finger": 1,
+   "stac": true
+  },
+  {
+   "pitch": "B3",
+   "beats": 1,
+   "finger": 2,
+   "stac": true
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 4,
+   "stac": true
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 3,
+   "stac": true
+  },
+  {
+   "pitch": "B3",
+   "beats": 1,
+   "finger": 2,
+   "stac": true
+  },
+  {
+   "pitch": "C4",
+   "beats": 0.5,
+   "finger": 3,
+   "stac": true
+  },
+  {
+   "pitch": "B3",
+   "beats": 0.5,
+   "finger": 2,
+   "stac": true
+  },
+  {
+   "pitch": "A3",
+   "beats": 0.5,
+   "finger": 1,
+   "stac": true
+  },
+  {
+   "pitch": "B3",
+   "beats": 0.5,
+   "finger": 2,
+   "stac": true
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 3,
+   "stac": true
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 4,
+   "stac": true
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 5,
+   "dyn": "f",
+   "stac": true
+  },
+  {
+   "rest": true,
+   "beats": 1
+  },
+  {
+   "pitch": "A3",
+   "beats": 1,
+   "finger": 1,
+   "stac": true
+  },
+  {
+   "rest": true,
+   "beats": 1
+  }
+ ]
+}

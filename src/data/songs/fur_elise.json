@@ -9,7 +9,7 @@
  "hand": "RH",
  "bpm": 60,
  "timeSignature": "3/4",
- "week": 21,
+ "week": 22,
  "position": "free",
  "phrases": [
   0,
@@ -23,7 +23,8 @@
   {
    "pitch": "E5",
    "beats": 0.5,
-   "finger": 5
+   "finger": 5,
+   "dyn": "p"
   },
   {
    "pitch": "D#5",

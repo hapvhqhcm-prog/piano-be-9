@@ -20,7 +20,8 @@
   {
    "pitch": "E4",
    "beats": 1,
-   "finger": 3
+   "finger": 3,
+   "dyn": "f"
   },
   {
    "pitch": "E4",
@@ -75,7 +76,8 @@
   {
    "pitch": "F4",
    "beats": 1,
-   "finger": 4
+   "finger": 4,
+   "dyn": "mf"
   },
   {
    "pitch": "F4",
@@ -145,7 +147,8 @@
   {
    "pitch": "E4",
    "beats": 1,
-   "finger": 3
+   "finger": 3,
+   "dyn": "f"
   },
   {
    "pitch": "E4",

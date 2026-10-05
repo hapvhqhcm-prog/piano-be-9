@@ -9,7 +9,7 @@
  "hand": "RH",
  "bpm": 60,
  "timeSignature": "3/4",
- "week": 20,
+ "week": 21,
  "position": "free",
  "phrases": [
   0,
@@ -19,12 +19,14 @@
   {
    "pitch": "D5",
    "beats": 1,
-   "finger": 5
+   "finger": 5,
+   "dyn": "mf"
   },
   {
    "pitch": "G4",
    "beats": 0.5,
-   "finger": 1
+   "finger": 1,
+   "slur": "start"
   },
   {
    "pitch": "A4",
@@ -39,7 +41,8 @@
   {
    "pitch": "C5",
    "beats": 0.5,
-   "finger": 4
+   "finger": 4,
+   "slur": "end"
   },
   {
    "pitch": "D5",
@@ -49,12 +52,14 @@
   {
    "pitch": "G4",
    "beats": 1,
-   "finger": 1
+   "finger": 1,
+   "stac": true
   },
   {
    "pitch": "G4",
    "beats": 1,
-   "finger": 1
+   "finger": 1,
+   "stac": true
   },
   {
    "pitch": "E5",
@@ -64,7 +69,8 @@
   {
    "pitch": "C5",
    "beats": 0.5,
-   "finger": 1
+   "finger": 1,
+   "slur": "start"
   },
   {
    "pitch": "D5",
@@ -79,7 +85,8 @@
   {
    "pitch": "F#5",
    "beats": 0.5,
-   "finger": 4
+   "finger": 4,
+   "slur": "end"
   },
   {
    "pitch": "G5",
@@ -89,12 +96,14 @@
   {
    "pitch": "G4",
    "beats": 1,
-   "finger": 1
+   "finger": 1,
+   "stac": true
   },
   {
    "pitch": "G4",
    "beats": 1,
-   "finger": 1
+   "finger": 1,
+   "stac": true
   },
   {
    "pitch": "C5",
@@ -104,7 +113,8 @@
   {
    "pitch": "D5",
    "beats": 0.5,
-   "finger": 5
+   "finger": 5,
+   "slur": "start"
   },
   {
    "pitch": "C5",
@@ -119,7 +129,8 @@
   {
    "pitch": "A4",
    "beats": 0.5,
-   "finger": 2
+   "finger": 2,
+   "slur": "end"
   },
   {
    "pitch": "B4",
@@ -129,7 +140,8 @@
   {
    "pitch": "C5",
    "beats": 0.5,
-   "finger": 4
+   "finger": 4,
+   "slur": "start"
   },
   {
    "pitch": "B4",
@@ -144,7 +156,8 @@
   {
    "pitch": "G4",
    "beats": 0.5,
-   "finger": 1
+   "finger": 1,
+   "slur": "end"
   },
   {
    "pitch": "F#4",
@@ -154,7 +167,8 @@
   {
    "pitch": "G4",
    "beats": 0.5,
-   "finger": 2
+   "finger": 2,
+   "slur": "start"
   },
   {
    "pitch": "A4",
@@ -169,7 +183,8 @@
   {
    "pitch": "G4",
    "beats": 0.5,
-   "finger": 2
+   "finger": 2,
+   "slur": "end"
   },
   {
    "pitch": "A4",
