@@ -9,7 +9,12 @@ import { diatonic } from '../music/staff';
  * - read:     "Đọc nốt"        — nốt hiện trên khuông, bé chạm phím ảo (không nghe trước)
  * - majorminor: "Vui hay buồn?" — app rải hợp âm TRƯỞNG (vui) hoặc THỨ (buồn) — Cấp 3
  */
-export type QuizVariant = 'updown' | 'stepskip' | 'identify' | 'read' | 'majorminor';
+/**
+ * interval (v5, OWNER duyệt 2026-10-05 — đọc nhạc theo QUÃNG): khuông hiện 2 nốt, bé trả lời
+ * giống nhau / bước (quãng 2) / nhảy (quãng 3) / … và lên hay xuống — đọc theo hình dáng, không thuộc lòng ngón↔phím.
+ * landmark (v5): nhận các NỐT MỐC (Đô giữa, Sol khóa Sol, Fa khóa Fa, Đô cao/thấp, dòng kẻ phụ).
+ */
+export type QuizVariant = 'updown' | 'stepskip' | 'identify' | 'read' | 'majorminor' | 'interval' | 'landmark';
 
 export interface QuizSpec {
   variant: QuizVariant;
@@ -19,6 +24,8 @@ export interface QuizSpec {
   reference?: Pitch;
   /** Khóa nhạc cho trò đọc nốt (mặc định khóa Sol) */
   clef?: 'treble' | 'bass';
+  /** interval: quãng lớn nhất được hỏi (2 = chỉ bước, 3 = bước/nhảy, 5 = tới quãng 5) */
+  maxInterval?: 2 | 3 | 4 | 5;
 }
 
 export interface Choice {

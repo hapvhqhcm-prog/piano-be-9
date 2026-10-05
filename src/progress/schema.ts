@@ -69,6 +69,11 @@ export interface SongRun {
    * Lượt tách tay KHÔNG tính cho tiêu chí tuần / "đã thuộc" (lessonEngine.passedWhole bỏ qua).
    */
   hand?: 'RH' | 'LH';
+  /**
+   * (+ v5) Phiếu chấm 3 ý của bố mẹ khi KHÔNG dùng micro (OWNER duyệt 2026-10-05):
+   * notes = đúng nốt · beat = đều nhịp · fingers = đúng ngón & dáng tay. Lượt chỉ "đạt" khi cả 3 đều đạt.
+   */
+  checklist?: { notes: boolean; beat: boolean; fingers: boolean };
   total: number;
   hits: number;
   source: 'mic' | 'parent';
@@ -134,6 +139,17 @@ export interface AppData {
   settings: Settings;
   progress: Progress;
   sessions: Session[];
+  /** (+ v5) Bài bé tự sáng tác (trò "Sáng tác") — hiện trong Thư viện mục "Bài của con". Không có = []. */
+  compositions?: Composition[];
+}
+
+/** (+ v5) Một bài bé sáng tác: dãy nốt (cùng định dạng nốt bài hát) trong một thế tay. */
+export interface Composition {
+  id: string;
+  title: string;
+  createdAt: number;
+  timeSignature: '4/4' | '3/4';
+  notes: Array<{ pitch?: string; beats: number; finger?: number; rest?: boolean }>;
 }
 
 export function localDateStr(d: Date): string {

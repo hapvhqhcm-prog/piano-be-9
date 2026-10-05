@@ -45,6 +45,8 @@ export interface Segment {
  * long3 = nốt trắng chấm "Đi-i-i" (3 phách) · dotted = đen chấm + móc đơn "Đi-chấm chạy" (2 phách: vỗ ở 0 và 1,5)
  * rest = lặng đen "Suỵt".
  */
+export type TechniqueDrill = 'arm-drop' | 'wrist-circle' | 'finger-tap' | 'five-finger' | 'thumb-under' | 'hand-shape';
+
 export type RhythmSymbol = 'walk' | 'run' | 'long' | 'long3' | 'dotted' | 'rest';
 
 export type Activity =
@@ -74,6 +76,25 @@ export type Activity =
       hints: 'names' | 'staff';
     }
   | { kind: 'stage'; level?: 1 | 2 | 3 }
+  /**
+   * v5 — KHỞI ĐỘNG KỸ THUẬT (~1 phút, OWNER duyệt 2026-10-05): thầy làm mẫu (hình/hoạt hình), bé làm theo, bố mẹ xác nhận.
+   * arm-drop = thả rơi cánh tay "cầu vồng"; wrist-circle = xoay cổ tay; finger-tap = gõ ngón trên nắp đàn;
+   * five-finger = 5 ngón lên-xuống (p rồi f); thumb-under = chuẩn bị luồn ngón cái; hand-shape = tay tròn "ôm bóng".
+   */
+  | { kind: 'technique'; title: string; drills: TechniqueDrill[] }
+  /**
+   * v5 — SÁNG TẠO: black-keys = ứng tấu tự do trên phím đen theo nền ngũ cung app đàn;
+   * question-answer = app đàn "câu hỏi" 2 ô, bé đàn "câu trả lời" (kết về Đô) trong thế tay;
+   * compose = bé sáng tác `bars` ô nhịp trong thế tay, app ghi lại thành bài trong Thư viện.
+   */
+  | {
+      kind: 'improv';
+      title: string;
+      intro: string;
+      mode: 'black-keys' | 'question-answer' | 'compose';
+      position?: Exclude<PositionId, 'free'>;
+      bars?: number;
+    }
   /**
    * v4 — Trò chơi SẮC THÁI / KIỂU ĐÀN (OWNER duyệt 2026-10-05): thầy đàn mẫu, bé đàn lại.
    * loud-soft: mỗi lượt là một nốt/nhóm nốt cần đàn TO (f) hoặc NHỎ (p) — micro so với tiếng "vừa" của chính bé.
