@@ -6,6 +6,7 @@ import { keyboardRangeFor, pitchToMidi, type Pitch } from '../piano/pitchTable';
  * - v2 (Phase 3): `rest`, `week`, `phrases` (ô nhịp bắt đầu mỗi câu), `extension` (nốt duỗi ngón, vd "A4").
  * - v3 (Cấp 2–3): `position`/`lhPosition` (thế tay), `hand: "BOTH"` + `lh` (bè tay trái),
  *   `also` (nốt cùng lúc — hợp âm), nhịp 3/4, nốt chấm dôi (1.5, 3), dấu giáng ("Bb4").
+ * - v4 (OWNER duyệt 2026-10-05): `dyn` (p/mf/f), `stac` (ngắt tiếng), `slur` (luyến) — trường cộng thêm, bài cũ vẫn hợp lệ.
  */
 export interface TuneNote {
   pitch?: Pitch;
@@ -14,7 +15,15 @@ export interface TuneNote {
   rest?: boolean;
   /** Nốt đánh cùng lúc (hợp âm) */
   also?: Array<{ pitch: Pitch; finger?: number }>;
+  /** v4 — Sắc thái bắt đầu từ nốt này (giữ tới khi đổi): p = nhỏ, mf = vừa, f = to */
+  dyn?: Dynamic;
+  /** v4 — Ngắt tiếng (staccato): giữ phím rất ngắn */
+  stac?: boolean;
+  /** v4 — Luyến (legato): dấu luyến bắt đầu / kết thúc ở nốt này — các nốt trong đó đàn liền, không hở */
+  slur?: 'start' | 'end';
 }
+
+export type Dynamic = 'p' | 'mf' | 'f';
 
 export type TuneHand = Hand | 'BOTH';
 

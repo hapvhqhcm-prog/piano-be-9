@@ -43,7 +43,7 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
             ? `🎉 Con đã lên ${levelOf(week + 1).name}! Chặng mới: ${next.islandEmoji} ${next.island}.`
             : `🏅 Con đã qua ${weekPlan(week).island}! Chặng tiếp: ${next.islandEmoji} ${next.island}.`;
       } else if (!passedBefore) {
-        banner = '🏆 Con đã hoàn thành cả 24 tuần — từ nay mỗi ngày có bài luyện tập mới!';
+        banner = `🏆 Con đã hoàn thành cả ${MAX_WEEK} tuần — từ nay mỗi ngày có bài luyện tập mới!`;
       }
     }
     app.show(

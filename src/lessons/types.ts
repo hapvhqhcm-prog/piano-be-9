@@ -73,7 +73,20 @@ export type Activity =
       /** names = có tên nốt (Cấp 2), staff = chỉ khuông (Cấp 3) */
       hints: 'names' | 'staff';
     }
-  | { kind: 'stage'; level?: 1 | 2 | 3 };
+  | { kind: 'stage'; level?: 1 | 2 | 3 }
+  /**
+   * v4 — Trò chơi SẮC THÁI / KIỂU ĐÀN (OWNER duyệt 2026-10-05): thầy đàn mẫu, bé đàn lại.
+   * loud-soft: mỗi lượt là một nốt/nhóm nốt cần đàn TO (f) hoặc NHỎ (p) — micro so với tiếng "vừa" của chính bé.
+   * stac-leg: mỗi lượt đàn các nốt NGẮT (stac) hoặc LIỀN (leg) — micro đo tiếng tắt nhanh hay ngân liền.
+   * Không có micro → bố mẹ xác nhận.
+   */
+  | {
+      kind: 'dynamics';
+      title: string;
+      intro: string;
+      mode: 'loud-soft' | 'stac-leg';
+      rounds: Array<{ pitches: Pitch[]; want: 'p' | 'f' | 'stac' | 'leg'; fingers?: number[]; hand?: Hand }>;
+    };
 
 export interface Lesson {
   id: string;
