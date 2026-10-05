@@ -1,4 +1,5 @@
 import type { AudioEngine, EngineState } from './AudioEngine';
+import { analyzeChord, CHORD_FRAME, CHORD_READY_AFTER, type ChordResult } from './chordVerify';
 import { MicAnalyzer, type AppSound, type Sensitivity } from './micAnalyzer';
 import type { HeardNote, PitchResult } from './pitchDetect';
 
@@ -32,6 +33,19 @@ export const MIC_STALE_MS = 1000;
 export const MIC_MUTE_GRACE_MS = 1000;
 /** Số mẫu lấy làm "chữ ký" để nhận ra bộ đệm y hệt khung trước. */
 const PROBES = 8;
+/** Khung phân tích cao độ / gõ phím (mẫu) — MicAnalyzer luôn nhận 2048 mẫu gần nhất. */
+export const ANALYSIS_FRAME = 2048;
+/**
+ * Bộ đệm lấy từ AnalyserNode (mẫu): ~0,34 s ở 48 kHz — đủ để kiểm tra hợp âm (cần [gõ + 50 ms, gõ + 200 ms])
+ * kể cả khi màn hình hỏi chậm vài khung. Chép 16384 số mỗi 25 ms là rất nhẹ.
+ */
+export const HISTORY_SIZE = 16384;
+
+interface ChordRequest {
+  midis: number[];
+  onsetAt: number;
+  resolve: (r: ChordResult | null) => void;
+}
 
 export class MicListener {
   private stream: MediaStream | null = null;
@@ -61,6 +75,15 @@ export class MicListener {
    * xem tests/micClick.test.ts). Chỉ tăng lên nếu loa/micro của một máy cụ thể làm tiếng tích lọt vào.
    */
   clickBlankMs = 0;
+  /**
+   * Độ trễ khứ hồi loa → micro đã ĐO (ms, màn "Thử micro" → "Đo độ trễ"); 0 = chưa đo. App gán từ Cài đặt.
+   */
+  latencyMs = 0;
+  /** Lần gõ phím gần nhất (đồng hồ AudioContext, giây); −1 = chưa có */
+  private lastOnsetAt = -1;
+  private chordRequests: ChordRequest[] = [];
+  /** Thời điểm (đồng hồ AudioContext) của mẫu cuối trong `buf` — lúc lấy bộ đệm gần nhất */
+  private bufTime = 0;
   /** Đồng hồ (ms) cho watchdog — tiêm vào để test; KHÔNG dùng ctx.currentTime vì nó đứng yên khi bị ngắt. */
   clock: () => number = () => Date.now();
 
@@ -133,6 +156,55 @@ export class MicListener {
     return () => this.frameListeners.delete(fn);
   }
 
+  /**
+   * Độ trễ cần trừ khi chấm NHỊP (giây): bé đàn theo tiếng tích nghe thấy (trễ loa), tiếng đàn tới app trễ thêm (micro).
+   * Đã đo (latencyMs > 0) → dùng số đo; chưa đo → ước lượng của trình duyệt (outputLatency) như trước.
+   */
+  inputOutputLatency(): number {
+    return this.latencyMs > 0 ? this.latencyMs / 1000 : this.audio.outputLatency;
+  }
+
+  /**
+   * KIỂM TRA HỢP ÂM: trong tiếng đàn ở lần gõ `onsetAt` (mặc định: lần gõ gần nhất) có đủ các nốt `midis` không?
+   * Resolve khi đủ dữ liệu (~200 ms sau lần gõ). null = không kiểm tra được (micro tắt / chưa có lần gõ) →
+   * dùng cách cũ (match.ts). Kết quả `conclusive = false` (tiếng nhỏ / ồn) → cũng nên dùng cách cũ.
+   */
+  verifyChord(midis: number[], onsetAt = this.lastOnsetAt): Promise<ChordResult | null> {
+    if (this._state !== 'on' || !this.buf || onsetAt < 0 || midis.length < 2) return Promise.resolve(null);
+    return new Promise((resolve) => {
+      this.chordRequests.push({ midis, onsetAt, resolve });
+      // Dữ liệu có thể đã sẵn (màn hình hỏi muộn) → trả lời ngay, không chờ khung sau
+      this.serveChords();
+    });
+  }
+
+  /** Trả lời các yêu cầu kiểm tra hợp âm đã đủ dữ liệu (gọi sau mỗi khung). */
+  private serveChords(): void {
+    if (!this.chordRequests.length) return;
+    const buf = this.buf;
+    const ctx = this.audio.context;
+    if (!buf || !ctx) return;
+    const now = this.bufTime;
+    const sr = ctx.sampleRate;
+    const len = Math.round(CHORD_FRAME.length * sr);
+    this.chordRequests = this.chordRequests.filter((rq) => {
+      if (now < rq.onsetAt + CHORD_READY_AFTER) return true;
+      // Mẫu cuối bộ đệm ≈ `now` → vị trí của [gõ + 50 ms, + 150 ms]; hỏi quá muộn thì lấy đoạn cũ nhất còn giữ
+      let start = buf.length - Math.round((now - rq.onsetAt - CHORD_FRAME.startAfter) * sr);
+      start = Math.max(0, Math.min(buf.length - len, start));
+      let r: ChordResult | null = null;
+      try {
+        r = analyzeChord(buf.subarray(start, start + len), sr, rq.midis, this.tuningCents);
+        // App đang phát tiếng (âm mẫu…) → micro nghe cả tiếng app → không kết luận
+        if (this.audio.isSounding) r.conclusive = false;
+      } catch {
+        r = null;
+      }
+      rq.resolve(r);
+      return false;
+    });
+  }
+
   /** Bỏ trạng thái nốt đang ngân — gọi khi bắt đầu chờ một nốt mới. */
   resetTracker(): void {
     // Nốt cũ còn ngân không được tính cho nốt mới
@@ -167,14 +239,14 @@ export class MicListener {
     const myGen = this.gen;
     let stream: MediaStream;
     try {
-      this.audio.setAudioSessionType('play-and-record');
+      this.audio.setMicActive(true);
       stream = await navigator.mediaDevices.getUserMedia({
         audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
         video: false,
       });
     } catch (e) {
       if (myGen !== this.gen) return this._state;
-      this.audio.setAudioSessionType('playback');
+      this.audio.setMicActive(false);
       const name = (e as { name?: string })?.name;
       this.setState(name === 'NotAllowedError' || name === 'SecurityError' ? 'denied' : 'error');
       return this._state;
@@ -208,11 +280,12 @@ export class MicListener {
     }
     this.source = ctx.createMediaStreamSource(stream);
     this.analyser = ctx.createAnalyser();
-    this.analyser.fftSize = 2048;
+    this.analyser.fftSize = HISTORY_SIZE;
     this.buf = new Float32Array(new ArrayBuffer(this.analyser.fftSize * 4));
     // KHÔNG nối ra loa → không có tiếng hú
     this.source.connect(this.analyser);
     this.analyzer.reset(false);
+    this.lastOnsetAt = -1;
     this.probe.fill(NaN);
     this.staleSince = -1;
     this.timer = window.setInterval(() => this.tick(), 25);
@@ -277,6 +350,7 @@ export class MicListener {
     if (this.checkStale(buf)) return;
     const since = this.audio.msSinceSound();
     const now = ctx.currentTime;
+    this.bufTime = now;
     const app: AppSound = this.audio.isSounding
       ? 'sounding'
       : this.clickBlankMs > 0 && this.audio.clickNear(now, this.clickBlankMs / 1000 + this.audio.outputLatency, 0.01)
@@ -286,13 +360,15 @@ export class MicListener {
           : 'quiet';
     // Không ai cần cao độ (vd chỉ chấm vỗ nhịp) → bỏ YIN, đỡ CPU iPad cũ
     const needPitch = this.noteListeners.size > 0 || this.frameListeners.size > 0;
-    const f = this.analyzer.process(buf, ctx.sampleRate, now, app, needPitch);
+    const f = this.analyzer.process(buf.subarray(buf.length - ANALYSIS_FRAME), ctx.sampleRate, now, app, needPitch);
     // "Gõ/vỗ" (chấm vỗ nhịp): mốc thời gian định vị trong khung phân tích
     if (f.onset && now - this.lastClapAt > 0.15) {
       this.lastClapAt = now;
       const at = f.onsetAt >= 0 ? Math.min(now, f.onsetAt) : now - 0.035;
+      this.lastOnsetAt = at;
       this.onsetListeners.forEach((fn) => fn(at));
     }
+    this.serveChords();
     if (this.frameListeners.size) {
       const frame: MicFrame = { pitch: f.pitch, level: f.level, rms: f.rms, floor: f.floor, gate: f.gate, onset: f.onset, app };
       this.frameListeners.forEach((fn) => fn(frame));
@@ -307,6 +383,8 @@ export class MicListener {
   stop(): void {
     this._needsRestart = false;
     this.teardown();
+    // Đồng bộ kiểu phiên âm thanh (vd vừa tắt micro trong Cài đặt → về 'playback')
+    this.audio.setMicActive(false);
   }
 
   private teardown(): void {
@@ -334,8 +412,12 @@ export class MicListener {
     this.source = null;
     this.analyser = null;
     this.buf = null;
+    const pending = this.chordRequests;
+    this.chordRequests = [];
+    pending.forEach((rq) => rq.resolve(null));
     if (this._state === 'on' || this._state === 'starting') {
-      this.audio.setAudioSessionType('playback');
+      // Giữ 'play-and-record' nếu micro vẫn được bật trong Cài đặt (AudioEngine quyết định)
+      this.audio.setMicActive(false);
       this.setState('off');
     }
   }

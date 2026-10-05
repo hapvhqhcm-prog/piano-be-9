@@ -1,5 +1,5 @@
 import type { TechniqueDrill } from '../../lessons/types';
-import { P, svgRoot } from './art/svgKit';
+import { P, pauseWhenHidden, svgRoot } from './art/svgKit';
 import { handArt } from './handArt';
 
 /**
@@ -158,13 +158,13 @@ function fingerTap(): { el: HTMLElement; stop: () => void } {
 export function techniqueArt(drill: Exclude<TechniqueDrill, 'five-finger'>): { el: Element; stop: () => void } {
   switch (drill) {
     case 'arm-drop':
-      return { el: armDrop(), stop: () => undefined };
+      return { el: pauseWhenHidden(armDrop()), stop: () => undefined };
     case 'wrist-circle':
-      return { el: wristCircle(), stop: () => undefined };
+      return { el: pauseWhenHidden(wristCircle()), stop: () => undefined };
     case 'thumb-under':
-      return { el: thumbUnder(), stop: () => undefined };
+      return { el: pauseWhenHidden(thumbUnder()), stop: () => undefined };
     case 'hand-shape':
-      return { el: handShape(), stop: () => undefined };
+      return { el: pauseWhenHidden(handShape()), stop: () => undefined };
     case 'finger-tap':
       return fingerTap();
   }

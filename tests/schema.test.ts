@@ -21,6 +21,7 @@ describe('schema v1 (§7)', () => {
       micTuningCents: 0,
       micAutoNext: true,
       micSensitivity: 'normal',
+      micLatencyMs: 0, // chưa đo độ trễ
       accompaniment: true,
       timing: 'easy',
       lastBackupAt: 0,

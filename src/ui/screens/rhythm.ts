@@ -175,9 +175,11 @@ export function rhythmScreen(app: App, hooks: RhythmHooks) {
       const loop = () => {
         if (tk !== token) return void unOnset();
         const beat = (app.audio.now() - t0) / spb;
-        if (beat < 0) countEl.textContent = String(((countIn - Math.ceil(-beat - 1e-6)) % meter) + 1);
+        // Chỉ ghi khi chữ đổi (tránh cập nhật DOM mỗi khung hình)
+        const say = (t: string) => countEl.textContent !== t && (countEl.textContent = t);
+        if (beat < 0) say(String(((countIn - Math.ceil(-beat - 1e-6)) % meter) + 1));
         else {
-          countEl.textContent = useMic ? (Math.floor(beat) % meter === 0 ? '●' : '•') : ' ';
+          say(useMic ? (Math.floor(beat) % meter === 0 ? '●' : '•') : ' ');
           els.forEach((e, k) => e.classList.toggle('now', beat >= starts[k] && (k + 1 >= starts.length || beat < starts[k + 1])));
         }
         if (beat < total + 0.4) raf = requestAnimationFrame(loop);

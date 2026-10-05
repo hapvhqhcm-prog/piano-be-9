@@ -35,8 +35,9 @@ export function libraryScreen(app: App) {
         h(
           'div',
           { class: 'song-card-sub' },
-          // Dân ca: tên tiếng Việt đã ghi vùng miền — không lặp tên phiên âm tiếng Anh
-          `${s.composer?.startsWith('Dân ca') ? 'Dân ca Việt Nam' : s.title}${s.hand === 'LH' ? ' · tay trái' : s.hand === 'BOTH' ? ' · hai tay' : ''}`,
+          // Dân ca: tên tiếng Việt đã ghi vùng miền — không lặp tên phiên âm. Bài app tự sáng tác: không hiện tên tiếng Anh.
+          // Bài nổi tiếng: tên nhạc sĩ (bố mẹ dễ nhận ra) thay cho tên tiếng Anh dài.
+          `${s.composer?.startsWith('Dân ca') ? 'Dân ca Việt Nam' : s.composer?.startsWith('Bài tự sáng tác') ? 'Bài sáng tác cho bé' : (s.composer ?? s.title).replace(/\s*\(.*\)$/, '')}${s.hand === 'LH' ? ' · tay trái' : s.hand === 'BOTH' ? ' · hai tay' : ''}`,
         ),
         h('div', { class: 'song-card-week' }, faded ? 'Ôn lại nhé!' : star ? 'Đã thuộc!' : `Tuần ${s.week}`),
       );
@@ -51,11 +52,11 @@ export function libraryScreen(app: App) {
         { class: 'song-card comp-card', type: 'button', onClick: () => playSong(app, compositionToTune(c)) },
         h('div', { class: 'song-card-title' }, h('span', {}, '🎼 ', c.title)),
         h('div', { class: 'song-card-sub' }, `Con sáng tác · ${bars} ô nhịp`),
-        h('div', { class: 'song-card-week' }, `${d.getDate()}/${d.getMonth() + 1}`),
+        h('div', { class: 'song-card-week' }, `📅 ${d.getDate()} thg ${d.getMonth() + 1}`),
       );
     };
     const mineSection = mine.length
-      ? h('section', { class: 'lib-mine' }, h('h2', { class: 'lib-level' }, '🎼 Bài của con'), h('div', { class: 'library' }, ...mine.map(compCard)))
+      ? h('section', { class: 'lib-mine' }, h('h2', { class: 'lib-level' }, '🎼 Bài con sáng tác'), h('div', { class: 'library' }, ...mine.map(compCard)))
       : null;
     root.append(
       h(
@@ -100,7 +101,7 @@ export function playSong(app: App, s: Tune): void {
       s,
       // Bài mới (của tuần này/tuần trước) có gợi ý đầy đủ; bài cũ thì chỉ tên nốt (đổi được trong màn bài hát)
       // Bài con tự sáng tác (không có tuần) → luôn gợi ý đầy đủ
-      { mode: 'wait', hints: week >= 7 && (s.week ?? week) < week - 1 ? 'names' : 'full', free: true },
+      { mode: 'wait', hints: week >= 8 && (s.week ?? week) < week - 1 ? 'names' : 'full', free: true },
       { onRun: (run) => store.addSongRun(session.id, run), onDone: leave, onBack: leave },
     ),
   );

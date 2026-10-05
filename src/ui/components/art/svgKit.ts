@@ -58,6 +58,39 @@ export function svgRoot(viewBox: string, cls: string, inner: string): SVGSVGElem
   return svg;
 }
 
+/**
+ * Tranh có hoạt hình lặp mãi (CSS animation trên phần tử SVG con / SMIL <animate>): trình duyệt phải VẼ LẠI cả tranh
+ * mỗi khung hình (phần tử con của SVG không được GPU ghép lớp). Hàm này dừng hoạt hình khi tranh khuất khỏi màn hình
+ * (cuộn đi / bị che) và khi máy bật "Giảm chuyển động" (CSS đã tự tắt; SMIL thì không → dừng bằng pauseAnimations).
+ */
+export function pauseWhenHidden<T extends SVGSVGElement>(svg: T): T {
+  if (typeof window === 'undefined') return svg;
+  const mq = typeof window.matchMedia === 'function' ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+  let visible = true;
+  const apply = () => {
+    const run = visible && !mq?.matches;
+    svg.classList.toggle('anim-paused', !run);
+    try {
+      if (run) svg.unpauseAnimations();
+      else svg.pauseAnimations();
+    } catch {
+      /* trình duyệt không có SMIL */
+    }
+  };
+  if (typeof IntersectionObserver !== 'undefined') {
+    let seen = false;
+    const io = new IntersectionObserver((entries) => {
+      if (svg.isConnected) seen = true;
+      else if (seen) return io.disconnect(); // rời màn → thôi theo dõi
+      visible = entries[entries.length - 1].isIntersecting;
+      apply();
+    });
+    io.observe(svg);
+  }
+  if (mq?.matches) apply();
+  return svg;
+}
+
 /** Đường dẫn ngôi sao 5 cánh, tâm (cx, cy), bán kính ngoài r. */
 export function starPath(cx: number, cy: number, r: number, inner = 0.48): string {
   const pts: string[] = [];

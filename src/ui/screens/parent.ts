@@ -243,7 +243,7 @@ export function parentScreen(app: App) {
         ),
 
         (() => {
-          // Kỹ năng hướng tới "thành thạo"
+          // Kỹ năng của con (mục tiêu: ≈ hết Faber cấp 1 / đầu cấp 2)
           const pa = d.sessions.flatMap((x) => x.parentAssessments).filter((a) => /^[A-G]/.test(a.note));
           const mic = d.sessions.flatMap((x) => x.micAssessments);
           const findOk = pa.filter((a) => a.result === 'correct').length + mic.filter((a) => a.firstTry).length;
@@ -257,7 +257,7 @@ export function parentScreen(app: App) {
           return h(
             'section',
             { class: 'card' },
-            h('h2', {}, '🎯 Tiến tới thành thạo'),
+            h('h2', {}, '🎯 Kỹ năng của con'),
             h('p', {}, `${levelOf(week).name} — ${levelOf(week).goal}`),
             table(
               ['Kỹ năng', 'Kết quả', 'Số lần'],

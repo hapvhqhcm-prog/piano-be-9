@@ -135,7 +135,7 @@ export function stageScreen(app: App, hooks: StageHooks) {
                     h(
             'h1',
             { class: 'hero-title' },
-            level === 1 ? 'Con đã chinh phục Lâu đài Âm nhạc!' : level === 2 ? 'Huy chương Cấp 2 — nghệ sĩ hai tay!' : '🏆 Huy chương vàng — con đã thành thạo piano!',
+            level === 1 ? 'Con đã chinh phục Lâu đài Âm nhạc!' : level === 2 ? 'Huy chương Cấp 2 — nghệ sĩ hai tay!' : '🏆 Huy chương vàng — con đã đi hết 30 tuần học đàn!',
           ),
                     button({ icon: '▶', label: 'Tiếp', kind: 'primary', big: true, onTap: hooks.onDone }),
                   ),

@@ -26,6 +26,8 @@ export class App {
     readonly store: ProgressStore,
   ) {
     this.mic = new MicListener(audio);
+    // Micro được bật trong Cài đặt → giữ phiên 'play-and-record' suốt (đổi qua lại làm iOS nhỏ tiếng / lẹt xẹt)
+    audio.recordSessionWanted = () => this.micWanted;
     // iOS cắt micro ngầm (cuộc gọi, khóa màn hình…) → micro báo 'off' + needsRestart → bật lại ở lần chạm sau
     this.mic.onState((s) => {
       if (s === 'off' && this.mic.needsRestart) this.armMicRestart();
@@ -60,6 +62,7 @@ export class App {
     if (!this.micWanted) return false;
     this.mic.tuningCents = this.store.settings.micTuningCents;
     this.mic.sensitivity = this.store.settings.micSensitivity;
+    this.mic.latencyMs = this.store.settings.micLatencyMs;
     return (await this.mic.start()) === 'on';
   }
 

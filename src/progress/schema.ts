@@ -120,6 +120,7 @@ export interface Settings {
   micTuningCents: number; // (+) bù độ lệch dây đàn nhà, -100..100
   micAutoNext: boolean; // (+) micro nghe đúng → tự sang nốt sau ~1 giây
   micSensitivity: 'low' | 'normal' | 'high'; // (+) độ nhạy micro (phòng ồn → thấp; đàn nhỏ/micro xa → cao)
+  micLatencyMs: number; // (+) độ trễ khứ hồi loa → micro đã đo (ms, 0–1000); 0 = chưa đo (dùng ước lượng của trình duyệt)
   accompaniment: boolean; // (+) nhạc đệm "bố mẹ đàn cùng" khi chơi theo nhịp
   timing: 'easy' | 'normal' | 'strict'; // (+) độ khắt khe khi micro chấm nhịp (mặc định dễ — trẻ 9 tuổi)
   lastBackupAt: number; // (+) lần xuất/sao chép JSON gần nhất (ms) — để nhắc sao lưu
@@ -172,6 +173,7 @@ export function defaultSettings(): Settings {
     micTuningCents: 0,
     micAutoNext: true,
     micSensitivity: 'normal',
+    micLatencyMs: 0,
     accompaniment: true,
     timing: 'easy',
     lastBackupAt: 0,
@@ -220,6 +222,8 @@ export function validateAppData(x: unknown): string[] {
     if (typeof tc !== 'number' || tc < -100 || tc > 100) errs.push('settings.micTuningCents');
     if (typeof st.micAutoNext !== 'boolean') errs.push('settings.micAutoNext');
     if (!['low', 'normal', 'high'].includes(st.micSensitivity as string)) errs.push('settings.micSensitivity');
+    const ml = st.micLatencyMs as number;
+    if (typeof ml !== 'number' || !(ml >= 0 && ml <= 1000)) errs.push('settings.micLatencyMs');
     if (typeof st.accompaniment !== 'boolean') errs.push('settings.accompaniment');
     if (!['easy', 'normal', 'strict'].includes(st.timing as string)) errs.push('settings.timing');
     if (typeof st.lastBackupAt !== 'number') errs.push('settings.lastBackupAt');

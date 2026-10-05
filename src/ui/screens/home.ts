@@ -86,6 +86,8 @@ function islandMap(app: App): HTMLElement {
           style: { left: `${(xs[i] / 10).toFixed(2)}%`, top: `${ys[i]}%` },
           'aria-label': later ? `Tuần ${w.week} — chưa mở` : `Tuần ${w.week}: ${w.island}${passed ? ' — đã qua' : here ? ' — con đang ở đây' : ''}`,
         },
+        // Đảo hiện tại: quầng sáng "thở" — lớp riêng chỉ đổi opacity (không animate filter của tranh)
+        here ? h('div', { class: 'island-glow', 'aria-hidden': 'true' }) : null,
         art,
         // Không có tranh: tự thêm huy hiệu ✓ / 🔒 (tranh đã có sẵn ngôi sao / ổ khóa)
         !islandIcon && passed ? h('div', { class: 'island-badge' }, '★') : null,
@@ -213,8 +215,8 @@ export function homeScreen(app: App, banner?: string) {
               'div',
               { class: 'lesson-list' },
               ...plan.lessons.map(lessonRow),
-              // Từ Cấp 2: luyện tập mỗi ngày (bài đang tập + ôn bài đã thuộc + đọc nhạc mới)
-              plan.week >= 9 && next.id !== `w${plan.week}-daily`
+              // Từ Cấp 2 (tuần 11, giáo trình v5): luyện tập mỗi ngày (bài đang tập + ôn bài đã thuộc + đọc nhạc mới)
+              plan.week >= 11 && next.id !== `w${plan.week}-daily`
                 ? h(
                     'button',
                     {

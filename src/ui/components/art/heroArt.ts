@@ -2,7 +2,7 @@
  * Tranh chào mừng ở màn đầu: Bé Nốt vẫy tay cạnh cây đàn piano (iPad trên giá nhạc), nốt nhạc bay lơ lửng.
  */
 import { mascot } from '../mascot';
-import { P, beamedNotes, noteGlyph, sparkle, starPath, svgRoot, uid } from './svgKit';
+import { P, beamedNotes, noteGlyph, pauseWhenHidden, sparkle, starPath, svgRoot, uid } from './svgKit';
 
 export function heroArt(): SVGSVGElement {
   const body = uid('ha-body');
@@ -94,5 +94,5 @@ export function heroArt(): SVGSVGElement {
   svg.setAttribute('role', 'img');
   svg.removeAttribute('aria-hidden');
   svg.setAttribute('aria-label', 'Bé Nốt vẫy tay cạnh cây đàn piano');
-  return svg;
+  return pauseWhenHidden(svg);
 }

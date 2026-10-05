@@ -1,4 +1,5 @@
 import { MicListener, meterPct, type MicFrame, type MicState } from '../../audio/MicListener';
+import { BLUETOOTH_LIKELY_MS, LATENCY_GAP, LATENCY_MAX, LATENCY_PINGS, estimateLatency } from '../../audio/latency';
 import type { Sensitivity } from '../../audio/micAnalyzer';
 import { PianoKeyboard } from '../../piano/PianoKeyboard';
 import { midiToPitch, noteLabel, pitchFreq, pitchToMidi, type Pitch } from '../../piano/pitchTable';
@@ -55,6 +56,7 @@ export function micTestScreen(app: App) {
     const levelBar = h('span', { class: 'mic-level-bar' });
     const meterText = h('p', { class: 'muted small' }, ' ');
     const tuning = h('p', { class: 'muted' });
+    const latencyText = h('p', { class: 'muted' });
     const calib = h('p', { class: 'lead' });
     const report = h('div', { class: 'mic-report' });
     const kb = new PianoKeyboard({ labels: 'all', fingerOnPress: false });
@@ -69,6 +71,54 @@ export function micTestScreen(app: App) {
     let steps: StepLog[] = [];
     let lastFrame: MicFrame | null = null;
     let lastMeterText = 0;
+    /** Đang đo độ trễ (app phát tiếng "tinh") — bỏ qua nốt nghe được lúc này */
+    let measuring = false;
+    let disposed = false;
+
+    const showLatency = () => {
+      const ms = store.settings.micLatencyMs;
+      latencyText.textContent = ms > 0 ? `Độ trễ loa → micro đã đo: ${ms} ms (dùng khi chấm nhịp)` : 'Chưa đo độ trễ loa → micro.';
+    };
+
+    /**
+     * Đo độ trễ: phát 6 tiếng "tinh" (Đô5 — tiếng tích máy đếm nhịp bị bộ lọc micro chặn nên không dùng được),
+     * micro bắt lần gõ → so với giờ hẹn → độ trễ khứ hồi (trung vị, bỏ lần lệch xa).
+     */
+    const measureLatency = async () => {
+      if (measuring) return;
+      if (!(await startMic())) return;
+      const ctx = app.audio.context;
+      if (!ctx) return;
+      checking = -1;
+      window.clearTimeout(stepTimer);
+      calibrating = false;
+      measuring = true;
+      calib.textContent = '⏱️ Đang đo độ trễ… Giữ yên lặng, app sẽ phát 6 tiếng "tinh". Mở loa iPad vừa đủ nghe.';
+      const onsets: number[] = [];
+      const unOnset = app.mic.onOnset((at) => onsets.push(at));
+      const t0 = ctx.currentTime + 0.6;
+      const times = Array.from({ length: LATENCY_PINGS }, (_, i) => t0 + i * LATENCY_GAP);
+      times.forEach((t) => app.audio.ping(t));
+      const waitMs = (times[times.length - 1] - ctx.currentTime + LATENCY_MAX + 0.2) * 1000;
+      await new Promise((r) => window.setTimeout(r, waitMs));
+      unOnset();
+      measuring = false;
+      if (disposed) return;
+      const est = estimateLatency(times, onsets);
+      if (!est) {
+        calib.textContent =
+          'Chưa đo được: micro không nghe rõ tiếng "tinh". Tăng âm lượng iPad, tháo tai nghe, giữ yên lặng rồi đo lại.';
+        return;
+      }
+      store.updateSettings({ micLatencyMs: est.ms });
+      app.mic.latencyMs = est.ms;
+      showLatency();
+      calib.textContent =
+        `⏱️ Độ trễ loa → micro: ${est.ms} ms (đo được ${est.used}/${est.total} lần, lệch ±${est.spreadMs} ms). ` +
+        (est.ms > BLUETOOTH_LIKELY_MS
+          ? 'Đang dùng tai nghe Bluetooth? Hãy dùng loa iPad để chấm nhịp chính xác.'
+          : 'Đã lưu — app dùng con số này khi chấm nhịp. ✅');
+    };
 
     const showTuning = () => {
       const c = store.settings.micTuningCents;
@@ -199,6 +249,7 @@ export function micTestScreen(app: App) {
       }
     });
     const unNote = app.mic.onNote((n) => {
+      if (measuring) return;
       const p = midiToPitch(n.midi);
       big.textContent = noteLabel(p);
       const cents = Math.round(n.cents);
@@ -248,6 +299,7 @@ export function micTestScreen(app: App) {
     const startMic = async () => {
       app.mic.tuningCents = store.settings.micTuningCents;
       app.mic.sensitivity = store.settings.micSensitivity;
+      app.mic.latencyMs = store.settings.micLatencyMs;
       if (app.mic.state !== 'on') await app.mic.start();
       return app.mic.state === 'on';
     };
@@ -260,6 +312,8 @@ export function micTestScreen(app: App) {
         sampleRate: app.audio.context?.sampleRate ?? null,
         tuningCents: store.settings.micTuningCents,
         sensitivity: store.settings.micSensitivity,
+        latencyMs: store.settings.micLatencyMs,
+        outputLatency: app.audio.outputLatency,
         lastFrame: lastFrame && {
           rms: +lastFrame.rms.toFixed(5),
           floor: +lastFrame.floor.toFixed(5),
@@ -303,6 +357,7 @@ export function micTestScreen(app: App) {
           sensBox,
           calib,
           tuning,
+          latencyText,
           report,
           // Nút phụ (ít dùng) để trong vùng cuộn — thanh dưới chỉ giữ 4 nút chính
           h(
@@ -319,6 +374,7 @@ export function micTestScreen(app: App) {
                 showTuning();
               },
             }),
+            button({ icon: '⏱️', label: 'Đo độ trễ', onTap: () => void measureLatency() }),
             button({ icon: '📋', label: 'Sao chép nhật ký', onTap: () => void copyLog() }),
           ),
           h(
@@ -336,7 +392,7 @@ export function micTestScreen(app: App) {
             label: 'Kiểm tra 5 nốt',
             kind: 'good',
             onTap: async () => {
-              if (!(await startMic())) return;
+              if (measuring || !(await startMic())) return;
               calibrating = false;
               steps = [];
               report.replaceChildren();
@@ -348,7 +404,7 @@ export function micTestScreen(app: App) {
             icon: '🎯',
             label: 'Chỉnh theo đàn nhà',
             onTap: async () => {
-              if (!(await startMic())) return;
+              if (measuring || !(await startMic())) return;
               checking = -1;
               window.clearTimeout(stepTimer);
               calibrating = true;
@@ -362,9 +418,11 @@ export function micTestScreen(app: App) {
     );
     status.textContent = MicListener.supported ? STATE_TEXT[app.mic.state] : STATE_TEXT.unsupported;
     showTuning();
+    showLatency();
     renderSens();
 
     return () => {
+      disposed = true;
       window.clearTimeout(stepTimer);
       unState();
       unFrame();

@@ -1,6 +1,6 @@
 import { findTune } from '../music/exercises';
 import { beatsPerMeasure, measureCount, phraseRanges } from '../music/tune';
-import type { QuizSpec } from '../practice/quiz';
+import { makeQuestion, type QuizSpec } from '../practice/quiz';
 import type { AppAssessment, AppData, Session } from '../progress/schema';
 import type { Activity, LevelInfo, Lesson, Segment, Target, WeekPlan } from './types';
 import { LEVEL2_WEEKS } from './level2';
@@ -291,7 +291,77 @@ export function nextLesson(data: Readonly<AppData>, rng: () => number = Math.ran
   if (firstUndone) return firstUndone;
   const test = plan.lessons.find((l) => l.isWeekTest);
   if (test && !weekPassed(plan.week, data)) return test;
+  // Học hết bài nhưng CHƯA đạt tiêu chí (v5: phải đạt ở 2 ngày khác nhau) → mời lại đúng bài giúp đạt tiêu chí.
+  // QA 2026-10-05: trước đây luôn mời bài CUỐI tuần → 15/30 tuần kẹt mãi nếu chỉ bấm "Học tiếp".
+  if (!weekPassed(plan.week, data)) {
+    const helper = criterionLesson(plan.week, data);
+    if (helper) return helper;
+  }
   return regular[regular.length - 1];
+}
+
+/* ---------- Bài nào giúp đạt tiêu chí tuần? (giả lập buổi học "hoàn hảo") ---------- */
+
+/** Một buổi giả lập: bé làm ĐÚNG hết mọi hoạt động của bài (và khởi động của tuần) vào ngày `date`. */
+function idealSession(lesson: Lesson, plan: WeekPlan, date: string, seq: number): Session {
+  const parent: Session['parentAssessments'] = [];
+  const app: AppAssessment[] = [];
+  const runs: Session['songRuns'] = [];
+  let x = seq * 7919 + 17;
+  const rng = () => ((x = (x * 9301 + 49297) % 233280) / 233280);
+  const answerQuiz = (q: QuizSpec) => {
+    let prev;
+    for (let k = 0; k < Math.max(10, q.rounds); k++) {
+      prev = makeQuestion(q, rng, prev);
+      app.push({ expected: prev.expected, actual: prev.expected, correct: true, ts: 0 });
+    }
+  };
+  if (plan.warmup) answerQuiz(plan.warmup);
+  for (const a of lesson.activities) {
+    switch (a.kind) {
+      case 'notes':
+        for (const t of a.segment.targets) parent.push({ note: t.noteId, result: 'correct', ts: 0 });
+        break;
+      case 'quiz':
+        answerQuiz(a.quiz);
+        break;
+      case 'song':
+        runs.push({ songId: a.songId, mode: a.mode, level: a.mode === 'tempo' ? (a.level ?? 2) : undefined, bpm: 72, hints: a.hints, phrase: null, total: 10, hits: 10, source: 'mic', passed: true, ts: 0 });
+        break;
+      case 'sight':
+        for (let k = 0; k < a.count; k++)
+          runs.push({ songId: `sight:${a.position}:${a.hand}`, mode: 'wait', bpm: 60, hints: a.hints, phrase: null, total: 10, hits: 10, source: 'mic', passed: true, ts: 0 });
+        break;
+      case 'stage':
+        parent.push({ note: 'medal', result: 'correct', ts: 0 });
+        break;
+      default:
+        break;
+    }
+  }
+  return {
+    id: `ideal-${seq}`, date, lessonId: lesson.id, parentAssessments: parent, appAssessments: app, micAssessments: [],
+    songRuns: runs, selfRating: null, startedAt: 0, endedAt: 0, minutes: 10, completed: true, checklist: {},
+  };
+}
+
+/**
+ * Bài thường của tuần mà nếu bé làm tốt ở 2 ngày nữa thì tuần ĐẠT tiêu chí; ưu tiên bài lâu chưa học.
+ * Tiêu chí cần hai bài (vd tuần gam: tay phải + tay trái) → thử theo cặp, trả bài lâu chưa học hơn trong cặp.
+ */
+export function criterionLesson(week: number, data: Readonly<AppData>): Lesson | null {
+  const plan = weekPlan(week);
+  const regular = plan.lessons.filter((l) => !l.isWeekTest);
+  const lastPlayed = (id: string) => Math.max(0, ...data.sessions.filter((s) => s.lessonId === id).map((s) => s.startedAt));
+  const order = [...regular].sort((a, b) => lastPlayed(a.id) - lastPlayed(b.id));
+  const passesWith = (ls: Lesson[]) => {
+    const extra: Session[] = [];
+    ['9998-01-01', '9998-01-02'].forEach((d, di) => ls.forEach((l, li) => extra.push(idealSession(l, plan, d, di * 10 + li))));
+    return weekPassed(week, { ...data, sessions: [...data.sessions, ...extra] } as AppData);
+  };
+  for (const l of order) if (passesWith([l])) return l;
+  for (const a of order) for (const b of order) if (a !== b && passesWith([a, b])) return a;
+  return null;
 }
 
 export type SessionStep =

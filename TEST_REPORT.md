@@ -395,3 +395,26 @@ Ba chuyên gia đánh giá độc lập: sư phạm piano thiếu nhi, khoa họ
 - **Chuyển dữ liệu tự động** (curriculumRev 3) theo bảng tuần cũ → mới. Lượt bố mẹ chấm trước 06/10/2026 vẫn được tính.
 - **Bản đồ đảo:** ảnh gắn lại theo tuần mới, thêm 5 đảo cho 5 tuần mới.
 - 853 test qua.
+
+## 21. Kiểm thử toàn bộ v5 + hợp âm thật + đo độ trễ + mượt trên iPad cũ (2026-10-05)
+
+- **LỖI NGHIÊM TRỌNG đã sửa:** với quy tắc "đạt ở 2 ngày", nút "Học tiếp" ở 15/30 tuần cứ mời mãi bài cuối tuần, trong khi bài cần cho tiêu chí là bài khác. Bé chỉ bấm "Học tiếp" thì kẹt.
+  - Giờ app giả lập "buổi học hoàn hảo" để tìm bài giúp đạt tiêu chí (`criterionLesson`).
+  - Test mới `learnPath`: bé chỉ bấm "Học tiếp" đi hết 30 tuần. Trên mã cũ, test này phát hiện kẹt ở tuần 4.
+- **Micro nhận HỢP ÂM thật:** kiểm từng nốt mong đợi (phổ + mẫu họa âm + NNLS, có nốt "mồi" để loại nhầm).
+  - Giả lập: đủ nốt được nhận 100%; đàn 1 nốt thay hợp âm bị loại 100%; sai nốt trầm bị loại 100%; quên nốt trên được phát hiện 86%.
+  - Bé quên nốt thì app nhắc "Con quên nốt Mi". Không chắc chắn thì dùng cách cũ.
+- **Đo độ trễ** loa → micro (Thử micro → ⏱️): 6 tiếng "ping", lấy trung vị, dùng để chấm nhịp. Trên 120 ms thì nhắc có thể đang dùng tai nghe Bluetooth.
+- **Phiên âm thanh iOS:** giữ "play-and-record" suốt khi micro được bật, không đổi qua lại (tránh tụt âm lượng hay rè).
+- **Mượt trên iPad cũ** (máy làm chậm 6 lần):
+  - khuông chạy 11 → 63 khung/giây;
+  - đàn mẫu trên khuông chạy 20 → 60;
+  - con trỏ 52 → 62;
+  - hết các tác vụ dài.
+- **Sửa nhỏ:**
+  - Luyện tập mỗi ngày bắt đầu từ Cấp 2 (tuần 11);
+  - bỏ chữ "thành thạo" quá đà;
+  - Thư viện ghi tên nhạc sĩ / "Bài sáng tác cho bé" thay vì tên tiếng Anh;
+  - ngày sáng tác dạng "📅 5 thg 10";
+  - chữ P/T không còn bị phím đen che;
+  - khởi động 5 ngón không chạy đè đồng hồ.

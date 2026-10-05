@@ -82,7 +82,11 @@ export function eventsFromTargets(targets: Target[]): DemoEvent[] {
 /** Hai bàn tay hoạt hình phủ lên bàn phím (không nhận chạm). */
 export class HandOverlay {
   readonly el: HTMLDivElement;
-  private hands: Record<Hand, { box: HTMLDivElement; art: HandArt; placed: boolean }>;
+  private hands: Record<Hand, { box: HTMLDivElement; art: HandArt; placed: boolean; at: [Pitch, number] | null }>;
+  /** Kích thước bàn phím (px) — đo bằng ResizeObserver, không đọc bố cục ngay sau khi vừa ghi style */
+  private kbW = 0;
+  private kbH = 0;
+  private ro: ResizeObserver | null = null;
 
   constructor(private readonly kb: PianoKeyboard) {
     this.el = document.createElement('div');
@@ -93,10 +97,22 @@ export class HandOverlay {
       const art = handArt(hand, { className: 'overlay-hand' });
       box.append(art.el);
       this.el.append(box);
-      return { box, art, placed: false };
+      return { box, art, placed: false, at: null as [Pitch, number] | null };
     };
     this.hands = { RH: mk('RH'), LH: mk('LH') };
     kb.el.append(this.el);
+    if (typeof ResizeObserver !== 'undefined') {
+      this.ro = new ResizeObserver(() => {
+        this.kbW = this.kb.el.clientWidth;
+        this.kbH = this.kb.el.clientHeight;
+        // Xoay màn hình giữa chừng: đặt lại tay đang hiện theo kích thước mới
+        for (const hand of ['RH', 'LH'] as Hand[]) {
+          const h = this.hands[hand];
+          if (h.placed && h.at) this.place(hand, h.at[0], h.at[1], true);
+        }
+      });
+      this.ro.observe(kb.el);
+    }
   }
 
   /** Đặt bàn tay để ngón `finger` nằm trên phím `pitch`. */
@@ -107,16 +123,23 @@ export class HandOverlay {
     const widthPct = (this.kb.whiteKeyWidth * HAND_VIEW.w) / HAND_VIEW.spacing;
     const tip = hand === 'RH' ? RH_TIP_X[finger - 1] : HAND_VIEW.w - RH_TIP_X[finger - 1];
     const left = g.center - (tip / HAND_VIEW.w) * widthPct;
-    const kbW = this.kb.el.clientWidth || 1000;
-    const kbH = this.kb.el.clientHeight || 300;
+    if (!this.kbW) {
+      // Chưa có số đo (lần đầu, trước khi ResizeObserver báo) → đọc một lần
+      this.kbW = this.kb.el.clientWidth;
+      this.kbH = this.kb.el.clientHeight;
+    }
+    const kbW = this.kbW || 1000;
+    const kbH = this.kbH || 300;
     const handPxH = ((widthPct / 100) * kbW * HAND_VIEW.h) / HAND_VIEW.w;
     // Đầu ngón chạm phím ở ~45% chiều cao (phím đen: cao hơn, ~28%)
     const tipLine = (g.black ? 0.28 : 0.45) * kbH;
     const top = tipLine - (HAND_VIEW.tipY / HAND_VIEW.h) * handPxH;
     h.box.classList.toggle('instant', instant || !h.placed);
-    h.box.style.width = `${widthPct}%`;
-    h.box.style.left = `${left}%`;
-    h.box.style.top = `${top}px`;
+    const w = `${widthPct}%`;
+    if (h.box.style.width !== w) h.box.style.width = w;
+    // Trượt tay bằng transform (GPU) thay cho left/top (mỗi khung hình chuyển động phải tính lại bố cục)
+    h.box.style.transform = `translate3d(${((left * kbW) / 100).toFixed(1)}px,${top.toFixed(1)}px,0)`;
+    h.at = [pitch, finger];
     h.placed = true;
     h.box.classList.add('show');
   }
@@ -144,6 +167,7 @@ export class HandOverlay {
   }
 
   destroy(): void {
+    this.ro?.disconnect();
     this.el.remove();
   }
 }

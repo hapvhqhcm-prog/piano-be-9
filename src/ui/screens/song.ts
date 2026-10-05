@@ -285,7 +285,13 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
     }
 
     /** Nhóm nốt BÉ phải đàn: tập tách tay → chỉ nốt của tay đó (nhóm không còn nốt nào thì bỏ). */
-    const groups = (): Onset[] => handOnsets(tune, solo());
+    // Ghi nhớ theo (bài, tay): follow() gọi mỗi khung hình — không dựng lại cả dòng thời gian mỗi lần
+    let gMemo: { tune: Tune; hand: Hand | null; gs: Onset[] } | null = null;
+    const groups = (): Onset[] => {
+      const hand = solo();
+      if (!gMemo || gMemo.tune !== tune || gMemo.hand !== hand) gMemo = { tune, hand, gs: handOnsets(tune, hand) };
+      return gMemo.gs;
+    };
     /** Tập tách tay: app đàn khẽ nốt tay KIA bắt đầu trong [fromBeat, toBeat) — chỉ khi micro tắt */
     function playOther(fromBeat: number, toBeat: number, t0: number, spb: number): void {
       if (micOn()) return; // micro bật: tiếng app đàn sẽ lẫn vào tiếng bé
@@ -299,7 +305,10 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
     const midisOf = (o: Onset) => o.pitches.map(pitchToMidi);
     const idxOf = (o: Onset) => o.notes.map((n) => n.index);
 
+    /** Nhóm nốt đang sáng trên phím (follow() gọi mỗi khung hình → chỉ vẽ lại phím khi đổi nhóm) */
+    let litOnset: Onset | undefined | null = null;
     function lightOnset(o: Onset | undefined, force = false): void {
+      litOnset = o;
       kb.setTargets([]);
       if (!o || (hints !== 'full' && !force)) return;
       const ts: KeyTarget[] = [];
@@ -420,7 +429,7 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
       if (cur) staff.setCursor(idxOf(cur));
       if (hints === 'full') {
         const upcoming = gs.find((g) => g.start >= beat - 0.05 && g.start - beat < 0.5) ?? cur;
-        lightOnset(upcoming);
+        if (upcoming !== litOnset) lightOnset(upcoming);
       }
       return cur;
     }
@@ -610,8 +619,9 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
         if (g) for (const i of idxOf(g)) staff.mark(i, m);
       };
       unTempo();
-      // Bé đàn theo tiếng tích NGHE THẤY (trễ thêm độ trễ loa) → trừ đi khi chấm
-      const outLat = app.audio.outputLatency;
+      // Bé đàn theo tiếng tích NGHE THẤY (trễ loa), tiếng đàn tới app trễ thêm (micro) → trừ độ trễ khứ hồi
+      // đã đo ở "Thử micro → Đo độ trễ" (chưa đo: ước lượng outputLatency của trình duyệt như trước)
+      const outLat = app.mic.inputOutputLatency();
       const unNote = app.mic.onNote((n) => {
         const at = n.at ?? app.audio.now() - MIC_LATENCY;
         heard.push({ beat: (at - outLat - t0) / spb, midi: n.midi });
@@ -630,7 +640,9 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
         if (tk !== token) return void unNote();
         const beat = (app.audio.now() - t0) / spb;
         if (beat < 0) {
-          countEl.textContent = beat < -lead ? ' ' : String(countInLabel(beat, bpmM, lead));
+          // Chỉ ghi khi số đếm đổi (ghi textContent mỗi khung hình = tính lại bố cục mỗi khung hình)
+          const label = beat < -lead ? ' ' : String(countInLabel(beat, bpmM, lead));
+          if (countEl.textContent !== label) countEl.textContent = label;
         } else {
           if (state === 'countin') {
             state = 'playing';
@@ -715,8 +727,32 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
 
     // Micro nghe được nốt (chế độ chờ)
     const unWaitNote = app.mic.onNote((n) => {
-      if (state === 'playing' && mode === 'wait') onWaitInput(n.midi, 'mic');
+      if (state !== 'playing' || mode !== 'wait') return;
+      const g = groups()[wIdx];
+      if (g && midisOf(g).length >= 2) onWaitChord(n.midi, n.at ?? -1);
+      else onWaitInput(n.midi, 'mic');
     });
+    /** Lần gõ phím đã hỏi kiểm tra hợp âm — một lần gõ có thể cho nhiều nốt nghe được */
+    let chordAskedAt = -1;
+    /**
+     * Nhóm ≥ 2 nốt (hợp âm / hai tay): hỏi micro có ĐỦ các nốt không. Đủ → đúng; thiếu → nhắc nốt bị quên
+     * (không tính là sai, như trước); không kết luận được (tiếng nhỏ / ồn) → cách cũ (onWaitInput / match.ts).
+     */
+    function onWaitChord(midi: number, at: number): void {
+      if (at >= 0 && Math.abs(at - chordAskedAt) < 0.05) return;
+      chordAskedAt = at;
+      const tk = token;
+      const idx = wIdx;
+      const g = groups()[idx];
+      void app.mic.verifyChord(midisOf(g), at >= 0 ? at : undefined).then((r) => {
+        if (tk !== token || idx !== wIdx || state !== 'playing' || mode !== 'wait') return;
+        if (!r || !r.conclusive) return onWaitInput(midi, 'mic');
+        if (r.missing.length === 0) return onWaitInput(midisOf(g)[0], 'mic');
+        r.present.forEach((m) => kb.setResult(midiToPitch(m), 'good'));
+        const names = r.missing.map((m) => viName(midiToPitch(m))).join(', ');
+        status.textContent = `🎤 Con quên nốt ${names} — đàn cùng lúc cả ${midisOf(g).length} nốt nhé`;
+      });
+    }
 
     let disposed = false;
     reset();

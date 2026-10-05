@@ -39,6 +39,8 @@ export class PianoKeyboard {
   /** Vị trí phím (% bề ngang) — để lớp "thầy đàn mẫu" đặt bàn tay đúng chỗ */
   private geom = new Map<number, { center: number; black: boolean }>();
   private whiteW = 100 / 15;
+  /** Đánh dấu "cần đánh" đang hiện trên từng phím (khóa so sánh) — để setTargets chỉ sửa phím thay đổi */
+  private targetSig = new Map<number, string>();
 
   constructor(private readonly opts: KeyboardOptions = {}) {
     this.el = document.createElement('div');
@@ -56,6 +58,7 @@ export class PianoKeyboard {
     this.el.replaceChildren();
     this.keys.clear();
     this.geom.clear();
+    this.targetSig.clear();
     const all = keyboardPitches(this.low, this.high);
     const whites = all.filter((p) => !p.isBlack);
     const whiteW = 100 / whites.length;
@@ -158,11 +161,24 @@ export class PianoKeyboard {
 
   /** Sáng các phím cần đánh (xóa đánh dấu cũ). */
   setTargets(targets: KeyTarget[]): void {
-    this.keys.forEach((k) => k.setTarget(null));
+    const want = new Map<number, KeyMark>();
     for (const t of targets) {
-      const mark: KeyMark = { hand: t.hand, finger: t.finger, label: t.label };
-      this.key(t.pitch)?.setTarget(mark);
+      let m: number;
+      try {
+        m = pitchToMidi(t.pitch);
+      } catch {
+        continue;
+      }
+      if (this.keys.has(m)) want.set(m, { hand: t.hand, finger: t.finger, label: t.label });
     }
+    // Chỉ đụng tới phím có đánh dấu THAY ĐỔI (đổi chữ/lớp trên mọi phím = tính lại bố cục cả bàn phím)
+    this.keys.forEach((k, m) => {
+      const mark = want.get(m) ?? null;
+      const sig = mark ? `${mark.hand ?? ''}|${mark.finger ?? ''}|${mark.label ?? ''}` : '';
+      if (this.targetSig.get(m) === sig) return;
+      this.targetSig.set(m, sig);
+      k.setTarget(mark);
+    });
   }
 
   setGuides(pitches: Pitch[]): void {
@@ -181,6 +197,7 @@ export class PianoKeyboard {
   }
 
   clear(): void {
+    this.targetSig.clear();
     this.keys.forEach((k) => {
       k.setTarget(null);
       k.setGuide(false);

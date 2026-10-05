@@ -10,6 +10,7 @@ import {
   waveKeyFreq,
   type ParamEvent,
 } from './pianoVoice';
+import { PING } from './latency';
 
 /**
  * AudioEngine — tiếng đàn tổng hợp "giống piano" (OWNER chọn thay cho sample Salamander):
@@ -167,13 +168,22 @@ export class AudioEngine {
   }
 
   private lastSoundEnd = 0;
-  private sessionType: 'playback' | 'play-and-record' = 'playback';
+  /** Kiểu phiên âm thanh đã thực sự đặt cho iOS (null = chưa đặt) — tránh đặt lại cùng giá trị. */
+  private appliedSession: 'playback' | 'play-and-record' | null = null;
+  private micActive = false;
+  /**
+   * Phụ huynh đã BẬT micro trong Cài đặt? (App gán.) Nếu có: giữ 'play-and-record' suốt — mỗi lần đổi kiểu phiên,
+   * iOS đổi đường âm thanh → tiếng nhỏ đi / lẹt xẹt. Chỉ về 'playback' khi micro bị tắt trong Cài đặt.
+   */
+  recordSessionWanted: () => boolean = () => false;
 
   /**
    * iOS 17+: "playback" = vẫn kêu khi bật im lặng; "play-and-record" = khi đang dùng micro.
+   * `force` = đặt lại kể cả khi giống lần trước (lúc unlock — iOS có thể đã tự đổi).
    */
-  setAudioSessionType(type: 'playback' | 'play-and-record'): void {
-    this.sessionType = type;
+  setAudioSessionType(type: 'playback' | 'play-and-record', force = false): void {
+    if (!force && this.appliedSession === type) return;
+    this.appliedSession = type;
     try {
       const nav = globalThis.navigator as unknown as { audioSession?: { type: string } } | undefined;
       if (nav?.audioSession) nav.audioSession.type = type;
@@ -182,9 +192,26 @@ export class AudioEngine {
     }
   }
 
+  /** Kiểu phiên cần có: đang dùng micro hoặc micro được bật trong Cài đặt → 'play-and-record'. */
+  private wantedSession(): 'playback' | 'play-and-record' {
+    let wanted = false;
+    try {
+      wanted = this.recordSessionWanted();
+    } catch {
+      /* bỏ qua */
+    }
+    return this.micActive || wanted ? 'play-and-record' : 'playback';
+  }
+
+  /** MicListener báo micro bật/tắt; cũng gọi lại sau khi đổi Cài đặt micro để đồng bộ kiểu phiên. */
+  setMicActive(on: boolean): void {
+    this.micActive = on;
+    this.setAudioSessionType(this.wantedSession());
+  }
+
   /** PHẢI gọi trong handler của thao tác chạm. */
   async unlock(): Promise<boolean> {
-    this.setAudioSessionType(this.sessionType);
+    this.setAudioSessionType(this.wantedSession(), true);
     if (!this.ctx) {
       this.ctx = this.factory();
       const ctx = this.ctx;
@@ -409,6 +436,42 @@ export class AudioEngine {
       this.clicks.delete(osc);
       try {
         osc.disconnect();
+        g.disconnect();
+      } catch {
+        /* bỏ qua */
+      }
+    };
+  }
+
+  /**
+   * Tiếng "tinh" ngắn để ĐO ĐỘ TRỄ loa → micro (latency.ts): Đô5 + họa âm, lên ~2 ms.
+   * KHÔNG dùng tiếng tích (≥ 5 kHz bị bộ lọc micro chặn). Không tính là "app đang phát" để micro vẫn bắt lần gõ.
+   */
+  ping(when: number): void {
+    const ctx = this.ctx;
+    const master = this.dry ?? this.master;
+    if (!ctx || !master) return;
+    const t = Math.max(when, ctx.currentTime);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(PING.gain, t + PING.attack);
+    g.gain.setTargetAtTime(0, t + PING.attack, PING.tau);
+    g.connect(master);
+    const oscs = [1, 2].map((k) => {
+      const osc = ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = PING.hz * k;
+      const og = ctx.createGain();
+      og.gain.value = k === 1 ? 1 : 0.5;
+      osc.connect(og);
+      og.connect(g);
+      osc.start(t);
+      osc.stop(t + PING.length);
+      return { osc, og };
+    });
+    oscs[0].osc.onended = () => {
+      try {
+        oscs.forEach(({ osc, og }) => (osc.disconnect(), og.disconnect()));
         g.disconnect();
       } catch {
         /* bỏ qua */

@@ -1006,6 +1006,31 @@ p {
   height: 100%;
   overflow: visible;
 }
+/* Băng chuyền: khung tĩnh + dải nốt chạy bằng transform (lớp GPU riêng) + vạch đỏ ở trên */
+.staff-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.staff-stage > .staff-over {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.staff-clip {
+  position: absolute;
+  overflow: hidden;
+  pointer-events: none;
+}
+.staff-strip {
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
+.staff .staff-strip svg {
+  display: block;
+  overflow: hidden;
+}
 .staff-mini {
   width: 260px;
   height: 150px;

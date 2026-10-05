@@ -42,6 +42,7 @@ function setup() {
     msSinceSound: () => 10_000,
     clickNear: () => false,
     setAudioSessionType: vi.fn(),
+    setMicActive: vi.fn(),
     onStateChange: (fn: (s: EngineState) => void) => {
       engineListeners.add(fn);
       return () => engineListeners.delete(fn);

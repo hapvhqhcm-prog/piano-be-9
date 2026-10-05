@@ -183,6 +183,8 @@ export function techniqueScreen(app: App, hooks: TechniqueHooks) {
 
     /** Bé làm theo: đồng hồ nhẹ nhàng, chấm sáng dần "Làm 3 lần"; hết giờ (hoặc bấm Xong) → bố mẹ xác nhận. */
     function run(): void {
+      // Hủy hẹn giờ "thầy làm mẫu" còn chờ (bấm "Con làm nào" ngay sau khi màn hiện) — tránh mẫu chạy đè đồng hồ
+      token++;
       if (demoRun) {
         demoRun.cancel();
         demoRun = null;

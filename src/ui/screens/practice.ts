@@ -554,8 +554,37 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
         }
         return;
       }
+      if (t.keys.length >= 2) {
+        // HỢP ÂM: hỏi micro trong tiếng vừa đàn có ĐỦ các nốt không (kiểm tra theo nốt cần đàn) —
+        // mỗi lần gõ phím chỉ hỏi một lần; không kết luận được (tiếng nhỏ / ồn) → cách cũ (micChordLegacy)
+        const at = n.at ?? -1;
+        if (at >= 0 && Math.abs(at - chordAskedAt) < 0.05) return;
+        chordAskedAt = at;
+        const tk = token;
+        void app.mic.verifyChord(t.keys.map(pitchToMidi), at >= 0 ? at : undefined).then((r) => {
+          if (tk !== token || sm.snapshot.state !== 'WAIT_PARENT' || target() !== t) return;
+          if (!r || !r.conclusive) return micChordLegacy(t, n.midi);
+          if (r.missing.length === 0) {
+            t.keys.forEach((k) => heardKeys.add(k));
+            send('HEARD');
+            return;
+          }
+          // Thiếu nốt: chỉ ra phím đã nghe được + nhắc nhẹ nốt bị quên (không tính là sai)
+          r.present.forEach((m) => kb.setResult(midiToPitch(m), 'good'));
+          const names = r.missing.map((m) => noteLabel(midiToPitch(m)).split(' / ')[0]).join(', ');
+          micHint(`🎤 Con quên nốt ${names} — đàn cùng lúc cả ${t.keys.length} phím nhé`, 'wrong', true);
+        });
+        return;
+      }
+      micChordLegacy(t, n.midi);
+    });
+    /** Lần gõ phím đã hỏi kiểm tra hợp âm (đồng hồ AudioContext) — một lần gõ có thể cho nhiều nốt nghe được */
+    let chordAskedAt = -1;
+    /** Cách cũ: so nốt micro nghe được với các phím cần đàn (hợp âm: nốt trầm "chung" cũng tính — match.ts). */
+    function micChordLegacy(t: Target, midi: number): void {
+      const heard = midiToPitch(midi);
       const match = t.keys.find((k) => samePitch(k, heard));
-      if (!match && matchHeard(n.midi, t.keys.map(pitchToMidi)) === 'chord') {
+      if (!match && matchHeard(midi, t.keys.map(pitchToMidi)) === 'chord') {
         // Bấm cả hợp âm cùng lúc: micro nghe ra nốt trầm chung của hợp âm → tính là đủ các phím
         t.keys.forEach((k) => heardKeys.add(k));
         send('HEARD');
@@ -576,7 +605,7 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
         const want = t.keys.length === 1 ? noteLabel(t.keys[0]).split(' / ')[0] : 'phím đang sáng';
         micHint(`🎤 Con vừa đàn ${noteLabel(heard).split(' / ')[0]} — tìm ${want} nhé`, 'wrong', wrongCount <= 3);
       }
-    });
+    }
     // Thanh âm lượng: cho bé/bố mẹ thấy app "đang nghe"
     const unFrame = app.mic.onFrame((f) => {
       const pct = meterPct(f);

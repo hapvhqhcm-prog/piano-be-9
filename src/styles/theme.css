@@ -607,10 +607,13 @@ h3,
 }
 .hand-pos {
   position: absolute;
+  left: 0;
+  top: 0;
   opacity: 0;
+  will-change: transform;
+  /* vị trí đặt bằng transform (demo.ts HandOverlay.place) — trượt trên GPU, không tính lại bố cục */
   transition:
-    left 0.22s ease-out,
-    top 0.22s ease-out,
+    transform 0.22s ease-out,
     opacity 0.25s;
 }
 .hand-pos.instant {
@@ -1102,8 +1105,30 @@ h3,
 .island.here .island-emoji {
   position: relative;
   transform: scale(1.12);
-  filter: drop-shadow(0 0 10px rgba(255, 216, 90, 0.95)) drop-shadow(0 4px 6px rgba(240, 168, 28, 0.4));
+  /* Viền sáng TĨNH (vẽ một lần). Nhịp "thở" sáng nằm ở lớp .island-glow riêng, chỉ đổi opacity → GPU ghép lớp;
+     trước đây animate `filter: drop-shadow` mãi mãi = vẽ lại tranh đảo mỗi khung hình. */
+  filter: drop-shadow(0 0 7px rgba(255, 216, 90, 0.85)) drop-shadow(0 4px 6px rgba(240, 168, 28, 0.38));
+}
+.island-glow {
+  position: absolute;
+  left: 50%;
+  top: -12px;
+  width: 116px;
+  height: 96px;
+  margin-left: -58px;
+  z-index: -1; /* .island có transform → lớp xếp riêng: quầng nằm dưới tranh & tên đảo */
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(closest-side, rgba(255, 216, 90, 0.75), rgba(255, 216, 90, 0.35) 60%, rgba(255, 216, 90, 0) 100%);
+  opacity: 0.25;
+  will-change: opacity;
   animation: island-glow 2.4s ease-in-out infinite;
+}
+.island:not(.has-art) .island-glow {
+  top: -14px;
+  width: 96px;
+  height: 80px;
+  margin-left: -48px;
 }
 .island.here .island-name {
   background: var(--sun-400);
@@ -1119,10 +1144,10 @@ h3,
 @keyframes island-glow {
   0%,
   100% {
-    filter: drop-shadow(0 0 6px rgba(255, 216, 90, 0.8)) drop-shadow(0 4px 6px rgba(240, 168, 28, 0.35));
+    opacity: 0.25;
   }
   50% {
-    filter: drop-shadow(0 0 14px rgba(255, 216, 90, 1)) drop-shadow(0 4px 6px rgba(240, 168, 28, 0.45));
+    opacity: 1;
   }
 }
 .island-pin {
@@ -1613,30 +1638,45 @@ h3,
   box-shadow:
     inset 0 0 0 4px var(--rh),
     inset 0 -7px 0 #a3c9ee;
-  animation: target-glow 1.4s ease-in-out infinite;
 }
 .key.is-target.hand-rh.key-black {
   background: linear-gradient(180deg, #4d9de6 0%, #155f9f 100%);
-  animation: target-glow 1.4s ease-in-out infinite;
 }
 .key.is-target.hand-lh.key-white {
   background: linear-gradient(180deg, #fff6ea 0%, #ffd9b0 100%);
   box-shadow:
     inset 0 0 0 4px var(--lh),
     inset 0 -7px 0 #f6c28c;
-  animation: target-glow 1.4s ease-in-out infinite;
 }
 .key.is-target.hand-lh.key-black {
   background: linear-gradient(180deg, #ffb066 0%, #d9741a 100%);
+}
+/* Phím cần đánh "thở" sáng: lớp phủ trắng mỏng chỉ đổi opacity (GPU) — trước đây animate `filter: brightness`
+   mãi mãi = vẽ lại phím mỗi khung hình, đúng lúc bé đang đàn theo nhịp */
+.key.is-target::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+  will-change: opacity;
   animation: target-glow 1.4s ease-in-out infinite;
+}
+.key.is-target.key-black::before {
+  background: #bfe0ff;
+}
+.key.is-target.hand-lh.key-black::before {
+  background: #ffe2c4;
 }
 @keyframes target-glow {
   0%,
   100% {
-    filter: brightness(1);
+    opacity: 0;
   }
   50% {
-    filter: brightness(1.07) saturate(1.2);
+    opacity: 0.16;
   }
 }
 .key.is-show.key-white,
@@ -2275,6 +2315,12 @@ h3,
   }
 }
 
+/* Tranh hoạt hình đang khuất khỏi màn hình (art/svgKit.ts pauseWhenHidden) → dừng vẽ lại */
+.anim-paused,
+.anim-paused * {
+  animation-play-state: paused !important;
+}
+
 /* ---------- Thanh âm lượng micro: cùng tông màu ---------- */
 .mic-level {
   background: var(--violet-50);
@@ -2782,7 +2828,7 @@ h3,
 .hand-tag-lh {
   background: var(--lh-dark);
 }
-/* Số ngón trên phím đích: thêm nhãn P/T nhỏ ở góc huy hiệu */
+/* Số ngón trên phím đích: thêm nhãn P/T nhỏ ở góc DƯỚI huy hiệu (góc trên bị phím đen che với Đô/Rê/Mi) */
 .key.is-target .key-badge {
   position: relative;
 }
@@ -2790,7 +2836,7 @@ h3,
 .key.is-target.hand-lh .key-badge.show::after {
   content: 'P';
   position: absolute;
-  top: -9px;
+  bottom: -9px;
   right: -12px;
   min-width: 22px;
   height: 22px;
@@ -2810,7 +2856,7 @@ h3,
   background: var(--lh-dark);
 }
 .keyboard.wide .key.is-target .key-badge.show::after {
-  top: -7px;
+  bottom: -7px;
   right: -9px;
   min-width: 18px;
   height: 18px;

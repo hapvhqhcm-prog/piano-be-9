@@ -112,6 +112,20 @@ export class StaffView {
   /** Ánh xạ của trang đang hiện: x = X0 + (spaceAt(phách) − origin) × scale */
   private origin = 0;
   private scale = 1;
+  /** Con trỏ đang vẽ (khóa các chỉ số nốt) — chỉ đụng tới DOM khi con trỏ thật sự đổi nhóm */
+  private cursorKey = '';
+  /**
+   * Băng chuyền (mode 'scroll'): dải nốt là một <svg> riêng nằm trong khung HTML cắt hai bên; chạy ngang bằng
+   * CSS `transform: translate3d()` trên lớp HTML (GPU ghép lớp — không vẽ lại khuông mỗi khung hình, nhẹ cho iPad cũ).
+   */
+  private strip: { clip: HTMLDivElement; move: HTMLDivElement; svg: SVGSVGElement; x0: number; w: number } | null = null;
+  /** px màn hình trên mỗi đơn vị viewBox (đo bằng ResizeObserver, không đọc bố cục mỗi khung hình) */
+  private px = 0;
+  /** Độ dịch hiện tại (đơn vị viewBox) */
+  private shift = 0;
+  /** Phần lẻ (px) của vị trí khung cắt — cộng vào transform */
+  private frac: [number, number] = [0, 0];
+  private ro: ResizeObserver | null = null;
 
   constructor(
     private readonly tune: Tune,
@@ -190,24 +204,89 @@ export class StaffView {
     }
     this.content = el('g', { class: 'staff-content' });
     if (this.o.mode === 'scroll') {
-      const clipId = `staff-clip-${Math.random().toString(36).slice(2, 9)}`;
-      const defs = el('defs');
-      const clip = el('clipPath', { id: clipId });
-      // Cắt hai bên: nốt chỉ hiện giữa vạch đỏ và mép phải khuông (không tràn ra ngoài khung)
-      clip.append(el('rect', { x: X0 - 16, y: 0, width: width - 8 - (X0 - 16), height: this.height }));
-      defs.append(clip);
-      this.svg.append(defs);
-      const wrap = el('g', { 'clip-path': `url(#${clipId})` });
-      wrap.append(this.content);
-      this.svg.append(wrap);
-      this.drawAll();
-      this.svg.append(el('line', { x1: X0, x2: X0, y1: 22, y2: this.height - 26, class: 'staff-playhead' }));
-      this.setTime(0);
+      this.buildStrip(width);
     } else {
       this.svg.append(this.content);
       this.showPage(0);
+      this.el.append(this.svg);
     }
-    this.el.append(this.svg);
+  }
+
+  /**
+   * Băng chuyền: [khung khuông (svg tĩnh)] + [khung cắt HTML ▸ lớp chạy (will-change: transform) ▸ svg dải nốt]
+   * + [svg vạch đỏ ở trên cùng]. Ba lớp cùng hệ toạ độ viewBox (meet, căn giữa) → hình y hệt bản một-svg cũ.
+   * Cắt hai bên: nốt chỉ hiện giữa (vạch đỏ − 16) và mép phải khuông, như clipPath trước đây.
+   */
+  private buildStrip(width: number): void {
+    const stage = document.createElement('div');
+    stage.className = 'staff-stage';
+    this.drawAll();
+    const total = beatsPerMeasure(this.tune) * measureCount(this.tune);
+    const x0 = X0 - 16;
+    // Dải đủ dài cho cả bài (+ chỗ vạch kết, dấu luyến cuối, số ngón)
+    const w = X0 + spaceAt(this.spacing, total) + 60 - x0;
+    const svg = el('svg', { viewBox: `${x0} 0 ${w} ${this.height}`, preserveAspectRatio: 'xMinYMin meet', class: 'staff-strip-svg', 'aria-hidden': 'true' });
+    svg.append(this.content);
+    const move = document.createElement('div');
+    move.className = 'staff-strip';
+    move.append(svg);
+    const clip = document.createElement('div');
+    clip.className = 'staff-clip';
+    clip.append(move);
+    this.strip = { clip, move, svg, x0, w };
+    const top = el('svg', {
+      viewBox: `0 0 ${width} ${this.height}`,
+      preserveAspectRatio: 'xMidYMid meet',
+      class: 'staff-over',
+      'aria-hidden': 'true',
+    });
+    top.append(el('line', { x1: X0, x2: X0, y1: 22, y2: this.height - 26, class: 'staff-playhead' }));
+    stage.append(this.svg, clip, top);
+    this.el.append(stage);
+    const vw = width;
+    const vh = this.height;
+    const fit = (W: number, H: number) => {
+      if (!(W > 0 && H > 0) || !this.strip) return;
+      // Cùng phép "meet + căn giữa" của svg khung → toạ độ viewBox → px
+      const s = Math.min(W / vw, H / vh);
+      const ox = (W - vw * s) / 2;
+      const oy = (H - vh * s) / 2;
+      this.px = s;
+      // Khung cắt đặt ở px NGUYÊN (lớp GPU không nhận nửa px khi đặt vị trí); phần lẻ dồn vào transform của dải
+      const left = ox + x0 * s;
+      const top = oy;
+      this.frac = [left - Math.round(left), top - Math.round(top)];
+      const cs = this.strip.clip.style;
+      cs.left = `${Math.round(left)}px`;
+      cs.top = `${Math.round(top)}px`;
+      cs.width = `${(vw - 8 - x0) * s}px`;
+      cs.height = `${vh * s}px`;
+      this.strip.svg.style.width = `${w * s}px`;
+      this.strip.svg.style.height = `${vh * s}px`;
+      this.applyShift();
+    };
+    if (typeof ResizeObserver !== 'undefined') {
+      this.ro = new ResizeObserver((entries) => {
+        if (!stage.isConnected) {
+          // Màn đã đóng → thôi theo dõi (tránh giữ DOM cũ)
+          this.ro?.disconnect();
+          this.ro = null;
+          return;
+        }
+        const r = entries[entries.length - 1].contentRect;
+        fit(r.width, r.height);
+      });
+      this.ro.observe(stage);
+    }
+    this.setTime(0);
+  }
+
+  private applyShift(): void {
+    if (!this.strip) return;
+    // Làm tròn tới 1/100 px: đủ mượt, chuỗi transform ngắn
+    const tx = Math.round((this.frac[0] - this.shift * this.px) * 100) / 100;
+    const ty = Math.round(this.frac[1] * 100) / 100;
+    this.strip.move.style.transform = `translate3d(${tx}px,${ty}px,0)`;
   }
 
   private y(s: Stave, step: number): number {
@@ -486,6 +565,7 @@ export class StaffView {
   }
 
   private clear(): void {
+    this.cursorKey = '';
     this.content.replaceChildren();
     this.noteEls.clear();
     this.stemDir.clear();
@@ -528,6 +608,10 @@ export class StaffView {
     const m = idx.length ? this.measureOf(idx[0]) : undefined;
     if (m === undefined) return;
     if (this.o.mode === 'page') this.showPage(Math.floor(m / this.o.measuresPerPage));
+    // Gọi mỗi khung hình (theo nhịp / xem mẫu) → chỉ đổi lớp CSS khi con trỏ sang nhóm nốt khác
+    const key = idx.join(',');
+    if (key === this.cursorKey) return;
+    this.cursorKey = key;
     this.noteEls.forEach((g) => g.classList.remove('now'));
     for (const i of idx) this.noteEls.get(i)?.classList.add('now');
   }
@@ -535,7 +619,8 @@ export class StaffView {
   /** Băng chuyền: đặt vị trí theo phách hiện tại (nốt trôi về vạch đỏ — đúng lúc kể cả khi giãn cách không đều). */
   setTime(beat: number): void {
     if (this.o.mode === 'scroll') {
-      this.content.setAttribute('transform', `translate(${-spaceAt(this.spacing, beat)} 0)`);
+      this.shift = spaceAt(this.spacing, beat);
+      this.applyShift();
     } else {
       const bpm = beatsPerMeasure(this.tune);
       this.showPage(Math.floor(Math.max(0, beat) / bpm / this.o.measuresPerPage));
@@ -545,12 +630,14 @@ export class StaffView {
   mark(index: number, m: NoteMark): void {
     const g = this.noteEls.get(index);
     if (!g) return;
+    this.cursorKey = '';
     g.classList.toggle('now', m === 'now');
     g.classList.toggle('hit', m === 'hit');
     g.classList.toggle('miss', m === 'miss');
   }
 
   clearMarks(): void {
+    this.cursorKey = '';
     this.noteEls.forEach((g) => g.classList.remove('now', 'hit', 'miss'));
   }
 }
