@@ -1,7 +1,7 @@
 import { wait } from '../../audio/AudioEngine';
 import { matchHeard } from '../../audio/match';
 import { confetti } from '../components/celebrate';
-import { PASS_SCORE, TIMING_WINDOWS, countInBeats, countInLabel, gradeTiming, score as scoreOf, starsFor, type HeardEvent } from '../../music/timing';
+import { PASS_SCORE, TIMING_WINDOWS, countInBeats, countInLabel, gradeTiming, loopStreak, score as scoreOf, starsFor, type HeardEvent } from '../../music/timing';
 import {
   DYN_VOLUME,
   accompaniment,
@@ -9,7 +9,8 @@ import {
   beatsPerMeasure,
   dynAtBeat,
   expressionUsed,
-  onsets,
+  handOnsets,
+  otherHandNotes,
   phraseRanges,
   pitchesOf,
   slice,
@@ -26,6 +27,7 @@ import type { App } from '../App';
 import { backButton, button, h } from '../components/dom';
 import { StaffView } from '../components/staffView';
 import { HandOverlay, eventsFromTune, playDemo } from '../components/demo';
+import '../../styles/pedagogy.css';
 
 export interface SongOptions {
   mode: 'wait' | 'tempo';
@@ -36,7 +38,16 @@ export interface SongOptions {
   free?: boolean;
   /** Sân khấu: chỉ chơi cả bài một lần rồi báo xong */
   stage?: boolean;
+  /** v5 — Mở sẵn một câu [ô đầu, ô cuối) (bước "Ôn bài cũ") */
+  phrase?: [number, number];
+  /** v5 — Tốc độ mở sẵn (mặc định tốc độ của bài) */
+  bpm?: number;
+  /** v5 — Bước "Ôn bài cũ" trong buổi: khoá câu (không hiện nút chọn câu), luôn hiện lời dẫn */
+  review?: boolean;
 }
+
+/** Tập tách tay (bài hai tay): RH / LH = chỉ chấm tay đó; BOTH = hai tay như thường. */
+type HandSel = 'BOTH' | 'RH' | 'LH';
 
 export interface SongHooks {
   onRun(run: Omit<SongRun, 'ts'>): void;
@@ -99,8 +110,20 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
     let mode = opts.mode;
     let hints = opts.hints;
     let level: 2 | 3 = opts.level ?? 2;
-    let bpm = full.bpm;
-    let phrase: [number, number] | null = null;
+    let bpm = opts.bpm ?? full.bpm;
+    let phrase: [number, number] | null = opts.phrase ?? null;
+    // ---- v5 sư phạm ----
+    /** Tập tách tay — chỉ bài hai tay (có bè lh) */
+    const twoHand = !!full.lh;
+    let handSel: HandSel = 'BOTH';
+    /** Tay đang tập riêng (null = hai tay) */
+    const solo = (): Hand | null => (twoHand && handSel !== 'BOTH' ? handSel : null);
+    /** "Lặp câu này 3 lần đúng liên tiếp" (chế độ chờ, đang chọn một câu) */
+    let loop3 = false;
+    let streak = 0;
+    /** Bài MỚI (chưa chơi lượt nào): nhắc hát tên nốt theo thầy khi xem mẫu */
+    const firstTime =
+      !full.id.startsWith('sight') && !app.store.get().sessions.some((s) => s.songRuns.some((r) => r.songId === full.id));
     let tune = full;
     let state: State = 'idle';
     let token = 0;
@@ -163,9 +186,22 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
           { class: 'song-title' },
           h('b', {}, full.titleVi),
           // Tên gốc/nhạc sĩ chỉ dành cho bố mẹ (thư viện) — màn của bé gọn chữ
-          full.lh ? h('span', { class: 'hand-tag' }, '🙌 hai tay') : null,
+          full.lh && opts.stage ? h('span', { class: 'hand-tag' }, '🙌 hai tay') : null,
+          opts.review ? h('span', { class: 'hand-tag review-tag' }, '🔁 ôn bài cũ') : null,
         ),
       );
+      if (twoHand && !opts.stage) {
+        // v5: tập TÁCH TAY trước rồi mới ghép hai tay (lượt tách tay không tính tiêu chí tuần / "đã thuộc")
+        row.append(
+          h(
+            'div',
+            { class: 'seg-group hand-sel', role: 'group', 'aria-label': 'Tay tập' },
+            chip('🫱 Tay phải', handSel === 'RH', () => ((handSel = 'RH'), reset())),
+            chip('🫲 Tay trái', handSel === 'LH', () => ((handSel = 'LH'), reset())),
+            chip('🙌 Hai tay', handSel === 'BOTH', () => ((handSel = 'BOTH'), reset())),
+          ),
+        );
+      }
       if (opts.free) {
         row.append(
           h(
@@ -177,7 +213,7 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
         );
       }
       const ranges = phraseRanges(full);
-      if (ranges.length > 1 && !opts.stage) {
+      if (ranges.length > 1 && !opts.stage && !opts.review) {
         row.append(
           h(
             'div',
@@ -241,11 +277,24 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
         names: hints !== 'staff',
         fingers: hints === 'full',
         mode: mode === 'tempo' && level === 3 ? 'scroll' : 'page',
+        // Tập tách tay: bè kia vẽ mờ (app đàn thay)
+        dimHand: solo() ? (solo() === 'RH' ? 'LH' : 'RH') : null,
       });
       staffBox.replaceChildren(staff.el);
     }
 
-    const groups = () => onsets(tune);
+    /** Nhóm nốt BÉ phải đàn: tập tách tay → chỉ nốt của tay đó (nhóm không còn nốt nào thì bỏ). */
+    const groups = (): Onset[] => handOnsets(tune, solo());
+    /** Tập tách tay: app đàn khẽ nốt tay KIA bắt đầu trong [fromBeat, toBeat) — chỉ khi micro tắt */
+    function playOther(fromBeat: number, toBeat: number, t0: number, spb: number): void {
+      if (micOn()) return; // micro bật: tiếng app đàn sẽ lẫn vào tiếng bé
+      for (const n of otherHandNotes(tune, solo())) {
+        if (n.start < fromBeat - 1e-6 || n.start >= toBeat - 1e-6) continue;
+        for (const p of pitchesOf(n)) {
+          void app.audio.scheduleFreq(midiToFreq(pitchToMidi(p)), t0 + (n.start - fromBeat) * spb, n.beats * spb * 0.9, 0.35, false);
+        }
+      }
+    }
     const midisOf = (o: Onset) => o.pitches.map(pitchToMidi);
     const idxOf = (o: Onset) => o.notes.map((n) => n.index);
 
@@ -271,6 +320,8 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
 
     function reset(): void {
       token++;
+      loop3 = false;
+      streak = 0;
       cancelAnimationFrame(raf);
       unTempo();
       demoRun?.cancel();
@@ -284,24 +335,43 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
       const g0 = groups()[0];
       if (g0) staff.setCursor(idxOf(g0));
       lightOnset(g0);
+      const sh = solo();
       status.replaceChildren(
         h(
           'span',
           {},
-          opts.intro && !phrase ? opts.intro + ' ' : '',
+          opts.intro && (!phrase || opts.review) ? opts.intro + ' ' : '',
+          sh ? `${sh === 'RH' ? '🫱 Tập tay PHẢI' : '🫲 Tập tay TRÁI'} — ${micOn() ? 'tay kia để nghỉ' : 'app đàn khẽ tay kia'}. ` : '',
           mode === 'wait'
-            ? micOn()
-              ? '🎤 Bấm Bắt đầu rồi đàn từng nốt — app nghe và tự đi tiếp.'
-              : 'Bấm 🎬 Xem mẫu để xem thầy đàn, rồi Bắt đầu và đàn từng nốt.'
+            ? // Bài mới: nghe – hát – rồi mới đàn (gộp một dòng cho gọn)
+              firstTime
+              ? '🎬 Xem mẫu và hát tên nốt theo thầy — rồi Bắt đầu đàn từng nốt.'
+              : micOn()
+                ? '🎤 Bấm Bắt đầu rồi đàn từng nốt — app nghe và tự đi tiếp.'
+                : 'Bấm 🎬 Xem mẫu để xem thầy đàn, rồi Bắt đầu và đàn từng nốt.'
             : `Đếm vào rồi đàn theo tiếng "tích" (${bpm} nhịp/phút).`,
         ),
       );
+      const canLoop = mode === 'wait' && !!phrase && !opts.stage;
       setBar(
         backButton(() => hooks.onBack()),
         button({ icon: '🎬', label: 'Xem mẫu', onTap: () => void demo() }),
+        canLoop ? button({ icon: '🔁', label: 'Lặp 3 lần đúng', onTap: () => void startLoop() }) : null,
         button({ icon: '▶', label: 'Bắt đầu', kind: 'primary', onTap: () => void start() }),
       );
     }
+
+    /** v5 — Lặp một câu: tự chơi lại tới khi đúng (không sai nốt nào) 3 lần LIÊN TIẾP. */
+    async function startLoop(): Promise<void> {
+      await start();
+      if (state === 'playing' && mode === 'wait') {
+        loop3 = true;
+        streak = 0;
+        showWaitNote();
+      }
+    }
+    const streakDots = () =>
+      h('span', { class: 'loop-dots', 'aria-label': `${streak}/3` }, '🔁 ', '●'.repeat(streak), h('span', { class: 'loop-off' }, '○'.repeat(Math.max(0, 3 - streak))));
 
     // ---------------- Xem mẫu: "video" bàn tay thầy đàn ----------------
     let demoRun: { cancel: () => void; done: Promise<void> } | null = null;
@@ -312,7 +382,7 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
       overlay.setGhost(false);
       kb.setTargets([]);
       const caption = h('span', {}, '🎬 Xem thầy đàn mẫu — nhìn ngón tay nhé');
-      status.replaceChildren(caption);
+      status.replaceChildren(caption, firstTime ? h('div', { class: 'sing-prompt' }, '🎤 Hát tên nốt theo thầy nhé!') : '');
       setBar(button({ icon: '⏹', label: 'Dừng', onTap: reset }));
       scheduleAccomp(app.audio.now() + 0.35, spb);
       demoRun = playDemo(app.audio, kb, overlay, eventsFromTune(tune), {
@@ -375,12 +445,15 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
     let wIdx = 0;
     let wHits = 0;
     let wWrongThis = 0;
+    /** Số lần đàn sai trong cả lượt (micro nghe sai / chạm sai phím ảo) — cho "Lặp 3 lần đúng" */
+    let wWrongPass = 0;
     function startWait(): void {
       token++;
       state = 'playing';
       wIdx = 0;
       wHits = 0;
       wWrongThis = 0;
+      wWrongPass = 0;
       staff.clearMarks();
       app.mic.resetTracker();
       showWaitNote();
@@ -395,6 +468,8 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
       status.replaceChildren(
         h('span', { class: 'song-progress' }, `${wIdx + 1}/${gs.length}`),
         ' ',
+        loop3 ? streakDots() : '',
+        loop3 ? ' ' : '',
         hints === 'staff' ? 'Nhìn khuông nhạc — nốt đang sáng' : `Đàn ${onsetLabel(g)}`,
         micOn() ? ' · 🎤' : '',
       );
@@ -424,11 +499,18 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
         if (match === 'exact') kb.setResult(midiToPitch(midi), 'good');
         wIdx++;
         wWrongThis = 0;
+        // Tập tách tay: app đàn khẽ các nốt tay kia từ nhóm này tới nhóm sau
+        if (solo()) playOther(g.start, groups()[wIdx]?.start ?? Infinity, app.audio.now() + 0.02, 60 / bpm);
         if (from === 'mic') app.mic.resetTracker();
         showWaitNote();
+      } else if (from === 'tap') {
+        wWrongPass++;
       } else if (from === 'mic') {
         // Nhiều nốt cùng lúc: micro hay nghe lẫn → không tính là sai, chỉ chỉ ra phím nghe được
-        if (midisOf(g).length < 2) wWrongThis++;
+        if (midisOf(g).length < 2) {
+          wWrongThis++;
+          wWrongPass++;
+        }
         const heard = midiToPitch(midi);
         kb.setResult(heard, 'heard');
         status.textContent = `🎤 Con vừa đàn ${viName(heard)} — tìm ${viName(g.pitches[0])} nhé`;
@@ -437,6 +519,7 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
 
     function finishWait(): void {
       const total = groups().length;
+      if (loop3) return finishLoopPass(total);
       if (micOn()) {
         const s = total ? wHits / total : 0;
         record({ mode: 'wait', total, hits: wHits, source: 'mic', passed: s >= PASS_SCORE });
@@ -444,6 +527,63 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
       } else {
         askParent('Con đã đàn hết bài chưa?', total);
       }
+    }
+
+    /** Hết một lượt của "Lặp 3 lần": sạch (không sai nốt nào) → +1, sai → về 0; đủ 3 → ăn mừng. */
+    function finishLoopPass(total: number): void {
+      const verdict = (clean: boolean) => {
+        const v = loopStreak(streak, clean);
+        streak = v.streak;
+        if (v.done) {
+          loop3 = false;
+          return showResult(1, '🏆 Đúng 3 lần liên tiếp — câu này con thuộc rồi!');
+        }
+        state = 'rate';
+        kb.setTargets([]);
+        status.replaceChildren(
+          streakDots(),
+          ' ',
+          h('b', {}, clean ? `✓ Đúng rồi! Còn ${3 - streak} lần nữa nào!` : 'Gần được rồi — mình đàn lại từ đầu câu nhé!'),
+        );
+        setBar(backButton(reset));
+        if (clean) void app.audio.chime();
+        const tk = token;
+        void wait(1600).then(() => {
+          if (tk === token && loop3 && !disposed) startWait();
+        });
+      };
+      if (micOn()) {
+        const clean = wHits >= total && wWrongPass === 0;
+        record({ mode: 'wait', total, hits: wHits, source: 'mic', passed: clean });
+        return verdict(clean);
+      }
+      if (wWrongPass > 0) {
+        record({ mode: 'wait', total, hits: 0, source: 'parent', passed: false });
+        return verdict(false);
+      }
+      state = 'rate';
+      status.replaceChildren(streakDots(), ' ', h('b', {}, '👪 Bố mẹ: con đàn đúng hết, không sai nốt nào chứ?'));
+      setBar(
+        backButton(reset),
+        button({
+          icon: '✓',
+          label: 'Đúng hết!',
+          kind: 'good',
+          onTap: () => {
+            record({ mode: 'wait', total, hits: total, source: 'parent', passed: true });
+            verdict(true);
+          },
+        }),
+        button({
+          icon: '↻',
+          label: 'Có sai',
+          kind: 'retry',
+          onTap: () => {
+            record({ mode: 'wait', total, hits: 0, source: 'parent', passed: false });
+            verdict(false);
+          },
+        }),
+      );
     }
 
     // ----- Theo nhịp -----
@@ -459,6 +599,8 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
       // Tiếng "tích" nhấn mạnh ở phách 1 mỗi ô (2/4: mạnh–nhẹ, 3/4: mạnh–nhẹ–nhẹ, 4/4: mạnh–nhẹ–nhẹ–nhẹ)
       for (let b = -lead; b < total; b++) app.audio.click(t0 + b * spb, ((b % bpmM) + bpmM) % bpmM === 0);
       scheduleAccomp(t0, spb);
+      // Tập tách tay: app đàn khẽ tay kia đúng nhịp
+      if (solo()) playOther(0, Infinity, t0, spb);
       const heard: HeardEvent[] = [];
       const gs = groups();
       const gradeInput = gs.map((g) => ({ index: g.notes[0].index, start: g.start, midi: midisOf(g) }));
@@ -477,7 +619,11 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
       unTempo = unNote;
       app.mic.resetTracker();
       const countEl = h('div', { class: 'countin' });
-      status.replaceChildren(countEl);
+      // Đếm to theo phần đếm vào: "1 – 2 – 3 – 4"
+      status.replaceChildren(
+        countEl,
+        h('div', { class: 'countin-say' }, `Đếm to theo nhé! ${Array.from({ length: bpmM }, (_, k) => k + 1).join(' – ')}`),
+      );
       setBar(button({ icon: '⏹', label: 'Dừng', onTap: () => (unNote(), reset()) }));
       const loop = () => {
         if (tk !== token) return void unNote();
@@ -520,7 +666,8 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
 
     // ----- Kết quả -----
     function record(r: Pick<SongRun, 'mode' | 'total' | 'hits' | 'source' | 'passed'>): void {
-      hooks.onRun({ songId: full.id, ...r, level: r.mode === 'tempo' ? level : undefined, bpm, hints: hints, phrase });
+      const sh = solo();
+      hooks.onRun({ songId: full.id, ...r, level: r.mode === 'tempo' ? level : undefined, bpm, hints: hints, phrase, ...(sh ? { hand: sh } : {}) });
     }
 
     function askParent(question: string, total: number): void {

@@ -20,6 +20,7 @@ import {
   type TimedNote,
   type Tune,
 } from '../../music/tune';
+import type { Hand } from '../../piano/fingering';
 import { pitchInfo, viName } from '../../piano/pitchTable';
 
 const SVG = 'http://www.w3.org/2000/svg';
@@ -55,6 +56,8 @@ export interface StaffOptions {
   mode?: 'page' | 'scroll';
   measuresPerPage?: number;
   pxPerBeat?: number;
+  /** v5 — Tập tách tay: bè của tay này vẽ MỜ (app đàn thay / không chấm) */
+  dimHand?: Hand | null;
 }
 
 export type NoteMark = 'now' | 'hit' | 'miss' | null;
@@ -122,6 +125,7 @@ export class StaffView {
       mode: opts.mode ?? 'page',
       measuresPerPage: opts.measuresPerPage ?? 4,
       pxPerBeat: opts.pxPerBeat ?? defaultPxPerBeat(bpm),
+      dimHand: opts.dimHand ?? null,
     };
     // Bài có sắc thái: chừa một hàng dưới khuông (khuông kép: giữa hai khuông, như bản nhạc piano thật)
     const pad = expressionUsed(tune).dyn ? DYN_PAD : 0;
@@ -364,7 +368,7 @@ export class StaffView {
   }
 
   private drawNote(s: Stave, n: TimedNote, x: number, beam?: StemInfo): SVGGElement {
-    const g = el('g', { class: 'staff-note' });
+    const g = el('g', { class: this.o.dimHand && n.hand === this.o.dimHand ? 'staff-note dim' : 'staff-note' });
     this.noteEls.set(n.index, g);
     if (n.rest) {
       this.drawRest(s, n, x, g);

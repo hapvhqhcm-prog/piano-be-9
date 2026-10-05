@@ -86,8 +86,8 @@ export function handArt(
       <stop offset="0" stop-color="#fbd6b7"/><stop offset="1" stop-color="#efb98f"/>
     </linearGradient>
     <linearGradient id="${id}-on" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="${hand === 'RH' ? '#7ee2a4' : '#ffc27a'}"/>
-      <stop offset="1" stop-color="${hand === 'RH' ? '#2e9e5b' : '#f28c28'}"/>
+      <stop offset="0" stop-color="${hand === 'RH' ? '#8cc4f4' : '#ffc574'}"/>
+      <stop offset="1" stop-color="${hand === 'RH' ? '#1b74c4' : '#e8890c'}"/>
     </linearGradient>`;
   svg.append(defs);
   const root = el('g', hand === 'LH' ? { transform: `translate(${HAND_VIEW.w} 0) scale(-1 1)` } : {});

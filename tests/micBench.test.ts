@@ -77,14 +77,14 @@ class OldTracker {
   }
 }
 
-type Pipeline = (buf: Float32Array, t: number) => HeardNote | null;
+type Pipeline = (buf: Float32Array, t: number, sr: number) => HeardNote | null;
 const oldPipeline = (): Pipeline => {
   const tr = new OldTracker();
-  return (buf) => tr.push(oldDetect(buf, SIM_RATE));
+  return (buf, _t, sr) => tr.push(oldDetect(buf, sr));
 };
 const newPipeline = (): Pipeline => {
   const a = new MicAnalyzer();
-  return (buf, t) => a.process(buf, SIM_RATE, t).note;
+  return (buf, t, sr) => a.process(buf, sr, t).note;
 };
 
 interface Score {
@@ -100,13 +100,14 @@ interface Score {
 async function run(notes: SimNote[], pipe: Pipeline, hopMs: number, o: SimOptions = {}): Promise<Score> {
   const end = Math.max(...notes.map((n) => n.start + n.dur)) + 1.5;
   const sig = renderPiano(notes, end, o);
-  const hop = Math.round((hopMs / 1000) * SIM_RATE);
+  const sr = o.sampleRate ?? SIM_RATE;
+  const hop = Math.round((hopMs / 1000) * sr);
   const heard: Array<{ t: number; midi: number }> = [];
   for (let i = 2048, k = 0; i < sig.length; i += hop, k++) {
     // Nhường CPU định kỳ — khối tính dài làm vitest báo "Timeout calling onTaskUpdate"
     if (k % 100 === 99) await new Promise((r) => setTimeout(r, 0));
-    const n = pipe(sig.subarray(i - 2048, i), i / SIM_RATE);
-    if (n) heard.push({ t: i / SIM_RATE, midi: n.midi });
+    const n = pipe(sig.subarray(i - 2048, i), i / sr, sr);
+    if (n) heard.push({ t: i / sr, midi: n.midi });
   }
   const used = new Set<number>();
   const s: Score = { played: notes.length, ok: 0, octave: 0, wrong: 0, missed: 0, extra: 0, latency: [] };
@@ -171,6 +172,18 @@ const SCENARIOS: Array<{ name: string; notes: SimNote[] } & SimOptions> = [
   { name: 'THẬT: đàn lệch dây −35 cents', notes: melody(C_POS, 16, 0.6, 0.45, 29), ...REAL, detuneCents: -35 },
   { name: 'THẬT: phòng rất ồn (TV, quạt)', notes: melody(C_POS, 16, 0.7, 0.5, 31), ...REAL, noise: 0.015, hum: 0.006 },
   { name: 'THẬT: đàn nhanh', notes: melody(C_POS, 24, 0.35, 0.3, 33), ...REAL },
+  // ---- iPad cũ / tai nghe Bluetooth: 44,1 kHz ----
+  { name: '44,1k: giai điệu tay phải', notes: melody(C_POS, 24, 0.6, 0.45, 41), ...REAL, sampleRate: 44100 },
+  { name: '44,1k: tay trái trầm', notes: melody([43, 45, 47, 48, 50, 52, 53, 55], 16, 0.7, 0.55, 43), ...REAL, sampleRate: 44100 },
+  { name: '44,1k: nốt cao', notes: melody([67, 69, 71, 72, 74, 76], 16, 0.6, 0.45, 45), ...REAL, sampleRate: 44100 },
+  // ---- máy đếm nhịp kêu cùng lúc (tiếng tích lọt vào micro, KHÔNG bịt tai) ----
+  {
+    name: 'THẬT + tiếng tích đếm nhịp',
+    notes: melody(C_POS, 16, 0.6, 0.45, 47),
+    ...REAL,
+    clicks: Array.from({ length: 32 }, (_, i) => ({ t: 0.3 + i * 0.3, accent: i % 4 === 0 })),
+    clickLevel: 0.4,
+  },
 ];
 
 function pct(a: number, b: number) {

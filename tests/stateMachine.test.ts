@@ -179,4 +179,23 @@ describe('PracticeStateMachine — micro (MIC_ASSESSMENT)', () => {
     sm.send({ type: 'CONTINUE' });
     expect(sm.snapshot).toMatchObject({ state: 'SHOW_NOTE', index: 0 });
   });
+
+  it('SKIP ("Bỏ qua — mai ôn lại"): từ chờ → ghi Thử lại rồi sang nốt sau; từ kết quả Thử lại → sang nốt sau, không ghi thêm', () => {
+    const sm = new PracticeStateMachine(3);
+    sm.send({ type: 'NEXT' });
+    sm.send({ type: 'NEXT' });
+    toWaitParent(sm);
+    expect(sm.send({ type: 'SKIP' })).toContainEqual({ type: 'record', index: 0, result: 'retry' });
+    expect(sm.snapshot.state).toBe('NEXT_NOTE');
+    sm.send({ type: 'NEXT' });
+    expect(sm.snapshot).toMatchObject({ state: 'SHOW_NOTE', index: 1 });
+    toWaitParent(sm);
+    sm.send({ type: 'RETRY' });
+    expect(sm.send({ type: 'SKIP' })).toEqual([{ type: 'cancelAutoAdvance' }]);
+    expect(sm.snapshot.state).toBe('NEXT_NOTE');
+    sm.send({ type: 'NEXT' });
+    toWaitParent(sm);
+    sm.send({ type: 'CORRECT' });
+    expect(sm.send({ type: 'SKIP' })).toBeNull(); // đã đúng thì không có "Bỏ qua"
+  });
 });

@@ -326,3 +326,44 @@ Mỗi bài đối chiếu ≥ 2 nguồn ký âm độc lập; nốt và tiết t
 - **Hướng dẫn nhanh cho bố mẹ:** 4 thẻ, hiện ở lần đầu (cài mới), mở lại ở Phụ huynh → 📖.
 - **Sổ sticker:** 41 sticker suy ra từ dữ liệu có sẵn (đảo, huy chương, số bài thuộc, chuỗi ngày, dân ca, đàn chuẩn qua micro, trò to/nhỏ – ngắt/liền). Kết thúc buổi học báo sticker mới.
 - 639 test qua.
+
+## 19. Phản biện của 3 chuyên gia + cải tiến an toàn (2026-10-05)
+
+Ba chuyên gia đánh giá độc lập: sư phạm piano thiếu nhi, khoa học học tập/trải nghiệm trẻ em, kỹ sư âm thanh/iPad.
+
+**Kỹ thuật**
+- **Chống mất dữ liệu:**
+  - xin lưu trữ bền vững;
+  - thẻ hướng dẫn "Thêm vào Màn hình chính";
+  - sao lưu qua bảng Chia sẻ của iPad (chỉ ghi "đã sao lưu" khi thành công);
+  - tự cất 3 bản dữ liệu cũ trước khi nhập/xóa.
+- **Micro:**
+  - tự phục hồi sau cuộc gọi, Siri hay khóa màn hình (tắt tiếng track, ngắt AudioContext, bộ canh im lặng);
+  - giảm tần số lấy mẫu ×2 nên nhẹ CPU gấp 3;
+  - tiếng tích đổi sang 5 kHz kèm lọc bậc 4, không còn che micro đúng phách;
+  - mức ồn nền không còn "trôi" khi nốt ngân dài;
+  - ước lúc gõ phím sai số 0–4 ms.
+  - Đo trên giả lập: 99% (trước 97%); đàn nhanh 100%; 44,1 kHz 100%.
+- **Cập nhật app** chỉ áp dụng ở điểm an toàn, không đổi phiên bản giữa bài.
+
+**Trải nghiệm**
+- **Giọng đọc tiếng Việt** (vi-VN của iPad), có nút 🔊 nghe lại; micro tạm bỏ qua khi app đang nói.
+- **Tự chấm** "Dễ/Vừa/Khó" đều được 3 sao (không phạt sự trung thực).
+- **Khen cụ thể** ("Đúng Đô — ngón 1!"); hoa giấy chỉ khi xong đoạn hoặc 3 lần đúng liên tiếp.
+- **Bỏ chuỗi ngày 🔥** khỏi màn của bé, thay bằng "🌟 Tuần chăm chỉ" (≥ 4 buổi/tuần).
+- **Phụ huynh:**
+  - thẻ "📝 Việc cần làm tối nay" (3 chỗ bé hay vấp + một việc cụ thể + mục tiêu tuần);
+  - bỏ thuật ngữ khó; phần kỹ thuật gom vào "Nâng cao";
+  - giải thích "Khi nào bấm Đúng rồi?".
+- **Màu tay an toàn cho người mù màu:** tay phải xanh dương, tay trái cam, kèm chữ P/T.
+- **Khi micro không nghe thấy 8 giây:** nhắc bé đàn to hơn. Vấp 3 lần thì có nút "Bỏ qua — mai ôn lại".
+
+**Sư phạm (an toàn, không đổi cấu trúc)**
+- **Sửa lỗi Ôn nhanh:** từ tuần 9 trước đây chỉ ôn tìm phím tuần 1–6.
+- **Ôn có trọng số** theo lỗi gần đây và thời gian chưa gặp.
+- **Ôn bài cũ trong buổi:** 1 câu của bài 2–4 tuần trước, không tính vào hoàn thành bài.
+- **Bài "phai"** (đã thuộc nhưng 21 ngày chưa đàn): mờ ⭐ và được ưu tiên ôn.
+- **Tập tách tay** (phải/trái/hai tay) cho bài hai tay; lượt một tay không tính tiêu chí tuần hay "thuộc bài".
+- **Lặp câu** đến khi "3 lần đúng liên tiếp".
+- **Nhắc hát tên nốt** theo thầy trước bài mới; "Đếm to theo nhé!" khi đếm vào; trò vỗ nhịp xen kẽ đọc âm tiết và đếm số.
+- 698 test qua.

@@ -130,6 +130,24 @@ export function onsets(t: Tune): Onset[] {
     .map(([start, notes]) => ({ start, notes, pitches: notes.flatMap(pitchesOf) }));
 }
 
+/**
+ * v5 — Tập TÁCH TAY: nhóm thời điểm chỉ gồm nốt của tay `hand` (nhóm không còn nốt nào thì bỏ).
+ * hand = null → như onsets() (hai tay).
+ */
+export function handOnsets(t: Tune, hand: Hand | null): Onset[] {
+  const all = onsets(t);
+  if (!hand) return all;
+  return all.flatMap((o) => {
+    const notes = o.notes.filter((n) => n.hand === hand);
+    return notes.length ? [{ start: o.start, notes, pitches: notes.flatMap(pitchesOf) }] : [];
+  });
+}
+
+/** v5 — Nốt của tay KIA khi tập tách tay (app đàn khẽ thay bé). hand = null → không có. */
+export function otherHandNotes(t: Tune, hand: Hand | null): TimedNote[] {
+  return hand ? allTimed(t).filter((n) => n.hand !== hand && !n.rest && !!n.pitch) : [];
+}
+
 /** Câu nhạc: [ô nhịp bắt đầu, ô nhịp kết thúc) — mặc định mỗi câu 4 ô nhịp. */
 export function phraseRanges(t: Tune): Array<[number, number]> {
   const total = measureCount(t);

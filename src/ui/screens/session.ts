@@ -28,7 +28,8 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
   // Sticker đã có trước buổi — màn kết thúc so sánh để chúc mừng sticker MỚI
   const stickersBefore = earnedStickerIds(store.get());
   const session = store.startSession(lesson.id);
-  const steps = buildSessionPlan(lesson, store.get(), opts);
+  // songReview: thêm bước "Ôn bài cũ" (một câu của bài 2–4 tuần trước) — không tính vào hoàn thành bài
+  const steps = buildSessionPlan(lesson, store.get(), { ...opts, songReview: true, now: Date.now() });
   const wrapUp = steps.findIndex((s) => s.kind === 'teach' || s.kind === 'rating');
   const deadline = Date.now() + store.settings.sessionMinutes * 60_000;
   let lessonFinished = false;
@@ -211,6 +212,18 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
             back,
           ),
         );
+      case 'review-song': {
+        const tune = findTune(step.songId);
+        if (!tune || Date.now() >= deadline) return next();
+        return app.show(
+          songScreen(
+            app,
+            tune,
+            { mode: 'tempo', level: step.level, hints: step.hints, intro: step.intro, phrase: step.phrase, bpm: step.bpm, review: true },
+            { onRun: (run) => store.addSongRun(session.id, run), onDone: nextOrWrap, onBack: back },
+          ),
+        );
+      }
       case 'teach':
         return show(
           teachScreen(app, {

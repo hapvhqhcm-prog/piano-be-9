@@ -1,0 +1,58 @@
+/* =========================================================
+   v5 — SƯ PHẠM: tách tay, lặp câu, hát/đếm to, ôn bài cũ
+   (file riêng để không đụng main.css/theme.css — import từ song.ts)
+   ========================================================= */
+
+/* Tập tách tay: bè tay kia vẽ mờ (app đàn thay) */
+.staff-note.dim {
+  opacity: 0.3;
+}
+
+.hand-sel .seg-btn {
+  white-space: nowrap;
+}
+
+.review-tag {
+  color: var(--sun-800);
+  background: var(--sun-50);
+}
+
+/* Lời nhắc hát tên nốt theo thầy (bài mới) */
+.sing-prompt {
+  margin-top: 4px;
+  font-weight: 800;
+  color: var(--violet-600);
+}
+
+/* "Đếm to theo nhé! 1 – 2 – 3 – 4" dưới số đếm vào */
+.countin-say {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink-2);
+}
+
+/* Lặp câu 3 lần: chấm tiến độ ●●○ */
+.loop-dots {
+  font-size: 20px;
+  letter-spacing: 2px;
+  color: var(--mint-600);
+  white-space: nowrap;
+}
+.loop-dots .loop-off {
+  color: var(--ink-3);
+}
+
+/* Nhịp: dòng nhắc cách đọc; ô đếm số chữ nhỏ hơn cho vừa "1 và – 2" */
+.rh-how {
+  margin: 0 0 6px;
+}
+.rh-label.rh-count {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Thư viện: bài đã thuộc nhưng lâu chưa chơi lại — sao mờ, nhắc ôn */
+.song-card .star-faded {
+  opacity: 0.4;
+  filter: grayscale(0.6);
+}

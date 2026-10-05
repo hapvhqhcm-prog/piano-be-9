@@ -3,7 +3,7 @@ import type { ParentResult } from '../../progress/schema';
 import type { App } from '../App';
 import { backButton, button, h } from '../components/dom';
 import { confetti } from '../components/celebrate';
-import { TIMING_WINDOWS, gradeTiming } from '../../music/timing';
+import { TIMING_WINDOWS, countWords, gradeTiming } from '../../music/timing';
 
 const SYMBOL: Record<RhythmSymbol, { label: string; emoji: string; beats: number; hits: number[] }> = {
   walk: { label: 'Đi', emoji: '👣', beats: 1, hits: [0] },
@@ -44,24 +44,38 @@ export function rhythmScreen(app: App, hooks: RhythmHooks) {
     const BPM = 60;
     const spb = 60 / BPM;
 
+    /**
+     * v5 (sư phạm): xen kẽ hai cách đọc theo mẫu — mẫu lẻ "đọc vần" (Đi / Chạy-chạy), mẫu chẵn "đếm số" (1 – 2 – 3 – 4).
+     * Bé quen cả hai: vần dễ nhớ hình nốt, đếm số chuẩn bị cho đọc nhạc thật.
+     */
+    const counting = () => i % 2 === 1;
+
     function cells(p: RhythmSymbol[]): { row: HTMLElement; els: HTMLElement[]; starts: number[] } {
       const els: HTMLElement[] = [];
       const starts: number[] = [];
+      const seq = [...p, ...p];
       let b = 0;
-      for (const sym of [...p, ...p]) {
-        const s = SYMBOL[sym];
-        const c = h(
-          'div',
-          { class: `rh-cell rh-${sym}`, style: { flexGrow: String(s.beats) } },
-          h('div', { class: 'rh-emoji' }, s.emoji),
-          h('div', { class: 'rh-label' }, s.label),
-        );
-        els.push(c);
+      for (const sym of seq) {
         starts.push(b);
-        b += s.beats;
+        b += SYMBOL[sym].beats;
       }
+      const words = counting() ? countWords(seq.map((sym, k) => ({ start: starts[k], beats: SYMBOL[sym].beats, hits: SYMBOL[sym].hits }))) : null;
+      seq.forEach((sym, k) => {
+        const s = SYMBOL[sym];
+        els.push(
+          h(
+            'div',
+            { class: `rh-cell rh-${sym}`, style: { flexGrow: String(s.beats) } },
+            h('div', { class: 'rh-emoji' }, s.emoji),
+            h('div', { class: `rh-label${words ? ' rh-count' : ''}` }, words ? words[k] : s.label),
+          ),
+        );
+      });
       return { row: h('div', { class: 'rh-row' }, ...els), els, starts };
     }
+
+    /** Lời nhắc theo cách đọc của mẫu hiện tại */
+    const sayHow = () => (counting() ? 'Vỗ tay và đếm to: 1 – 2 – 3 – 4' : 'Vỗ tay và đọc to: Đi, Chạy-chạy…');
 
     function intro(): void {
       token++;
@@ -81,7 +95,8 @@ export function rhythmScreen(app: App, hooks: RhythmHooks) {
       const { row } = cells(p);
       stage.replaceChildren(
         h('div', { class: 'progress' }, `Mẫu ${i + 1} / ${hooks.patterns.length}`),
-        h('h1', { class: 'title' }, 'Vỗ tay và đọc to'),
+        h('h1', { class: 'title' }, counting() ? 'Vỗ tay và đếm số 🔢' : 'Vỗ tay và đọc to 🗣️'),
+        h('p', { class: 'lead rh-how' }, sayHow()),
         row,
         h('div', { class: 'countin' }, ' '),
       );
@@ -108,7 +123,12 @@ export function rhythmScreen(app: App, hooks: RhythmHooks) {
       const { row, els, starts } = cells(p);
       const countEl = h('div', { class: 'countin' });
       const useMic = !demo && app.mic.state === 'on';
-      stage.replaceChildren(h('h1', { class: 'title' }, demo ? '🔊 Nghe mẫu' : useMic ? '👏 Đến lượt con! 🎤 App đang nghe' : '👏 Đến lượt con!'), row, countEl);
+      stage.replaceChildren(
+        h('h1', { class: 'title' }, demo ? '🔊 Nghe mẫu' : useMic ? '👏 Đến lượt con! 🎤 App đang nghe' : '👏 Đến lượt con!'),
+        h('p', { class: 'lead rh-how' }, sayHow()),
+        row,
+        countEl,
+      );
       setBar(button({ icon: '⏹', label: 'Dừng', onTap: () => (app.audio.stopAll(), show()) }));
       const t0 = app.audio.now() + 0.4 + 4 * spb;
       const seq = [...p, ...p];

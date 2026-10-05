@@ -3,6 +3,8 @@ import { P, checkBadge, noteGlyph, sparkle, starPath, svgRoot } from '../compone
 import { append, button, h } from '../components/dom';
 import { mascot } from '../components/mascot';
 import { postureArt } from '../components/postureArt';
+import { whenCorrectBox } from '../components/whenCorrect';
+import { installCard } from '../components/installCard';
 
 /**
  * HƯỚNG DẪN NHANH CHO BỐ MẸ (lần đầu mở app; mở lại được ở màn Phụ huynh → "📖 Hướng dẫn").
@@ -88,6 +90,8 @@ interface Card {
   title: string;
   lines: Array<[string, string]>;
   chain?: string[];
+  /** Khối thêm dưới các dòng (vd chuẩn chấm "Đúng rồi") */
+  extra?: () => HTMLElement | null;
 }
 
 const CARDS: Card[] = [
@@ -107,6 +111,7 @@ const CARDS: Card[] = [
       ['▶', 'App tự chọn bài — không cần soạn gì'],
       ['👪', 'Bố mẹ ngồi cạnh, bấm nút 👪 khi app hỏi'],
     ],
+    extra: () => whenCorrectBox('div'),
   },
   {
     art: artMic,
@@ -119,8 +124,10 @@ const CARDS: Card[] = [
     title: 'Khu vực bố mẹ',
     lines: [
       ['👪', 'Nhấn giữ nút “Phụ huynh” 2 giây + làm 1 phép cộng'],
-      ['💾', 'Sao lưu: Phụ huynh → Dữ liệu → “Xuất JSON”'],
+      ['💾', 'Sao lưu: Phụ huynh → Nâng cao → “Sao lưu dữ liệu”'],
     ],
+    // Mở bằng tab trình duyệt → nhắc thêm vào Màn hình chính (null khi đã cài)
+    extra: () => installCard(),
   },
 ];
 
@@ -160,6 +167,7 @@ export function onboardingScreen(app: App, o: { onDone(): void }): Screen {
                   ...c.chain.map((t, k) => h('li', {}, h('b', {}, String(k + 1)), t)),
                 )
               : null,
+            c.extra?.() ?? null,
           ),
         ),
         dots,

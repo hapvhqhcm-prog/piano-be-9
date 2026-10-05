@@ -4,6 +4,8 @@
  * - tiếng búa gõ (nhiễu ngắn) lúc bấm, tắt dần 2 giai đoạn, nhả phím thì giảm âm nhanh
  * - tiếng ồn phòng + tiếng ù điện 50 Hz, lực bấm to/nhỏ khác nhau
  */
+import { CLICK } from '../src/audio/AudioEngine';
+
 export interface SimNote {
   midi: number;
   start: number; // giây
@@ -11,7 +13,7 @@ export interface SimNote {
   vel?: number; // 0.3–1
 }
 
-const SR = 48000;
+const SIM_RATE_DEFAULT = 48000;
 
 function rng(seed: number) {
   let s = seed >>> 0;
@@ -34,9 +36,16 @@ export interface SimOptions {
   detuneCents?: number;
   /** Bé chưa nhả phím cũ đã bấm phím mới: nốt cũ ngân thêm (giây) */
   legato?: number;
+  /** Tần số lấy mẫu (mặc định 48 kHz; iPad cũ / tai nghe có thể 44,1 kHz) */
+  sampleRate?: number;
+  /** Tiếng tích máy đếm nhịp lọt vào micro: các thời điểm (giây) */
+  clicks?: Array<{ t: number; accent?: boolean }>;
+  /** Biên độ đỉnh tiếng tích tại micro (mặc định 0,3 — loa iPad sát micro) */
+  clickLevel?: number;
 }
 
 export function renderPiano(notes: SimNote[], seconds: number, o: SimOptions = {}): Float32Array {
+  const SR = o.sampleRate ?? SIM_RATE_DEFAULT;
   const n = Math.floor(seconds * SR);
   const out = new Float32Array(n);
   const r = rng(o.seed ?? 7);
@@ -85,10 +94,22 @@ export function renderPiano(notes: SimNote[], seconds: number, o: SimOptions = {
       for (let i = off; i < n; i++) out[i] += dry[i - off] * g * o.reverb;
     }
   }
+  // Tiếng tích máy đếm nhịp (giống AudioEngine.click: sin cao, lên nhanh, tắt nhanh) — đi thẳng loa → micro
+  for (const c of o.clicks ?? []) {
+    const f = c.accent ? CLICK.accentHz : CLICK.hz;
+    const peak = (o.clickLevel ?? 0.3) * (c.accent ? 1 : CLICK.normalGain / CLICK.accentGain);
+    const s0 = Math.floor(c.t * SR);
+    const len = Math.floor(CLICK.length * SR);
+    for (let i = 0; i < len && s0 + i < n; i++) {
+      const t = i / SR;
+      const env = t < CLICK.attack ? t / CLICK.attack : Math.exp(-(t - CLICK.attack) / CLICK.tau);
+      out[s0 + i] += peak * env * Math.sin(2 * Math.PI * f * t);
+    }
+  }
   const noise = o.noise ?? 0.004;
   const hum = o.hum ?? 0.002;
   for (let i = 0; i < n; i++) out[i] += noise * (r() * 2 - 1) + hum * Math.sin((2 * Math.PI * 50 * i) / SR);
   return out;
 }
 
-export { SR as SIM_RATE };
+export { SIM_RATE_DEFAULT as SIM_RATE };

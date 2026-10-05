@@ -28,6 +28,35 @@ export function rms(buf: Float32Array): number {
   return Math.sqrt(s / buf.length);
 }
 
+/** Bộ đệm CMND dùng lại giữa các khung (không cấp phát mỗi khung — đỡ dọn rác trên iPad cũ). */
+let cmndBuf = new Float32Array(0);
+
+/**
+ * Giá trị đáy THẬT của CMND quanh t (nội suy parabol). Sau khi giảm mẫu, chu kỳ hiếm khi trùng số nguyên mẫu
+ * → giá trị tại mẫu gần nhất cao hơn đáy thật, có khi cao hơn đáy ở 2–3 lần chu kỳ (trùng mẫu hơn) → nhầm quãng.
+ */
+function dipValue(cmnd: Float32Array, t: number, tauMax: number): number {
+  const b = cmnd[t];
+  if (t < 1 || t >= tauMax) return b;
+  const a = cmnd[t - 1];
+  const c = cmnd[t + 1];
+  const denom = a + c - 2 * b;
+  if (denom <= 0) return b;
+  return Math.max(0, Math.min(b, b - ((a - c) * (a - c)) / (8 * denom)));
+}
+
+/** Điểm đầu tiên dưới ngưỡng (theo đáy nội suy), rồi trượt tới cực tiểu cục bộ; −1 nếu không có. */
+function firstDip(cmnd: Float32Array, tauMin: number, tauMax: number, th: number): number {
+  for (let t = tauMin; t <= tauMax; t++) {
+    const v = cmnd[t];
+    if (v < th || (t > tauMin && t < tauMax && v <= cmnd[t - 1] && v < cmnd[t + 1] && dipValue(cmnd, t, tauMax) < th)) {
+      while (t + 1 <= tauMax && cmnd[t + 1] < cmnd[t]) t++;
+      return t;
+    }
+  }
+  return -1;
+}
+
 export function detectPitch(
   buf: Float32Array,
   sampleRate: number,
@@ -42,7 +71,8 @@ export function detectPitch(
   const W = buf.length - tauMax;
 
   // Hàm sai phân + chuẩn hóa tích lũy (CMND)
-  const cmnd = new Float32Array(tauMax + 1);
+  if (cmndBuf.length < tauMax + 1) cmndBuf = new Float32Array(tauMax + 1);
+  const cmnd = cmndBuf;
   cmnd[0] = 1;
   let running = 0;
   for (let tau = 1; tau <= tauMax; tau++) {
@@ -55,24 +85,17 @@ export function detectPitch(
     cmnd[tau] = running > 0 ? (d * tau) / running : 1;
   }
 
-  // Điểm đầu tiên dưới ngưỡng, rồi trượt tới cực tiểu cục bộ
-  const firstDip = (th: number) => {
-    for (let t = tauMin; t <= tauMax; t++) {
-      if (cmnd[t] < th) {
-        while (t + 1 <= tauMax && cmnd[t + 1] < cmnd[t]) t++;
-        return t;
-      }
-    }
-    return -1;
-  };
-  let tau = firstDip(opts.threshold);
+  let tau = firstDip(cmnd, tauMin, tauMax, opts.threshold);
   if (tau < 0) {
     // Phòng ồn: không điểm nào đạt ngưỡng chuẩn → nới ngưỡng theo cực tiểu toàn cục (vẫn lấy điểm ĐẦU TIÊN
     // để khỏi nhầm xuống quãng 8 dưới). Quá mờ (> 0,45) thì thôi.
     let g = Infinity;
-    for (let t = tauMin; t <= tauMax; t++) if (cmnd[t] < g) g = cmnd[t];
+    for (let t = tauMin; t <= tauMax; t++) {
+      const v = cmnd[t] < g ? cmnd[t] : g;
+      g = t > tauMin && t < tauMax && cmnd[t] <= cmnd[t - 1] && cmnd[t] < cmnd[t + 1] ? Math.min(v, dipValue(cmnd, t, tauMax)) : v;
+    }
     if (g > 0.45) return null;
-    tau = firstDip(Math.min(0.5, g + 0.08));
+    tau = firstDip(cmnd, tauMin, tauMax, Math.min(0.5, g + 0.08));
     if (tau < 0) return null;
   }
 
@@ -85,7 +108,7 @@ export function detectPitch(
     const denom = a + c - 2 * b;
     if (denom !== 0) better = tau + (a - c) / (2 * denom);
   }
-  return { freq: sampleRate / better, clarity: 1 - cmnd[tau], rms: level };
+  return { freq: sampleRate / better, clarity: 1 - dipValue(cmnd, tau, tauMax), rms: level };
 }
 
 /** Tần số → MIDI (số thực), có bù độ lệch dây của đàn nhà (cents). */
@@ -114,6 +137,9 @@ export function nearestNote(freq: number, tuningCents = 0): HeardNote {
  * Lần nhấn mới được nhận ra nhờ âm lượng bật tăng — tốt nhất truyền `onset` tính từ âm lượng THÔ của mọi khung
  * (kể cả khung lúc búa gõ chưa rõ cao độ); nếu không truyền thì tự so âm lượng giữa các khung rõ.
  */
+/** Khoảng (nửa cung) từ nốt thật xuống "nốt ảo" chu kỳ chung: quãng 8, quãng 12, 2 quãng 8. */
+const SUBHARMONIC_STEPS = [12, 19, 24];
+
 export class NoteTracker {
   private candidate: number | null = null;
   private count = 0;
@@ -167,6 +193,13 @@ export class NoteTracker {
     if (this.blocked) return null;
 
     const note = nearestNote(result.freq, tuningCents);
+    // Chưa có lần gõ mới mà "nốt" nhảy xuống quãng 8 / quãng 12 / 2 quãng 8 của nốt vừa báo = chu kỳ chung
+    // của nốt mới + đuôi nốt cũ còn ngân (vd Fa4 + Đô4 → Fa2), không phải bé đàn thêm → không báo.
+    if (this.emitted !== null && SUBHARMONIC_STEPS.includes(this.emitted - note.midi)) {
+      this.candidate = null;
+      this.count = 0;
+      return null;
+    }
     if (note.midi === this.candidate) this.count++;
     else {
       this.candidate = note.midi;

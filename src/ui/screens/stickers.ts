@@ -69,7 +69,7 @@ export function stickersScreen(app: App) {
               { class: 'story bubble' },
               got
                 ? `Con đã sưu tầm ${got} sticker! Học tiếp để nhận thêm nhé.`
-                : 'Sổ còn trống — học xong mỗi đảo, thuộc bài hát, học nhiều ngày liền là có sticker!',
+                : 'Sổ còn trống — học xong mỗi đảo, thuộc bài hát, tuần nào học đủ 4 buổi là có sticker!',
             ),
           ),
           section('🏆 Thành tích', others),

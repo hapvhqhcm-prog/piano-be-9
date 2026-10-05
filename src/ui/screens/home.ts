@@ -1,7 +1,6 @@
 import { mascot } from '../components/mascot';
 import {
   sessionsThisWeek,
-  streakDays,
   MAX_SESSIONS_PER_DAY,
   WEEKS,
   dailyLesson,
@@ -20,7 +19,9 @@ import { parentButton } from '../components/longPress';
 import { freePlayScreen } from './freePlay';
 import { libraryScreen } from './library';
 import { stickersScreen } from './stickers';
-import { earnedStickerIds } from '../../lessons/stickers';
+import { BUSY_WEEK_SESSIONS, earnedStickerIds } from '../../lessons/stickers';
+import { cancelSpeech, speak } from '../../audio/voice';
+import { speakChip } from '../components/speakChip';
 import { parentGateScreen } from './parentGate';
 import { startSession } from './session';
 import { markSafePoint } from '../../pwa/updater';
@@ -129,10 +130,10 @@ export function homeScreen(app: App, banner?: string) {
             : null,
       );
 
-    // Mục tiêu tuần (§1: 4–5 buổi/tuần) + chuỗi ngày + mục tiêu qua đảo
+    // Mục tiêu TUẦN (§1: 4–5 buổi/tuần) + mục tiêu qua đảo. Không hiện chuỗi ngày liền với bé:
+    // chuỗi bị "đứt" làm trẻ nản — nghỉ một ngày không sao, chỉ cần đủ buổi trong tuần.
     const now = new Date();
     const weekDone = sessionsThisWeek(data, now);
-    const streak = streakDays(data, now);
     // Đạt tiêu chí nhưng còn bài chưa học → tuần chưa qua; nhắc nhẹ còn mấy bài
     const leftLessons = plan.lessons.filter((l) => !l.isWeekTest && !done.has(l.id)).length;
     const goalMetNotDone = weekPassed(plan.week, data) && !weekComplete(plan.week, data) && leftLessons > 0;
@@ -145,7 +146,7 @@ export function homeScreen(app: App, banner?: string) {
         h('span', { class: 'goal-label' }, 'Tuần này'),
         ...[0, 1, 2, 3, 4].map((i) => h('span', { class: `dot${i < weekDone ? ' on' : ''}` })),
       ),
-      streak >= 2 ? h('div', { class: 'streak' }, `🔥 ${streak} ngày liền`) : null,
+      weekDone >= BUSY_WEEK_SESSIONS ? h('div', { class: 'streak week-star' }, '🌟 Tuần chăm chỉ!') : null,
     );
 
     root.append(
@@ -176,7 +177,12 @@ export function homeScreen(app: App, banner?: string) {
           h(
             'section',
             { class: 'quest-card' },
-            h('div', { class: 'story-row' }, mascot('happy', 84), h('p', { class: 'story bubble' }, plan.story)),
+            h(
+              'div',
+              { class: 'story-row' },
+              mascot('happy', 84),
+              h('p', { class: 'story bubble' }, plan.story, speakChip(app, plan.story)),
+            ),
             h(
               'div',
               { class: 'goal-panel' },
@@ -232,7 +238,24 @@ export function homeScreen(app: App, banner?: string) {
         ),
       ),
     );
+    // Đọc to câu chuyện của tuần — mỗi ngày một lần (không phải mỗi lần về màn chính)
+    if (shouldTellStory(today, plan.week)) window.setTimeout(() => void speak(app, plan.story), 600);
+    return () => cancelSpeech();
   };
+}
+
+const STORY_KEY = 'piano-be-9:story-told';
+
+/** Hôm nay đã kể chuyện tuần này chưa (lưu trong máy — chỉ là tiện ích, mất cũng không sao). */
+function shouldTellStory(today: string, week: number): boolean {
+  const key = `${today}:w${week}`;
+  try {
+    if (localStorage.getItem(STORY_KEY) === key) return false;
+    localStorage.setItem(STORY_KEY, key);
+  } catch {
+    /* không có bộ nhớ → vẫn đọc */
+  }
+  return true;
 }
 
 /** Nút "Sổ sticker" ở thanh dưới (họ nút hồng riêng) — kèm số sticker đã có. */

@@ -2,17 +2,23 @@ import { MAX_WEEK, WEEKS, findLesson, levelOf, masteredSongs, weekPassed, weekPl
 import { SONGS } from '../../music/tune';
 import { parentTip } from '../../lessons/parentTips';
 import { findTune } from '../../music/exercises';
-import { RATING_STARS, isEmptySession } from '../../progress/ProgressStore';
+import { isEmptySession } from '../../progress/ProgressStore';
 import { CHECKLIST_ITEMS, localDateStr, type AppData, type Session, type Settings } from '../../progress/schema';
 import type { App } from '../App';
-import { button, confirmDialog, h } from '../components/dom';
+import { button, confirmDialog, h, toast } from '../components/dom';
 import { homeScreen } from './home';
 import { micTestScreen } from './micTest';
 import { APP_VERSION, checkForUpdate, isUpdateReady } from '../../pwa/updater';
 import { startScreen } from './start';
 import { onboardingScreen } from './onboarding';
+import { WHO_TEXT, tonightPlan } from './tonight';
+import { whenCorrectBox } from '../components/whenCorrect';
+import { cancelSpeech, hasVietnameseVoice, speak } from '../../audio/voice';
 
-const RATING_LABEL = { all: '😄 Đàn được hết', some: '🙂 Còn vấp vài chỗ', hard: '😅 Khó quá' } as const;
+import { installCard } from '../components/installCard';
+import { BACKUP_MESSAGE, exportBackup } from '../../progress/backup';
+
+const RATING_LABEL = { all: '😄 Dễ — đàn được', some: '🙂 Vừa — còn vấp chút', hard: '😅 Khó — cần tập thêm' } as const;
 
 function mondayOf(d: Date): Date {
   const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -66,7 +72,47 @@ function segmented<T extends string | number>(
   );
 }
 
-/** Màn phụ huynh (§8). PARENT và APP hiển thị TÁCH RIÊNG (§2). */
+/** "Việc cần làm tối nay": 3 chỗ khó (2 tuần) · 1 việc cụ thể · tiêu chí tuần bằng lời thường + tiến độ. */
+function tonightCard(d: Readonly<AppData>, now: Date): HTMLElement {
+  const t = tonightPlan(d, now);
+  const g = t.goal;
+  const pct = Math.min(100, Math.round((g.sessionsThisWeek / 4) * 100));
+  return h(
+    'section',
+    { class: 'card todo-card' },
+    h('h2', {}, '📝 Việc cần làm tối nay'),
+    h('p', { class: 'todo-action' }, t.action),
+    t.struggles.length
+      ? h(
+          'div',
+          {},
+          h('h3', {}, 'Chỗ bé hay vấp (2 tuần gần đây)'),
+          h(
+            'ol',
+            { class: 'todo-list' },
+            ...t.struggles.map((x, i) => h('li', {}, h('b', {}, String(i + 1)), h('span', {}, `${x.label} — vấp ${x.misses} lần`))),
+          ),
+        )
+      : h('p', { class: 'muted' }, 'Chưa thấy chỗ nào bé vấp nhiều trong 2 tuần gần đây. 👍'),
+    h(
+      'p',
+      { class: 'todo-goal' },
+      g.passed ? h('span', { class: 'met' }, '✅ Đã đạt mục tiêu tuần. ') : null,
+      g.lessonsLeft > 0 ? `Còn ${g.lessonsLeft} bài; ` : 'Đã học hết bài của tuần; ',
+      `mục tiêu tuần ${g.week}: `,
+      h('b', {}, g.text),
+      ` (${g.who}).`,
+    ),
+    h('p', { class: 'todo-goal' }, `Tuần này đã học ${g.sessionsThisWeek} buổi — nên 4–5 buổi, nghỉ ngày nào cũng được.`),
+    h('div', { class: 'todo-meter', 'aria-hidden': 'true' }, h('i', { style: { width: `${pct}%` } })),
+  );
+}
+
+/**
+ * Màn phụ huynh (§8). Trên cùng: "Việc cần làm tối nay" (3 chỗ khó + 1 việc + tiêu chí tuần).
+ * Kết quả bố mẹ bấm / trò chơi app chấm / micro chấm vẫn hiển thị TÁCH RIÊNG (§2) nhưng bằng lời thường.
+ * Phiên bản, cài đặt, dữ liệu nằm trong mục "Nâng cao" thu gọn.
+ */
 export function parentScreen(app: App) {
   return (root: HTMLElement) => {
     const store = app.store;
@@ -74,6 +120,8 @@ export function parentScreen(app: App) {
     root.append(h('div', { class: 'screen' }, scroller));
     let resetStep = 0;
     let message = '';
+    /** Mục "Nâng cao" đang mở (giữ trạng thái khi vẽ lại) */
+    let advOpen = false;
 
     const render = () => {
       const top = scroller.scrollTop;
@@ -162,11 +210,14 @@ export function parentScreen(app: App) {
         store.recoveredFromBackup
           ? h('div', { class: 'banner' }, '✅ App đã tự khôi phục tiến độ của bé từ bản sao lưu trong máy (do lỗi cũ khi lên tuần 9).')
           : null,
+        installCard(),
+        tonightCard(d, now),
         h(
           'section',
           { class: 'card tip-card' },
           h('h2', {}, `👪 Tuần ${week}: bố mẹ chú ý`),
           h('p', {}, parentTip(week)),
+          whenCorrectBox(),
         ),
         // Nhắc sao lưu: dữ liệu chỉ nằm trên iPad
         d.sessions.length >= 3 && Date.now() - (d.settings.lastBackupAt ?? 0) > 14 * 86_400_000
@@ -174,30 +225,10 @@ export function parentScreen(app: App) {
               'div',
               { class: 'banner warn' },
               d.settings.lastBackupAt
-                ? `💾 Đã hơn 2 tuần chưa sao lưu tiến độ — kéo xuống mục "Dữ liệu" bấm "Sao chép JSON" và dán vào Ghi chú.`
-                : `💾 Chưa sao lưu lần nào — kéo xuống mục "Dữ liệu" bấm "Sao chép JSON" và dán vào Ghi chú.`,
+                ? `💾 Đã hơn 2 tuần chưa sao lưu tiến độ — mở mục "Nâng cao" ở cuối trang → "Sao lưu dữ liệu".`
+                : `💾 Chưa sao lưu lần nào — mở mục "Nâng cao" ở cuối trang → "Sao lưu dữ liệu".`,
             )
           : null,
-        h(
-          'section',
-          { class: 'card version-card' },
-          h('p', {}, 'Phiên bản đang chạy: ', h('b', {}, APP_VERSION)),
-          button({
-            icon: '🔄',
-            label: 'Kiểm tra bản mới',
-            onTap: async () => {
-              if (!navigator.onLine) return say('iPad đang không có mạng — bật Wi‑Fi rồi thử lại.');
-              say('Đang kiểm tra…');
-              await checkForUpdate(true);
-              await new Promise((r) => setTimeout(r, 5000));
-              say(
-                isUpdateReady()
-                  ? '✅ Đã tải bản mới. Bấm "Về màn của bé" — app sẽ tự khởi động lại bằng bản mới.'
-                  : 'Đang dùng bản mới nhất (nếu vừa deploy, đợi 1–2 phút rồi thử lại).',
-              );
-            },
-          }),
-        ),
         store.lastSaveError ? h('div', { class: 'banner warn' }, `Lỗi lưu dữ liệu: ${store.lastSaveError}`) : null,
 
         h(
@@ -205,8 +236,8 @@ export function parentScreen(app: App) {
           { class: 'card' },
           h('h2', {}, 'Tổng quan'),
           h('p', {}, `Tuần hiện tại: `, h('b', {}, `Tuần ${week} — ${plan.title}`)),
-          h('p', {}, `Tiêu chí qua tuần: ${plan.criterion.text} (${plan.criterion.who}) — `, weekPassed(week, d) ? '✅ đã đạt' : '⏳ chưa đạt'),
-          h('p', {}, `Số buổi tuần này (từ ${monday}): `, h('b', {}, String(sessionsThisWeek.length)), ` · hoàn thành: ${sessionsThisWeek.filter((s) => s.completed).length}`),
+          h('p', {}, `Mục tiêu qua tuần: ${plan.criterion.text} (${WHO_TEXT[plan.criterion.who]}) — `, weekPassed(week, d) ? '✅ đã đạt' : '⏳ chưa đạt'),
+          h('p', {}, `Số buổi tuần này (từ thứ Hai ${monday}): `, h('b', {}, String(sessionsThisWeek.length)), ` · học xong: ${sessionsThisWeek.filter((s) => s.completed).length}`),
           h('h3', {}, 'Phút luyện / ngày (7 ngày)'),
           table(['Ngày', 'Phút', 'Sao'], days),
         ),
@@ -247,8 +278,8 @@ export function parentScreen(app: App) {
         h(
           'section',
           { class: 'card' },
-          h('h2', {}, 'Bé đánh trên đàn thật — phụ huynh xác nhận'),
-          h('p', { class: 'muted' }, 'PARENT_ASSESSMENT: app KHÔNG nghe đàn. Đây chỉ là nút bố mẹ đã bấm.'),
+          h('h2', {}, '👪 Bố mẹ chấm — bé đàn trên đàn thật'),
+          h('p', { class: 'muted' }, 'Các lần bố mẹ bấm “Đúng rồi” / “Thử lại” (khi micro tắt, app không nghe đàn).'),
           table(
             ['Nốt / việc', '✓ Đúng rồi', '↻ Thử lại'],
             [...pAgg.entries()].map(([k, v]) => [k, v.c, v.r]),
@@ -258,8 +289,8 @@ export function parentScreen(app: App) {
         h(
           'section',
           { class: 'card' },
-          h('h2', {}, 'Trò chơi tai nghe — app tự chấm'),
-          h('p', { class: 'muted' }, 'APP_ASSESSMENT: bé chạm phím ảo trên iPad, app biết chính xác phím nào.'),
+          h('h2', {}, '📱 Trò chơi tai nghe — app tự chấm'),
+          h('p', { class: 'muted' }, 'Bé chạm phím trên iPad nên app biết chính xác bé chọn đúng hay sai.'),
           table(
             ['Nốt app phát', 'Đúng', 'Tổng', '%'],
             [...aAgg.entries()].map(([k, v]) => [k, v.c, v.t, `${Math.round((v.c / v.t) * 100)}%`]),
@@ -271,11 +302,11 @@ export function parentScreen(app: App) {
         h(
           'section',
           { class: 'card' },
-          h('h2', {}, 'Micro nghe đàn thật — app tự chấm'),
+          h('h2', {}, '🎤 Micro nghe đàn thật — app tự chấm'),
           h(
             'p',
             { class: 'muted' },
-            'MIC_ASSESSMENT: khi micro bật, app nghe đàn cơ. "Đúng ngay" = không đàn nhầm phím nào trước đó. "Bố mẹ sửa" = micro nghe nhầm, người lớn đã bấm Sửa.',
+            '"Đúng ngay" = không đàn nhầm phím nào trước đó. "Bố mẹ sửa" = micro nghe nhầm, người lớn đã bấm Sửa.',
           ),
           table(
             ['Nốt', 'Hoàn thành', 'Đúng ngay', '%', 'Bố mẹ sửa'],
@@ -309,10 +340,11 @@ export function parentScreen(app: App) {
         h(
           'section',
           { class: 'card' },
-          h('h2', {}, 'Bé tự đánh giá'),
+          h('h2', {}, 'Bé kể: hôm nay thấy thế nào?'),
+          h('p', { class: 'muted' }, 'Câu nào bé cũng được 3 sao (thưởng vì học xong buổi) — để bé dám nói thật. “Khó” nhiều buổi liền = nên tập chậm lại.'),
           table(
-            ['Ngày', 'Bài', 'Bé chọn', 'Sao'],
-            rated.map((s) => [s.date, lessonName(s.lessonId), RATING_LABEL[s.selfRating!], '★'.repeat(RATING_STARS[s.selfRating!])]),
+            ['Ngày', 'Bài', 'Bé chọn'],
+            rated.map((s) => [s.date, lessonName(s.lessonId), RATING_LABEL[s.selfRating!]]),
           ),
         ),
       ];
@@ -375,11 +407,58 @@ export function parentScreen(app: App) {
       }
 
       const s = d.settings;
-      sections.push(
+      /** Mục "Nâng cao" (thu gọn): phiên bản, cài đặt, dữ liệu */
+      const adv: HTMLElement[] = [];
+      adv.push(
+        h(
+          'section',
+          { class: 'card version-card' },
+          h('p', {}, 'Phiên bản đang chạy: ', h('b', {}, APP_VERSION)),
+          button({
+            icon: '🔄',
+            label: 'Kiểm tra bản mới',
+            onTap: async () => {
+              if (!navigator.onLine) return say('iPad đang không có mạng — bật Wi‑Fi rồi thử lại.');
+              say('Đang kiểm tra…');
+              await checkForUpdate(true);
+              await new Promise((r) => setTimeout(r, 5000));
+              say(
+                isUpdateReady()
+                  ? '✅ Đã tải bản mới. Bấm "Về màn của bé" — app sẽ tự khởi động lại bằng bản mới.'
+                  : 'Đang dùng bản mới nhất (nếu vừa deploy, đợi 1–2 phút rồi thử lại).',
+              );
+            },
+          }),
+        ),
         h(
           'section',
           { class: 'card' },
           h('h2', {}, 'Cài đặt'),
+          h('h3', {}, '🔊 Giọng đọc hướng dẫn'),
+          h('p', { class: 'muted' }, 'App đọc to câu hướng dẫn cho bé (bé đọc chậm). Cần giọng tiếng Việt trên iPad: Cài đặt → Trợ năng → Nội dung được đọc → Giọng nói → Tiếng Việt.'),
+          h(
+            'div',
+            { class: 'row' },
+            segmented(
+              [
+                { value: 'on', label: 'Bật' },
+                { value: 'off', label: 'Tắt' },
+              ],
+              s.voice === false ? 'off' : 'on',
+              (v) => {
+                if (v === 'off') cancelSpeech();
+                set({ voice: v === 'on' });
+              },
+            ),
+            button({
+              icon: '🔊',
+              label: 'Nghe thử',
+              onTap: () =>
+                hasVietnameseVoice()
+                  ? void speak(app, 'Chào con! Mình cùng học đàn nhé.')
+                  : toast('iPad chưa có giọng đọc tiếng Việt'),
+            }),
+          ),
           h('h3', {}, 'Độ dài buổi'),
           segmented(
             [10, 15, 20].map((m) => ({ value: m as 10 | 15 | 20, label: `${m} phút` })),
@@ -534,41 +613,27 @@ export function parentScreen(app: App) {
       const paste = h('textarea', { class: 'text-in paste', placeholder: 'Hoặc dán nội dung JSON vào đây…' });
       const confirmIn = h('input', { class: 'text-in', type: 'text', placeholder: 'Gõ XOA' });
 
-      sections.push(
+      adv.push(
         h(
           'section',
           { class: 'card' },
           h('h2', {}, 'Dữ liệu'),
-          h('p', { class: 'muted' }, 'Mọi dữ liệu chỉ nằm trên iPad này. Nên xuất JSON định kỳ để sao lưu.'),
+          h(
+            'p',
+            { class: 'muted' },
+            'Lưu trữ bền vững: ',
+            h('b', {}, app.storagePersisted === true ? 'có' : app.storagePersisted === false ? 'không' : 'chưa rõ'),
+            app.storagePersisted === false ? ' — nên thêm app vào Màn hình chính và sao lưu thường xuyên.' : '',
+          ),
+          h('p', { class: 'muted' }, 'Mọi dữ liệu chỉ nằm trên iPad này. Nên bấm “Sao lưu dữ liệu” mỗi tuần (lưu vào Tệp / Ghi chú).'),
           h(
             'div',
             { class: 'row' },
             button({
-              icon: '⬇',
-              label: 'Xuất JSON',
-              onTap: () => {
-                const blob = new Blob([store.exportJSON()], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = h('a', { href: url, download: `piano-be-9-${store.today()}.json` });
-                document.body.append(a);
-                a.click();
-                store.updateSettings({ lastBackupAt: Date.now() });
-                a.remove();
-                window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
-              },
-            }),
-            button({
-              icon: '📋',
-              label: 'Sao chép JSON',
-              onTap: async () => {
-                try {
-                  await navigator.clipboard.writeText(store.exportJSON());
-                  store.updateSettings({ lastBackupAt: Date.now() });
-                  say('✅ Đã sao chép JSON.');
-                } catch {
-                  say('❌ Không sao chép được — hãy dùng "Xuất JSON".');
-                }
-              },
+              icon: '💾',
+              label: 'Sao lưu dữ liệu',
+              kind: 'primary',
+              onTap: () => void exportBackup(store).then((r) => say(BACKUP_MESSAGE[r])),
             }),
             button({ icon: '⬆', label: 'Nhập JSON (file)', onTap: () => fileIn.click() }),
             fileIn,
@@ -618,8 +683,12 @@ export function parentScreen(app: App) {
                 ),
               ),
         ),
-        h('p', { class: 'muted foot' }, 'Piano bé · Phase 1 · không mạng, không quảng cáo, không thu thập dữ liệu.'),
+        h('p', { class: 'muted foot' }, 'Piano bé · không mạng, không quảng cáo, không thu thập dữ liệu.'),
       );
+      const details = h('details', { class: 'adv' }, h('summary', {}, '⚙️ Nâng cao: cài đặt · dữ liệu · phiên bản'), ...adv);
+      details.open = advOpen;
+      details.addEventListener('toggle', () => (advOpen = details.open));
+      sections.push(details);
       return sections.filter((x): x is HTMLElement => !!x);
     };
 

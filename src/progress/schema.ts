@@ -64,6 +64,11 @@ export interface SongRun {
   hints: 'full' | 'names' | 'staff';
   /** Chỉ tập một câu: [ô nhịp đầu, ô nhịp cuối) */
   phrase?: [number, number] | null;
+  /**
+   * (+) Tập TÁCH TAY bài hai tay: chỉ chấm tay này (RH = tay phải, LH = tay trái). Không có = chơi đủ (hai tay).
+   * Lượt tách tay KHÔNG tính cho tiêu chí tuần / "đã thuộc" (lessonEngine.passedWhole bỏ qua).
+   */
+  hand?: 'RH' | 'LH';
   total: number;
   hits: number;
   source: 'mic' | 'parent';
@@ -112,6 +117,7 @@ export interface Settings {
   timing: 'easy' | 'normal' | 'strict'; // (+) độ khắt khe khi micro chấm nhịp (mặc định dễ — trẻ 9 tuổi)
   lastBackupAt: number; // (+) lần xuất/sao chép JSON gần nhất (ms) — để nhắc sao lưu
   onboardedAt: number; // (+) lúc bố mẹ xem xong/bỏ qua hướng dẫn lần đầu (ms); 0 = chưa xem
+  voice: boolean; // (+) giọng đọc hướng dẫn tiếng Việt (bé đọc chậm) — mặc định BẬT
 }
 
 export interface Progress {
@@ -152,6 +158,7 @@ export function defaultSettings(): Settings {
     timing: 'easy',
     lastBackupAt: 0,
     onboardedAt: 0,
+    voice: true,
   };
 }
 
@@ -199,6 +206,7 @@ export function validateAppData(x: unknown): string[] {
     if (!['easy', 'normal', 'strict'].includes(st.timing as string)) errs.push('settings.timing');
     if (typeof st.lastBackupAt !== 'number') errs.push('settings.lastBackupAt');
     if (typeof st.onboardedAt !== 'number') errs.push('settings.onboardedAt');
+    if (typeof st.voice !== 'boolean') errs.push('settings.voice');
   }
   const p = x.progress;
   if (!isObj(p)) errs.push('Thiếu progress');
@@ -238,7 +246,8 @@ export function validateAppData(x: unknown): string[] {
             !['wait', 'tempo'].includes(r.mode as string) ||
             typeof r.passed !== 'boolean' ||
             typeof r.bpm !== 'number' ||
-            !Number.isFinite(r.bpm)
+            !Number.isFinite(r.bpm) ||
+            (r.hand !== undefined && r.hand !== 'RH' && r.hand !== 'LH')
           ) {
             errs.push(`sessions[${i}].songRuns[${j}]`);
           }

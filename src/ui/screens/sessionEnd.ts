@@ -6,7 +6,7 @@ import { confetti } from '../components/celebrate';
 import { button, h } from '../components/dom';
 import { stickersScreen } from './stickers';
 
-const KIND_ORDER: Sticker['kind'][] = ['medal', 'songs', 'streak', 'folk', 'mic', 'dynamics', 'island'];
+const KIND_ORDER: Sticker['kind'][] = ['medal', 'songs', 'week', 'streak', 'folk', 'mic', 'dynamics', 'island'];
 
 /** Khoảnh khắc "Con nhận được sticker mới!" — tối đa 3 sticker hiện ra lần lượt. */
 function stickerReveal(app: App, fresh: Sticker[]): HTMLElement {

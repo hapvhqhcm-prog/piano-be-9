@@ -58,10 +58,15 @@
   --good-dark: var(--mint-700);
   --retry: var(--coral-500);
   --danger: #c63d3d;
-  --rh: #22a861; /* tay phải = xanh (giữ nguyên theo giáo trình) */
-  --rh-soft: #c9f0d8;
-  --lh: #f28c28; /* tay trái = cam */
-  --lh-soft: #ffe1c2;
+  /* Hai tay: XANH DƯƠNG / CAM (cặp Okabe–Ito, phân biệt được cả với mắt mù màu đỏ–lục).
+     Trước đây tay phải xanh lá #22a861 — với mắt mù màu lục (deuteranopia) gần giống cam.
+     Không chỉ dựa vào màu: phím đích và "Ngón N" còn có chữ P (phải) / T (trái). */
+  --rh: #1b74c4; /* tay phải = xanh dương — chữ trắng 4.9:1 */
+  --rh-soft: #d6e9fb;
+  --rh-dark: #12568f;
+  --lh: #e8890c; /* tay trái = cam */
+  --lh-soft: #ffe3bf;
+  --lh-dark: #a65c00;
   --guide: var(--violet-200);
 
   /* --- Bóng (độ nổi) --- */
@@ -571,10 +576,10 @@ h3,
   fill: var(--ink);
 }
 .hand-art .f.on {
-  filter: drop-shadow(0 0 6px rgba(46, 158, 91, 0.75));
+  filter: drop-shadow(0 0 6px rgba(27, 116, 196, 0.75));
 }
 .hand-art.hand-lh .f.on {
-  filter: drop-shadow(0 0 6px rgba(242, 140, 40, 0.8));
+  filter: drop-shadow(0 0 6px rgba(232, 137, 12, 0.8));
 }
 /* Hiệu ứng "nhấn" đặt ở lớp NGOÀI (.f): lớp trong (.f-inner) giữ thuộc tính xoay của ngón cái —
    trước đây transform CSS ở .f-inner GHI ĐÈ góc xoay → ngón cái dựng đứng, chồng lên ngón 2 khi được nhấn */
@@ -1604,14 +1609,14 @@ h3,
   background: linear-gradient(180deg, #8a84d6 0%, #5b54b8 100%);
 }
 .key.is-target.hand-rh.key-white {
-  background: linear-gradient(180deg, #ecfff3 0%, #c4f2d6 100%);
+  background: linear-gradient(180deg, #eef6ff 0%, #c6e0f8 100%);
   box-shadow:
     inset 0 0 0 4px var(--rh),
-    inset 0 -7px 0 #9fe2bb;
+    inset 0 -7px 0 #a3c9ee;
   animation: target-glow 1.4s ease-in-out infinite;
 }
 .key.is-target.hand-rh.key-black {
-  background: linear-gradient(180deg, #45d688 0%, #1f8f50 100%);
+  background: linear-gradient(180deg, #4d9de6 0%, #155f9f 100%);
   animation: target-glow 1.4s ease-in-out infinite;
 }
 .key.is-target.hand-lh.key-white {
@@ -1646,12 +1651,12 @@ h3,
   padding-top: 4px;
 }
 .key-badge {
-  background: radial-gradient(circle at 35% 30%, #5be39a 0%, var(--rh) 70%);
+  background: radial-gradient(circle at 35% 30%, #6fb6f2 0%, var(--rh) 70%);
   border: 3px solid #fff;
-  box-shadow: 0 3px 8px rgba(20, 90, 50, 0.35);
+  box-shadow: 0 3px 8px rgba(15, 60, 120, 0.35);
 }
 .key.is-target.hand-lh .key-badge {
-  background: radial-gradient(circle at 35% 30%, #ffc07a 0%, var(--lh) 70%);
+  background: radial-gradient(circle at 35% 30%, #ffc574 0%, var(--lh) 70%);
   box-shadow: 0 3px 8px rgba(150, 80, 10, 0.35);
 }
 
@@ -2748,4 +2753,274 @@ h3,
     width: 92px;
     height: 92px;
   }
+}
+
+/* =========================================================
+   UX 2026-10-05: giọng đọc · chữ P/T cho hai tay · lời khen đúng mức · việc cần làm cho bố mẹ
+   ========================================================= */
+
+/* ---------- Chữ P (phải) / T (trái): không chỉ dựa vào màu ---------- */
+.hand-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  margin-left: 10px;
+  min-width: 1.35em;
+  height: 1.35em;
+  padding: 0 0.2em;
+  border-radius: 0.4em;
+  font-family: var(--font-display);
+  font-size: 0.5em;
+  font-weight: 800;
+  line-height: 1;
+  color: #fff;
+  background: var(--rh);
+  position: relative;
+  top: -0.1em;
+}
+.hand-tag-lh {
+  background: var(--lh-dark);
+}
+/* Số ngón trên phím đích: thêm nhãn P/T nhỏ ở góc huy hiệu */
+.key.is-target .key-badge {
+  position: relative;
+}
+.key.is-target.hand-rh .key-badge.show::after,
+.key.is-target.hand-lh .key-badge.show::after {
+  content: 'P';
+  position: absolute;
+  top: -9px;
+  right: -12px;
+  min-width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  border: 2px solid #fff;
+  background: var(--rh-dark);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 20px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+.key.is-target.hand-lh .key-badge.show::after {
+  content: 'T';
+  background: var(--lh-dark);
+}
+.keyboard.wide .key.is-target .key-badge.show::after {
+  top: -7px;
+  right: -9px;
+  min-width: 18px;
+  height: 18px;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+/* ---------- Nút 🔊 nghe đọc lại ---------- */
+.speak-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  width: 44px;
+  height: 44px;
+  margin-left: 10px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--violet-50);
+  box-shadow: inset 0 0 0 2px var(--violet-200);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  flex: 0 0 auto;
+  position: relative;
+  top: -0.08em;
+}
+.speak-chip:active,
+.speak-chip.on {
+  background: var(--violet-100);
+  box-shadow: inset 0 0 0 3px var(--violet-400);
+}
+.speak-chip.on span {
+  animation: speak-pulse 0.9s ease-in-out infinite;
+}
+@keyframes speak-pulse {
+  50% {
+    transform: scale(1.18);
+  }
+}
+.title .speak-chip,
+.note-big .speak-chip {
+  width: 48px;
+  height: 48px;
+}
+
+/* ---------- "Bỏ qua — mai ôn lại" ---------- */
+.skip-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+}
+.skip-row .btn {
+  min-height: 56px;
+  font-size: 22px;
+}
+
+/* ---------- Tuần chăm chỉ (thay chuỗi ngày) ---------- */
+.streak.week-star {
+  color: var(--sun-800);
+  background: var(--sun-50);
+  box-shadow: inset 0 0 0 2px var(--sun-300);
+}
+
+/* ---------- Phụ huynh: việc cần làm tối nay ---------- */
+.todo-card {
+  background: linear-gradient(180deg, #f6f4ff, var(--violet-50));
+  box-shadow: var(--e2), inset 0 0 0 3px var(--violet-200);
+}
+.todo-card h2 {
+  font-size: 30px;
+}
+.todo-action {
+  font-size: 23px;
+  font-weight: 700;
+  color: var(--ink);
+  background: var(--surface);
+  border-radius: var(--r-md);
+  padding: 12px 16px;
+  margin: 6px 0;
+  box-shadow: var(--e1);
+}
+.todo-list {
+  margin: 4px 0 8px;
+  padding-left: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.todo-list li {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  font-size: 20px;
+}
+.todo-list li b {
+  flex: 0 0 auto;
+  min-width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--coral-100);
+  color: var(--coral-700);
+  font-family: var(--font-display);
+  text-align: center;
+  line-height: 30px;
+}
+.todo-goal {
+  font-size: 20px;
+  margin-top: 6px;
+}
+.todo-goal .met {
+  color: var(--mint-700);
+  font-weight: 800;
+}
+.todo-meter {
+  height: 12px;
+  border-radius: 6px;
+  background: var(--line);
+  overflow: hidden;
+  margin-top: 6px;
+  max-width: 520px;
+}
+.todo-meter i {
+  display: block;
+  height: 100%;
+  background: var(--mint-500);
+  border-radius: 6px;
+}
+
+/* ---------- 👪 Khi nào bấm "Đúng rồi"? ---------- */
+.when-correct {
+  background: var(--mint-50);
+  border-radius: var(--r-md);
+  padding: 10px 16px;
+  box-shadow: inset 0 0 0 2px var(--mint-100);
+}
+.when-correct h3,
+.when-correct .when-title {
+  margin: 0 0 4px;
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 800;
+  color: var(--mint-800);
+}
+.when-correct ul {
+  margin: 0;
+  padding-left: 22px;
+  font-size: 19px;
+  line-height: 1.4;
+}
+.onb-text .when-correct {
+  margin-top: 10px;
+}
+.onb-text .when-correct ul {
+  font-size: 18px;
+}
+
+/* ---------- Nâng cao (thu gọn) ---------- */
+.adv {
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  box-shadow: var(--e1);
+  padding: 0 16px;
+}
+.adv > summary {
+  cursor: pointer;
+  list-style: none;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--ink-2);
+  padding: 16px 0;
+}
+.adv > summary::-webkit-details-marker {
+  display: none;
+}
+.adv > summary::before {
+  content: '▸ ';
+}
+.adv[open] > summary::before {
+  content: '▾ ';
+}
+.adv[open] {
+  padding-bottom: 12px;
+}
+.adv > .card {
+  box-shadow: none;
+  border: 2px solid var(--line);
+  margin-bottom: 12px;
+}
+/* Thẻ "Thêm vào Màn hình chính" nằm gọn trong thẻ 4 Hướng dẫn */
+.onb-text .install-card {
+  margin-top: 10px;
+  padding: 10px 14px;
+  font-size: 17px;
+  box-shadow: inset 0 0 0 2px var(--line);
+}
+.onb-text .install-card h2 {
+  font-size: 20px;
+  margin: 0 0 4px;
+}
+.onb-text .install-card .banner,
+.onb-text .install-card > p.muted {
+  display: none;
+}
+.onb-text .install-card ol {
+  margin: 0;
+  padding-left: 22px;
+  font-size: 17px;
+  line-height: 1.35;
 }

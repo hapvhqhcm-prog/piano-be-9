@@ -25,6 +25,7 @@ describe('schema v1 (§7)', () => {
       timing: 'easy',
       lastBackupAt: 0,
       onboardedAt: 0,
+      voice: true, // giọng đọc hướng dẫn mặc định BẬT
     });
   });
 
@@ -38,6 +39,7 @@ describe('schema v1 (§7)', () => {
     const d = migrate(raw);
     expect(d.settings.autoAdvance).toBe(false);
     expect(d.settings.onboardedAt).toBe(0); // dữ liệu cũ chưa có trường hướng dẫn → 0
+    expect(d.settings.voice).toBe(true); // dữ liệu cũ chưa có giọng đọc → bật
     expect(d.sessions[0].parentAssessments).toEqual([]);
     expect(validateAppData(d)).toEqual([]);
   });

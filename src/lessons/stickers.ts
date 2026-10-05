@@ -7,9 +7,13 @@ import { LEVELS, WEEKS, masteredSongs, weekComplete, weekPassed } from './lesson
  * (tiến độ tuần, lượt chơi bài hát, buổi học…). Không lưu thêm gì → không bao giờ lệch với dữ liệu,
  * sao lưu/nhập JSON là có đủ sticker. Hàm thuần — có test (tests/stickers.test.ts).
  *
- * Sticker đã nhận KHÔNG mất: chuỗi ngày dùng chuỗi DÀI NHẤT từng có (không phải chuỗi hiện tại).
+ * Sticker đã nhận KHÔNG mất (mọi mốc tính trên toàn bộ lịch sử, chỉ tăng).
+ *
+ * "Tuần chăm chỉ" (2026-10-05) thay cho "chuỗi ngày liền": chuỗi ngày bị đứt làm trẻ nản; mục tiêu tuần
+ * (≥ 4 buổi) khớp với giáo trình 4–5 buổi/tuần và được nghỉ ngày nào cũng không sao.
+ * Sticker chuỗi ngày CŨ mà bé đã nhận trước ngày đổi vẫn được giữ (tính trên các buổi trước STREAK_RETIRED_AFTER).
  */
-export type StickerKind = 'island' | 'songs' | 'streak' | 'mic' | 'folk' | 'dynamics' | 'medal';
+export type StickerKind = 'island' | 'songs' | 'streak' | 'week' | 'mic' | 'folk' | 'dynamics' | 'medal';
 
 export interface Sticker {
   id: string;
@@ -19,7 +23,7 @@ export interface Sticker {
   /** Gợi ý cách nhận (hiện khi còn khóa) */
   hint: string;
   earned: boolean;
-  /** island / medal: số tuần; songs / streak: mốc số; medal: cấp; dynamics: kiểu trò */
+  /** island / medal: số tuần; songs / streak / week: mốc số; medal: cấp; dynamics: kiểu trò */
   week?: number;
   n?: number;
   level?: number;
@@ -27,16 +31,43 @@ export interface Sticker {
 }
 
 export const SONG_MILESTONES = [1, 5, 10, 20, 40] as const;
+/** (CŨ) mốc chuỗi ngày — chỉ còn để giữ sticker bé đã nhận trước khi đổi sang "tuần chăm chỉ". */
 export const STREAK_MILESTONES = [3, 7, 14, 30] as const;
+/** Ngày cuối cùng còn tính chuỗi ngày (buổi sau ngày này không tạo thêm sticker chuỗi ngày). */
+export const STREAK_RETIRED_AFTER = '2026-10-05';
+/** Mốc "tuần chăm chỉ": số tuần (thứ 2 → CN) có ≥ BUSY_WEEK_SESSIONS buổi hoàn thành. */
+export const BUSY_WEEK_MILESTONES = [1, 3, 6, 10] as const;
+export const BUSY_WEEK_SESSIONS = 4;
 /** Số lượt đúng tối thiểu (các lượt khác nhau, trong một buổi) để tính là "chơi xong" trò to/nhỏ – ngắt/liền. */
 export const DYNAMICS_ROUNDS = 3;
 
 const dayKey = (x: Date) =>
   `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`;
 
-/** Chuỗi ngày học liên tiếp DÀI NHẤT từng có (chỉ tính buổi đã hoàn thành). */
-export function bestStreak(data: Readonly<AppData>): number {
-  const days = [...new Set(data.sessions.filter((s) => s.completed).map((s) => s.date))].sort();
+/** Thứ 2 của tuần chứa ngày "YYYY-MM-DD". */
+function mondayKey(date: string): string {
+  const [y, m, d] = date.split('-').map(Number);
+  const x = new Date(y, m - 1, d);
+  x.setDate(x.getDate() - ((x.getDay() + 6) % 7));
+  return dayKey(x);
+}
+
+/** Số tuần (thứ 2 → CN) có ít nhất BUSY_WEEK_SESSIONS buổi hoàn thành — chỉ tăng, không bao giờ giảm. */
+export function busyWeeks(data: Readonly<AppData>): number {
+  const perWeek = new Map<string, number>();
+  for (const s of data.sessions) {
+    if (!s.completed) continue;
+    const k = mondayKey(s.date);
+    perWeek.set(k, (perWeek.get(k) ?? 0) + 1);
+  }
+  return [...perWeek.values()].filter((n) => n >= BUSY_WEEK_SESSIONS).length;
+}
+
+/** Chuỗi ngày học liên tiếp DÀI NHẤT từng có (chỉ tính buổi đã hoàn thành). `until`: chỉ tính các ngày ≤ until. */
+export function bestStreak(data: Readonly<AppData>, until?: string): number {
+  const days = [
+    ...new Set(data.sessions.filter((s) => s.completed && (!until || s.date <= until)).map((s) => s.date)),
+  ].sort();
   const set = new Set(days);
   let best = 0;
   for (const d of days) {
@@ -54,10 +85,10 @@ export function bestStreak(data: Readonly<AppData>): number {
   return best;
 }
 
-/** Bé đàn trọn một bài (cả bài, không phải một câu) mà micro chấm đúng hết mọi nốt. */
+/** Bé đàn trọn một bài (cả bài, đủ cả hai tay — không phải một câu / một tay) mà micro chấm đúng hết mọi nốt. */
 export function micPerfectRun(data: Readonly<AppData>): boolean {
   return data.sessions.some((s) =>
-    s.songRuns.some((r) => r.source === 'mic' && r.passed && !r.phrase && r.total > 0 && r.hits >= r.total),
+    s.songRuns.some((r) => r.source === 'mic' && r.passed && !r.phrase && !r.hand && r.total > 0 && r.hits >= r.total),
   );
 }
 
@@ -113,16 +144,22 @@ export function allStickers(data: Readonly<AppData>): Sticker[] {
       n,
     });
   }
-  const streak = bestStreak(data);
-  for (const n of STREAK_MILESTONES) {
+  const weeks = busyWeeks(data);
+  for (const n of BUSY_WEEK_MILESTONES) {
     out.push({
-      id: `streak-${n}`,
-      kind: 'streak',
-      title: `${n} ngày liền`,
-      hint: `Học ${n} ngày liền nhau`,
-      earned: streak >= n,
+      id: `week-${n}`,
+      kind: 'week',
+      title: n === 1 ? 'Tuần chăm chỉ' : `${n} tuần chăm chỉ`,
+      hint: n === 1 ? `Học ${BUSY_WEEK_SESSIONS} buổi trong một tuần` : `${n} tuần, mỗi tuần học ${BUSY_WEEK_SESSIONS} buổi`,
+      earned: weeks >= n,
       n,
     });
+  }
+  // Sticker chuỗi ngày cũ: chỉ hiện nếu bé ĐÃ nhận (trước ngày đổi) — không mất, không còn mốc mới
+  const streak = bestStreak(data, STREAK_RETIRED_AFTER);
+  for (const n of STREAK_MILESTONES) {
+    if (streak < n) continue;
+    out.push({ id: `streak-${n}`, kind: 'streak', title: `${n} ngày liền`, hint: `Học ${n} ngày liền nhau`, earned: true, n });
   }
   out.push({
     id: 'folk',

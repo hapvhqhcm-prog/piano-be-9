@@ -28,6 +28,28 @@ const seedStickers = `
       parentAssessments: i === 1 ? [{ note: 'medal', result: 'correct', ts: 0 }, ...[0, 1, 2].map((k) => ({ note: 'dyn:loud-soft:' + k, result: 'correct', ts: 0 }))] : [] });
   }`;
 
+
+/** Màn Từng nốt: chờ tới khi nút có chữ `t` bấm được rồi bấm (âm mẫu / giọng đọc có thể kéo dài). */
+const practiceSeg = (targets) => `
+  const m = await import('/src/ui/screens/practice.ts');
+  const seg = { id: 'x', step: 'B2', title: 'Nhà của Đô', intro: 'Đô ở bên trái hai phím đen', targets: ${targets} };
+  app.show(m.practiceScreen(app, seg, { record() {}, recordMic() {}, amendLast() {}, onComplete() {}, onExit() {} }));
+  const tap = async (t) => { for (let i = 0; i < 60; i++) { await new Promise((r) => setTimeout(r, 150));
+    const b = [...document.querySelectorAll('.actions button')].find((x) => x.textContent.includes(t) && !x.disabled); if (b) { b.click(); return; } } };`;
+const W1 = `(await import('/src/lessons/lessonEngine.ts')).lessonNoteTargets((await import('/src/lessons/lessonEngine.ts')).weekPlan(2).lessons[0]).slice(0, 5)`;
+
+/** Dữ liệu cho màn Phụ huynh: vài buổi gần đây có nốt hay vấp, micro nghe nhầm, bài chưa đạt. */
+const seedParent = `
+  const d = app.store.get(); d.progress.currentWeek = 3;
+  const today = new Date(); const ds = (k) => { const x = new Date(today.getFullYear(), today.getMonth(), today.getDate() - k); return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'); };
+  const base = { appAssessments: [], micAssessments: [], songRuns: [], selfRating: 'hard', startedAt: 0, endedAt: 0, minutes: 12, completed: true, checklist: {} };
+  const pa = (note, result) => ({ note, result, ts: 0 });
+  d.sessions.push({ ...base, id: 'p1', date: ds(1), lessonId: 'w3-l1', parentAssessments: [pa('F4', 'retry'), pa('F4', 'retry'), pa('F4', 'retry'), pa('G4', 'retry'), pa('C4', 'correct')] });
+  d.sessions.push({ ...base, id: 'p2', date: ds(2), lessonId: 'w3-l2', selfRating: 'some', parentAssessments: [pa('G4', 'retry')],
+    micAssessments: [{ expected: 'E4', firstHeard: 'F4', firstTry: false, wrongCount: 2, ts: 0 }],
+    songRuns: [{ songId: 'mary_lamb', mode: 'tempo', bpm: 60, hints: 'full', total: 20, hits: 12, source: 'mic', passed: false, ts: 0 }] });
+  app.store.recomputePracticeDays();`;
+
 export const SCENES = [
   { name: 'start', js: `` },
   { name: 'home-w1', js: `const m = await import('/src/ui/screens/home.ts'); app.show(m.homeScreen(app));` },
@@ -165,7 +187,7 @@ export const SCENES = [
     name: 'session-end-sticker',
     js: `const st = await import('/src/lessons/stickers.ts');
          ${seedStickers}
-         const before = st.earnedStickerIds(app.store.get()).filter((id) => !['island-11', 'streak-7'].includes(id));
+         const before = st.earnedStickerIds(app.store.get()).filter((id) => !['island-11', 'week-1'].includes(id));
          const m = await import('/src/ui/screens/sessionEnd.ts');
          app.show(m.sessionEndScreen(app, { banner: '🏅 Con đã qua Đảo Phím Đen! Chặng tiếp: 🏠 Nhà Đô.', stickersBefore: before, onReplay() {}, onHome() {} }));
          await new Promise((r) => setTimeout(r, 3000));`,
@@ -177,5 +199,37 @@ export const SCENES = [
          const m = await import('/src/ui/screens/sessionEnd.ts');
          app.show(m.sessionEndScreen(app, { stickersBefore: before, onReplay() {}, onHome() {} }));
          await new Promise((r) => setTimeout(r, 3000));`,
+  },
+  {
+    name: 'practice-correct',
+    js: `${practiceSeg(W1)} await tap('Tiếp'); await tap('Bắt đầu'); await tap('Đúng rồi'); await new Promise((r) => setTimeout(r, 300));`,
+  },
+  {
+    name: 'practice-skip',
+    js: `${practiceSeg(W1)} await tap('Tiếp'); await tap('Bắt đầu');
+         const sel = async (q) => { for (let i = 0; i < 60; i++) { await new Promise((r) => setTimeout(r, 150)); const b = document.querySelector(q); if (b && !b.disabled) { b.click(); return; } } };
+         for (let k = 0; k < 3; k++) { await sel('.actions .btn-retry'); if (k < 2) await sel('.actions .btn-primary'); }
+         await new Promise((r) => setTimeout(r, 400));`,
+  },
+  {
+    name: 'practice-lh',
+    js: `app.store.setCurrentWeek(6); ${practiceSeg(`[{ noteId: 'C3', title: 'Đô / C', subtitle: 'Đô trầm — tay trái', keys: ['C3'], finger: 5, hand: 'LH', sample: ['C3'] }, { noteId: 'G3', title: 'Sol / G', keys: ['G3'], finger: 1, hand: 'LH', sample: ['G3'] }]`)}
+         await tap('Tiếp'); await tap('Bắt đầu'); await new Promise((r) => setTimeout(r, 900));`,
+  },
+  {
+    name: 'parent-todo',
+    js: `${seedParent} const m = await import('/src/ui/screens/parent.ts'); app.show(m.parentScreen(app));`,
+  },
+  {
+    name: 'parent-adv',
+    js: `${seedParent} const m = await import('/src/ui/screens/parent.ts'); app.show(m.parentScreen(app));
+         await new Promise((r) => setTimeout(r, 200)); const det = document.querySelector('details.adv'); det.open = true; det.scrollIntoView();`,
+  },
+  {
+    name: 'home-weekstar',
+    js: `const d = app.store.get(); const t = new Date(); const mon = new Date(t.getFullYear(), t.getMonth(), t.getDate() - ((t.getDay() + 6) % 7));
+         const ds = mon.getFullYear() + '-' + String(mon.getMonth() + 1).padStart(2, '0') + '-' + String(mon.getDate()).padStart(2, '0');
+         for (let i = 0; i < 4; i++) d.sessions.push({ id: 'h' + i, date: ds, lessonId: 'w1-l1', parentAssessments: [], appAssessments: [], micAssessments: [], songRuns: [], selfRating: 'all', startedAt: 0, endedAt: 0, minutes: 12, completed: true, checklist: {} });
+         app.store.recomputePracticeDays(); const m = await import('/src/ui/screens/home.ts'); app.show(m.homeScreen(app));`,
   },
 ];

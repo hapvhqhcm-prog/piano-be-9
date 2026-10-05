@@ -80,6 +80,19 @@ interface Voice {
 const LIGHT_VOICE_THRESHOLD = 8;
 /** Hồi âm còn nghe sau khi nốt tắt hẳn → cộng vào "app vừa im" để micro không bắt nhầm đuôi vang. */
 export const REVERB_GUARD_MS = 150;
+/**
+ * Tiếng tích máy đếm nhịp (dùng chung với giả lập trong test). Lên 1,5 ms (không "bụp", phổ gọn),
+ * tắt theo hàm mũ τ = 10 ms. Tần số ≥ 5 kHz để bộ lọc micro (2 × biquad 1,6 kHz) chặn > 40 dB.
+ */
+export const CLICK = {
+  hz: 5000,
+  accentHz: 6000,
+  normalGain: 0.3,
+  accentGain: 0.5,
+  attack: 0.0015,
+  tau: 0.01,
+  length: 0.06,
+} as const;
 /** Mức gửi hồi âm (ướt) — nhỏ, chỉ cho "có phòng". */
 const REVERB_WET = 0.14;
 
@@ -369,8 +382,9 @@ export class AudioEngine {
   }
 
   /**
-   * Tiếng gõ nhịp (metronome): rất ngắn, cao (~1,6–2 kHz) — nằm ngoài dải micro nghe đàn
-   * nên KHÔNG làm micro bỏ qua.
+   * Tiếng gõ nhịp (metronome): tiếng "ting" sin rất ngắn ở 5 kHz (phách mạnh: 6 kHz, to hơn) — rõ, không chói.
+   * Cao hẳn trên dải micro nghe đàn: bộ lọc bậc 4 của micAnalyzer chặn > 40 dB → micro KHÔNG cần bỏ qua khung có tiếng tích,
+   * bé gõ phím đúng phách vẫn được nghe & chấm giờ chính xác.
    */
   click(when: number, accent = false): void {
     const ctx = this.ctx;
@@ -380,16 +394,16 @@ export class AudioEngine {
     this.clickTimes = this.clickTimes.filter((c) => c > ctx.currentTime - 1);
     this.clickTimes.push(t);
     const osc = ctx.createOscillator();
-    osc.type = 'square';
-    osc.frequency.value = accent ? 2000 : 1600;
+    osc.type = 'sine';
+    osc.frequency.value = accent ? CLICK.accentHz : CLICK.hz;
     const g = ctx.createGain();
     g.gain.setValueAtTime(0, t);
-    g.gain.linearRampToValueAtTime(accent ? 0.25 : 0.15, t + 0.002);
-    g.gain.linearRampToValueAtTime(0, t + 0.035);
+    g.gain.linearRampToValueAtTime(accent ? CLICK.accentGain : CLICK.normalGain, t + CLICK.attack);
+    g.gain.setTargetAtTime(0, t + CLICK.attack, CLICK.tau);
     osc.connect(g);
     g.connect(master);
     osc.start(t);
-    osc.stop(t + 0.05);
+    osc.stop(t + CLICK.length);
     this.clicks.add(osc);
     osc.onended = () => {
       this.clicks.delete(osc);
@@ -473,7 +487,7 @@ export class AudioEngine {
 
   /**
    * Có tiếng tích trong khoảng [t − before, t + after] không (giây, đồng hồ AudioContext).
-   * Tiếng tích (1,6–2 kHz, không tính là "app đang phát") lọt qua bộ lọc micro → micro phải bỏ qua các khung đó.
+   * (Tiếng tích ≥ 5 kHz giờ bị bộ lọc micro chặn — micro không còn dùng hàm này để bịt tai; giữ để chẩn đoán.)
    */
   clickNear(t: number, before: number, after: number): boolean {
     return this.clickTimes.some((c) => c >= t - before && c <= t + after);

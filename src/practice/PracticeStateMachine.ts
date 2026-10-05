@@ -33,6 +33,7 @@ export type PracticeEvent =
   | { type: 'CONTINUE' } // nút "Tiếp" / "Thử lại" ở màn RESULT
   | { type: 'AUTO_ADVANCE' } // hết giờ đếm auto-advance
   | { type: 'EDIT' } // "Sửa" — phụ huynh bấm nhầm
+  | { type: 'SKIP' } // "Bỏ qua — mai ôn lại": sang nốt sau, nốt này được ghi "Thử lại" để ôn
   | { type: 'BACK' }; // "Quay lại"
 
 export type PracticeEffect =
@@ -175,6 +176,12 @@ export class PracticeStateMachine {
             effects: [{ type: 'stopAudio' }, { type: 'record', index: s.index, result: 'retry' }],
           };
         }
+        if (ev.type === 'SKIP') {
+          return {
+            next: { ...s, state: 'NEXT_NOTE', lastResult: null, lastSource: null },
+            effects: [{ type: 'stopAudio' }, { type: 'record', index: s.index, result: 'retry' }],
+          };
+        }
         if (ev.type === 'BACK') return this.goPrev([{ type: 'stopAudio' }]);
         return null;
 
@@ -188,6 +195,10 @@ export class PracticeStateMachine {
             next: { ...s, state: 'SHOW_NOTE', lastResult: null, lastSource: null },
             effects: [{ type: 'cancelAutoAdvance' }],
           };
+        }
+        // Bỏ qua sau khi đã "Thử lại" (kết quả thử lại đã được ghi) → không ghi thêm
+        if (ev.type === 'SKIP' && s.lastResult === 'retry') {
+          return { next: { ...s, state: 'NEXT_NOTE', lastResult: null, lastSource: null }, effects: [{ type: 'cancelAutoAdvance' }] };
         }
         if (ev.type === 'AUTO_ADVANCE') {
           if (s.lastResult !== 'correct' || !this.autoFor(s.lastSource ?? 'parent')) return null;

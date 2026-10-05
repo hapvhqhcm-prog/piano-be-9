@@ -72,3 +72,19 @@ describe('nhịp độ giáo trình (rà soát 2026-10-05)', () => {
     }
   });
 });
+
+import { reviewSegment } from '../src/lessons/lessonEngine';
+describe('Ôn nhanh ôn cả kiến thức gần đây (lỗi chuyên gia phát hiện)', () => {
+  it('tuần 12: ôn được nốt của thế Sol / khóa Fa, không chỉ tìm phím tuần 1–6', () => {
+    const st = store();
+    st.setCurrentWeek(12);
+    const seen = new Set<string>();
+    for (let k = 0; k < 40; k++) {
+      let x = k + 1;
+      const rng = () => ((x = (x * 9301 + 49297) % 233280) / 233280);
+      const seg = reviewSegment(weekPlan(12).lessons[0], st.get(), rng);
+      seg?.targets.forEach((t) => seen.add(`${t.keys[0]}|${t.staff ? 'staff' : ''}`));
+    }
+    expect([...seen].some((k) => k.endsWith('|staff'))).toBe(true);
+  });
+});

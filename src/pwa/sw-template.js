@@ -11,9 +11,16 @@ self.addEventListener('install', (event) => {
     (async () => {
       const cache = await caches.open(CACHE);
       await cache.addAll(PRECACHE.map((url) => new Request(url, { cache: 'reload' })));
-      await self.skipWaiting();
+      // KHÔNG skipWaiting() ở đây: bản mới CHỜ, để không đổi phiên bản giữa buổi học.
+      // Lần cài đầu (chưa có bản cũ) tự kích hoạt ngay; bản cập nhật chỉ kích hoạt khi trang gửi 'SKIP_WAITING'
+      // ở điểm an toàn (src/pwa/updater.ts → markSafePoint(true)).
     })(),
   );
+});
+
+self.addEventListener('message', (event) => {
+  const d = event.data;
+  if (d === 'SKIP_WAITING' || (d && d.type === 'SKIP_WAITING')) self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {

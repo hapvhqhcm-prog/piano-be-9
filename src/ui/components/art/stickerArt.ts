@@ -15,6 +15,7 @@ const DISC: Record<Sticker['kind'], [string, string, string]> = {
   medal: ['#fff3c4', P.sunLight, P.sun],
   songs: [P.violetLight, P.violet, P.indigo],
   streak: [P.coralLight, P.coral, '#e85a4a'],
+  week: [P.mintLight, P.grass, P.grassDark],
   folk: [P.mintLight, P.mint, '#2fae84'],
   mic: [P.lavender, P.violetLight, P.violet],
   dynamics: [P.sunLight, P.sun, P.orange],
@@ -33,6 +34,23 @@ function flame(cx: number, cy: number, s: number): string {
   return `<path d="M${cx} ${cy - 30 * s} C${cx + 6 * s} ${cy - 18 * s} ${cx + 22 * s} ${cy - 12 * s} ${cx + 20 * s} ${cy + 6 * s} C${cx + 18 * s} ${cy + 22 * s} ${cx - 18 * s} ${cy + 24 * s} ${cx - 20 * s} ${cy + 6 * s} C${cx - 22 * s} ${cy - 6 * s} ${cx - 12 * s} ${cy - 10 * s} ${cx - 10 * s} ${cy - 20 * s} C${cx - 4 * s} ${cy - 12 * s} ${cx} ${cy - 16 * s} ${cx} ${cy - 30 * s} Z" fill="${P.orange}" stroke="#e0662f" stroke-width="${k(1.6)}" stroke-linejoin="round"/>
     <path d="M${cx} ${cy - 10 * s} C${cx + 4 * s} ${cy - 2 * s} ${cx + 12 * s} ${cy + 2 * s} ${cx + 10 * s} ${cy + 10 * s} C${cx + 8 * s} ${cy + 18 * s} ${cx - 10 * s} ${cy + 18 * s} ${cx - 10 * s} ${cy + 9 * s} C${cx - 10 * s} ${cy + 2 * s} ${cx - 3 * s} ${cy} ${cx} ${cy - 10 * s} Z" fill="${P.sun}"/>
     <ellipse cx="${cx}" cy="${cy + 11 * s}" rx="${k(5)}" ry="${k(4)}" fill="#fff6c8"/>`;
+}
+
+/** Tờ lịch một tuần với 4 ô đã tích — "tuần chăm chỉ". */
+function calendar(): string {
+  const cells = [0, 1, 2, 3, 4, 5, 6]
+    .map((i) => {
+      const x = 30 + (i % 4) * 16;
+      const y = 56 + Math.floor(i / 4) * 18;
+      const on = [0, 1, 3, 4].includes(i);
+      return `<rect x="${x}" y="${y}" width="13" height="14" rx="3" fill="${on ? P.mint : '#eef2f7'}"/>` +
+        (on ? `<path d="M${x + 3} ${y + 7.5} l3 3 l5 -6" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>` : '');
+    })
+    .join('');
+  return `<rect x="24" y="34" width="72" height="62" rx="9" fill="#fff" stroke="${P.grassDark}" stroke-width="2.5"/>
+    <rect x="24" y="34" width="72" height="17" rx="9" fill="${P.coral}"/><rect x="24" y="44" width="72" height="7" fill="${P.coral}"/>
+    <rect x="38" y="27" width="6" height="14" rx="3" fill="${P.ink}"/><rect x="76" y="27" width="6" height="14" rx="3" fill="${P.ink}"/>
+    ${cells}`;
 }
 
 function medal(level: number): string {
@@ -108,6 +126,8 @@ function emblem(s: Sticker, earned: boolean): string {
       return `${beamedNotes(34, 76, 9, '#fff')}${sparkle(30, 32, 7, P.sun)}`;
     case 'streak':
       return flame(56, 66, 1.25);
+    case 'week':
+      return calendar();
     case 'folk':
       return nonLa();
     case 'mic':
@@ -119,7 +139,7 @@ function emblem(s: Sticker, earned: boolean): string {
 
 /** Huy hiệu số (mốc bài hát / chuỗi ngày) — vẽ NGOÀI lớp bóng xám để sticker còn khóa vẫn đọc được mốc. */
 function badge(s: Sticker, earned: boolean): string {
-  if (!s.n || (s.kind === 'songs' && s.n === 1) || (s.kind !== 'songs' && s.kind !== 'streak')) return '';
+  if (!s.n || (s.kind === 'songs' && s.n === 1) || (s.kind !== 'songs' && s.kind !== 'streak' && s.kind !== 'week')) return '';
   if (!earned) return numberBadge(s.n, '#e4e0f4', '#8c84b8');
   return s.kind === 'songs' ? numberBadge(s.n, P.sun, '#8a5a00') : numberBadge(s.n, '#fff', '#c2412b');
 }

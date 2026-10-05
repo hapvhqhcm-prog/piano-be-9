@@ -84,3 +84,28 @@ export function countInLabel(beat: number, beatsPerMeasure: number, lead = count
   const k = Math.max(0, lead - Math.ceil(-beat - 1e-6)); // phách thứ k (từ 0) của phần đếm vào
   return (k % beatsPerMeasure) + 1;
 }
+
+/** v5 — "Lặp câu này 3 lần đúng liên tiếp": lượt sạch → +1, có sai → về 0; đủ `goal` → xong. */
+export function loopStreak(streak: number, clean: boolean, goal = 3): { streak: number; done: boolean } {
+  const next = clean ? streak + 1 : 0;
+  return { streak: next, done: next >= goal };
+}
+
+/**
+ * v5 — Lời ĐẾM SỐ cho từng ô của mẫu nhịp (vỗ tay + đếm "1 – 2 – 3 – 4"):
+ * mỗi phách nói số thứ tự trong ô nhịp; tiếng vỗ ở nửa phách nói "và"; phách ngân (không vỗ) vẫn đếm;
+ * dấu lặng (không vỗ tiếng nào) đếm thầm — để trong ngoặc.
+ * cells: thời điểm bắt đầu (phách), độ dài (phách), các tiếng vỗ (phách, tính từ đầu ô).
+ */
+export function countWords(cells: Array<{ start: number; beats: number; hits: number[] }>, beatsPerMeasure = 4): string[] {
+  return cells.map((c) => {
+    const parts: string[] = [];
+    for (let k = 0; k < Math.ceil(c.beats - 1e-9); k++) {
+      const n = String((((Math.floor(c.start + 1e-9) + k) % beatsPerMeasure) + beatsPerMeasure) % beatsPerMeasure + 1);
+      const and = c.hits.some((h) => Math.abs(h - (k + 0.5)) < 1e-6);
+      parts.push(and ? `${n} và` : n);
+    }
+    const s = parts.join(' – ');
+    return c.hits.length ? s : `(${s})`;
+  });
+}

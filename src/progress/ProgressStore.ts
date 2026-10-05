@@ -24,8 +24,14 @@ export interface KeyValueStorage {
 }
 
 export const STORAGE_KEY = 'piano-be-9';
+/** Giữ tối đa bao nhiêu bản "archived-*" (mỗi bản vài chục KB — localStorage chỉ ~5 MB). */
+export const MAX_ARCHIVES = 3;
 
-export const RATING_STARS: Record<SelfRating, number> = { all: 3, some: 2, hard: 1 };
+/**
+ * Sao thưởng cho việc HOÀN THÀNH buổi — bằng nhau cho mọi câu trả lời: bé nói thật "khó quá" không bị ít sao hơn.
+ * Câu bé tự chọn chỉ là thông tin cho bố mẹ (màn Phụ huynh).
+ */
+export const RATING_STARS: Record<SelfRating, number> = { all: 3, some: 3, hard: 3 };
 
 export function isEmptySession(s: Session): boolean {
   return (
@@ -118,6 +124,54 @@ export class ProgressStore {
       } catch {
         /* bỏ qua */
       }
+    }
+  }
+
+  /** Các khóa "archived-*", mới nhất trước. */
+  archivedKeys(): string[] {
+    const keys: string[] = [];
+    const n = this.kv.length ?? 0;
+    for (let i = 0; i < n; i++) {
+      const k = this.kv.key?.(i);
+      if (k && k.startsWith(`${STORAGE_KEY}:archived-`)) keys.push(k);
+    }
+    const ts = (k: string) => Number(k.split('-').pop()) || 0;
+    return keys.sort((a, b) => ts(b) - ts(a));
+  }
+
+  /** Chỉ giữ MAX_ARCHIVES bản mới nhất. */
+  private pruneArchives(): void {
+    for (const k of this.archivedKeys().slice(MAX_ARCHIVES)) {
+      try {
+        this.kv.removeItem(k);
+      } catch {
+        /* bỏ qua */
+      }
+    }
+  }
+
+  /**
+   * Trước khi GHI ĐÈ dữ liệu (nhập JSON / đặt lại): cất bản hiện tại sang "archived-<thời điểm>" để lỡ tay còn cứu được.
+   * Dữ liệu trống (chưa học buổi nào) thì không cần cất. Trả về khóa đã cất (null nếu không cất / không ghi được).
+   */
+  private archiveCurrent(): string | null {
+    if (this.data.sessions.length === 0 && !this.data.learner.name) return null;
+    let ts = this.now().getTime();
+    while (this.kv.getItem(`${STORAGE_KEY}:archived-${ts}`) !== null) ts++;
+    const key = `${STORAGE_KEY}:archived-${ts}`;
+    // Bớt bản cũ TRƯỚC để còn chỗ (localStorage đầy thì setItem lỗi)
+    for (const k of this.archivedKeys().slice(MAX_ARCHIVES - 1)) {
+      try {
+        this.kv.removeItem(k);
+      } catch {
+        /* bỏ qua */
+      }
+    }
+    try {
+      this.kv.setItem(key, JSON.stringify(this.data));
+      return key;
+    } catch {
+      return null; // hết chỗ → vẫn cho nhập/đặt lại (ý muốn của phụ huynh), chỉ là không có bản cất
     }
   }
 
@@ -369,16 +423,20 @@ export class ProgressStore {
     }
     const errs = validateAppData(d);
     if (errs.length) return { ok: false, error: `Dữ liệu sai cấu trúc: ${errs.slice(0, 3).join('; ')}` };
+    this.archiveCurrent(); // dữ liệu đang có được cất lại trước khi bị thay
     this.data = d;
     this.recomputePracticeDays();
     this.archiveCorrupt(); // dữ liệu nhập là ý muốn của phụ huynh → bản sao lưu cũ không được đè lên
+    this.pruneArchives();
     this.save();
     return { ok: true };
   }
 
   resetAll(): void {
+    this.archiveCurrent(); // lỡ tay "Xóa hết" vẫn còn bản cất
     this.data = defaultData(this.now());
     this.archiveCorrupt(); // đặt lại có chủ ý → lần mở sau không được tự khôi phục bản cũ
+    this.pruneArchives();
     this.save();
   }
 }

@@ -1,4 +1,4 @@
-import { LEVELS, songMastered } from '../../lessons/lessonEngine';
+import { LEVELS, songFresh, songMastered } from '../../lessons/lessonEngine';
 import { SONGS, type Tune } from '../../music/tune';
 import type { App } from '../App';
 import { actionBar, backButton, h, toast } from '../components/dom';
@@ -16,6 +16,8 @@ export function libraryScreen(app: App) {
     const card = (s: Tune) => {
       const open = (s.week ?? 1) <= week;
       const star = open && songMastered(data, s.id);
+      // v5: đã thuộc nhưng lâu (> 3 tuần) chưa chơi lại → sao mờ, nhắc ôn (sticker vẫn giữ "đã từng thuộc")
+      const faded = star && !songFresh(s.id, data);
       return h(
         'button',
         {
@@ -23,14 +25,18 @@ export function libraryScreen(app: App) {
           type: 'button',
           onClick: () => (open ? playSong(app, s) : toast(s.week ? `🔒 Bài này mở ở Tuần ${s.week} nhé` : '🔒 Bài này mở sau nhé')),
         },
-        h('div', { class: 'song-card-title' }, open ? `${star ? '⭐ ' : ''}${s.titleVi}` : `🔒 ${s.titleVi}`),
+        h(
+          'div',
+          { class: 'song-card-title' },
+          open ? h('span', {}, star ? h('span', { class: faded ? 'star-faded' : undefined }, '⭐ ') : '', s.titleVi) : `🔒 ${s.titleVi}`,
+        ),
         h(
           'div',
           { class: 'song-card-sub' },
           // Dân ca: tên tiếng Việt đã ghi vùng miền — không lặp tên phiên âm tiếng Anh
           `${s.composer?.startsWith('Dân ca') ? 'Dân ca Việt Nam' : s.title}${s.hand === 'LH' ? ' · tay trái' : s.hand === 'BOTH' ? ' · hai tay' : ''}`,
         ),
-        h('div', { class: 'song-card-week' }, star ? 'Đã thuộc!' : `Tuần ${s.week}`),
+        h('div', { class: 'song-card-week' }, faded ? 'Ôn lại nhé!' : star ? 'Đã thuộc!' : `Tuần ${s.week}`),
       );
     };
     root.append(

@@ -11,8 +11,8 @@
   --good: #2e9e5b;
   --retry: #e0902b;
   --danger: #c84040;
-  --rh: #2e9e5b;
-  --rh-soft: #c9f0d8;
+  --rh: #1b74c4;
+  --rh-soft: #d6e9fb;
   --lh: #f28c28;
   --lh-soft: #ffe1c2;
   --guide: #b9cdf7;
@@ -470,7 +470,7 @@ p {
   background: #8a7a2a;
 }
 .key.is-good.key-white {
-  background: var(--rh-soft);
+  background: #c9f0d8; /* đúng = xanh bạc hà (không dùng màu tay phải) */
   box-shadow: inset 0 0 0 5px var(--good);
 }
 .key.is-show.key-white,
@@ -609,7 +609,7 @@ p {
   display: block;
   height: 100%;
   width: 0;
-  background: var(--rh);
+  background: var(--good);
   transition: width 0.08s linear;
 }
 .mic-hint {
@@ -785,7 +785,7 @@ p {
 }
 .check.on {
   border-color: var(--good);
-  background: var(--rh-soft);
+  background: #c9f0d8;
 }
 .edit-item.correct {
   border-color: var(--good);
@@ -1089,7 +1089,7 @@ p {
   stroke: var(--good);
 }
 .staff-note.hit .staff-head.hollow {
-  fill: var(--rh-soft);
+  fill: #c9f0d8;
 }
 .staff-note.miss .staff-head {
   fill: #e9a25a;

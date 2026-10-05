@@ -8,6 +8,8 @@ import type { Tune } from '../../music/tune';
 import type { App } from '../App';
 import { backButton, button, h } from '../components/dom';
 import { StaffView } from '../components/staffView';
+import { cancelSpeech, speak } from '../../audio/voice';
+import { speakChip } from '../components/speakChip';
 
 export interface QuizHooks {
   title: string;
@@ -86,15 +88,19 @@ export function quizScreen(app: App, hooks: QuizHooks) {
     function intro(): void {
       token++;
       kb.clear();
+      const said = `${hooks.title}. ${hooks.intro}`;
       stage.replaceChildren(
         h('div', { class: 'step-tag' }, 'Trò chơi'),
         h('h1', { class: 'title' }, hooks.title),
-        h('p', { class: 'lead' }, hooks.intro),
+        h('p', { class: 'lead' }, hooks.intro, speakChip(app, said)),
       );
       setBar(back(), button({ icon: '▶', label: 'Bắt đầu', kind: 'primary', onTap: () => void demo() }));
+      const tk = token;
+      window.setTimeout(() => tk === token && void speak(app, said), 400);
     }
 
     async function demo(): Promise<void> {
+      cancelSpeech(); // không đọc chồng lên nốt nhạc của trò chơi
       if (spec.variant !== 'identify') return void next();
       const tk = ++token;
       const ref = referenceOf(spec);
@@ -207,6 +213,7 @@ export function quizScreen(app: App, hooks: QuizHooks) {
     intro();
     return () => {
       token++;
+      cancelSpeech();
       kb.destroy();
     };
   };
