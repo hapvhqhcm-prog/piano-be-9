@@ -33,7 +33,8 @@ export const WEEK17: WeekPlan = {
   title: 'Hợp âm tay trái',
   story: 'Trong Rừng Hợp Âm, ba nốt cùng vang lên một lúc như ba cây cổ thụ. Hợp âm làm bài hát đầy đặn!',
   leftHand: true,
-  warmup: { variant: 'majorminor', pool: ['C4', 'F4', 'G4'], rounds: 6 },
+  // Đọc các nốt hợp âm tay trái (khóa Fa) — "vui/buồn" (trưởng/thứ) để dành tới tuần 19 mới dạy
+  warmup: { variant: 'read', clef: 'bass', pool: ['C3', 'E3', 'G3', 'F3', 'A3', 'B2', 'D3'], rounds: 6 },
   teach: { emoji: '👨‍🏫', text: 'Con chỉ bố/mẹ hợp âm Đô: ngón 5-3-1 tay trái trên Đô-Mi-Sol.' },
   criterion: { text: 'Chơi trọn "Bài ca niềm vui — hai tay hợp âm" theo nhịp', who: 'PARENT/MIC' },
   lessons: [

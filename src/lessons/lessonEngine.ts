@@ -173,11 +173,27 @@ export function weekPassed(week: number, data: Readonly<AppData>): boolean {
   }
 }
 
+/**
+ * Tuần XONG (được sang tuần mới) = đạt tiêu chí VÀ đã học hết các bài thường của tuần.
+ * Rà soát 2026-10-05: trước đây chỉ cần đạt tiêu chí → giả lập "bé giỏi" đi hết 25 tuần trong ~47 buổi,
+ * BỎ QUA 34 bài (có cả bài dạy nốt La, giọng thứ…) — các bài này không bao giờ được mời học nữa.
+ */
+export function weekComplete(week: number, data: Readonly<AppData>): boolean {
+  if (!weekPassed(week, data)) return false;
+  const done = new Set(data.progress.lessonsCompleted);
+  return weekPlan(week)
+    .lessons.filter((l) => !l.isWeekTest)
+    .every((l) => done.has(l.id));
+}
+
+/** Mã đánh dấu đã xong hoạt động thứ i của một bài (lưu chung trong lessonsCompleted) — để học tiếp phần còn lại. */
+export const activityDoneId = (lessonId: string, i: number): string => `${lessonId}#${i}`;
+
 /** Bài "Học tiếp": bài đầu tiên chưa xong → bài kiểm tra tuần (nếu chưa qua) → bài cuối để ôn. */
 export function nextLesson(data: Readonly<AppData>, rng: () => number = Math.random): Lesson {
   const plan = weekPlan(data.progress.currentWeek);
   // Đã xong cả giáo trình (MAX_WEEK tuần) → luyện tập mỗi ngày, không có điểm dừng
-  if (plan.week === MAX_WEEK && weekPassed(MAX_WEEK, data)) return dailyLesson(data, rng);
+  if (plan.week === MAX_WEEK && weekComplete(MAX_WEEK, data)) return dailyLesson(data, rng);
   const done = new Set(data.progress.lessonsCompleted);
   const regular = plan.lessons.filter((l) => !l.isWeekTest);
   const firstUndone = regular.find((l) => !done.has(l.id));
@@ -191,7 +207,7 @@ export type SessionStep =
   | { kind: 'posture'; short: boolean }
   | { kind: 'review'; segment: Segment }
   | { kind: 'quiz'; title: string; intro: string; quiz: QuizSpec; warmup: boolean }
-  | { kind: 'activity'; activity: Activity; last: boolean }
+  | { kind: 'activity'; activity: Activity; last: boolean; /** vị trí trong lesson.activities */ index: number }
   | { kind: 'teach'; emoji: string; text: string }
   | { kind: 'rating' };
 
@@ -261,26 +277,57 @@ export function buildSessionPlan(
   const plan = weekPlan(lesson.week);
   const steps: SessionStep[] = [];
   const isStage = lesson.activities.some((a) => a.kind === 'stage');
+  const doneIds = new Set(data?.progress.lessonsCompleted ?? []);
+  // Học tiếp phần còn dở: buổi trước hết giờ giữa bài → lần này chỉ làm các hoạt động CHƯA xong
+  // (trước đây bài bị cắt vì hết giờ không bao giờ được tính xong → "Học tiếp" lặp lại mãi)
+  let todo = lesson.activities.map((activity, index) => ({ activity, index }));
+  if (!opts.replay && !doneIds.has(lesson.id)) {
+    const rest = todo.filter((x) => !doneIds.has(activityDoneId(lesson.id, x.index)));
+    if (rest.length) todo = rest;
+  }
+  // Khởi động: bài ĐẦU của tuần (chưa học) mà tuần không chấm bằng khởi động → dùng khởi động của tuần TRƯỚC,
+  // để không hỏi nốt/khóa/giọng mới trước khi bài dạy (rà soát: tuần 9 khóa Fa, 11 thế Sol, 13 Fa♯, 17 trưởng/thứ…)
+  const firstOfWeek = plan.lessons[0]?.id === lesson.id && !doneIds.has(lesson.id);
+  const criterionQuiz = plan.criterion.who === 'APP';
+  let warm: QuizSpec | null = plan.warmup;
+  if (warm && firstOfWeek && !criterionQuiz && lesson.week > 1) warm = weekPlan(lesson.week - 1).warmup ?? null;
+  // Bài đã có quiz cùng kiểu → bỏ khởi động (khỏi hỏi một thứ hai lần liền)
+  if (warm && todo.some((x) => x.activity.kind === 'quiz' && x.activity.quiz.variant === warm!.variant)) warm = null;
+  const warmStep = (q: QuizSpec): SessionStep => {
+    // Buổi chỉ 10–15': khởi động gọn 6 lượt; riêng tuần có tiêu chí "tai nghe 8/10" giữ đủ 10 lượt
+    const quiz = criterionQuiz && q === plan.warmup ? q : { ...q, rounds: Math.min(q.rounds, 6) };
+    return { kind: 'quiz', title: warmupTitle(quiz), intro: warmupIntro(quiz), quiz, warmup: true };
+  };
+  // Tuần chấm bằng khởi động (tai nghe / đọc nốt 8/10): buổi đầu học bài TRƯỚC, khởi động-chấm điểm SAU
+  const warmAfter = !!warm && criterionQuiz && firstOfWeek;
   if (!opts.replay && !isStage) {
     const completed = data?.sessions.filter((s) => s.completed).length ?? 0;
     steps.push({ kind: 'posture', short: completed >= 3 });
     // Bài kiểm tra tuần: KHÔNG ôn nhanh (để kết quả ôn không lẫn vào tiêu chí, vd C4 10/10)
     const review = data && !lesson.isWeekTest ? reviewSegment(lesson, data, opts.rng) : null;
     if (review) steps.push({ kind: 'review', segment: review });
-    if (plan.warmup) {
-      // Buổi chỉ 10–15': khởi động gọn 6 lượt; riêng tuần có tiêu chí "tai nghe 8/10" giữ đủ 10 lượt
-      const criterionQuiz = plan.criterion.who === 'APP';
-      const quiz = criterionQuiz ? plan.warmup : { ...plan.warmup, rounds: Math.min(plan.warmup.rounds, 6) };
-      steps.push({ kind: 'quiz', title: warmupTitle(quiz), intro: warmupIntro(quiz), quiz, warmup: true });
-    }
+    if (warm && !warmAfter) steps.push(warmStep(warm));
   }
-  lesson.activities.forEach((activity, i) =>
-    steps.push({ kind: 'activity', activity, last: i === lesson.activities.length - 1 }),
-  );
-  if (!opts.replay && !isStage) steps.push({ kind: 'teach', ...plan.teach });
+  todo.forEach((x, k) => steps.push({ kind: 'activity', activity: x.activity, index: x.index, last: k === todo.length - 1 }));
+  if (!opts.replay && !isStage && warm && warmAfter) steps.push(warmStep(warm));
+  if (!opts.replay && !isStage) {
+    const daily = lesson.id.endsWith('-daily');
+    const teach = daily ? DAILY_TEACH[(data?.sessions.length ?? 0) % DAILY_TEACH.length] : plan.teach;
+    steps.push({ kind: 'teach', ...teach });
+  }
   steps.push({ kind: 'rating' });
   return steps;
 }
+
+/** "Con làm thầy" cho buổi luyện tập mỗi ngày — xoay vòng. */
+const DAILY_TEACH: ReadonlyArray<{ emoji: string; text: string }> = [
+  { emoji: '🎹', text: 'Con đàn cho bố mẹ nghe bài con thích nhất hôm nay.' },
+  { emoji: '🦁', text: 'Con đàn một câu thật TO rồi thật NHỎ — bố mẹ đoán xem câu nào to?' },
+  { emoji: '🖐️', text: 'Con chỉ cho bố mẹ ngón 1 đến ngón 5 và đặt tay vào thế Đô.' },
+  { emoji: '🎼', text: 'Con chỉ cho bố mẹ một nốt trên khuông và nói tên nốt đó.' },
+  { emoji: '👏', text: 'Con vỗ một nhịp, bố mẹ vỗ lại theo con.' },
+  { emoji: '🌟', text: 'Con kể cho bố mẹ: hôm nay chỗ nào khó nhất, con đã vượt qua thế nào?' },
+];
 
 export function warmupTitle(q: QuizSpec): string {
   return {
@@ -320,7 +367,12 @@ export function dailyLesson(data: Readonly<AppData>, rng: () => number = Math.ra
   const open = SONGS.filter((s) => (s.week ?? 1) <= week);
   const mastered = new Set(masteredSongs(data));
   const pick = <T,>(arr: T[]): T | undefined => arr[Math.floor(rng() * arr.length) % Math.max(1, arr.length)];
-  const learning = pick(open.filter((s) => !mastered.has(s.id))) ?? pick(open);
+  // Ưu tiên bài GẦN trình độ hiện tại (8 tuần gần nhất) — tránh tuần 25 lại tập bài tay trái tuần 1
+  const recent = open.filter((s) => (s.week ?? 1) >= week - 8);
+  const notMastered = open.filter((s) => !mastered.has(s.id));
+  const recentNotMastered = notMastered.filter((s) => recent.includes(s));
+  const learning =
+    (rng() < 0.75 ? pick(recentNotMastered) : undefined) ?? pick(notMastered) ?? pick(recent) ?? pick(open);
   const keep = pick(open.filter((s) => mastered.has(s.id) && s.id !== learning?.id));
   const positions = week >= 20 ? (['C', 'G', 'C5'] as const) : week >= 11 ? (['C', 'G'] as const) : (['C'] as const);
   const position = positions[Math.floor(rng() * positions.length) % positions.length];
@@ -341,7 +393,42 @@ export function dailyLesson(data: Readonly<AppData>, rng: () => number = Math.ra
     activities.push({ kind: 'song', songId: learning.id, mode: 'wait', hints: week >= 18 ? 'names' : 'full', intro: 'Bài đang tập — từng nốt trước nhé.' });
     activities.push({ kind: 'song', songId: learning.id, mode: 'tempo', level: 2, hints: week >= 18 ? 'names' : 'full' });
   }
-  if (keep) activities.push({ kind: 'song', songId: keep.id, mode: 'tempo', level: 3, hints: 'names', intro: 'Bài con đã thuộc — chơi lại cho nhớ lâu!' });
+  // Xen kẽ cho đỡ nhàm: thường là ôn bài đã thuộc; thỉnh thoảng trò tai nghe hoặc to/nhỏ – ngắt/liền
+  const extra = rng();
+  if (extra < 0.2 && week >= 5) {
+    activities.push({
+      kind: 'dynamics',
+      title: week >= 10 && rng() < 0.5 ? 'Ngắt hay liền?' : 'To hay nhỏ?',
+      intro: 'Thầy đàn mẫu — con đàn lại thật rõ kiểu nhé!',
+      ...(week >= 10 && rng() < 0.5
+        ? {
+            mode: 'stac-leg' as const,
+            rounds: [
+              { pitches: ['C4', 'D4', 'E4', 'F4'], want: 'leg' as const, fingers: [1, 2, 3, 4], hand: 'RH' as const },
+              { pitches: ['G4', 'G4', 'G4'], want: 'stac' as const, fingers: [5, 5, 5], hand: 'RH' as const },
+              { pitches: ['G4', 'F4', 'E4', 'D4'], want: 'leg' as const, fingers: [5, 4, 3, 2], hand: 'RH' as const },
+              { pitches: ['C4', 'E4', 'G4'], want: 'stac' as const, fingers: [1, 3, 5], hand: 'RH' as const },
+            ],
+          }
+        : {
+            mode: 'loud-soft' as const,
+            rounds: [
+              { pitches: ['C4', 'E4', 'G4'], want: 'f' as const, fingers: [1, 3, 5], hand: 'RH' as const },
+              { pitches: ['G4', 'E4', 'C4'], want: 'p' as const, fingers: [5, 3, 1], hand: 'RH' as const },
+              { pitches: ['E4', 'D4', 'C4'], want: 'p' as const, fingers: [3, 2, 1], hand: 'RH' as const },
+              { pitches: ['C4', 'D4', 'E4'], want: 'f' as const, fingers: [1, 2, 3], hand: 'RH' as const },
+            ],
+          }),
+    });
+  } else if (extra < 0.35 && week >= 3) {
+    const quiz: QuizSpec =
+      week >= 19 && rng() < 0.5
+        ? { variant: 'majorminor', pool: ['C4', 'D4', 'F4', 'G4', 'A4'], rounds: 6 }
+        : { variant: 'identify', pool: ['C4', 'D4', 'E4', 'F4', 'G4'], rounds: 6 };
+    activities.push({ kind: 'quiz', title: quiz.variant === 'majorminor' ? 'Vui hay buồn? 😊😢' : 'Nốt nào đây? 👂', intro: 'Đôi tai giỏi — nghe rồi chọn nhé!', quiz });
+  } else if (keep) {
+    activities.push({ kind: 'song', songId: keep.id, mode: 'tempo', level: 3, hints: 'names', intro: 'Bài con đã thuộc — chơi lại cho nhớ lâu!' });
+  }
   return { id: `w${week}-daily`, week, title: 'Luyện tập mỗi ngày', emoji: '🔁', activities };
 }
 

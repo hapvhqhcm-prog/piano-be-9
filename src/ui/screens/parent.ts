@@ -5,7 +5,7 @@ import { findTune } from '../../music/exercises';
 import { RATING_STARS, isEmptySession } from '../../progress/ProgressStore';
 import { CHECKLIST_ITEMS, localDateStr, type AppData, type Session, type Settings } from '../../progress/schema';
 import type { App } from '../App';
-import { button, h } from '../components/dom';
+import { button, confirmDialog, h } from '../components/dom';
 import { homeScreen } from './home';
 import { micTestScreen } from './micTest';
 import { APP_VERSION, checkForUpdate, isUpdateReady } from '../../pwa/updater';
@@ -494,13 +494,36 @@ export function parentScreen(app: App) {
         ),
       );
 
-      // Dữ liệu
+      // Dữ liệu — nhập JSON phải xác nhận trước (thay TOÀN BỘ dữ liệu hiện tại; bản cũ vẫn được lưu dự phòng)
+      const doImport = (text: string) => {
+        const r = store.importJSON(text);
+        say(r.ok ? '✅ Đã nhập dữ liệu.' : `❌ Không nhập được: ${r.error}`);
+      };
+      const confirmImport = (text: string) => {
+        let incoming: { progress?: { currentWeek?: unknown }; sessions?: unknown } | null = null;
+        try {
+          incoming = JSON.parse(text);
+        } catch {
+          return doImport(text); // không phải JSON → importJSON báo lỗi rõ ràng
+        }
+        const wk = typeof incoming?.progress?.currentWeek === 'number' ? incoming.progress.currentWeek : '?';
+        const ns = Array.isArray(incoming?.sessions) ? incoming.sessions.length : '?';
+        confirmDialog({
+          title: 'Thay dữ liệu?',
+          text: `Thay dữ liệu hiện tại (tuần ${d.progress.currentWeek}, ${d.sessions.length} buổi) bằng dữ liệu nhập (tuần ${wk}, ${ns} buổi)?`,
+          okIcon: '⬆',
+          okLabel: 'Thay dữ liệu',
+          danger: true,
+          onOk: () => doImport(text),
+        });
+      };
       const fileIn = h('input', { type: 'file', accept: '.json,application/json', class: 'hidden-file' });
       fileIn.addEventListener('change', async () => {
         const f = fileIn.files?.[0];
         if (!f) return;
-        const r = store.importJSON(await f.text());
-        say(r.ok ? '✅ Đã nhập dữ liệu.' : `❌ Không nhập được: ${r.error}`);
+        const text = await f.text();
+        fileIn.value = ''; // chọn lại cùng file vẫn chạy
+        confirmImport(text);
       });
       const paste = h('textarea', { class: 'text-in paste', placeholder: 'Hoặc dán nội dung JSON vào đây…' });
       const confirmIn = h('input', { class: 'text-in', type: 'text', placeholder: 'Gõ XOA' });
@@ -548,10 +571,7 @@ export function parentScreen(app: App) {
           button({
             icon: '⬆',
             label: 'Nhập từ chữ đã dán',
-            onTap: () => {
-              const r = store.importJSON(paste.value);
-              say(r.ok ? '✅ Đã nhập dữ liệu.' : `❌ Không nhập được: ${r.error}`);
-            },
+            onTap: () => confirmImport(paste.value),
           }),
           h('h3', {}, 'Đặt lại toàn bộ dữ liệu'),
           resetStep === 0

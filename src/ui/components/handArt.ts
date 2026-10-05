@@ -62,7 +62,12 @@ export interface HandArt {
   setNumbers(on: boolean): void;
 }
 
-export function handArt(hand: Hand = 'RH', opts: { numbers?: boolean; className?: string } = {}): HandArt {
+export function handArt(
+  hand: Hand = 'RH',
+  /** thumbOnTop: hình minh họa đứng riêng (thẻ "Ngón 1") — ngón cái vẽ trên bàn tay cho thấy rõ.
+   *  Bàn tay phủ trên phím đàn thì KHÔNG (ngón cái sẽ đè ngón 2). */
+  opts: { numbers?: boolean; className?: string; thumbOnTop?: boolean } = {},
+): HandArt {
   const id = `h${++uid}`;
   const svg = el('svg', {
     viewBox: `0 0 ${HAND_VIEW.w} ${HAND_VIEW.h}`,
@@ -87,7 +92,7 @@ export function handArt(hand: Hand = 'RH', opts: { numbers?: boolean; className?
 
   const groups = new Map<number, SVGGElement>();
   const badges: SVGGElement[] = [];
-  // Ngón cái vẽ trước (nằm dưới lòng bàn tay), rồi các ngón, rồi bàn tay
+  // Các ngón, rồi bàn tay; ngón cái được đưa lên trên cùng (xem dưới)
   for (const f of FINGERS) {
     const g = el('g', { class: 'f', 'data-f': f.n });
     const inner = el('g', { class: 'f-inner', ...(f.rot ? { transform: `rotate(${f.rot.deg} ${f.rot.x} ${f.rot.y})` } : {}) });
@@ -127,6 +132,10 @@ export function handArt(hand: Hand = 'RH', opts: { numbers?: boolean; className?
   );
   // nếp khớp ngón trên mu bàn tay
   root.append(el('path', { class: 'knuckles', d: 'M70,112 Q113,104 190,116' }));
+  // Hình đứng riêng: ngón cái đưa LÊN TRÊN bàn tay — trước đây nằm dưới lòng bàn tay nên gần như bị che hết —
+  // đúng lúc nó là ngón cần bấm (ngón 1) thì bé lại không thấy.
+  const thumb = groups.get(1);
+  if (thumb && opts.thumbOnTop) root.append(thumb);
 
   const setActive = (finger: number | null | undefined) => {
     groups.forEach((g, n) => g.classList.toggle('on', n === finger));

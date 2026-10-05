@@ -16,7 +16,7 @@ export interface HandDiagram {
 
 /** Hình bàn tay sáng đúng ngón (dùng hình vẽ mới `handArt`), ngón sáng có nhịp "nhấn" nhẹ. */
 export function handDiagram(hand: Hand = 'RH'): HandDiagram {
-  const art = handArt(hand, { className: 'hand' });
+  const art = handArt(hand, { className: 'hand', thumbOnTop: true });
   return {
     el: art.el,
     set(finger) {

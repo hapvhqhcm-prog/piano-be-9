@@ -1,8 +1,9 @@
-import { MAX_WEEK, buildSessionPlan, levelOf, weekPassed, weekPlan } from '../../lessons/lessonEngine';
+import { MAX_WEEK, activityDoneId, buildSessionPlan, levelOf, weekComplete, weekPlan } from '../../lessons/lessonEngine';
 import type { Activity, Lesson, Segment } from '../../lessons/types';
 import { findTune } from '../../music/exercises';
 import { makeSightTune } from '../../music/sightread';
 import type { App, Screen } from '../App';
+import { h } from '../components/dom';
 import { quizScreen } from './ear';
 import { dynamicsScreen } from './dynamics';
 import { homeScreen } from './home';
@@ -22,7 +23,7 @@ import { teachScreen } from './teach';
 export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean } = {}): void {
   const store = app.store;
   // Đã qua tuần hiện tại TRƯỚC buổi này chưa — để 🏆 tuần cuối chỉ hiện đúng buổi vừa qua, không lặp mãi
-  const passedBefore = weekPassed(store.get().progress.currentWeek, store.get());
+  const passedBefore = weekComplete(store.get().progress.currentWeek, store.get());
   const session = store.startSession(lesson.id);
   const steps = buildSessionPlan(lesson, store.get(), opts);
   const wrapUp = steps.findIndex((s) => s.kind === 'teach' || s.kind === 'rating');
@@ -35,7 +36,8 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
     if (lessonFinished) store.markLessonCompleted(lesson.id);
     let banner: string | undefined;
     const week = store.get().progress.currentWeek;
-    if (lesson.week === week && weekPassed(week, store.get())) {
+    // Sang tuần mới khi ĐẠT TIÊU CHÍ và đã HỌC HẾT các bài của tuần (không bỏ sót bài dạy điều mới)
+    if (lesson.week === week && weekComplete(week, store.get())) {
       if (week < MAX_WEEK) {
         store.setCurrentWeek(week + 1);
         const next = weekPlan(week + 1);
@@ -146,6 +148,20 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
     }
   };
 
+  const withProgress =
+    (screen: Screen, i: number): Screen =>
+    (root) => {
+      const cleanup = screen(root);
+      root.append(
+        h(
+          'div',
+          { class: 'session-progress', 'aria-hidden': 'true' },
+          ...steps.map((_, k) => h('i', { class: k < i ? 'done' : k === i ? 'now' : undefined })),
+        ),
+      );
+      return cleanup;
+    };
+
   const go = (i: number): void => {
     if (i < 0) {
       app.mic.stop();
@@ -153,17 +169,19 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
       return app.show(homeScreen(app));
     }
     const step = steps[i];
+    // Vạch tiến trình nhỏ trên cùng màn: bé thấy buổi học còn mấy bước (chỉ là trang trí, không đổi logic)
+    const show = (screen: Screen) => app.show(withProgress(screen, i));
     const next = () => go(i + 1);
     const back = () => go(i - 1);
     // Hết giờ: bỏ qua phần còn lại của bài, sang phần kết
     const nextOrWrap = () => (Date.now() >= deadline && i + 1 < wrapUp ? go(wrapUp) : next());
     switch (step.kind) {
       case 'posture':
-        return app.show(postureScreen(app, { short: step.short, onDone: next, onBack: back }));
+        return show(postureScreen(app, { short: step.short, onDone: next, onBack: back }));
       case 'review':
-        return app.show(segmentScreen(step.segment, nextOrWrap, back));
+        return show(segmentScreen(step.segment, nextOrWrap, back));
       case 'quiz':
-        return app.show(
+        return show(
           quizScreen(app, {
             title: step.title,
             intro: step.intro,
@@ -174,10 +192,12 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
           }),
         );
       case 'activity':
-        return app.show(
+        return show(
           activityScreen(
             step.activity,
             () => {
+              // Ghi nhận từng hoạt động xong → hết giờ giữa bài thì lần sau học tiếp phần còn lại
+              if (!opts.replay) store.markLessonCompleted(activityDoneId(lesson.id, step.index));
               if (step.last) {
                 lessonFinished = true;
                 return next();
@@ -188,7 +208,7 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
           ),
         );
       case 'teach':
-        return app.show(
+        return show(
           teachScreen(app, {
             emoji: step.emoji,
             text: step.text,
@@ -201,7 +221,7 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
           }),
         );
       case 'rating':
-        return app.show(
+        return show(
           ratingScreen(app, {
             onRate: (r) => store.setSelfRating(session.id, r),
             onDone: finish,

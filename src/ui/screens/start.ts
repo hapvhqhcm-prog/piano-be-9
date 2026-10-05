@@ -1,5 +1,5 @@
 import type { App } from '../App';
-import { mascot } from '../components/mascot';
+import { heroArt } from '../components/art/heroArt';
 import { button, h } from '../components/dom';
 import { homeScreen } from './home';
 import { markSafePoint } from '../../pwa/updater';
@@ -9,13 +9,16 @@ export function startScreen(app: App) {
   return (root: HTMLElement) => {
     markSafePoint(true);
     const name = app.store.get().learner.name;
+    const art = heroArt();
+    // Kích thước tranh: co theo cả chiều ngang lẫn chiều cao màn hình (tỉ lệ 400×240)
+    art.setAttribute('style', 'display:block;width:min(560px, 84vw, 62vh);height:auto;margin:0 auto');
     root.append(
       h(
         'div',
         { class: 'screen center' },
-        h('div', { class: 'hero-mascot' }, mascot('wave', 150)),
-        h('h1', { class: 'hero-title' }, name ? `Chào ${name}!` : 'Học Piano cùng bố mẹ'),
-        h('p', { class: 'hero-sub' }, 'Đặt iPad lên giá nhạc, ngồi ngay ngắn nhé'),
+        h('div', { class: 'hero-art-wrap' }, art),
+        h('h1', { class: 'hero-title' }, 'Học Piano cùng bố mẹ'),
+        h('p', { class: 'hero-sub' }, name ? `Chào ${name}! Đặt iPad lên giá nhạc, ngồi ngay ngắn nhé` : 'Đặt iPad lên giá nhạc, ngồi ngay ngắn nhé'),
         button({
           icon: '▶',
           label: 'Bắt đầu',

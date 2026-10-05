@@ -21,7 +21,7 @@ export function teachScreen(
           h('div', { class: 'step-tag' }, 'Con làm thầy'),
           h('div', { class: 'hero-mascot' }, mascot('wave', 120)),
           h('h1', { class: 'title' }, 'Bây giờ con là thầy giáo!'),
-          h('p', { class: 'lead big' }, o.text),
+          h('p', { class: 'lead big teach-card' }, o.text),
         ),
         h(
           'div',

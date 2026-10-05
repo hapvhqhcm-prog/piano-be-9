@@ -285,3 +285,25 @@ Mỗi bài đối chiếu ≥ 2 nguồn ký âm độc lập; nốt và tiết t
 - Từ chối dữ liệu của bản giáo trình mới hơn.
 - Chú giải sắc thái chỉ ghi ký hiệu bài có dùng (thêm "mf = vừa").
 - Dấu luyến sang trang không đè số chỉ nhịp.
+
+## 17. Giao diện mới + sửa nhịp độ giáo trình (2026-10-05)
+
+**Giao diện** (soát bằng ảnh chụp tự động mọi màn ở 2 cỡ iPad — `node scripts/shots.mjs <thư-mục>`):
+- **Bộ quy chuẩn giao diện:** màu tím–vàng nắng–xanh bạc hà–cam san hô; nền trời → cát; bóng đổ 3 mức; một họ nút thống nhất.
+- **Phông chữ** Baloo 2 + Nunito có đủ dấu tiếng Việt, đóng gói sẵn để chạy offline (giấy phép OFL).
+- **Màn chính:** bản đồ biển với 25 hòn đảo vẽ riêng nối bằng đường đi; bên trái thẻ câu chuyện + mục tiêu + "Học tiếp", bên phải danh sách bài.
+- **Hình vẽ mới:** linh vật, màn bắt đầu (linh vật + đàn piano), tư thế (cậu bé ngồi đàn, kính lúp "tay tròn"), hoa giấy hình nốt nhạc.
+- **Màn bài hát:** tùy chọn phụ gom vào "⚙️ Tuỳ chọn".
+- **Các màn khác:** bàn phím có hộp đàn và dải nỉ đỏ; ngón cái trong hình bàn tay không còn bị che.
+- **Màn Phụ huynh:** nhập dữ liệu có bước xác nhận.
+
+**Nhịp độ giáo trình** (rà soát toàn bộ bằng giả lập: 25 tuần xong trong ~47 buổi, bỏ qua 34 bài):
+- **Sang tuần mới** chỉ khi đạt tiêu chí VÀ học hết các bài của tuần. Màn chính báo "Còn N bài nữa là qua đảo".
+- **Hết giờ giữa bài:** lần sau học tiếp phần còn lại, không lặp lại từ đầu mãi.
+- **Khởi động:**
+  - Bài đầu tuần dùng khởi động của tuần trước, để không hỏi điều chưa dạy.
+  - Tuần chấm điểm bằng khởi động thì buổi đầu học bài trước rồi mới khởi động.
+  - Bài đã có quiz cùng kiểu thì bỏ khởi động.
+  - Tuần 17 đọc nốt hợp âm khóa Fa thay vì "vui/buồn" (tuần 19 mới dạy).
+- **Luyện tập mỗi ngày:** ưu tiên bài gần trình độ; thỉnh thoảng có trò tai nghe hoặc to/nhỏ; lời "Con làm thầy" đổi theo ngày.
+- 521 test qua (thêm tests/pacing.test.ts).

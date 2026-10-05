@@ -9,6 +9,7 @@ import {
   minutesToday,
   nextLesson,
   sessionsToday,
+  weekComplete,
   weekPassed,
   weekPlan,
 } from '../../lessons/lessonEngine';
@@ -22,23 +23,72 @@ import { parentGateScreen } from './parentGate';
 import { startSession } from './session';
 import { markSafePoint } from '../../pwa/updater';
 
+/**
+ * Tranh đảo (do src/ui/components/art/islandArt.ts vẽ). Nạp "mềm" qua import.meta.glob: nếu file tranh
+ * chưa có thì bản đồ dùng emoji — màn chính không bao giờ hỏng vì thiếu tranh.
+ */
+type IslandIconFn = (week: number, state: 'done' | 'current' | 'locked') => SVGElement;
+const islandArtMod = import.meta.glob<{ islandIcon?: IslandIconFn }>('../components/art/islandArt.ts', { eager: true });
+const islandIcon: IslandIconFn | undefined = Object.values(islandArtMod)[0]?.islandIcon;
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
 /** Bản đồ "Hành trình tới Lâu đài Âm nhạc" — chỉ hiển thị tiến trình, không mở khóa bằng sao. */
 function islandMap(app: App): HTMLElement {
   const data = app.store.get();
   const cur = data.progress.currentWeek;
   const lv = levelOf(cur);
+  const weeks = WEEKS.filter((w) => w.week >= lv.weeks[0] && w.week <= lv.weeks[1]);
+  const n = weeks.length;
+  // Đảo xếp so le cao/thấp; đường đi chấm chấm uốn lượn nối các đảo (SVG nằm dưới)
+  const xs = weeks.map((_, i) => ((i + 0.5) / n) * 1000);
+  const ys = weeks.map((_, i) => (i % 2 ? 58 : 36)); // % chiều cao bản đồ
+  const py = (i: number) => ys[i] * 1.5; // toạ độ y trong viewBox 1000×150 (gần đúng tỉ lệ thật → chấm tròn)
+  const curve = (to: number) => {
+    let d = `M ${xs[0]} ${py(0)}`;
+    for (let i = 1; i <= to; i++) {
+      const mx = (xs[i - 1] + xs[i]) / 2;
+      d += ` C ${mx} ${py(i - 1)}, ${mx} ${py(i)}, ${xs[i]} ${py(i)}`;
+    }
+    return d;
+  };
+  const curIdx = weeks.findIndex((w) => w.week === cur);
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('class', 'map-path');
+  svg.setAttribute('viewBox', '0 0 1000 150');
+  svg.setAttribute('preserveAspectRatio', 'none');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.innerHTML =
+    // Cả hành trình (chấm trắng) + phần đã đi tới đảo hiện tại (chấm vàng)
+    `<path d="${curve(n - 1)}" class="route"/>` + (curIdx > 0 ? `<path d="${curve(curIdx)}" class="route done"/>` : '');
+
   return h(
     'div',
     { class: 'map', role: 'list', 'aria-label': `Bản đồ ${lv.name}` },
-    ...WEEKS.filter((w) => w.week >= lv.weeks[0] && w.week <= lv.weeks[1]).map((w) => {
-      const passed = w.week < cur || weekPassed(w.week, data);
+    svg,
+    ...weeks.map((w, i) => {
+      // Qua đảo = đạt tiêu chí VÀ học xong các bài thường của tuần (weekComplete)
+      const passed = w.week < cur || weekComplete(w.week, data);
       const here = w.week === cur;
+      const later = w.week > cur;
+      const state = here ? 'current' : later ? 'locked' : 'done';
+      const art = islandIcon
+        ? h('div', { class: 'island-art-wrap', 'aria-hidden': 'true' }, islandIcon(w.week, state))
+        : h('div', { class: 'island-emoji', 'aria-hidden': 'true' }, w.islandEmoji);
       return h(
         'div',
-        { class: `island${here ? ' here' : ''}${passed ? ' passed' : ''}${w.week > cur ? ' later' : ''}`, role: 'listitem' },
-        h('div', { class: 'island-emoji' }, w.week > cur ? '☁️' : w.islandEmoji),
-        h('div', { class: 'island-name' }, w.week > cur ? `Tuần ${w.week}` : w.island),
-        passed ? h('div', { class: 'island-badge' }, '✓') : here ? h('div', { class: 'island-badge here' }, '📍') : null,
+        {
+          class: `island${here ? ' here' : ''}${passed ? ' passed' : ''}${later ? ' later' : ''}${islandIcon ? ' has-art' : ''}`,
+          role: 'listitem',
+          style: { left: `${(xs[i] / 10).toFixed(2)}%`, top: `${ys[i]}%` },
+          'aria-label': later ? `Tuần ${w.week} — chưa mở` : `Tuần ${w.week}: ${w.island}${passed ? ' — đã qua' : here ? ' — con đang ở đây' : ''}`,
+        },
+        art,
+        // Không có tranh: tự thêm huy hiệu ✓ / 🔒 (tranh đã có sẵn ngôi sao / ổ khóa)
+        !islandIcon && passed ? h('div', { class: 'island-badge' }, '★') : null,
+        !islandIcon && later ? h('div', { class: 'island-badge lock' }, '🔒') : null,
+        here ? h('div', { class: 'island-pin', 'aria-hidden': 'true' }, mascot('happy', 34)) : null,
+        h('div', { class: 'island-name' }, later ? `Tuần ${w.week}` : w.island),
       );
     }),
   );
@@ -60,23 +110,46 @@ export function homeScreen(app: App, banner?: string) {
 
     const restToast = () => toast('🌙 Hôm nay con học đủ rồi — mai mình học tiếp nhé!');
 
-    const lessonChip = (l: Lesson) =>
+    const lessonRow = (l: Lesson) =>
       h(
         'button',
         {
-          class: `chip${l.id === next.id ? ' chip-next' : ''}`,
+          class: `lesson-row${l.id === next.id ? ' is-next' : ''}${done.has(l.id) ? ' is-done' : ''}`,
           type: 'button',
           onClick: () => (overLimit ? restToast() : startSession(app, l)),
         },
-        h('span', { class: 'chip-emoji' }, l.emoji),
-        h('span', {}, l.title),
-        done.has(l.id) ? h('span', { class: 'chip-done' }, '✓') : null,
+        h('span', { class: 'lesson-emoji', 'aria-hidden': 'true' }, l.emoji),
+        h('span', { class: 'lesson-title' }, l.title),
+        done.has(l.id)
+          ? h('span', { class: 'lesson-done', 'aria-label': 'đã học' }, '✓')
+          : l.id === next.id
+            ? h('span', { class: 'lesson-next', 'aria-hidden': 'true' }, '▶')
+            : null,
       );
+
+    // Mục tiêu tuần (§1: 4–5 buổi/tuần) + chuỗi ngày + mục tiêu qua đảo
+    const now = new Date();
+    const weekDone = sessionsThisWeek(data, now);
+    const streak = streakDays(data, now);
+    // Đạt tiêu chí nhưng còn bài chưa học → tuần chưa qua; nhắc nhẹ còn mấy bài
+    const leftLessons = plan.lessons.filter((l) => !l.isWeekTest && !done.has(l.id)).length;
+    const goalMetNotDone = weekPassed(plan.week, data) && !weekComplete(plan.week, data) && leftLessons > 0;
+    const goalRow = h(
+      'div',
+      { class: 'goal-row' },
+      h(
+        'div',
+        { class: 'goal-dots', title: 'Mục tiêu: 4–5 buổi mỗi tuần', 'aria-label': `Tuần này đã học ${weekDone} trên 5 buổi` },
+        h('span', { class: 'goal-label' }, 'Tuần này'),
+        ...[0, 1, 2, 3, 4].map((i) => h('span', { class: `dot${i < weekDone ? ' on' : ''}` })),
+      ),
+      streak >= 2 ? h('div', { class: 'streak' }, `🔥 ${streak} ngày liền`) : null,
+    );
 
     root.append(
       h(
         'div',
-        { class: 'screen' },
+        { class: 'screen home' },
         h(
           'header',
           { class: 'topbar' },
@@ -84,69 +157,75 @@ export function homeScreen(app: App, banner?: string) {
             'div',
             { class: 'topbar-title' },
             h('span', { class: 'level-tag' }, levelOf(plan.week).name),
-            ` ${plan.islandEmoji} Tuần ${plan.week} · ${plan.island}`,
+            h('span', { class: 'topbar-week' }, `Tuần ${plan.week} · ${plan.island}`),
           ),
-          parentButton(() => app.show(parentGateScreen(app))),
+          h(
+            'div',
+            { class: 'topbar-side' },
+            todayStars ? h('div', { class: 'today-stars', 'aria-label': `Hôm nay được ${todayStars} sao` }, `⭐ ${Math.min(todayStars, 99)}`) : null,
+            parentButton(() => app.show(parentGateScreen(app))),
+          ),
         ),
         islandMap(app),
         h(
           'div',
-          { class: 'stage home-stage scrollable' },
-          banner ? h('div', { class: 'banner' }, banner) : null,
-          h('div', { class: 'story-row' }, mascot('happy', 64), h('p', { class: 'story bubble' }, plan.story)),
-          // Mục tiêu tuần (§1: 4–5 buổi/tuần) + chuỗi ngày + mục tiêu qua đảo
-          (() => {
-            const now = new Date();
-            const done = sessionsThisWeek(data, now);
-            const streak = streakDays(data, now);
-            return h(
-              'div',
-              { class: 'goal-row' },
-              h(
-                'div',
-                { class: 'goal-dots', title: 'Mục tiêu: 4–5 buổi mỗi tuần' },
-                'Tuần này: ',
-                ...[0, 1, 2, 3, 4].map((i) => h('span', { class: `dot${i < done ? ' on' : ''}` })),
-                ` ${Math.min(done, 9)}/5`,
-              ),
-              streak >= 2 ? h('div', { class: 'streak' }, `🔥 ${streak} ngày liền`) : null,
-              h('div', { class: 'goal-text' }, `🎯 ${plan.criterion.text}`),
-            );
-          })(),
-          overLimit
-            ? h('div', { class: 'banner' }, '🌙 Hôm nay con học đủ rồi. Mai mình học tiếp nhé!')
-            : button({
-                icon: '▶',
-                label: `Học tiếp: ${next.emoji} ${next.title}`,
-                kind: 'primary',
-                big: true,
-                onTap: () => startSession(app, next),
-              }),
+          { class: 'home-main scrollable' },
+          banner ? h('div', { class: 'banner home-banner' }, banner) : null,
           h(
-            'div',
-            { class: 'chips' },
-            ...plan.lessons.map(lessonChip),
-            // Từ Cấp 2: luyện tập mỗi ngày (bài đang tập + ôn bài đã thuộc + đọc nhạc mới)
-            plan.week >= 9 && next.id !== `w${plan.week}-daily`
-              ? h(
-                  'button',
-                  { class: 'chip', type: 'button', onClick: () => (overLimit ? restToast() : startSession(app, dailyLesson(app.store.get()))) },
-                  h('span', { class: 'chip-emoji' }, '🔁'),
-                  h('span', {}, 'Luyện tập mỗi ngày'),
-                )
+            'section',
+            { class: 'quest-card' },
+            h('div', { class: 'story-row' }, mascot('happy', 84), h('p', { class: 'story bubble' }, plan.story)),
+            h(
+              'div',
+              { class: 'goal-panel' },
+              goalMetNotDone
+                ? h('div', { class: 'goal-target met' }, `🎯 Đạt mục tiêu rồi! Còn ${leftLessons} bài nữa là qua đảo`)
+                : h('div', { class: 'goal-target' }, h('span', { 'aria-hidden': 'true' }, '🎯'), ' ', plan.criterion.text),
+              goalRow,
+            ),
+            overLimit
+              ? h('div', { class: 'banner rest' }, '🌙 Hôm nay con học đủ rồi. Mai mình học tiếp nhé!')
+              : button({
+                  icon: '▶',
+                  label: `Học tiếp: ${next.emoji} ${next.title}`,
+                  kind: 'primary',
+                  big: true,
+                  onTap: () => startSession(app, next),
+                }),
+            // Mẹo cho bố mẹ nằm ở màn Phụ huynh — màn chính ít chữ cho bé
+            todayCount >= MAX_SESSIONS_PER_DAY && !overLimit
+              ? h('p', { class: 'soft-note' }, `Hôm nay con đã học ${todayCount} buổi rồi, giỏi quá! Nghỉ ngơi nhé 😊`)
               : null,
           ),
           h(
-            'div',
-            { class: 'home-row' },
-            button({ icon: '🎵', label: 'Bài hát', onTap: () => app.show(libraryScreen(app)) }),
-            button({ icon: '🎹', label: 'Đàn tự do', onTap: () => app.show(freePlayScreen(app)) }),
-            h('div', { class: 'today-stars' }, 'Hôm nay: ', todayStars ? '★'.repeat(Math.min(todayStars, 9)) : '—'),
+            'section',
+            { class: 'lesson-card', 'aria-label': 'Các bài của tuần' },
+            h('h2', { class: 'card-kicker' }, `${plan.islandEmoji} Bài trong tuần`),
+            h(
+              'div',
+              { class: 'lesson-list' },
+              ...plan.lessons.map(lessonRow),
+              // Từ Cấp 2: luyện tập mỗi ngày (bài đang tập + ôn bài đã thuộc + đọc nhạc mới)
+              plan.week >= 9 && next.id !== `w${plan.week}-daily`
+                ? h(
+                    'button',
+                    {
+                      class: 'lesson-row daily',
+                      type: 'button',
+                      onClick: () => (overLimit ? restToast() : startSession(app, dailyLesson(app.store.get()))),
+                    },
+                    h('span', { class: 'lesson-emoji', 'aria-hidden': 'true' }, '🔁'),
+                    h('span', { class: 'lesson-title' }, 'Luyện tập mỗi ngày'),
+                  )
+                : null,
+            ),
           ),
-          // Mẹo cho bố mẹ nằm ở màn Phụ huynh (thẻ "Tuần N: bố mẹ chú ý") — màn chính ít chữ cho bé
-          todayCount >= MAX_SESSIONS_PER_DAY && !overLimit
-            ? h('p', { class: 'soft-note' }, `Hôm nay con đã học ${todayCount} buổi rồi, giỏi quá! Nghỉ ngơi nhé 😊`)
-            : null,
+        ),
+        h(
+          'nav',
+          { class: 'home-dock' },
+          button({ icon: '🎵', label: 'Bài hát', kind: 'sun', onTap: () => app.show(libraryScreen(app)) }),
+          button({ icon: '🎹', label: 'Đàn tự do', kind: 'mint', onTap: () => app.show(freePlayScreen(app)) }),
         ),
       ),
     );

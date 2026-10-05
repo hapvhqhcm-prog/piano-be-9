@@ -140,43 +140,99 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
       return b;
     };
 
+    /** Bảng "⚙️ Tuỳ chọn" (gợi ý, kiểu con trỏ, tốc độ) — đang mở hay không; giữ nguyên khi vẽ lại đầu trang. */
+    let optsOpen = false;
+    const screenEl = root.querySelector('.screen') as HTMLElement;
+    screenEl.addEventListener('pointerdown', (e) => {
+      // Chạm ra ngoài bảng tuỳ chọn → đóng bảng
+      if (!optsOpen) return;
+      const t = e.target as Element | null;
+      if (t?.closest('.opts-pop') || t?.closest('.opts-toggle')) return;
+      optsOpen = false;
+      head.querySelector('.opts-pop')?.setAttribute('hidden', '');
+      head.querySelector('.opts-toggle')?.classList.remove('on');
+    });
+
     function renderHead(): void {
-      const rows: HTMLElement[] = [
+      // Hàng chính (luôn thấy): tên bài · cách chơi (Từng nốt / Theo nhịp) · câu · nút ⚙️ Tuỳ chọn
+      const row = h(
+        'div',
+        { class: 'song-head-row' },
         h(
           'div',
           { class: 'song-title' },
           h('b', {}, full.titleVi),
           // Tên gốc/nhạc sĩ chỉ dành cho bố mẹ (thư viện) — màn của bé gọn chữ
-          full.lh ? h('span', { class: 'muted' }, ' · 🙌 hai tay') : null,
+          full.lh ? h('span', { class: 'hand-tag' }, '🙌 hai tay') : null,
         ),
-      ];
-      const opt = h('div', { class: 'song-opts' });
+      );
       if (opts.free) {
-        opt.append(
-          chip('🐢 Từng nốt', mode === 'wait', () => ((mode = 'wait'), reset())),
-          chip('🎵 Theo nhịp', mode === 'tempo', () => ((mode = 'tempo'), reset())),
+        row.append(
+          h(
+            'div',
+            { class: 'seg-group', role: 'group', 'aria-label': 'Cách chơi' },
+            chip('🐢 Từng nốt', mode === 'wait', () => ((mode = 'wait'), reset())),
+            chip('🎵 Theo nhịp', mode === 'tempo', () => ((mode = 'tempo'), reset())),
+          ),
         );
       }
+      const ranges = phraseRanges(full);
+      if (ranges.length > 1 && !opts.stage) {
+        row.append(
+          h(
+            'div',
+            { class: 'seg-group', role: 'group', 'aria-label': 'Chọn câu' },
+            chip('Cả bài', !phrase, () => ((phrase = null), reset())),
+            ...ranges.map(([a, b], i) => chip(`Câu ${i + 1}`, !!phrase && phrase[0] === a, () => ((phrase = [a, b]), reset()))),
+          ),
+        );
+      }
+
+      // Tuỳ chọn phụ (ít dùng) gom vào bảng bật/tắt
+      const sections: HTMLElement[] = [];
+      const section = (label: string, ...chips: HTMLElement[]) =>
+        sections.push(h('div', { class: 'opts-sec' }, h('div', { class: 'opts-label' }, label), h('div', { class: 'seg-group' }, ...chips)));
       if (opts.free) {
-        opt.append(
-          chip('💡 Đầy đủ', hints === 'full', () => ((hints = 'full'), reset())),
+        section(
+          '💡 Gợi ý',
+          chip('Đầy đủ', hints === 'full', () => ((hints = 'full'), reset())),
           chip('Tên nốt', hints === 'names', () => ((hints = 'names'), reset())),
           chip('Chỉ khuông', hints === 'staff', () => ((hints = 'staff'), reset())),
         );
       }
       if (mode === 'tempo' && !opts.stage) {
-        if (opts.free) opt.append(chip('Con trỏ', level === 2, () => ((level = 2), reset())), chip('Băng chuyền', level === 3, () => ((level = 3), reset())));
-        for (const t of TEMPOS) opt.append(chip(`${t === 40 ? '🐢 ' : t === 72 ? '🐇 ' : ''}${t}`, bpm === t, () => ((bpm = t), reset())));
+        if (opts.free) {
+          section(
+            '👀 Cách nhìn',
+            chip('Con trỏ', level === 2, () => ((level = 2), reset())),
+            chip('Băng chuyền', level === 3, () => ((level = 3), reset())),
+          );
+        }
+        section(
+          '⏱ Tốc độ',
+          ...TEMPOS.map((t) => chip(`${t === 40 ? '🐢 ' : t === 72 ? '🐇 ' : ''}${t}`, bpm === t, () => ((bpm = t), reset()))),
+        );
       }
-      const ranges = phraseRanges(full);
-      if (ranges.length > 1 && !opts.stage) {
-        opt.append(chip('Cả bài', !phrase, () => ((phrase = null), reset())));
-        ranges.forEach(([a, b], i) => opt.append(chip(`Câu ${i + 1}`, !!phrase && phrase[0] === a, () => ((phrase = [a, b]), reset()))));
+      let pop: HTMLElement | null = null;
+      if (sections.length) {
+        const toggle = h(
+          'button',
+          { class: `seg-btn small opts-toggle${optsOpen ? ' on' : ''}`, type: 'button', 'aria-haspopup': 'true' },
+          '⚙️ Tuỳ chọn',
+        );
+        pop = h('div', { class: 'opts-pop', role: 'dialog', 'aria-label': 'Tuỳ chọn' }, ...sections);
+        if (!optsOpen) pop.setAttribute('hidden', '');
+        toggle.addEventListener('click', () => {
+          optsOpen = !optsOpen;
+          toggle.classList.toggle('on', optsOpen);
+          pop?.toggleAttribute('hidden', !optsOpen);
+        });
+        row.append(h('div', { class: 'song-head-spacer' }), toggle);
       }
-      if (opt.childElementCount) rows.push(opt);
+      // Chú giải sắc thái nằm cùng hàng (trước nút ⚙️) — khi xuống dòng thì đi cùng nút, không tốn thêm hàng
       const legend = expressionLegend(full);
-      if (legend) rows.push(legend);
-      head.replaceChildren(...rows);
+      if (legend) row.insertBefore(legend, row.querySelector('.song-head-spacer'));
+      head.replaceChildren(row, ...(pop ? [pop] : []));
     }
 
     function buildStaff(): void {

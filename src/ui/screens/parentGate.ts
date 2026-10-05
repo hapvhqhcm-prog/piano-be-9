@@ -36,14 +36,18 @@ export function parentGateScreen(app: App) {
         h(
           'div',
           { class: 'stage gate' },
-          h('p', { class: 'lead' }, 'Dành cho bố mẹ'),
-          q,
-          display,
           h(
             'div',
-            { class: 'keypad' },
-            ...keys.map((k) =>
-              h('button', { class: `key-btn${k === 'OK' ? ' key-ok' : ''}`, type: 'button', onClick: () => press(k) }, k),
+            { class: 'gate-card' },
+            h('p', { class: 'lead' }, '👪 Dành cho bố mẹ'),
+            q,
+            display,
+            h(
+              'div',
+              { class: 'keypad' },
+              ...keys.map((k) =>
+                h('button', { class: `key-btn${k === 'OK' ? ' key-ok' : ''}`, type: 'button', onClick: () => press(k) }, k),
+              ),
             ),
           ),
         ),

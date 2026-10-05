@@ -1,4 +1,6 @@
-/* Piano bé — iPad landscape. Chữ ≥ 24px, nút ≥ 64px. Font hệ thống, không tải gì từ mạng. */
+@import './fonts.css';
+/* Piano bé — iPad landscape. Chữ ≥ 24px, nút ≥ 64px. Phông Nunito/Baloo 2 đóng gói sẵn (fonts.css), không tải gì từ mạng.
+   Hệ thiết kế (màu, bóng, bo góc, nút…) nằm ở theme.css — nạp SAU file này. */
 :root {
   --bg: #fff8ec;
   --ink: #2b2a33;
@@ -32,7 +34,8 @@ body {
   overscroll-behavior: none;
   background: var(--bg);
   color: var(--ink);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 600;
   font-size: 24px;
   line-height: 1.3;
   -webkit-user-select: none;

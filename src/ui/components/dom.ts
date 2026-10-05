@@ -34,7 +34,11 @@ export interface ButtonOpts {
   icon?: string;
   label: string;
   onTap: () => void;
-  kind?: 'primary' | 'good' | 'retry' | 'plain' | 'danger';
+  /**
+   * Họ nút (theme.css): primary = hành động chính (tím) · good = đúng/xong (xanh bạc hà) · retry = thử lại (san hô)
+   * · plain = phụ (trắng) · sun / mint = phụ có màu (vàng nắng / bạc hà nhạt) · danger = xóa (phụ huynh).
+   */
+  kind?: 'primary' | 'good' | 'retry' | 'plain' | 'danger' | 'sun' | 'mint';
   disabled?: boolean;
   big?: boolean;
 }
@@ -81,4 +85,44 @@ export function toast(text: string, ms = 2000): void {
   el.classList.add('show');
   window.clearTimeout(toastTimer);
   toastTimer = window.setTimeout(() => el.classList.remove('show'), ms);
+}
+
+/**
+ * Hộp xác nhận trong app (nền mờ + thẻ giữa màn) — thay window.confirm cho đẹp & chữ to.
+ * Chạm nền mờ hoặc "Hủy" = không làm gì.
+ */
+export function confirmDialog(o: {
+  title: string;
+  text: string;
+  okLabel: string;
+  okIcon?: string;
+  danger?: boolean;
+  onOk: () => void;
+}): void {
+  const close = () => wrap.remove();
+  const card = h(
+    'div',
+    { class: 'dialog-card', role: 'alertdialog', 'aria-modal': 'true', 'aria-label': o.title },
+    h('h2', { class: 'dialog-title' }, o.title),
+    h('p', { class: 'dialog-text' }, o.text),
+    h(
+      'div',
+      { class: 'dialog-actions' },
+      button({ label: 'Hủy', onTap: close }),
+      button({
+        icon: o.okIcon,
+        label: o.okLabel,
+        kind: o.danger ? 'danger' : 'primary',
+        onTap: () => {
+          close();
+          o.onOk();
+        },
+      }),
+    ),
+  );
+  const wrap = h('div', { class: 'dialog-backdrop' }, card);
+  wrap.addEventListener('click', (e) => {
+    if (e.target === wrap) close();
+  });
+  document.body.append(wrap);
 }

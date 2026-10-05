@@ -11,6 +11,17 @@ Mã nguồn app do dự án tự viết, dùng riêng cho gia đình (OWNER: Pha
   - Vite — MIT
   - Vitest — MIT
   - TypeScript — Apache-2.0
+  - @fontsource/baloo-2, @fontsource/nunito — chỉ để lấy file phông (OFL-1.1, xem mục Phông chữ)
+
+## Phông chữ (đóng gói trong app, chạy offline)
+
+- **Baloo 2** (Ek Type) — độ đậm 700, 800 — tiêu đề & nút.
+- **Nunito** (Vernon Adams, Cyreal, Jacques Le Bailly) — độ đậm 600, 800 — chữ thường.
+- Giấy phép: **SIL Open Font License 1.1** (OFL-1.1) — https://openfontlicense.org. Được dùng, nhúng và phân phối
+  kèm phần mềm miễn phí; không bán riêng file phông.
+- Nguồn: gói npm `@fontsource/baloo-2` và `@fontsource/nunito` (v5.3.0, chỉ là devDependency). App chỉ nạp
+  8 file woff2 (tập ký tự Latin + Tiếng Việt) qua `src/styles/fonts.css`; Vite đưa vào `dist/assets/` và service
+  worker precache cùng bundle — không tải gì từ mạng.
 
 ## Âm thanh
 
