@@ -287,7 +287,7 @@ export class StaffView {
       };
       const aIn = na.measure >= from;
       const bIn = nb.measure < to;
-      const x1 = aIn ? this.xOf(na.start, originBeat) + 2 : X0 - 20;
+      const x1 = aIn ? this.xOf(na.start, originBeat) + 2 : X0 - 8;
       const x2 = bIn ? this.xOf(nb.start, originBeat) - 2 : this.xOf(to * bpm, originBeat) - 22;
       if (x2 - x1 < 8) continue;
       const off = below ? 13 : -13;

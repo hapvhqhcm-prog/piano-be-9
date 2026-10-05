@@ -26,7 +26,7 @@ export const WEEKS: readonly WeekPlan[] = [
 ];
 
 export const LEVELS: readonly LevelInfo[] = [
-  { level: 1, name: 'Cấp 1 · Làm quen', goal: 'Thế Đô hai tay, nhịp cơ bản, đọc nốt khóa Sol, 18 bài hát', weeks: [1, 8] },
+  { level: 1, name: 'Cấp 1 · Làm quen', goal: 'Thế Đô hai tay, nhịp cơ bản, đọc nốt khóa Sol, 21 bài hát', weeks: [1, 8] },
   { level: 2, name: 'Cấp 2 · Hai tay', goal: 'Đô giữa, thế Sol, phím đen, nhịp 3/4 & chấm dôi, gam, hai tay cùng lúc', weeks: [9, 16] },
   { level: 3, name: 'Cấp 3 · Thành thạo', goal: 'Hợp âm, đổi thế, trưởng/thứ, nốt cao, cổ điển, đọc nhạc hai khóa', weeks: [17, 25] },
 ];

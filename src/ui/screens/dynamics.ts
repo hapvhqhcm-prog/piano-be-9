@@ -68,6 +68,7 @@ export function dynamicsScreen(app: App, hooks: DynamicsHooks) {
     let i = 0;
     let token = 0;
     let micFails = 0;
+    let failsRound = -1;
     let calFails = 0;
     /** Tiếng "vừa" của bé (đỉnh âm lượng) — đo một lần cho cả hoạt động */
     let ref: number | null = null;
@@ -153,7 +154,11 @@ export function dynamicsScreen(app: App, hooks: DynamicsHooks) {
     /** Lượt i: thẻ to (sư tử / chuột / thỏ / rùa), phím sáng kèm số ngón, thầy tự đàn mẫu. */
     function show(autoDemo = true): void {
       halt();
-      micFails = 0;
+      // Đếm lần micro chấm trượt theo TỪNG LƯỢT — xem thầy đàn mẫu lại không xóa (để vẫn tới được "Bố mẹ: qua")
+      if (failsRound !== i) {
+        failsRound = i;
+        micFails = 0;
+      }
       const r = hooks.rounds[i];
       kb.clear();
       light(r);
@@ -265,8 +270,9 @@ export function dynamicsScreen(app: App, hooks: DynamicsHooks) {
       listen(tk, 2, 0.35, m.fill, (frames) => {
         if (tk !== token) return;
         const peaks = noteShapes(frames).map((s) => s.peak);
-        if (peaks.length >= 2) {
-          ref = referenceLevel(peaks);
+        const level = peaks.length >= 2 ? referenceLevel(peaks) : 0;
+        if (level > 0) {
+          ref = level;
           calFails = 0;
           stage.replaceChildren(h('div', { class: 'hero-emoji' }, '👂'), h('h1', { class: 'title' }, 'App nhớ tiếng vừa của con rồi!'));
           const tk2 = token;

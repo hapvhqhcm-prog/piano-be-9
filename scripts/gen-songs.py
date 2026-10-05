@@ -142,6 +142,30 @@ def song(id, title, titleVi, composer, week, hand, seq, phrases=None, ext=None, 
     return d
 
 ORIG = "Bài tự sáng tác cho app (piano-be-9)"
+# Dân ca Việt Nam (OWNER yêu cầu 2026-10-05): giai điệu truyền thống, đối chiếu ≥ 2 bản ký âm độc lập.
+# Bản gốc nhịp 2/4 (có móc kép); app ghi TRƯỜNG ĐỘ GẤP ĐÔI ở nhịp 4/4 (như sách giáo khoa vẫn làm):
+# móc kép → móc đơn, móc đơn → nốt đen, đen chấm → trắng chấm… — tỉ lệ nhịp giữ nguyên, mỗi ô 2/4 = một ô 4/4.
+# Nhịp lấy đà: dấu lặng ở đầu ô 0 cho tròn ô nhịp. Bỏ nốt hoa mỹ (luyến láy) như các bản ký âm đã bỏ.
+# Bàn tay NGŨ CUNG (Fa trưởng ngũ cung Đô Rê Fa Sol La): Đô1 Rê2 Fa3 Sol4 La5 — mỗi ngón một phím, không dời tay
+# (Rê–Fa cách một phím bằng ngón 2-3; Sol–La vẫn là 4-5 như quy tắc tuần 7).
+PENTA_F = {"C4": 1, "D4": 2, "F4": 3, "G4": 4, "A4": 5}
+
+def fingered(seq, table):
+    """Ghi số ngón theo bảng cho mọi nốt chưa ghi ngón (giữ nguyên "(", ")", "'", sắc thái, dấu lặng)."""
+    out = []
+    for tok in seq.split():
+        head = "(" if tok.startswith("(") else ""
+        body = tok[len(head):]
+        tail = ""
+        while body and body[-1] in ")'":
+            tail = body[-1] + tail; body = body[:-1]
+        pitch = body.partition(":")[0]
+        if pitch in table and "/" not in body:
+            body += f"/{table[pitch]}"
+        out.append(head + body + tail)
+    return " ".join(out)
+
+FOLK = "Ký âm đơn giản cho app từ các bản ký âm dân ca phổ biến (trường độ gấp đôi: 2/4 → 4/4)"
 S = []
 # ---------------------------------------------------------------- CẤP 1 (tuần 2–8)
 S += [
@@ -181,6 +205,20 @@ S += [
   "f F4 F4 F4 C4  D4 D4 C4:2  A4 A4 G4 G4  F4:3 C4  F4 F4 F4 C4  D4 D4 C4:2  A4 A4 G4 G4  F4:4",[0,4],"A4"),
  song("oh_susanna","Oh! Susanna","Ô Susanna","Stephen Foster (1848)",8,"RH",
   "mf C4 D4 E4 G4  G4 A4 G4 E4  C4 D4 E4 E4  D4 C4 D4:2  C4 D4 E4 G4  G4 A4 G4 E4  C4 D4 E4 E4  D4 D4 C4:2",[0,4],"A4"),
+ # ---- Dân ca Việt Nam (Cấp 1)
+ # Tuần 2 — chỉ Đô Rê Mi. Câu đầu bài quan họ (hạ một quãng tám: Đô4–Mi4). Ô 9→10 vốn là Đô nối dài: đàn lại Đô.
+ song("ly_cay_da","Ly Cay Da (Vietnamese folk song)","Lý cây đa (dân ca quan họ Bắc Ninh)","Dân ca quan họ Bắc Ninh",2,"RH",
+  "R:2 C4:2  D4:2 D4 C4:0.5 D4:0.5  E4:2 D4 C4:0.5 D4:0.5  E4 E4:0.5 D4:0.5 C4 D4  C4 C4 D4 C4:0.5 D4:0.5  "
+  "E4 E4:0.5 D4:0.5 C4 D4  C4 C4 D4 C4:0.5 D4:0.5  E4 E4:0.5 D4:0.5 C4 D4  C4:4  C4:2 R:2",[0,3,5,7],arr=FOLK),
+ # Tuần 7 — Rê Mi Sol La (giọng La ngũ cung, bản gốc): bàn tay "thế Đô nhích lên" Rê1 Mi2 (Fa3) Sol4 La5 — Sol–La = 4-5.
+ song("inh_la_oi","Inh La Oi (Vietnamese folk song)","Inh lả ơi (dân ca Thái Tây Bắc)","Dân ca Thái (Tây Bắc)",7,"RH",
+  "mf A4:2/5 E4/2 G4/4  A4:4/5  G4:2/4 E4:2/2  D4:4/1  A4:2/5 E4:2/2  D4:2/1 E4:2/2  A4:2/5 A4/5 G4/4  E4:2/2 G4:2/4  "
+  "D4:2/1 E4:2/2  A4:2/5 E4:2/2  G4:2/4 G4/4 E4/2  D4:4/1  p A4:2/5 E4/2 G4/4  A4:4/5  G4:2/4 G4/4 E4/2  G4:4/4",[0,4,8,12],
+  pos="free",arr=FOLK),
+ # Tuần 8 — Fa trưởng ngũ cung (Đô Rê Fa Sol La, không có Si♭): bàn tay ngũ cung Đô1 Rê2 Fa3 Sol4 La5. Lấy đà một phách (Đô).
+ song("xoe_hoa","Xoe Hoa (Vietnamese folk song)","Xòe hoa (dân ca Thái)","Dân ca Thái",8,"RH",fingered(
+  "mf R:3 C4  F4:2 A4:2  G4:2 G4 G4  A4:2 D4 F4  F4:2 G4 A4  G4 F4 D4 C4  C4:2 G4 A4  D4 F4 G4 F4  D4:2 G4 A4  G4 F4 D4 C4  F4:4",PENTA_F),
+  [0,5],pos="free",arr=FOLK),
 ]
 # ---------------------------------------------------------------- CẤP 2 (tuần 9–16): hai tay, thế mới, phím đen, nhịp
 S += [
@@ -235,8 +273,12 @@ S += [
  # Tuần 14 — nhịp chấm dôi & móc đơn
  song("ode_to_joy_original","Ode to Joy (original rhythm)","Bài ca niềm vui — nhịp chấm dôi","Ludwig van Beethoven",14,"RH",
   "mf E4 E4 F4 G4  G4 F4 E4 D4  C4 C4 D4 E4  E4:1.5 D4:0.5 D4:2  E4 E4 F4 G4  G4 F4 E4 D4  C4 C4 D4 E4  D4:1.5 C4:0.5 C4:2",[0,4]),
- song("london_bridge_dotted","London Bridge (dotted rhythm)","Cầu London — nhịp chấm dôi","Dân ca Anh (traditional)",14,"RH",
-  "f G4:1.5 A4:0.5 G4 F4  E4 F4 G4:2  D4 E4 F4:2  E4 F4 G4:2  G4:1.5 A4:0.5 G4 F4  E4 F4 G4:2  D4:2 G4:2  E4 C4:3",[0,4],"A4"),
+ # Dân ca (thay "Cầu London — chấm dôi", bài lặp): Bắc kim thang — hạ một cung xuống Fa trưởng ngũ cung (Đô Rê Fa Sol La,
+ # toàn phím trắng), bàn tay ngũ cung Đô1 Rê2 Fa3 Sol4 La5 (như "Xòe hoa"). Nhịp chấm dôi "Đi-chấm chạy" ở ô 1, 3, 5, 7, 9; dấu luyến theo bản ký âm gốc.
+ song("bac_kim_thang","Bac Kim Thang (Vietnamese folk song)","Bắc kim thang (dân ca Nam Bộ)","Dân ca Nam Bộ",14,"RH",fingered(
+  "mf R:2 A4 G4  F4:1.5 C4:0.5 F4 (G4:0.5 F4:0.5)  D4:2 D4 F4  C4:1.5 C4:0.5 C4 F4  D4:2 A4 A4  C4:1.5 D4:0.5 C4 D4  "
+  "A4:2 A4 A4  A4:1.5 A4:0.5 D4 (D4:0.5 F4:0.5)  G4:2 G4 G4  G4:1.5 A4:0.5 A4 (D4:0.5 F4:0.5)  C4:2 F4 C4  "
+  "D4 (D4:0.5 F4:0.5) C4 A4  F4 C4 F4 R",PENTA_F),[0,6],pos="free",arr=FOLK),
  song("twinkle_run","Twinkle variation (running)","Ngôi sao nhỏ — biến tấu Chạy-chạy","Dân ca Pháp (traditional)",14,"RH",
   "mf C4:0.5 C4:0.5 C4:0.5 C4:0.5 G4:0.5 G4:0.5 G4:0.5 G4:0.5  A4:0.5 A4:0.5 A4:0.5 A4:0.5 G4:2  F4:0.5 F4:0.5 F4:0.5 F4:0.5 E4:0.5 E4:0.5 E4:0.5 E4:0.5  D4:0.5 D4:0.5 D4:0.5 D4:0.5 C4:2",[0,2],"A4"),
  # Tuần 15 — gam Đô trưởng, luồn ngón cái
@@ -267,6 +309,11 @@ S += [
   "p (G4:1.5/2 A4:0.5/3 G4/2)  E4:3/1  (G4:1.5/2 A4:0.5/3 G4/2)  E4:3/1  D5:2/5 D5/5  B4:3/3  C5:2/4 C5/4  G4:3/1  "
   "mf A4:2/3 A4/3  C5:1.5/5 B4:0.5/4 A4/3  G4:1.5/2 A4:0.5/3 G4/2  E4:3/1  A4:2/3 A4/3  C5:1.5/5 B4:0.5/4 A4/3  G4:1.5/2 A4:0.5/3 G4/2  E4:3/1  "
   "p D5:2/3 D5/3  F5:1.5/5 D5:0.5/3 B4/1  C5:3/2  E5:3/4  C5:1.5/4 G4:0.5/1 E4/3  G4:1.5/5 F4:0.5/4 D4/2  C4:3/1",[0,4,8,12,16,20],pos="free",ts="3/4"),
+ # Tuần 18 — dân ca: Lý ngựa ô (12 ô đầu, Đô trưởng ngũ cung Rê Fa Sol La Đô — tầm quãng 7).
+ # Bàn tay MỞ RỘNG, mỗi ngón một phím: Rê1 Fa2 Sol3 La4 Đô5 — không dời tay, không ngón nào đánh hai phím.
+ song("ly_ngua_o","Ly Ngua O (Vietnamese folk song)","Lý ngựa ô (dân ca Nam Bộ)","Dân ca Nam Bộ",18,"RH",
+  "mf R:2 C5/5 A4/4  D4/1 F4/2 D4/1 F4/2  G4:4/3  R:4  R:2 C5/5 A4/4  D4/1 F4/2 D4/1 F4/2  G4:3/3 F4/2  G4:2/3 G4:2/3  "
+  "C5:3/5 G4/3  C5/5 A4/4 D4/1 F4/2  G4:4/3  A4/4 G4/3 F4/2 A4/4  G4:4/3",[0,4,9],pos="free",arr=FOLK),
  # Tuần 19 — trưởng & thứ: bài tự sáng tác giọng La thứ (thay "Bài ca niềm vui — La thứ"): NHỎ, NGẮT, ô cuối TO
  song("ninja_tiptoe","Tiptoe Ninja","Ninja rón rén",ORIG,19,"RH",
   "p A3' A3' C4' A3'  B3' B3' D4' B3'  A3' C4' E4' C4'  B3:2 R:2  A3' A3' C4' A3'  B3' D4' C4' B3'  "
@@ -290,6 +337,17 @@ S += [
   # Tay trái: thế Đô mở rộng Đô3–La3 (Đô5 Mi4 Fa3 Sol2 La1) — không nhảy ngón cái.
   "p E5:2/5 D5:2/4  C5:2/3 B4:2/2  A4:2/1 G4:2/3  A4:2/1 B4:2/2  E5:2/5 D5:2/4  C5:2/3 B4:2/2  A4:2/1 G4:2/3  A4:2/1 G4:2/3",[0,4],pos="free",
   lh="p C3:2/5 G3:2/2  A3:2/1 E3:2/4  F3:2/3 C3:2/5  F3:2/3 G3:2/2  C3:2/5 G3:2/2  A3:2/1 E3:2/4  F3:2/3 C3:2/5  F3:2/3 C3:2/5",lhpos="free"),
+ # Tuần 23 — dân ca hai khóa: Lý cây bông (La ngũ cung, giọng gốc Sol3–Đô5, tầm quãng 11 — quá một thế tay).
+ # Chia theo âm vực, hai tay LUÂN PHIÊN (không đánh cùng lúc): Mi4 trở lên tay phải "thế Mi" (Mi1 Sol2 La3 Đô5 — như
+ # "Đêm thánh vô cùng"), Rê4 trở xuống tay trái thế Sol giữa (Sol3=5 La3=4 Đô4=2 Rê4=1). Mỗi ngón chỉ một phím.
+ song("ly_cay_bong","Ly Cay Bong (Vietnamese folk song)","Lý cây bông (dân ca Nam Bộ)","Dân ca Nam Bộ",23,"BOTH",
+  "mf R:2 A4/3 G4/2  A4:2/3 A4/3 G4:0.5/2 A4:0.5/3  C5/5 E4/1 G4/2 E4/1  G4:2/2 A4:0.5/3 G4:0.5/2 E4:0.5/1 G4:0.5/2  A4:3/3 A4/3  "
+  "A4/3 G4/2 R G4/2  E4:1.5/1 G4:0.5/2 A4:0.5/3 G4:0.5/2 E4:0.5/1 G4:0.5/2  A4:3/3 R  "
+  "p E4:1.5/1 G4:0.5/2 E4:0.5/1 R:0.5 R  R:4  R:2 R R:0.5 E4:0.5/1  R:4  E4:1.5/1 G4:0.5/2 E4/1 R  R:4  R:2 R R:0.5 E4:0.5/1  R:4",
+  [0,8],pos="free",
+  lh="R:4  R:4  R:4  R:4  R:4  R:2 C4/2 R  R:4  R:2 R D4/1  "
+  "R:2 R:0.5 D4:0.5/1 C4/2  A3:4/4  C4/2 G3/5 A3:0.5/4 C4:0.5/2 D4:0.5/1 R:0.5  D4:3/1 D4/1  R:2 R D4:0.5/1 C4:0.5/2  A3:4/4  "
+  "C4/2 G3/5 A3:0.5/4 C4:0.5/2 D4:0.5/1 R:0.5  D4:4/1",lhpos="free",arr=FOLK),
  # Tuần 24 — bài hai tay
  song("saints_both","When the Saints (hands together)","Các thánh tiến bước — hai tay","Spiritual (traditional)",24,"BOTH",
   "f R C4 E4 F4  G4:4  R C4 E4 F4  G4:4  R C4 E4 F4  G4:2 E4:2  C4:2 E4:2  D4:4  R E4 E4 D4  C4:3 C4  E4:2 G4 G4  F4:4  E4 F4 G4:2  E4:2 C4:2  D4:4  C4:4",[0,4,8,12],

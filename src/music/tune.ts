@@ -334,9 +334,12 @@ export function noteStyles(t: Tune): Map<number, NoteStyle> {
   for (const voice of [timeline(t), lhTimeline(t)]) {
     // Bài có ghi sắc thái: trước dấu đầu tiên coi như mf
     let cur: Dynamic | null = anyDyn ? 'mf' : null;
+    // Bè không có dấu riêng (thường là tay trái) đi theo sắc thái CHUNG của bè chính — khuông vẽ một hàng chung
+    const ownDyn = voice.some((n) => !!n.dyn);
     let open = false;
     for (const n of voice) {
       if (n.dyn) cur = n.dyn;
+      else if (!ownDyn && anyDyn) cur = dynAtBeat(t, n.start);
       if (n.rest) continue;
       if (n.slur === 'start') open = true;
       const ending = n.slur === 'end';

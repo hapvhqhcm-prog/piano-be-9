@@ -85,7 +85,7 @@ export const WEEK10: WeekPlan = {
     pair('w10-l1', 10, 'Bánh nóng — hai tay', '🥐', 'hot_cross_buns_both', 'full', 'Tay trái giữ Đô thật lâu, tay phải đàn bài quen.'),
     {
       // OWNER duyệt 2026-10-05: thay "Chú cừu — hai tay" (bài lặp) bằng bài kiểu đàn ngắt / liền
-      id: 'w10-l2',
+      id: 'w10-stac', // nội dung mới (v4) → mã mới, để bài 'w10-l2' cũ đã học không bị tính là đã học bài này
       week: 10,
       title: 'Ngắt & liền',
       emoji: '🤖',
@@ -303,7 +303,8 @@ export const WEEK14: WeekPlan = {
       ],
     },
     pair('w14-l2', 14, 'Bài ca niềm vui — bản gốc', '🎶', 'ode_to_joy_original', 'names'),
-    pair('w14-l3', 14, 'Cầu London — chấm dôi', '🌉', 'london_bridge_dotted', 'names'),
+    // OWNER yêu cầu 2026-10-05: thay "Cầu London — chấm dôi" (bài lặp) bằng dân ca Việt Nam có nhịp chấm dôi
+    pair('w14-bkt', 14, 'Bắc kim thang', '🎋', 'bac_kim_thang', 'names', 'Dân ca Nam Bộ! Có nhiều chỗ "Đi-chấm chạy". Bàn tay ngũ cung: Đô 1, Rê 2, Fa 3, Sol 4, La 5. Hai nốt dưới dấu luyến: đàn LIỀN.'),
     pair('w14-l4', 14, 'Ngôi sao — Chạy-chạy', '⭐', 'twinkle_run', 'names'),
   ],
 };

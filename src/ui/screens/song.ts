@@ -71,12 +71,14 @@ function fingerMap(t: Tune): Map<number, { finger: number; hand: Hand }> {
 function expressionLegend(t: Tune): HTMLElement | null {
   const u = expressionUsed(t);
   if (!u.dyn && !u.stac && !u.slur) return null;
+  const dynsUsed = new Set([...t.notes, ...(t.lh ?? [])].map((n) => n.dyn).filter(Boolean));
   const item = (sym: HTMLElement, text: string) => h('span', { class: 'legend-item' }, sym, ' ', text);
   return h(
     'div',
     { class: 'song-legend' },
-    u.dyn ? item(h('i', { class: 'legend-dyn' }, 'p'), '= nhỏ 🐭') : null,
-    u.dyn ? item(h('i', { class: 'legend-dyn' }, 'f'), '= to 🦁') : null,
+    ...(['p', 'mf', 'f'] as const)
+      .filter((d) => dynsUsed.has(d))
+      .map((d) => item(h('i', { class: 'legend-dyn' }, d), d === 'p' ? '= nhỏ 🐭' : d === 'f' ? '= to 🦁' : '= vừa 🙂')),
     u.stac ? item(h('b', { class: 'legend-sym' }, '•'), 'chấm = ngắt tiếng 🐇') : null,
     u.slur ? item(h('b', { class: 'legend-sym' }, '⌒'), 'dấu luyến = đàn liền 🐢') : null,
   );

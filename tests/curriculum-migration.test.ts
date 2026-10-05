@@ -91,7 +91,8 @@ describe('đánh số lại tuần 20–24 → 21–25', () => {
 
   it('dữ liệu cũ ở tuần 19 giữ tuần 19 (tuần 20 mới sẽ là tuần kế tiếp); tuần 24 cũ → 25', () => {
     expect(migrate(oldData(19)).progress.currentWeek).toBe(19);
-    expect(migrate(oldData(20)).progress.currentWeek).toBe(21);
+    // tuần 20 cũ (Minuet chưa qua) → học tuần chuẩn bị mới trước
+    expect(migrate(oldData(20)).progress.currentWeek).toBe(20);
     expect(migrate(oldData(24)).progress.currentWeek).toBe(25);
   });
 

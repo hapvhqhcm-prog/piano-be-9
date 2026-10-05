@@ -254,3 +254,34 @@ Micro vẫn chỉ nghe được **một nốt mỗi lúc**.
   - Bớt bản trùng: Ode to Joy, Mary.
   - **Chưa thêm dân ca Việt Nam:** chưa xác minh chắc chắn giai điệu và tiết tấu. Cần bản nhạc tin cậy từ OWNER.
 - 460 test qua.
+
+## 16. Dân ca Việt Nam + sửa lỗi sau rà soát v0.4 (2026-10-05)
+
+**6 bài dân ca** (chỉ giai điệu truyền thống, không dùng lời mới có bản quyền).
+Mỗi bài đối chiếu ≥ 2 nguồn ký âm độc lập; nốt và tiết tấu được kiểm lại bằng máy so với bản ký âm.
+
+| Bài | Tin cậy | Tuần | Thế tay |
+|---|---|---|---|
+| Lý cây đa (câu đầu) — quan họ Bắc Ninh | vừa | 2 | Đô (Đô–Rê–Mi) |
+| Inh lả ơi — dân ca Thái | cao | 7 | thế Đô nhích lên (Sol–La 4-5) |
+| Xòe hoa — dân ca Thái | cao | 8 | ngũ cung Đô Rê Fa Sol La |
+| Bắc kim thang — dân ca Nam Bộ | cao | 14 (nốt chấm dôi; thay bản trùng "Cầu London — chấm dôi") | ngũ cung |
+| Lý ngựa ô (12 ô đầu) — dân ca Nam Bộ | vừa | 18 | bàn tay mở Rê–Đô (khoảng 7) |
+| Lý cây bông — dân ca Nam Bộ | vừa | 23 | hai tay luân phiên |
+
+**Đã loại:**
+- Trống cơm: bản phổ biến ghi tác giả Y Vân (còn bản quyền); bản dân ca thì các nguồn không khớp.
+- Cò lả: hai nguồn lệch nhau.
+- Ru con: chỉ có một nguồn.
+
+**Ghi chú:** bài 2/4 được ghi thành 4/4 với trường độ gấp đôi (app chưa vẽ nốt móc kép), nên nghe chậm hơn bản gốc.
+
+**Sửa lỗi sau rà soát v0.4:**
+- Tay trái nay theo sắc thái chung của bài.
+- Hiệu chỉnh "tiếng vừa" không còn lưu mức 0.
+- Xem thầy đàn mẫu không còn xóa đếm lần trượt, nên luôn tới được "Bố mẹ: qua".
+- Bé đang ở tuần 20 cũ được học tuần chuẩn bị mới trước Minuet.
+- Bài có nội dung mới dùng mã mới.
+- Từ chối dữ liệu của bản giáo trình mới hơn.
+- Chú giải sắc thái chỉ ghi ký hiệu bài có dùng (thêm "mf = vừa").
+- Dấu luyến sang trang không đè số chỉ nhịp.

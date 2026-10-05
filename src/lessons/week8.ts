@@ -17,11 +17,13 @@ export const WEEK8: WeekPlan = {
     {
       id: 'w8-l1',
       week: 8,
-      title: 'Ông lão vui tính',
+      title: 'Ông lão vui tính & Xòe hoa',
       emoji: '👴',
       activities: [
         { kind: 'song', songId: 'this_old_man', mode: 'wait', hints: 'names' },
         { kind: 'song', songId: 'this_old_man', mode: 'tempo', level: 3, hints: 'names' },
+        // Dân ca Việt Nam (OWNER yêu cầu 2026-10-05) — thêm một bài cho chương trình biểu diễn
+        { kind: 'song', songId: 'xoe_hoa', mode: 'wait', hints: 'names', intro: 'Điệu múa xòe của người Thái! Bàn tay ngũ cung: Đô 1, Rê 2, Fa 3, Sol 4, La 5 — mỗi ngón một phím. Bài bắt đầu bằng một nốt Đô lấy đà.' },
       ],
     },
     {

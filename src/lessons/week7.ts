@@ -71,6 +71,8 @@ export const WEEK7: WeekPlan = {
           ],
         }),
         { kind: 'song', songId: 'frere_jacques_easy', mode: 'wait', hints: 'full', intro: 'Mỗi câu hát hai lần: lần đầu TO (f), lần sau NHỎ (p) như tiếng vọng.' },
+        // Dân ca Việt Nam (OWNER yêu cầu 2026-10-05): chỉ Rê Mi Sol La — tay ở "thế nhích lên", Sol–La = 4-5
+        { kind: 'song', songId: 'inh_la_oi', mode: 'wait', hints: 'full', intro: 'Dân ca Thái Tây Bắc! Bàn tay nhích sang phải: ngón 1 ở Rê, Sol–La là ngón 4-5. Câu cuối đàn NHỎ (p) như tiếng vọng núi rừng.' },
       ],
     },
     {

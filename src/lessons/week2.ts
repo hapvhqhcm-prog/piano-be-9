@@ -56,9 +56,13 @@ export const WEEK2: WeekPlan = {
     {
       id: 'w2-l3',
       week: 2,
-      title: 'Bài hát: Bánh nóng',
+      title: 'Bài hát: Bánh nóng & Lý cây đa',
       emoji: '🥐',
-      activities: [{ kind: 'song', songId: 'hot_cross_buns', mode: 'wait', hints: 'full', intro: 'Bài hát đầu tiên của con — chỉ cần Mi, Rê, Đô!' }],
+      activities: [
+        { kind: 'song', songId: 'hot_cross_buns', mode: 'wait', hints: 'full', intro: 'Bài hát đầu tiên của con — chỉ cần Mi, Rê, Đô!' },
+        // Dân ca Việt Nam (OWNER yêu cầu 2026-10-05): câu đầu "Lý cây đa" cũng chỉ có Đô Rê Mi
+        { kind: 'song', songId: 'ly_cay_da', mode: 'wait', hints: 'full', intro: 'Một bài dân ca quan họ Bắc Ninh — cũng chỉ có Đô, Rê, Mi thôi! Ô đầu có chỗ nghỉ: chờ một chút rồi mới đàn Đô.' },
+      ],
     },
   ],
 };

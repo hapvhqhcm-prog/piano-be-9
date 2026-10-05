@@ -13,7 +13,7 @@ export function freePlayScreen(app: App) {
     const lhOn = leftHandActive(app.store.get());
     const big = h('div', { class: 'note-big' }, 'Chạm một phím');
     const fingerText = h('div', { class: 'finger-big' }, ' ');
-    const fingerName = h('div', { class: 'finger-name' }, lhOn ? 'Tay phải: Đô→La (Sol–La: ngón 4-5) · Tay trái: Đô3→Sol3' : 'Đô Rê Mi Fa Sol: ngón 1 2 3 4 5');
+    const fingerName = h('div', { class: 'finger-name' }, lhOn ? 'Tay phải: Đô→Sol ngón 1–5 · Tay trái: Đô3→Sol3' : 'Đô Rê Mi Fa Sol: ngón 1 2 3 4 5');
     const small = h('div', { class: 'note-sub' }, ' ');
     const hands: Record<Hand, HandDiagram> = { RH: handDiagram('RH'), LH: handDiagram('LH') };
     const row = h('div', { class: 'finger-row hand-rh' }, hands.RH.el, h('div', { class: 'finger-text' }, fingerText, fingerName));

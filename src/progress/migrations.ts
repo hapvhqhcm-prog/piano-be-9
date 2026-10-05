@@ -34,7 +34,9 @@ export function migrateCurriculum(data: Record<string, unknown>): Record<string,
   const p = data.progress;
   if (typeof p === 'object' && p !== null && !Array.isArray(p)) {
     const prog = { ...(p as Record<string, unknown>) };
-    if (typeof prog.currentWeek === 'number' && prog.currentWeek >= OLD_FIRST) prog.currentWeek = prog.currentWeek + 1;
+    // Bé đang ở tuần 20 cũ (Minuet, chưa qua) → ở lại tuần 20 MỚI "Đọc nốt cao" để được chuẩn bị trước Minuet
+    // (bài đã làm của tuần 20 cũ vẫn chuyển sang w21- nên không mất); từ tuần 21 cũ trở đi thì +1.
+    if (typeof prog.currentWeek === 'number' && prog.currentWeek > OLD_FIRST) prog.currentWeek = prog.currentWeek + 1;
     if (Array.isArray(prog.lessonsCompleted)) {
       prog.lessonsCompleted = prog.lessonsCompleted.map((x) => (typeof x === 'string' ? renumberId(x) : x));
     }

@@ -13,11 +13,11 @@ chỉ phím, chỉ ngón, phát âm mẫu. Khi bật micro, app **nghe đàn cơ
 
 ## Có gì trong app
 
-- **3 cấp × 8 tuần** (bản đồ đảo mỗi cấp), sau đó **Luyện tập mỗi ngày** không có điểm dừng:
-  - **Cấp 1 · Làm quen** (1–8): bàn phím, thế Đô hai tay, nhịp cơ bản, đọc nốt khóa Sol, La duỗi ngón.
+- **3 cấp, 25 tuần** (bản đồ đảo mỗi cấp), sau đó **Luyện tập mỗi ngày** không có điểm dừng:
+  - **Cấp 1 · Làm quen** (1–8): bàn phím, thế Đô hai tay, nhịp cơ bản, đọc nốt khóa Sol, to/nhỏ (p/f), nốt La (Sol–La ngón 4-5).
   - **Cấp 2 · Hai tay** (9–16): Đô giữa tay trái & khóa Fa, hai tay luân phiên → cùng lúc, thế Sol, nhịp 3/4,
-    phím đen (Fa♯, Mi♭), nốt chấm dôi & móc đơn, gam Đô trưởng luồn ngón, hòa nhạc Cấp 2.
-  - **Cấp 3 · Thành thạo** (17–24): hợp âm I–IV–V tay trái, đổi thế tay, trưởng/thứ, Minuet, Für Elise, Canon,
+    phím đen (Fa♯, Mi♭), nốt chấm dôi & móc đơn, gam Đô trưởng luồn ngón, ngắt tiếng/luyến, hòa nhạc Cấp 2.
+  - **Cấp 3 · Thành thạo** (17–25): hợp âm I–IV–V tay trái, đổi thế tay, trưởng/thứ, đọc nốt cao Đô5–Sol5, Minuet, Für Elise, Canon,
     đọc nhạc hai khóa chỉ nhìn khuông, Đại hòa nhạc.
 - **Mỗi buổi 10–15'**: Tư thế → Ôn nhanh → Khởi động tai/đọc nốt → Bài mới → Con làm thầy → Tự đánh giá.
 - **Trò chơi**: Lên hay xuống? · Bước hay nhảy? · Nốt nào đây? (có mốc) · Đọc nốt khóa Sol/Fa · Vui hay buồn? (trưởng/thứ) · Nhại lại · Vỗ nhịp.

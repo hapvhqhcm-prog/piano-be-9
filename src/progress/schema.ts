@@ -172,7 +172,10 @@ export function validateAppData(x: unknown): string[] {
   if (!isObj(x)) return ['Dữ liệu không phải object'];
   if (x.schemaVersion !== SCHEMA_VERSION) errs.push('schemaVersion phải là 1');
   // Không có = dữ liệu cũ (rev 1) — migrate() sẽ điền; có thì phải là số nguyên ≥ 1
-  if (x.curriculumRev !== undefined && (!Number.isInteger(x.curriculumRev) || (x.curriculumRev as number) < 1)) {
+  if (
+    x.curriculumRev !== undefined &&
+    (!Number.isInteger(x.curriculumRev) || (x.curriculumRev as number) < 1 || (x.curriculumRev as number) > CURRICULUM_REV)
+  ) {
     errs.push('curriculumRev');
   }
   if (!isObj(x.learner)) errs.push('Thiếu learner');

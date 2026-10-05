@@ -74,9 +74,11 @@ export const WEEK18: WeekPlan = {
   teach: { emoji: '👨‍🏫', text: 'Con chỉ bố/mẹ chỗ trong bài phải dời tay, và dời bằng ngón nào.' },
   criterion: { text: 'Chơi trọn "Đêm thánh vô cùng"', who: 'PARENT/MIC' },
   lessons: [
-    { id: 'w18-l1', week: 18, title: 'Đọc nhạc nhiều thế', emoji: '📖', activities: [
+    { id: 'w18-l1', week: 18, title: 'Đọc nhạc nhiều thế · Lý ngựa ô', emoji: '📖', activities: [
       { kind: 'sight', title: 'Đọc nhạc thế Đô', position: 'C', hand: 'RH', count: 2, rhythm: 2, hints: 'staff' },
       { kind: 'sight', title: 'Đọc nhạc thế Sol', position: 'G', hand: 'RH', count: 2, rhythm: 2, hints: 'staff' },
+      // Dân ca Việt Nam (OWNER yêu cầu 2026-10-05): một thế tay mới — bàn tay mở rộng
+      song('ly_ngua_o', 'wait', 2, 'names', 'Dân ca Nam Bộ! Bàn tay MỞ RỘNG: Rê 1, Fa 2, Sol 3, La 4, Đô cao 5 — mỗi ngón một phím, không cần dời tay. Bài bắt đầu bằng hai nốt lấy đà.'),
     ] },
     trio('w18-l2', 18, 'Đêm thánh vô cùng', '🌟', 'silent_night', 'Nhịp 3, có chấm dôi và dời tay ở câu 3.'),
   ],
@@ -109,7 +111,7 @@ export const WEEK19: WeekPlan = {
       ],
     },
     // OWNER duyệt 2026-10-05: thay "Bài ca niềm vui — La thứ" (bài lặp) bằng bài tự sáng tác giọng La thứ
-    trio('w19-l2', 19, 'Ninja rón rén', '🥷', 'ninja_tiptoe', 'Thế La thứ: ngón 1 ở La dưới Đô giữa. Ninja đi NHỎ (p) và NGẮT — chỉ ô cuối mới hét TO (f)!'),
+    trio('w19-ninja', 19, 'Ninja rón rén', '🥷', 'ninja_tiptoe', 'Thế La thứ: ngón 1 ở La dưới Đô giữa. Ninja đi NHỎ (p) và NGẮT — chỉ ô cuối mới hét TO (f)!'),
   ],
 };
 
@@ -211,6 +213,8 @@ export const WEEK23: WeekPlan = {
     { id: 'w23-l1', week: 23, title: 'Đọc nhạc chỉ nhìn khuông', emoji: '👀', activities: [
       { kind: 'sight', title: 'Tay phải — khóa Sol', position: 'C', hand: 'RH', count: 3, rhythm: 2, hints: 'staff' },
       { kind: 'sight', title: 'Tay trái — khóa Fa', position: 'C', hand: 'LH', count: 2, rhythm: 2, hints: 'staff' },
+      // Dân ca Việt Nam (OWNER yêu cầu 2026-10-05): giai điệu đi qua cả hai khóa, hai tay luân phiên
+      song('ly_cay_bong', 'wait', 2, 'names', 'Dân ca Nam Bộ! Giai điệu đi từ khóa Sol xuống khóa Fa: nốt cao tay phải, nốt thấp tay trái — hai tay thay nhau hát, không đàn cùng lúc.'),
     ] },
     trio('w23-l2', 23, 'Khúc Canon', '🎻', 'canon', 'Hai tay, mỗi nốt 2 phách — đàn thật êm.'),
   ],

@@ -1,0 +1,184 @@
+{
+ "id": "inh_la_oi",
+ "title": "Inh La Oi (Vietnamese folk song)",
+ "titleVi": "Inh lả ơi (dân ca Thái Tây Bắc)",
+ "composer": "Dân ca Thái (Tây Bắc)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Ký âm đơn giản cho app từ các bản ký âm dân ca phổ biến (trường độ gấp đôi: 2/4 → 4/4)",
+ "attributionRequired": false,
+ "hand": "RH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 7,
+ "position": "free",
+ "phrases": [
+  0,
+  4,
+  8,
+  12
+ ],
+ "notes": [
+  {
+   "pitch": "A4",
+   "beats": 2,
+   "finger": 5,
+   "dyn": "mf"
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "A4",
+   "beats": 4,
+   "finger": 5
+  },
+  {
+   "pitch": "G4",
+   "beats": 2,
+   "finger": 4
+  },
+  {
+   "pitch": "E4",
+   "beats": 2,
+   "finger": 2
+  },
+  {
+   "pitch": "D4",
+   "beats": 4,
+   "finger": 1
+  },
+  {
+   "pitch": "A4",
+   "beats": 2,
+   "finger": 5
+  },
+  {
+   "pitch": "E4",
+   "beats": 2,
+   "finger": 2
+  },
+  {
+   "pitch": "D4",
+   "beats": 2,
+   "finger": 1
+  },
+  {
+   "pitch": "E4",
+   "beats": 2,
+   "finger": 2
+  },
+  {
+   "pitch": "A4",
+   "beats": 2,
+   "finger": 5
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "E4",
+   "beats": 2,
+   "finger": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 2,
+   "finger": 4
+  },
+  {
+   "pitch": "D4",
+   "beats": 2,
+   "finger": 1
+  },
+  {
+   "pitch": "E4",
+   "beats": 2,
+   "finger": 2
+  },
+  {
+   "pitch": "A4",
+   "beats": 2,
+   "finger": 5
+  },
+  {
+   "pitch": "E4",
+   "beats": 2,
+   "finger": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 2,
+   "finger": 4
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "D4",
+   "beats": 4,
+   "finger": 1
+  },
+  {
+   "pitch": "A4",
+   "beats": 2,
+   "finger": 5,
+   "dyn": "p"
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "A4",
+   "beats": 4,
+   "finger": 5
+  },
+  {
+   "pitch": "G4",
+   "beats": 2,
+   "finger": 4
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 4,
+   "finger": 4
+  }
+ ]
+}

@@ -1,0 +1,179 @@
+{
+ "id": "ly_ngua_o",
+ "title": "Ly Ngua O (Vietnamese folk song)",
+ "titleVi": "Lý ngựa ô (dân ca Nam Bộ)",
+ "composer": "Dân ca Nam Bộ",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Ký âm đơn giản cho app từ các bản ký âm dân ca phổ biến (trường độ gấp đôi: 2/4 → 4/4)",
+ "attributionRequired": false,
+ "hand": "RH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 18,
+ "position": "free",
+ "phrases": [
+  0,
+  4,
+  9
+ ],
+ "notes": [
+  {
+   "rest": true,
+   "beats": 2
+  },
+  {
+   "pitch": "C5",
+   "beats": 1,
+   "finger": 5,
+   "dyn": "mf"
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 4,
+   "finger": 3
+  },
+  {
+   "rest": true,
+   "beats": 4
+  },
+  {
+   "rest": true,
+   "beats": 2
+  },
+  {
+   "pitch": "C5",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 3,
+   "finger": 3
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "C5",
+   "beats": 3,
+   "finger": 5
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "C5",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 4,
+   "finger": 3
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "G4",
+   "beats": 4,
+   "finger": 3
+  }
+ ]
+}

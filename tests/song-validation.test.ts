@@ -21,9 +21,10 @@ const ALLOWED = [
   'hand', 'bpm', 'timeSignature', 'week', 'extension', 'position', 'lh', 'lhPosition', 'phrases', 'notes',
 ];
 
-it('có 51 bài hát, id không trùng, đủ tuần 2–24 (trừ 16 — hòa nhạc)', () => {
-  expect(SONGS).toHaveLength(51);
-  expect(new Set(SONGS.map((s) => s.id)).size).toBe(51);
+it('có 56 bài hát, id không trùng, đủ tuần 2–24 (trừ 16 — hòa nhạc)', () => {
+  // 51 bài + 6 bài dân ca Việt Nam − "Cầu London — chấm dôi" (bài lặp, thay bằng "Bắc kim thang") — OWNER yêu cầu 2026-10-05
+  expect(SONGS).toHaveLength(56);
+  expect(new Set(SONGS.map((s) => s.id)).size).toBe(56);
   const weeks = new Set(SONGS.map((s) => s.week));
   for (const w of [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22, 23, 24]) expect(weeks.has(w)).toBe(true);
 });
