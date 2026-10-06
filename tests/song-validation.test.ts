@@ -17,7 +17,7 @@ import {
 import { pitchToMidi } from '../src/piano/pitchTable';
 
 const ALLOWED = [
-  'id', 'title', 'titleVi', 'composer', 'sourceStatus', 'arrangementBy', 'attributionRequired',
+  'id', 'title', 'titleVi', 'vn', 'aka', 'composer', 'sourceStatus', 'arrangementBy', 'attributionRequired',
   'hand', 'bpm', 'timeSignature', 'week', 'extension', 'position', 'lh', 'lhPosition', 'phrases', 'notes',
 ];
 
@@ -28,6 +28,24 @@ it('có 70 bài hát (56 cũ + 14 bài tự sáng tác v5), id không trùng, đ
   expect(new Set(SONGS.map((s) => s.id)).size).toBe(70);
   const weeks = new Set(SONGS.map((s) => s.week));
   for (let w = 2; w <= 30; w++) if (w !== 21) expect(weeks.has(w), `tuần ${w}`).toBe(true);
+});
+
+it('bài Việt Nam (2026-10-06): 6 dân ca vn=folk; bài quen hát lời Việt vn=lyrics, tên gọi khác chỉ là tên', () => {
+  const folk = SONGS.filter((s) => s.vn === 'folk').map((s) => s.id).sort();
+  expect(folk).toEqual(['bac_kim_thang', 'inh_la_oi', 'ly_cay_bong', 'ly_cay_da', 'ly_ngua_o', 'xoe_hoa']);
+  // mọi bài "Dân ca <vùng miền Việt Nam>" đều được đánh dấu
+  for (const s of SONGS) if (/^Dân ca (Nam Bộ|quan họ|Thái)/.test(s.composer ?? '')) expect(s.vn, s.id).toBe('folk');
+  const lyrics = SONGS.filter((s) => s.vn === 'lyrics').map((s) => s.id);
+  for (const id of ['frere_jacques_easy', 'twinkle_easy', 'birthday_both', 'jingle_bells']) expect(lyrics).toContain(id);
+  expect(SONGS.find((s) => s.id === 'twinkle_easy')!.aka).toBe('Sao nhỏ lấp lánh');
+  expect(SONGS.find((s) => s.id === 'jingle_bells')!.aka).toBe('Leng keng');
+  expect(SONGS.find((s) => s.id === 'frere_jacques_easy')!.titleVi).toBe('Kìa con bướm vàng');
+  for (const s of SONGS) {
+    if (s.aka !== undefined) {
+      expect(s.vn, s.id).toBeDefined();
+      expect(s.aka.length, s.id).toBeLessThan(30);
+    }
+  }
 });
 
 it('giảm bài lặp (OWNER duyệt 2026-10-05): Bài ca niềm vui ≤ 6, Chú cừu ≤ 3; có 4 bài tự sáng tác mới', () => {

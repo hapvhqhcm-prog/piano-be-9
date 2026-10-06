@@ -7,6 +7,7 @@ import {
   type AppData,
   type ChecklistKey,
   type Composition,
+  type ParentSong,
   type ParentResult,
   type Session,
   type SelfRating,
@@ -403,6 +404,55 @@ export class ProgressStore {
 
   findComposition(id: string): Composition | undefined {
     return this.data.compositions?.find((c) => c.id === id);
+  }
+
+  // ---------------- (+ 2026-10-06) Bài bố mẹ thêm — chỉ lưu trên iPad này ----------------
+
+  private static copySong(c: ParentSong): ParentSong {
+    return {
+      ...c,
+      notes: c.notes.map((n) => ({ ...n })),
+      ...(c.lh ? { lh: c.lh.map((n) => ({ ...n })) } : {}),
+      ...(c.phrases ? { phrases: [...c.phrases] } : {}),
+    };
+  }
+
+  /** Thêm bài mới (trùng id → thay bài cũ). */
+  addParentSong(c: ParentSong): void {
+    const list = (this.data.parentSongs ??= []);
+    const i = list.findIndex((x) => x.id === c.id);
+    if (i >= 0) list[i] = ProgressStore.copySong(c);
+    else list.push(ProgressStore.copySong(c));
+    this.save();
+  }
+
+  /** Sửa bài đã có (giữ createdAt, ghi updatedAt). Không có bài → false. */
+  updateParentSong(id: string, patch: Partial<Omit<ParentSong, 'id' | 'createdAt'>>): boolean {
+    const list = this.data.parentSongs ?? [];
+    const i = list.findIndex((x) => x.id === id);
+    if (i < 0) return false;
+    list[i] = ProgressStore.copySong({ ...list[i], ...patch, id, createdAt: list[i].createdAt, updatedAt: this.now().getTime() });
+    this.save();
+    return true;
+  }
+
+  /** Xóa bài (các lượt chơi đã ghi vẫn giữ trong lịch sử). Không có bài → false. */
+  deleteParentSong(id: string): boolean {
+    const list = this.data.parentSongs ?? [];
+    const i = list.findIndex((x) => x.id === id);
+    if (i < 0) return false;
+    list.splice(i, 1);
+    this.save();
+    return true;
+  }
+
+  /** Các bài bố mẹ thêm (cũ → mới). */
+  parentSongs(): readonly ParentSong[] {
+    return this.data.parentSongs ?? [];
+  }
+
+  findParentSong(id: string): ParentSong | undefined {
+    return this.data.parentSongs?.find((c) => c.id === id);
   }
 
   markLessonCompleted(lessonId: string): void {

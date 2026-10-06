@@ -146,6 +146,41 @@ export interface AppData {
   sessions: Session[];
   /** (+ v5) Bài bé tự sáng tác (trò "Sáng tác") — hiện trong Thư viện mục "Bài của con". Không có = []. */
   compositions?: Composition[];
+  /**
+   * (+ 2026-10-06) "📝 Bố mẹ thêm bài": bài bố mẹ TỰ NHẬP (gõ Đô Rê Mi hoặc chạm phím) — chỉ lưu trên iPad này,
+   * dùng riêng trong gia đình, không bao giờ đưa lên app công khai. Không có = [].
+   */
+  parentSongs?: ParentSong[];
+}
+
+/** (+) Một nốt bài bố mẹ nhập — cùng định dạng nốt bài hát (Tune). */
+export interface ParentSongNote {
+  pitch?: string;
+  beats: number;
+  finger?: number;
+  rest?: boolean;
+}
+
+/** (+ 2026-10-06) Bài bố mẹ thêm (src/ui/screens/songEditor.ts). */
+export interface ParentSong {
+  id: string;
+  title: string;
+  createdAt: number;
+  /** Lần sửa gần nhất (ms) */
+  updatedAt?: number;
+  timeSignature: '4/4' | '3/4' | '2/4';
+  /** Tốc độ (nốt đen / phút) */
+  bpm: number;
+  /** Bè chính (đã tự ghi số ngón khi lưu) */
+  notes: ParentSongNote[];
+  /** Bè tay trái (tùy chọn — trình soạn chưa nhập, để dành) */
+  lh?: ParentSongNote[];
+  /** Số ngón ghi riêng từng nốt */
+  position?: 'free';
+  /** Ô nhịp bắt đầu mỗi câu */
+  phrases?: number[];
+  /** Chữ Đô Rê Mi bố mẹ đã gõ (giữ nguyên xuống dòng khi sửa lại) */
+  text?: string;
 }
 
 /** (+ v5) Một bài bé sáng tác: dãy nốt (cùng định dạng nốt bài hát) trong một thế tay. */
@@ -309,5 +344,45 @@ export function validateAppData(x: unknown): string[] {
         }
       });
   }
+  // (+ 2026-10-06) Bài bố mẹ thêm — không có = []
+  if (x.parentSongs !== undefined) {
+    if (!Array.isArray(x.parentSongs)) errs.push('parentSongs');
+    else
+      x.parentSongs.forEach((c, i) => {
+        if (
+          !isObj(c) ||
+          typeof c.id !== 'string' ||
+          !c.id ||
+          typeof c.title !== 'string' ||
+          typeof c.createdAt !== 'number' ||
+          (c.updatedAt !== undefined && typeof c.updatedAt !== 'number') ||
+          !['4/4', '3/4', '2/4'].includes(c.timeSignature as string) ||
+          typeof c.bpm !== 'number' ||
+          !(c.bpm >= 30 && c.bpm <= 200) ||
+          !Array.isArray(c.notes) ||
+          !c.notes.length ||
+          !c.notes.every(validSongNote) ||
+          (c.lh !== undefined && (!Array.isArray(c.lh) || !c.lh.every(validSongNote))) ||
+          (c.position !== undefined && c.position !== 'free') ||
+          (c.phrases !== undefined && (!Array.isArray(c.phrases) || !c.phrases.every((p) => Number.isInteger(p) && (p as number) >= 0))) ||
+          (c.text !== undefined && typeof c.text !== 'string')
+        ) {
+          errs.push(`parentSongs[${i}]`);
+        }
+      });
+  }
   return errs;
+}
+
+/** Một nốt bài bố mẹ nhập: độ dài > 0, cao độ đúng dạng (hoặc dấu lặng), số ngón 1–5 nếu có. */
+function validSongNote(n: unknown): boolean {
+  return (
+    isObj(n) &&
+    typeof n.beats === 'number' &&
+    Number.isFinite(n.beats) &&
+    n.beats > 0 &&
+    (n.pitch === undefined || (typeof n.pitch === 'string' && /^[A-G](#|b)?-?\d$/.test(n.pitch))) &&
+    (n.pitch !== undefined || n.rest === true) &&
+    (n.finger === undefined || (Number.isInteger(n.finger) && (n.finger as number) >= 1 && (n.finger as number) <= 5))
+  );
 }

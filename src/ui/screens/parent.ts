@@ -17,6 +17,10 @@ import { cancelSpeech, hasVietnameseVoice, speak } from '../../audio/voice';
 
 import { installCard } from '../components/installCard';
 import { BACKUP_MESSAGE, exportBackup } from '../../progress/backup';
+import { PRIVACY_NOTE, customTuneTitle, parentSongToTune } from '../../practice/parentSongs';
+import { measureCount } from '../../music/tune';
+import { songEditorScreen } from './songEditor';
+import { playSong } from './library';
 
 const RATING_LABEL = { all: '😄 Dễ — đàn được', some: '🙂 Vừa — còn vấp chút', hard: '😅 Khó — cần tập thêm' } as const;
 
@@ -27,11 +31,11 @@ function mondayOf(d: Date): Date {
   return x;
 }
 
-function lessonName(id: string): string {
+function lessonName(id: string, d?: Readonly<AppData>): string {
   const l = findLesson(id);
   if (l) return `${l.emoji} ${l.title}`;
   const m = /^w\d+-song-(.+)$/.exec(id);
-  if (m) return `🎵 ${findTune(m[1])?.titleVi ?? m[1]} (tự chọn)`;
+  if (m) return `🎵 ${findTune(m[1])?.titleVi ?? (d && customTuneTitle(m[1], d)) ?? m[1]} (tự chọn)`;
   if (/^w\d+-daily$/.test(id)) return '🔁 Luyện tập mỗi ngày';
   return id;
 }
@@ -135,6 +139,58 @@ export function parentScreen(app: App) {
       render();
     };
 
+    /** "📝 Bài bố mẹ thêm" (2026-10-06): thêm / sửa / xóa bài bố mẹ tự nhập — chỉ lưu trên iPad này. */
+    const parentSongsCard = (): HTMLElement => {
+      const openEditor = (id: string | null) =>
+        app.show(songEditorScreen(app, id ? store.findParentSong(id) ?? null : null, { onDone: () => app.show(parentScreen(app)) }));
+      const list = [...store.parentSongs()].sort((a, b) => b.createdAt - a.createdAt);
+      return h(
+        'section',
+        { class: 'card' },
+        h('h2', {}, '📝 Bài bố mẹ thêm'),
+        h(
+          'p',
+          { class: 'muted' },
+          'Con thích bài nào mà app chưa có (cả bài thiếu nhi mới)? Bố mẹ gõ nốt Đô Rê Mi hoặc chạm phím — app tự ghi số ngón, bé tập như bài thường. ',
+          h('b', {}, PRIVACY_NOTE),
+        ),
+        button({ icon: '📝', label: 'Thêm bài hát', kind: 'primary', onTap: () => openEditor(null) }),
+        list.length
+          ? h(
+              'ul',
+              { class: 'psong-list' },
+              ...list.map((c) => {
+                const t = parentSongToTune(c);
+                return h(
+                  'li',
+                  { class: 'psong-item' },
+                  h('span', { class: 'psong-name' }, c.title, h('span', { class: 'psong-meta' }, `${measureCount(t)} ô nhịp · nhịp ${c.timeSignature} · ♩ = ${c.bpm}`)),
+                  button({ icon: '▶', label: 'Chơi thử', kind: 'mint', onTap: () => playSong(app, t) }),
+                  button({ icon: '✏️', label: 'Sửa', onTap: () => openEditor(c.id) }),
+                  button({
+                    icon: '🗑',
+                    label: 'Xóa',
+                    kind: 'danger',
+                    onTap: () =>
+                      confirmDialog({
+                        title: `Xóa “${c.title}”?`,
+                        text: 'Bài sẽ biến mất khỏi Thư viện (các lượt bé đã chơi vẫn giữ trong lịch sử). Sao lưu dữ liệu trước nếu muốn giữ.',
+                        okLabel: 'Xóa bài',
+                        okIcon: '🗑',
+                        danger: true,
+                        onOk: () => {
+                          store.deleteParentSong(c.id);
+                          say(`Đã xóa bài “${c.title}”.`);
+                        },
+                      }),
+                  }),
+                );
+              }),
+            )
+          : null,
+      );
+    };
+
     const build = (d: Readonly<AppData>): HTMLElement[] => {
       const now = new Date();
       const monday = localDateStr(mondayOf(now));
@@ -174,7 +230,7 @@ export function parentScreen(app: App) {
           if (a.correct) e.c++;
           aAgg.set(a.expected, e);
         });
-        games.push([s.date, lessonName(s.lessonId), `${s.appAssessments.filter((a) => a.correct).length}/${s.appAssessments.length}`]);
+        games.push([s.date, lessonName(s.lessonId, d), `${s.appAssessments.filter((a) => a.correct).length}/${s.appAssessments.length}`]);
       });
 
       const rated = d.sessions.filter((s) => s.selfRating).slice(-10).reverse();
@@ -340,7 +396,7 @@ export function parentScreen(app: App) {
               .reverse()
               .map(({ s, r }) => [
                 s.date,
-                (findTune(r.songId)?.titleVi ?? r.songId) + (r.phrase ? ` (ô ${r.phrase[0] + 1}–${r.phrase[1]})` : ''),
+                (findTune(r.songId)?.titleVi ?? customTuneTitle(r.songId, d) ?? r.songId) + (r.phrase ? ` (ô ${r.phrase[0] + 1}–${r.phrase[1]})` : ''),
                 MODE_LABEL[r.mode] + (r.level ? ` M${r.level}` : ''),
                 HINT_LABEL[r.hints],
                 r.mode === 'tempo' ? r.bpm : '—',
@@ -357,7 +413,7 @@ export function parentScreen(app: App) {
           h('p', { class: 'muted' }, 'Câu nào bé cũng được 3 sao (thưởng vì học xong buổi) — để bé dám nói thật. “Khó” nhiều buổi liền = nên tập chậm lại.'),
           table(
             ['Ngày', 'Bài', 'Bé chọn'],
-            rated.map((s) => [s.date, lessonName(s.lessonId), RATING_LABEL[s.selfRating!]]),
+            rated.map((s) => [s.date, lessonName(s.lessonId, d), RATING_LABEL[s.selfRating!]]),
           ),
         ),
       ];
@@ -368,7 +424,7 @@ export function parentScreen(app: App) {
             'section',
             { class: 'card' },
             h('h2', {}, 'Checklist quan sát — buổi gần nhất'),
-            h('p', { class: 'muted' }, `${latest.date} · ${lessonName(latest.lessonId)}`),
+            h('p', { class: 'muted' }, `${latest.date} · ${lessonName(latest.lessonId, d)}`),
             h(
               'div',
               { class: 'checklist' },
@@ -706,7 +762,7 @@ export function parentScreen(app: App) {
       const details = h('details', { class: 'adv' }, h('summary', {}, '⚙️ Nâng cao: cài đặt · dữ liệu · phiên bản'), ...adv);
       details.open = advOpen;
       details.addEventListener('toggle', () => (advOpen = details.open));
-      sections.push(details);
+      sections.push(parentSongsCard(), details);
       return sections.filter((x): x is HTMLElement => !!x);
     };
 

@@ -412,6 +412,30 @@ S += [
   lh=f"{I}:4  {I}:4  {I}:4  {V}:4  {I}:4  {I}:4  {I}:4  {V}:2 {I}:2"),
 ]
 
+# Bài Việt Nam (OWNER 2026-10-06) — mục "🇻🇳 Bài Việt Nam" của Thư viện:
+#   vn = "folk"   : dân ca Việt Nam
+#   vn = "lyrics" : giai điệu nước ngoài (public domain) mà trẻ em Việt Nam quen hát lời Việt
+#   aka           : tên Việt quen gọi khác (CHỈ tên — không có lời bài hát)
+VN_FOLK = {"bac_kim_thang", "inh_la_oi", "ly_cay_bong", "ly_cay_da", "ly_ngua_o", "xoe_hoa"}
+VN_LYRICS = {
+ "frere_jacques_easy": None, "frere_jacques_minor": None,          # "Kìa con bướm vàng" (đã là tên chính)
+ "twinkle_easy": "Sao nhỏ lấp lánh", "twinkle_run": "Sao nhỏ lấp lánh", "twinkle_both": "Sao nhỏ lấp lánh",
+ "birthday_both": None,                                         # "Chúc mừng sinh nhật" (đã là tên chính)
+ "jingle_bells": "Leng keng", "jingle_bells_both": "Leng keng",
+}
+for d in S:
+    meta = {}
+    if d["id"] in VN_FOLK: meta["vn"] = "folk"
+    elif d["id"] in VN_LYRICS:
+        meta["vn"] = "lyrics"
+        if VN_LYRICS[d["id"]]: meta["aka"] = VN_LYRICS[d["id"]]
+    if meta:
+        items = list(d.items()); d.clear()
+        for k, v in items:
+            d[k] = v
+            if k == "titleVi": d.update(meta)
+assert all(any(d["id"] == i for d in S) for i in VN_FOLK | set(VN_LYRICS)), "id bài Việt Nam sai"
+
 for f in glob.glob("src/data/songs/*.json"): os.remove(f)
 for d in S:
     voices = [d["notes"]] + ([d["lh"]] if "lh" in d else [])

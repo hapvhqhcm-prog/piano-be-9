@@ -31,6 +31,13 @@ export interface Tune {
   id: string;
   title: string;
   titleVi: string;
+  /**
+   * (+ 2026-10-06) Mục "🇻🇳 Bài Việt Nam" của Thư viện: 'folk' = dân ca Việt Nam ·
+   * 'lyrics' = giai điệu nước ngoài (public domain) trẻ em Việt Nam quen hát lời Việt.
+   */
+  vn?: 'folk' | 'lyrics';
+  /** (+ 2026-10-06) Tên Việt quen gọi khác (chỉ tên, không có lời) — vd "Sao nhỏ lấp lánh" */
+  aka?: string;
   composer?: string;
   sourceStatus?: string;
   arrangementBy?: string;

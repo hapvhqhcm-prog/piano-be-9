@@ -1,3 +1,4 @@
+import { customTuneTitle } from '../../practice/parentSongs';
 import { WEEKS, daysThisWeek, weekComplete, weekPassed, weekPlan } from '../../lessons/lessonEngine';
 import { findTune } from '../../music/exercises';
 import { viName } from '../../piano/pitchTable';
@@ -74,9 +75,9 @@ export function noteLabelForParent(id: string): { kind: Struggle['kind']; label:
   return { kind: 'note', label: t ?? id };
 }
 
-function songLabel(songId: string): string {
+function songLabel(songId: string, data: Readonly<AppData>): string {
   if (songId.startsWith('sight')) return 'Đọc nhạc ngẫu nhiên';
-  return `Bài “${findTune(songId)?.titleVi ?? songId}”`;
+  return `Bài “${findTune(songId)?.titleVi ?? customTuneTitle(songId, data) ?? songId}”`;
 }
 
 /** Tối đa 3 chỗ khó nhất trong `days` ngày gần nhất (nhiều lần vấp nhất trước). */
@@ -106,7 +107,7 @@ export function topStruggles(data: Readonly<AppData>, now: Date, days = 14, n = 
     for (const r of s.songRuns) {
       if (r.passed) continue;
       const key = r.songId.startsWith('sight') ? 'song:sight' : `song:${r.songId}`;
-      add(key, 'song', songLabel(r.songId), 1);
+      add(key, 'song', songLabel(r.songId, data), 1);
     }
   }
   return [...m.values()].sort((a, b) => b.misses - a.misses).slice(0, n);
