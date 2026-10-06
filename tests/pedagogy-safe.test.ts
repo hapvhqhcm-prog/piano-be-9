@@ -147,7 +147,7 @@ function shortLesson(minWeek = 8) {
 }
 
 describe('4. Ôn bài cũ trong buổi', () => {
-  it('chỉ khi bật songReview; sau bài mới, trước Con làm thầy; KHÔNG phải bước "activity"', () => {
+  it('chỉ khi bật songReview; sau bài mới, trước màn kết (Con làm thầy + tự chấm); KHÔNG phải bước "activity"', () => {
     const { st } = clockStore();
     const lesson = shortLesson();
     st.setCurrentWeek(lesson.week);
@@ -160,7 +160,7 @@ describe('4. Ôn bài cũ trong buổi', () => {
     expect(kinds.filter((k) => k === 'activity').length).toBe(base.filter((s) => s.kind === 'activity').length);
     const at = kinds.indexOf('review-song');
     expect(at).toBeGreaterThan(kinds.lastIndexOf('activity'));
-    expect(kinds[at + 1]).toBe('teach');
+    expect(kinds[at + 1]).toBe('closing');
     const step = plan[at];
     if (step.kind !== 'review-song') throw new Error();
     const t = findTune(step.songId)!;

@@ -1,4 +1,4 @@
-import { WEEKS, sessionsThisWeek, weekComplete, weekPassed, weekPlan } from '../../lessons/lessonEngine';
+import { WEEKS, daysThisWeek, weekComplete, weekPassed, weekPlan } from '../../lessons/lessonEngine';
 import { findTune } from '../../music/exercises';
 import { viName } from '../../piano/pitchTable';
 import { localDateStr, type AppData } from '../../progress/schema';
@@ -28,7 +28,8 @@ export interface TonightPlan {
     who: string;
     passed: boolean;
     lessonsLeft: number;
-    sessionsThisWeek: number;
+    /** v5.1 — số NGÀY có học trong tuần lịch (thứ 2 → CN); mục tiêu 4–5 ngày */
+    daysThisWeek: number;
   };
 }
 
@@ -112,9 +113,9 @@ export function topStruggles(data: Readonly<AppData>, now: Date, days = 14, n = 
 }
 
 /** Một câu hành động cụ thể cho tối nay. */
-export function actionFor(top: Struggle | undefined, weekSessions: number): string {
+export function actionFor(top: Struggle | undefined, weekDays: number): string {
   if (!top) {
-    return weekSessions < 4
+    return weekDays < 4
       ? 'Tối nay chỉ cần 10–15 phút: ngồi cạnh bé và bấm “Học tiếp”.'
       : 'Bé đang làm tốt! Tối nay cho bé chơi lại một bài đã thuộc và khen thật cụ thể (vd “ngón con cong đẹp quá”).';
   }
@@ -133,17 +134,17 @@ export function tonightPlan(data: Readonly<AppData>, now: Date): TonightPlan {
   const plan = weekPlan(week);
   const done = new Set(data.progress.lessonsCompleted);
   const struggles = topStruggles(data, now);
-  const sessions = sessionsThisWeek(data, now);
+  const days = daysThisWeek(data, now);
   return {
     struggles,
-    action: actionFor(struggles[0], sessions),
+    action: actionFor(struggles[0], days),
     goal: {
       week,
       text: plan.criterion.text,
       who: WHO_TEXT[plan.criterion.who],
       passed: weekPassed(week, data) || weekComplete(week, data),
       lessonsLeft: plan.lessons.filter((l) => !l.isWeekTest && !done.has(l.id)).length,
-      sessionsThisWeek: sessions,
+      daysThisWeek: days,
     },
   };
 }

@@ -1,8 +1,9 @@
 import { mascot } from '../components/mascot';
 import {
-  sessionsThisWeek,
+  daysThisWeek,
   MAX_SESSIONS_PER_DAY,
   WEEKS,
+  criterionProgress,
   dailyLesson,
   levelOf,
   minutesToday,
@@ -19,12 +20,14 @@ import { parentButton } from '../components/longPress';
 import { freePlayScreen } from './freePlay';
 import { libraryScreen } from './library';
 import { stickersScreen } from './stickers';
-import { BUSY_WEEK_SESSIONS, earnedStickerIds } from '../../lessons/stickers';
+import { BUSY_WEEK_DAYS, earnedStickerIds } from '../../lessons/stickers';
 import { cancelSpeech, speak } from '../../audio/voice';
 import { speakChip } from '../components/speakChip';
 import { parentGateScreen } from './parentGate';
 import { startSession } from './session';
 import { markSafePoint } from '../../pwa/updater';
+import type { AppData } from '../../progress/schema';
+import '../../styles/pedagogy.css';
 
 /**
  * Tranh đảo (do src/ui/components/art/islandArt.ts vẽ). Nạp "mềm" qua import.meta.glob: nếu file tranh
@@ -35,6 +38,26 @@ const islandArtMod = import.meta.glob<{ islandIcon?: IslandIconFn }>('../compone
 const islandIcon: IslandIconFn | undefined = Object.values(islandArtMod)[0]?.islandIcon;
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
+
+/**
+ * v5.1 — Tiến độ tiêu chí theo NGÀY cho bé: ●○ + "hôm nay ✓" / "còn N hôm". null = tiêu chí không tính theo ngày.
+ * "Hôm nay ✓" = hôm nay có góp một ngày (so với khi bỏ các buổi hôm nay ra) — chỉ dùng hợp đồng criterionProgress.
+ */
+export function goalDays(week: number, data: Readonly<AppData>, today: string): { days: number; needDays: number; doneToday: boolean } | null {
+  const p = criterionProgress(week, data);
+  if (!p || p.needDays <= 0) return null;
+  const before = criterionProgress(week, { ...data, sessions: data.sessions.filter((s) => s.date !== today) });
+  return { days: p.days, needDays: p.needDays, doneToday: p.days > (before?.days ?? 0) };
+}
+
+/** Lời người lớn "… — đạt ở 2 ngày khác nhau": chấm ngày đã nói thay → bỏ đuôi cho gọn (chỉ khi không có kidGoal). */
+const stripDaysTail = (t: string) => t.replace(/\s*[—–-]\s*đạt ở \d+ ngày khác nhau\s*$/u, '');
+/** Lời bé "… — 2 hôm nhé! 🐸": chấm ●○ + "còn N hôm" đã nói số hôm → bỏ cụm "2 hôm" cho vừa MỘT dòng (giữ emoji). */
+export const stripKidDays = (t: string) =>
+  t
+    .replace(/\s*(?:[—–,]\s*)?(?:trong\s+)?\d+\s+hôm(?:\s+nhé)?!?/u, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
 
 /** Bản đồ "Hành trình tới Lâu đài Âm nhạc" — chỉ hiển thị tiến trình, không mở khóa bằng sao. */
 function islandMap(app: App): HTMLElement {
@@ -133,23 +156,44 @@ export function homeScreen(app: App, banner?: string) {
             : null,
       );
 
-    // Mục tiêu TUẦN (§1: 4–5 buổi/tuần) + mục tiêu qua đảo. Không hiện chuỗi ngày liền với bé:
-    // chuỗi bị "đứt" làm trẻ nản — nghỉ một ngày không sao, chỉ cần đủ buổi trong tuần.
+    // Mục tiêu TUẦN (§1: 4–5 NGÀY/tuần — v5.1 đếm ngày, hai buổi cùng ngày = một ngày) + mục tiêu qua đảo.
+    // Không hiện chuỗi ngày liền với bé: chuỗi bị "đứt" làm trẻ nản — nghỉ một ngày không sao, chỉ cần đủ ngày trong tuần.
     const now = new Date();
-    const weekDone = sessionsThisWeek(data, now);
+    const weekDone = daysThisWeek(data, now);
     // Đạt tiêu chí nhưng còn bài chưa học → tuần chưa qua; nhắc nhẹ còn mấy bài
     const leftLessons = plan.lessons.filter((l) => !l.isWeekTest && !done.has(l.id)).length;
     const goalMetNotDone = weekPassed(plan.week, data) && !weekComplete(plan.week, data) && leftLessons > 0;
+    // v5.1: mục tiêu bằng lời của BÉ (kidGoal); chưa có thì lời tiêu chí. Lời đầy đủ + tiến độ ở màn Phụ huynh.
+    const gd = goalDays(plan.week, data, today);
+    const goalText = plan.kidGoal ? (gd ? stripKidDays(plan.kidGoal) : plan.kidGoal) : gd ? stripDaysTail(plan.criterion.text) : plan.criterion.text;
+    // Chấm ngày của tiêu chí nằm ở hàng 2 (cạnh "Tuần này") để hàng 1 đủ chỗ cho lời mục tiêu — khung tối đa 2 dòng
+    const daysEl = gd && !goalMetNotDone
+      ? h(
+          'span',
+          {
+            class: 'goal-days',
+            'aria-label': `Đã đạt ${Math.min(gd.days, gd.needDays)} trên ${gd.needDays} ngày${gd.doneToday ? ', hôm nay đã đạt' : ''}`,
+          },
+          h('span', { 'aria-hidden': 'true' }, '🎯'),
+          ...Array.from({ length: gd.needDays }, (_, i) => h('span', { class: `gd${i < gd.days ? ' on' : ''}`, 'aria-hidden': 'true' })),
+          gd.doneToday
+            ? h('span', { class: 'gd-note today' }, 'hôm nay ✓')
+            : gd.days < gd.needDays
+              ? h('span', { class: 'gd-note' }, `còn ${gd.needDays - gd.days} hôm`)
+              : null,
+        )
+      : null;
     const goalRow = h(
       'div',
       { class: 'goal-row' },
       h(
         'div',
-        { class: 'goal-dots', title: 'Mục tiêu: 4–5 buổi mỗi tuần', 'aria-label': `Tuần này đã học ${weekDone} trên 5 buổi` },
+        { class: 'goal-dots', title: 'Mục tiêu: 4–5 ngày mỗi tuần', 'aria-label': `Tuần này đã học ${weekDone} trên 5 ngày` },
         h('span', { class: 'goal-label' }, 'Tuần này'),
         ...[0, 1, 2, 3, 4].map((i) => h('span', { class: `dot${i < weekDone ? ' on' : ''}` })),
       ),
-      weekDone >= BUSY_WEEK_SESSIONS ? h('div', { class: 'streak week-star' }, '🌟 Tuần chăm chỉ!') : null,
+      weekDone >= BUSY_WEEK_DAYS ? h('div', { class: 'streak week-star' }, '🌟 Tuần chăm chỉ!') : null,
+      daysEl,
     );
 
     root.append(
@@ -191,7 +235,12 @@ export function homeScreen(app: App, banner?: string) {
               { class: 'goal-panel' },
               goalMetNotDone
                 ? h('div', { class: 'goal-target met' }, `🎯 Đạt mục tiêu rồi! Còn ${leftLessons} bài nữa là qua đảo`)
-                : h('div', { class: 'goal-target' }, h('span', { 'aria-hidden': 'true' }, '🎯'), ' ', plan.criterion.text),
+                : h(
+                    'div',
+                    { class: 'goal-target', title: plan.criterion.text },
+                    h('span', { 'aria-hidden': 'true' }, '🎯'),
+                    h('span', { class: 'goal-text' }, goalText),
+                  ),
               goalRow,
             ),
             overLimit

@@ -14,7 +14,9 @@ export const WEEK6: WeekPlan = {
   story: 'Ở Sân khấu nhỏ, cả làng chờ nghe con đàn "Bài ca niềm vui". Bố mẹ sẽ đàn cùng con!',
   warmup: { variant: 'identify', pool: ['C4', 'D4', 'E4', 'F4', 'G4'], rounds: 8, reference: 'C4' },
   teach: { emoji: '👨‍🏫', text: 'Con dạy bố/mẹ câu đầu "Bài ca niềm vui": Mi Mi Fa Sol – Sol Fa Mi Rê. Đàn một lần TO (f), một lần NHỎ (p)!' },
+  drills: ['five-finger', 'finger-tap'],
   criterion: { text: 'Chơi trọn "Bài ca niềm vui" ở tốc độ 60 — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
+  kidGoal: 'Bài ca niềm vui ở tốc độ 60 — 2 hôm nhé! 🎶',
   lessons: [
     {
       id: 'w6-l1',
@@ -22,7 +24,6 @@ export const WEEK6: WeekPlan = {
       title: 'Bài ca niềm vui — từng nốt',
       emoji: '🎶',
       activities: [
-        { kind: 'technique', title: 'Năm ngón to – nhỏ 🦁🐭', drills: ['five-finger', 'finger-tap'] },
         {
           kind: 'dynamics',
           title: 'To hay nhỏ? 🦁🐭',

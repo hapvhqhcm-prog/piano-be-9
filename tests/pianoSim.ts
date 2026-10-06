@@ -42,6 +42,16 @@ export interface SimOptions {
   clicks?: Array<{ t: number; accent?: boolean }>;
   /** Biên độ đỉnh tiếng tích tại micro (mặc định 0,3 — loa iPad sát micro) */
   clickLevel?: number;
+  /**
+   * iOS vừa mở micro: vài trăm ms đầu bộ đệm toàn 0 (phần cứng đang khởi động) rồi mới có tiếng phòng (giây).
+   * Mức ồn nền bị "khởi tạo" quá thấp → ngưỡng thấp → cần thích nghi nhanh lúc đầu.
+   */
+  warmup?: number;
+  /**
+   * iOS bật "tự chỉnh âm lượng" (AGC) dù app xin tắt: lúc im thì khuếch đại dần (tiếng ồn to lên),
+   * gặp tiếng to thì giảm nhanh (tiếng gõ phím bị "nén"). Giá trị = khuếch đại tối đa (vd 4 = +12 dB).
+   */
+  agc?: number;
 }
 
 export function renderPiano(notes: SimNote[], seconds: number, o: SimOptions = {}): Float32Array {
@@ -109,7 +119,31 @@ export function renderPiano(notes: SimNote[], seconds: number, o: SimOptions = {
   const noise = o.noise ?? 0.004;
   const hum = o.hum ?? 0.002;
   for (let i = 0; i < n; i++) out[i] += noise * (r() * 2 - 1) + hum * Math.sin((2 * Math.PI * 50 * i) / SR);
+  if (o.agc) applyAgc(out, SR, o.agc);
+  if (o.warmup) out.fill(0, 0, Math.min(n, Math.floor(o.warmup * SR)));
   return out;
+}
+
+/**
+ * AGC giả lập (giống bộ xử lý giọng nói): theo dõi mức RMS khối 10 ms; to hơn mục tiêu → giảm khuếch đại nhanh
+ * (τ 20 ms), nhỏ hơn → tăng chậm (τ 1,5 s) tới `maxGain`. Khuếch đại nội suy theo mẫu (không "bậc").
+ */
+function applyAgc(out: Float32Array, SR: number, maxGain: number): void {
+  const block = Math.round(0.01 * SR);
+  const target = 0.03;
+  const aAtt = 1 - Math.exp(-0.01 / 0.02);
+  const aRel = 1 - Math.exp(-0.01 / 1.5);
+  let g = 1;
+  for (let b = 0; b < out.length; b += block) {
+    const end = Math.min(out.length, b + block);
+    let s = 0;
+    for (let i = b; i < end; i++) s += out[i] * out[i];
+    const lvl = Math.sqrt(s / Math.max(1, end - b));
+    const want = Math.max(0.25, Math.min(maxGain, lvl > 1e-6 ? target / lvl : maxGain));
+    const g0 = g;
+    g += (want - g) * (want < g ? aAtt : aRel);
+    for (let i = b; i < end; i++) out[i] *= g0 + ((g - g0) * (i - b)) / (end - b);
+  }
 }
 
 export { SIM_RATE_DEFAULT as SIM_RATE };

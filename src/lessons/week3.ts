@@ -15,7 +15,9 @@ export const WEEK3: WeekPlan = {
   story: 'Qua khỏi làng là Cầu thang Sol có 5 bậc: Đô Rê Mi Fa Sol. Mỗi ngón tay đứng trên một bậc!',
   warmup: { variant: 'identify', pool: ['C4', 'D4', 'E4', 'F4', 'G4'], rounds: 10, reference: 'C4' },
   teach: { emoji: '👨‍🏫', text: 'Con đặt 5 ngón lên Đô Rê Mi Fa Sol, rồi dạy bố/mẹ "Leo cầu thang".' },
-  criterion: { text: 'Tai nghe (có mốc Đô) đúng 8/10', who: 'APP' },
+  drills: ['wrist-circle', 'hand-shape'],
+  criterion: { text: 'Tai nghe (có mốc Đô) đúng 8/10 — ở 2 ngày khác nhau', who: 'APP' },
+  kidGoal: 'Đôi tai thám tử: đoán đúng 8 nốt trong 10 — 2 hôm nhé! 👂',
   lessons: [
     {
       id: 'w3-l1',
@@ -23,7 +25,6 @@ export const WEEK3: WeekPlan = {
       title: 'Fa và Sol',
       emoji: '🖐',
       activities: [
-        { kind: 'technique', title: 'Cổ tay mềm 🌀', drills: ['wrist-circle', 'hand-shape'] },
         notes({
           id: 'w3-l1-a',
           step: 'Bài mới',

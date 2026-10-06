@@ -10,7 +10,10 @@ import { LEVELS, WEEKS, masteredSongs, weekComplete, weekPassed } from './lesson
  * Sticker đã nhận KHÔNG mất (mọi mốc tính trên toàn bộ lịch sử, chỉ tăng).
  *
  * "Tuần chăm chỉ" (2026-10-05) thay cho "chuỗi ngày liền": chuỗi ngày bị đứt làm trẻ nản; mục tiêu tuần
- * (≥ 4 buổi) khớp với giáo trình 4–5 buổi/tuần và được nghỉ ngày nào cũng không sao.
+ * khớp với giáo trình 4–5 buổi/tuần và được nghỉ ngày nào cũng không sao.
+ * v5.1 (OWNER duyệt 2026-10-06): tính theo NGÀY, không theo buổi — tuần chăm chỉ = ≥ BUSY_WEEK_DAYS NGÀY khác nhau có học
+ * (2 buổi một ngày chỉ là 1 ngày: luyện đều mỗi ngày quan trọng hơn dồn). Sticker đã nhận KHÔNG mất: buổi trước
+ * EFFORT_BY_DAYS_FROM vẫn được tính theo quy tắc cũ (≥ 4 buổi/tuần).
  * Sticker chuỗi ngày CŨ mà bé đã nhận trước ngày đổi vẫn được giữ (tính trên các buổi trước STREAK_RETIRED_AFTER).
  */
 export type StickerKind = 'island' | 'songs' | 'streak' | 'week' | 'mic' | 'folk' | 'dynamics' | 'medal';
@@ -35,9 +38,14 @@ export const SONG_MILESTONES = [1, 5, 10, 20, 40] as const;
 export const STREAK_MILESTONES = [3, 7, 14, 30] as const;
 /** Ngày cuối cùng còn tính chuỗi ngày (buổi sau ngày này không tạo thêm sticker chuỗi ngày). */
 export const STREAK_RETIRED_AFTER = '2026-10-05';
-/** Mốc "tuần chăm chỉ": số tuần (thứ 2 → CN) có ≥ BUSY_WEEK_SESSIONS buổi hoàn thành. */
+/** Mốc "tuần chăm chỉ": số tuần (thứ 2 → CN) có ≥ BUSY_WEEK_DAYS ngày học. */
 export const BUSY_WEEK_MILESTONES = [1, 3, 6, 10] as const;
-export const BUSY_WEEK_SESSIONS = 4;
+/** v5.1 — số NGÀY học khác nhau trong một tuần để là "tuần chăm chỉ". */
+export const BUSY_WEEK_DAYS = 4;
+/** @deprecated v5.1 — giữ tên cũ (màn chính đang dùng); nay là số NGÀY, cùng giá trị với BUSY_WEEK_DAYS. */
+export const BUSY_WEEK_SESSIONS = BUSY_WEEK_DAYS;
+/** v5.1 — ngày bắt đầu tính "tuần chăm chỉ" theo NGÀY; buổi trước ngày này giữ quy tắc cũ (≥ 4 BUỔI) để không mất sticker. */
+export const EFFORT_BY_DAYS_FROM = '2026-10-06';
 /** Số lượt đúng tối thiểu (các lượt khác nhau, trong một buổi) để tính là "chơi xong" trò to/nhỏ – ngắt/liền. */
 export const DYNAMICS_ROUNDS = 3;
 
@@ -52,15 +60,23 @@ function mondayKey(date: string): string {
   return dayKey(x);
 }
 
-/** Số tuần (thứ 2 → CN) có ít nhất BUSY_WEEK_SESSIONS buổi hoàn thành — chỉ tăng, không bao giờ giảm. */
+/**
+ * Số tuần (thứ 2 → CN) "chăm chỉ" — chỉ tăng, không bao giờ giảm. v5.1: một tuần là chăm chỉ khi có ≥ BUSY_WEEK_DAYS
+ * NGÀY khác nhau có buổi hoàn thành; HOẶC (giữ sticker đã nhận) ≥ 4 BUỔI hoàn thành tính riêng các buổi trước
+ * EFFORT_BY_DAYS_FROM (quy tắc cũ — một tuần đã đạt theo quy tắc cũ không bao giờ bị mất).
+ */
 export function busyWeeks(data: Readonly<AppData>): number {
-  const perWeek = new Map<string, number>();
+  const days = new Map<string, Set<string>>();
+  const legacySessions = new Map<string, number>();
   for (const s of data.sessions) {
     if (!s.completed) continue;
     const k = mondayKey(s.date);
-    perWeek.set(k, (perWeek.get(k) ?? 0) + 1);
+    days.set(k, (days.get(k) ?? new Set()).add(s.date));
+    if (s.date < EFFORT_BY_DAYS_FROM) legacySessions.set(k, (legacySessions.get(k) ?? 0) + 1);
   }
-  return [...perWeek.values()].filter((n) => n >= BUSY_WEEK_SESSIONS).length;
+  let n = 0;
+  for (const [k, d] of days) if (d.size >= BUSY_WEEK_DAYS || (legacySessions.get(k) ?? 0) >= 4) n++;
+  return n;
 }
 
 /** Chuỗi ngày học liên tiếp DÀI NHẤT từng có (chỉ tính buổi đã hoàn thành). `until`: chỉ tính các ngày ≤ until. */
@@ -150,7 +166,7 @@ export function allStickers(data: Readonly<AppData>): Sticker[] {
       id: `week-${n}`,
       kind: 'week',
       title: n === 1 ? 'Tuần chăm chỉ' : `${n} tuần chăm chỉ`,
-      hint: n === 1 ? `Học ${BUSY_WEEK_SESSIONS} buổi trong một tuần` : `${n} tuần, mỗi tuần học ${BUSY_WEEK_SESSIONS} buổi`,
+      hint: n === 1 ? `Học ${BUSY_WEEK_DAYS} ngày trong một tuần` : `${n} tuần, mỗi tuần học ${BUSY_WEEK_DAYS} ngày`,
       earned: weeks >= n,
       n,
     });

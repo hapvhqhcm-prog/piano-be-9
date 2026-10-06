@@ -74,6 +74,30 @@ export function renumberIdRev3(id: string): string {
   });
 }
 
+/**
+ * GIÁO TRÌNH rev 3 (30 tuần) → rev 4 (31 tuần, v5.1 — OWNER duyệt 2026-10-06 sau rà soát chuyên gia):
+ * tuần 18 "Suối Móc Kép" quá tải (móc kép + Tập-tễnh + nghịch phách + dây nối) → TÁCH đôi:
+ * tuần 18 giữ móc kép & Tập-tễnh (Thỏ con, Lý cây đa); tuần 19 MỚI "Phố Xích Lô" dạy nghịch phách & dây nối
+ * (Xích lô dạo phố, Bắc kim thang). Tuần 19–30 cũ → 20–31 (+1).
+ * Bài học CHUYỂN từ tuần 18 sang tuần 19 mới (đánh số chính xác, không theo bảng tuần):
+ */
+export const REV4_LESSON_MAP: Readonly<Record<string, string>> = Object.freeze({
+  'w18-l3': 'w19-l1', // "Nghịch phách & dây nối" (Xích lô dạo phố)
+  'w18-bkt': 'w19-bkt', // "Bắc kim thang"
+});
+
+/** Tuần rev 3 → rev 4: 1–18 giữ nguyên, ≥ 19 thì +1. */
+export const rev4Week = (w: number): number => (w >= 19 ? w + 1 : w);
+
+/** Đánh số lại một mã từ rev 3 sang rev 4 (mã bài học, "-song-", "-daily", "-stage"…). */
+export function renumberIdRev4(id: string): string {
+  const hash = id.indexOf('#');
+  const base = hash >= 0 ? id.slice(0, hash) : id;
+  const rest = hash >= 0 ? id.slice(hash) : '';
+  if (REV4_LESSON_MAP[base]) return REV4_LESSON_MAP[base] + rest;
+  return id.replace(/^w(\d+)-/, (_m, n: string) => `w${rev4Week(Number(n))}-`);
+}
+
 const isObj = (x: unknown): x is Record<string, unknown> => typeof x === 'object' && x !== null && !Array.isArray(x);
 
 /** Đổi mã trong progress.lessonsCompleted và sessions[].lessonId; `week` đổi progress.currentWeek. */
@@ -104,7 +128,7 @@ function renumberAll(
 }
 
 /**
- * Chạy đúng MỘT lần cho mỗi bậc: dữ liệu thiếu `curriculumRev` = rev 1. rev 1 → 2 → 3 lần lượt; dữ liệu đã ở rev hiện tại
+ * Chạy đúng MỘT lần cho mỗi bậc: dữ liệu thiếu `curriculumRev` = rev 1. rev 1 → 2 → 3 → 4 lần lượt; dữ liệu đã ở rev hiện tại
  * được trả về NGUYÊN (cùng object) — idempotent.
  */
 export function migrateCurriculum(data: Record<string, unknown>): Record<string, unknown> {
@@ -121,6 +145,12 @@ export function migrateCurriculum(data: Record<string, unknown>): Record<string,
     // (bé đã có kỹ năng — vẫn mở trong Thư viện/ôn tập). Dấu "đã xong một phần bài" ("<bài>#<i>") bị BỎ: nhiều bài được
     // thêm hoạt động khởi động kỹ thuật ở đầu nên số thứ tự hoạt động đã đổi — bài dở sẽ học lại trọn (an toàn hơn đánh dấu sai).
     out = renumberAll(out, 3, renumberIdRev3, (w) => REV3_WEEK_MAP[w] ?? (w > 25 ? w + 5 : w), (x) => !x.includes('#'));
+  }
+  if (rev < 4) {
+    // Bé đang ở tuần 18 → ở lại tuần 18 (bài "Nghịch phách"/"Bắc kim thang" đã học vẫn được tính, nay ở tuần 19);
+    // từ tuần 19 trở đi +1. Dấu "đã xong một phần bài" bị BỎ (v5.1 rút gọn buổi: bỏ hoạt động khởi động kỹ thuật
+    // trong bài, dời lượt băng chuyền… → số thứ tự hoạt động đã đổi) — bài dở sẽ học lại trọn.
+    out = renumberAll(out, 4, renumberIdRev4, rev4Week, (x) => !x.includes('#'));
   }
   return out;
 }

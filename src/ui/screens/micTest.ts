@@ -1,6 +1,7 @@
 import { MicListener, meterPct, type MicFrame, type MicState } from '../../audio/MicListener';
 import { BLUETOOTH_LIKELY_MS, LATENCY_GAP, LATENCY_MAX, LATENCY_PINGS, estimateLatency } from '../../audio/latency';
 import type { Sensitivity } from '../../audio/micAnalyzer';
+import { CandidateTally, chooseSensitivity, type Candidate, type NoteCheck, type TuneTip } from '../../audio/micTune';
 import { PianoKeyboard } from '../../piano/PianoKeyboard';
 import { midiToPitch, noteLabel, pitchFreq, pitchToMidi, type Pitch } from '../../piano/pitchTable';
 import type { App } from '../App';
@@ -26,6 +27,33 @@ const SENS_LABEL: Array<{ value: Sensitivity; label: string }> = [
 /** Bài kiểm tra: 5 nốt thế tay Đô — đủ để thấy micro nghe được, nghe đúng, và đàn có lệch không. */
 const CHECK_NOTES: Pitch[] = ['C4', 'D4', 'E4', 'F4', 'G4'];
 const STEP_TIMEOUT_MS = 8000;
+/** Nhật ký "đàn tự do" giữ tối đa bấy nhiêu nốt. */
+const FREE_LOG_MAX = 100;
+
+const TIP_TEXT: Record<TuneTip, string> = {
+  calibrate: 'Có nốt tiếng đủ to mà micro nghe lệch nửa cung → bấm "Chỉnh theo đàn nhà" (đàn lâu không lên dây).',
+  quiet:
+    'Có nốt tiếng đủ to mà micro vẫn chưa rõ cao độ → bớt tiếng ồn (TV, quạt, điều hòa), đàn từng nốt rõ ràng, nhả phím trước khi đàn nốt sau.',
+  closer:
+    'Tiếng đàn tới micro rất nhỏ kể cả ở độ nhạy Cao → đặt iPad trên giá nhạc (gần dây đàn), mở nắp trên của đàn nếu được.',
+};
+
+/** Tên bộ lọc iOS (cảnh báo cho phụ huynh). */
+const PROCESSING_NAME: Record<string, string> = {
+  echoCancellation: 'lọc tiếng vọng',
+  noiseSuppression: 'giảm ồn',
+  autoGainControl: 'tự chỉnh âm lượng',
+  voiceIsolation: 'tách giọng nói',
+};
+
+interface FreeNote {
+  note: Pitch;
+  cents: number;
+  /** Từ lúc gõ phím (ước tính) tới lúc app báo nốt (ms) */
+  latencyMs: number | null;
+  /** Bố mẹ chấm: micro nghe đúng phím bé đàn không */
+  verdict?: 'ok' | 'wrong';
+}
 
 interface StepLog {
   want: Pitch;
@@ -39,6 +67,10 @@ interface StepLog {
   pitchedFrames: number;
   frames: number;
   bestClarity: number;
+  /** Nốt ứng viên (top 3) từ các khung có cao độ */
+  candidates: Candidate[];
+  /** Gõ phím → app báo nốt (ms), từng lần nghe được */
+  latencyMs: number[];
 }
 
 /**
@@ -74,6 +106,11 @@ export function micTestScreen(app: App) {
     /** Đang đo độ trễ (app phát tiếng "tinh") — bỏ qua nốt nghe được lúc này */
     let measuring = false;
     let disposed = false;
+    let tally = new CandidateTally();
+    /** Đàn tự do: nốt nghe được + bố mẹ chấm đúng/sai (độ chính xác THẬT với đàn nhà) */
+    const freeLog: FreeNote[] = [];
+    let autoTune: ReturnType<typeof chooseSensitivity> | null = null;
+    const freeText = h('p', { class: 'muted' });
 
     const showLatency = () => {
       const ms = store.settings.micLatencyMs;
@@ -150,6 +187,8 @@ export function micTestScreen(app: App) {
       pitchedFrames: 0,
       frames: 0,
       bestClarity: 0,
+      candidates: [],
+      latencyMs: [],
     });
 
     const askStep = () => {
@@ -157,6 +196,7 @@ export function micTestScreen(app: App) {
       if (checking >= CHECK_NOTES.length) return finishCheck();
       const want = CHECK_NOTES[checking];
       steps.push(newStep(want));
+      tally = new CandidateTally();
       stepStart = performance.now();
       kb.clear();
       kb.setTargets([{ pitch: want, hand: 'RH', finger: checking + 1 }]);
@@ -175,26 +215,38 @@ export function micTestScreen(app: App) {
       const ok = steps.filter((s) => s.result === 'ok').length;
       const none = steps.filter((s) => s.result === 'none');
       const wrong = steps.filter((s) => s.result === 'wrong');
-      const tips: string[] = [];
-      if (none.length) {
-        const quiet = none.filter((s) => s.maxRms < s.gate * 1.2);
-        if (quiet.length) {
-          tips.push(
-            'Tiếng đàn tới micro còn NHỎ hơn vạch ngưỡng → chọn độ nhạy "Cao", đặt iPad trên giá nhạc (gần dây đàn), mở nắp trên của đàn nếu được.',
-          );
-        } else {
-          tips.push(
-            'Micro nghe thấy tiếng nhưng chưa rõ cao độ → bớt tiếng ồn (TV, quạt, điều hòa), đàn từng nốt rõ ràng, nhả phím trước khi đàn nốt sau.',
-          );
-        }
+      // TỰ CHỈNH ĐỘ NHẠY theo số đo từng nốt (micTune.ts) rồi áp dụng ngay
+      const cur = store.settings.micSensitivity;
+      const checks: NoteCheck[] = steps.map((s) => ({
+        want: pitchToMidi(s.want),
+        result: s.result,
+        heard: s.heard.map((p) => pitchToMidi(p as Pitch)),
+        maxRms: s.maxRms,
+        floor: s.floor,
+        gate: s.gate,
+        bestClarity: s.bestClarity,
+        candidates: s.candidates,
+      }));
+      const adv = chooseSensitivity(checks, cur);
+      autoTune = adv;
+      if (adv.changed) {
+        store.updateSettings({ micSensitivity: adv.sensitivity });
+        app.mic.sensitivity = adv.sensitivity;
+        renderSens();
       }
+      const tips: string[] = [];
+      const tip = (t: string) => {
+        if (!tips.includes(t)) tips.push(t);
+      };
+      adv.tips.forEach((t) => tip(TIP_TEXT[t]));
+      if (none.some((s) => s.maxRms < s.gate * 1.2) && adv.sensitivity === 'high' && !adv.changed) tip(TIP_TEXT.closer);
       const offs = wrong.flatMap((s) =>
         s.heard.map((p) => pitchToMidi(p as Pitch) - pitchToMidi(s.want)).filter((d) => Math.abs(d) === 1),
       );
-      if (offs.length >= 2) tips.push('Micro nghe lệch nửa cung → bấm "Chỉnh theo đàn nhà" (đàn lâu không lên dây).');
+      if (offs.length >= 2) tip(TIP_TEXT.calibrate);
       if (wrong.some((s) => s.heard.some((p) => (pitchToMidi(p as Pitch) - pitchToMidi(s.want)) % 12 === 0)))
         tips.push('Có lúc nghe nhầm quãng 8 (cùng tên nốt, khác cao độ) — thường do micro quá gần búa đàn; dịch iPad ra xa thêm ~20 cm.');
-      if (ok === steps.length) tips.push('Micro nghe tốt với đàn nhà. Có thể bật "Micro nghe đàn" trong Cài đặt. ✅');
+      if (ok === steps.length) tip('Micro nghe tốt với đàn nhà. Có thể bật "Micro nghe đàn" trong Cài đặt. ✅');
       const ms = steps.filter((s) => s.ms !== undefined).map((s) => s.ms!);
       report.replaceChildren(
         h('h3', {}, `Kết quả: nghe đúng ${ok}/${steps.length} nốt${ms.length ? ` · nhận sau ~${Math.round(ms.reduce((a, b) => a + b, 0) / ms.length / 100) / 10} giây` : ''}`),
@@ -216,9 +268,13 @@ export function micTestScreen(app: App) {
             ),
           ),
         ),
+        h('p', { class: 'lead' }, (adv.changed ? '🎚️ ' : '✔️ ') + adv.message),
         ...tips.map((t) => h('p', {}, '💡 ' + t)),
+        h('div', { class: 'row' }, button({ icon: '🔁', label: 'Kiểm tra lại', kind: 'good', onTap: () => void runCheck() })),
       );
-      calib.textContent = 'Xong bài kiểm tra. Có thể bấm "Sao chép nhật ký" để gửi người hỗ trợ.';
+      calib.textContent = adv.changed
+        ? 'Xong bài kiểm tra — đã đổi độ nhạy. Bấm "Kiểm tra lại" để thử với độ nhạy mới.'
+        : 'Xong bài kiểm tra. Có thể bấm "Sao chép nhật ký" để gửi người hỗ trợ.';
     };
 
     const unState = app.mic.onState((s) => (status.textContent = STATE_TEXT[s]));
@@ -245,6 +301,10 @@ export function micTestScreen(app: App) {
         if (f.pitch) {
           st.pitchedFrames++;
           st.bestClarity = Math.max(st.bestClarity, f.pitch.clarity);
+          if (f.rms >= f.gate) {
+            tally.add(f.pitch.freq, f.pitch.clarity, store.settings.micTuningCents);
+            st.candidates = tally.top(3);
+          }
         }
       }
     });
@@ -255,9 +315,12 @@ export function micTestScreen(app: App) {
       const cents = Math.round(n.cents);
       detail.textContent = `${p} · ${n.freq.toFixed(1)} Hz · lệch ${cents > 0 ? '+' : ''}${cents} cents`;
       kb.setResult(p, 'good');
+      const ctxNow = app.audio.context?.currentTime;
+      const latencyMs = n.at !== undefined && ctxNow !== undefined ? Math.round((ctxNow - n.at) * 1000) : null;
       if (checking >= 0) {
         const st = steps[steps.length - 1];
         st.heard.push(p);
+        if (latencyMs !== null) st.latencyMs.push(latencyMs);
         if (pitchToMidi(p) === pitchToMidi(st.want)) {
           st.result = 'ok';
           st.ms = Math.round(performance.now() - stepStart);
@@ -293,31 +356,97 @@ export function micTestScreen(app: App) {
             ? `Đã chỉnh: đàn nhà lệch ${clamped} cents. Lệch khá nhiều — nên gọi thợ lên dây khi có dịp.`
             : `Đã chỉnh xong: đàn nhà lệch ${clamped} cents. ✅`;
         showTuning();
+        return;
       }
+      // Đàn tự do: ghi lại để bố mẹ chấm đúng/sai
+      freeLog.push({ note: p, cents, latencyMs });
+      if (freeLog.length > FREE_LOG_MAX) freeLog.shift();
+      showFree();
     });
+
+    /** Bộ đếm "nhận nốt" khi đàn tự do: bố mẹ chạm Đúng/Sai cho nốt vừa hiện → độ chính xác thật với đàn nhà. */
+    function showFree(): void {
+      const judged = freeLog.filter((x) => x.verdict);
+      const good = judged.filter((x) => x.verdict === 'ok').length;
+      const last = freeLog[freeLog.length - 1];
+      freeText.textContent =
+        `Micro đã nghe ${freeLog.length} nốt` +
+        (judged.length ? ` · bố mẹ chấm ${good}/${judged.length} đúng (${Math.round((good / judged.length) * 100)}%)` : '') +
+        (last && !last.verdict ? ` · nốt vừa nghe: ${noteLabel(last.note)} — đúng phím bé đàn không?` : '');
+    }
+    const judge = (v: 'ok' | 'wrong') => {
+      const last = freeLog[freeLog.length - 1];
+      if (!last || last.verdict) return;
+      last.verdict = v;
+      showFree();
+    };
+
+    async function runCheck(): Promise<void> {
+      if (measuring || !(await startMic())) return;
+      calibrating = false;
+      steps = [];
+      autoTune = null;
+      report.replaceChildren();
+      checking = 0;
+      askStep();
+    }
+
+    /** iOS ép bật bộ lọc giọng nói (dù app xin tắt) → báo phụ huynh (và ghi vào nhật ký). */
+    const showProcessing = () => {
+      const info = app.mic.trackInfo();
+      if (!info?.forced.length) return;
+      meterText.textContent = `⚠️ iPad đang tự bật: ${info.forced.map((k) => PROCESSING_NAME[k] ?? k).join(', ')} — tiếng đàn ngân có thể bị nhỏ dần.`;
+      lastMeterText = performance.now() + 4000;
+    };
 
     const startMic = async () => {
       app.mic.tuningCents = store.settings.micTuningCents;
       app.mic.sensitivity = store.settings.micSensitivity;
       app.mic.latencyMs = store.settings.micLatencyMs;
-      if (app.mic.state !== 'on') await app.mic.start();
+      if (app.mic.state !== 'on') {
+        await app.mic.start();
+        showProcessing();
+      }
       return app.mic.state === 'on';
     };
 
     const copyLog = async () => {
+      const ctx = app.audio.context as (AudioContext & { baseLatency?: number }) | null;
+      const judged = freeLog.filter((x) => x.verdict);
+      const lat = freeLog.map((x) => x.latencyMs).filter((x): x is number => x !== null);
       const log = {
-        app: 'piano-be-9 mic log',
+        app: 'piano-be-9 mic log v2',
         at: new Date().toISOString(),
         ua: navigator.userAgent,
-        sampleRate: app.audio.context?.sampleRate ?? null,
+        sampleRate: ctx?.sampleRate ?? null,
+        baseLatency: ctx?.baseLatency ?? null,
+        ctxState: ctx?.state ?? null,
+        audioSession: (navigator as unknown as { audioSession?: { type?: string } }).audioSession?.type ?? null,
         tuningCents: store.settings.micTuningCents,
         sensitivity: store.settings.micSensitivity,
         latencyMs: store.settings.micLatencyMs,
         outputLatency: app.audio.outputLatency,
+        micState: app.mic.state,
+        // Bộ lọc iOS THẬT SỰ áp dụng (getSettings) — forced = bị ép bật dù app xin tắt
+        track: app.mic.trackInfo(),
+        stats: app.mic.stats,
+        warmingUp: app.mic.warmingUp,
         lastFrame: lastFrame && {
           rms: +lastFrame.rms.toFixed(5),
           floor: +lastFrame.floor.toFixed(5),
           gate: +lastFrame.gate.toFixed(5),
+          app: lastFrame.app,
+        },
+        autoTune: autoTune && {
+          sensitivity: autoTune.sensitivity,
+          changed: autoTune.changed,
+          reason: autoTune.reason,
+          tips: autoTune.tips,
+          margin: {
+            low: +autoTune.margin.low.toFixed(2),
+            normal: +autoTune.margin.normal.toFixed(2),
+            high: +autoTune.margin.high.toFixed(2),
+          },
         },
         steps: steps.map((s) => ({
           ...s,
@@ -325,7 +454,15 @@ export function micTestScreen(app: App) {
           gate: +s.gate.toFixed(5),
           floor: +s.floor.toFixed(5),
           bestClarity: +s.bestClarity.toFixed(2),
+          candidates: s.candidates.map((c) => ({ ...c, note: midiToPitch(c.midi) })),
         })),
+        free: {
+          heard: freeLog.length,
+          judged: judged.length,
+          correct: judged.filter((x) => x.verdict === 'ok').length,
+          medianLatencyMs: lat.length ? [...lat].sort((a, b) => a - b)[Math.floor(lat.length / 2)] : null,
+          notes: freeLog,
+        },
       };
       const text = JSON.stringify(log, null, 1);
       try {
@@ -359,6 +496,14 @@ export function micTestScreen(app: App) {
           tuning,
           latencyText,
           report,
+          h('h3', {}, 'Đàn tự do — bố mẹ chấm micro'),
+          freeText,
+          h(
+            'div',
+            { class: 'row mic-tools' },
+            button({ icon: '✅', label: 'Đúng', onTap: () => judge('ok') }),
+            button({ icon: '❌', label: 'Sai', onTap: () => judge('wrong') }),
+          ),
           // Nút phụ (ít dùng) để trong vùng cuộn — thanh dưới chỉ giữ 4 nút chính
           h(
             'div',
@@ -380,7 +525,7 @@ export function micTestScreen(app: App) {
           h(
             'p',
             { class: 'muted small' },
-            'Mẹo: đặt iPad trên giá nhạc, mic hướng về đàn; tắt TV/quạt; bé đàn rõ từng nốt. Micro chỉ phân tích ngay trên iPad, không ghi âm.',
+            'Mẹo: đặt iPad trên giá nhạc, mic hướng về đàn; tắt TV/quạt; bé đàn rõ từng nốt. Micro chỉ phân tích ngay trên iPad, không gửi đi đâu; màn này không ghi âm.',
           ),
         ),
         h('div', { class: 'keyboard-wrap short' }, kb.el),
@@ -391,14 +536,7 @@ export function micTestScreen(app: App) {
             icon: '🩺',
             label: 'Kiểm tra 5 nốt',
             kind: 'good',
-            onTap: async () => {
-              if (measuring || !(await startMic())) return;
-              calibrating = false;
-              steps = [];
-              report.replaceChildren();
-              checking = 0;
-              askStep();
-            },
+            onTap: () => void runCheck(),
           }),
           button({
             icon: '🎯',
@@ -420,6 +558,7 @@ export function micTestScreen(app: App) {
     showTuning();
     showLatency();
     renderSens();
+    showFree();
 
     return () => {
       disposed = true;

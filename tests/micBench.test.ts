@@ -176,6 +176,10 @@ const SCENARIOS: Array<{ name: string; notes: SimNote[] } & SimOptions> = [
   { name: '44,1k: giai điệu tay phải', notes: melody(C_POS, 24, 0.6, 0.45, 41), ...REAL, sampleRate: 44100 },
   { name: '44,1k: tay trái trầm', notes: melody([43, 45, 47, 48, 50, 52, 53, 55], 16, 0.7, 0.55, 43), ...REAL, sampleRate: 44100 },
   { name: '44,1k: nốt cao', notes: melody([67, 69, 71, 72, 74, 76], 16, 0.6, 0.45, 45), ...REAL, sampleRate: 44100 },
+  // ---- iPad thật (OWNER 2026-10-06 "nghe được nhưng chưa tốt"): micro khởi động trả toàn 0; iOS ép bật AGC ----
+  { name: 'iOS: micro khởi động (0,25 s)', notes: melody(C_POS, 24, 0.6, 0.45, 51), ...REAL, warmup: 0.25 },
+  { name: 'iOS: tự chỉnh âm lượng (AGC)', notes: melody(C_POS, 24, 0.6, 0.45, 53), ...REAL, agc: 4 },
+  { name: 'iOS: AGC + 44,1k + đàn nhẹ', notes: melody(C_POS, 16, 0.7, 0.5, 55, [0.3, 0.5]), ...REAL, gain: 0.05, agc: 4, sampleRate: 44100, warmup: 0.2 },
   // ---- máy đếm nhịp kêu cùng lúc (tiếng tích lọt vào micro, KHÔNG bịt tai) ----
   {
     name: 'THẬT + tiếng tích đếm nhịp',

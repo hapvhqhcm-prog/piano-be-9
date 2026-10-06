@@ -21,13 +21,13 @@ const ALLOWED = [
   'hand', 'bpm', 'timeSignature', 'week', 'extension', 'position', 'lh', 'lhPosition', 'phrases', 'notes',
 ];
 
-it('có 70 bài hát (56 cũ + 14 bài tự sáng tác v5), id không trùng, đủ tuần 2–29 (trừ 20 — hòa nhạc Cấp 2)', () => {
+it('có 70 bài hát (56 cũ + 14 bài tự sáng tác v5), id không trùng, đủ tuần 2–30 (trừ 21 — hòa nhạc Cấp 2; v5.1: 31 tuần)', () => {
   // 51 bài + 6 bài dân ca Việt Nam − "Cầu London — chấm dôi" (bài lặp, thay bằng "Bắc kim thang") — OWNER yêu cầu 2026-10-05
   // v5 (OWNER duyệt 2026-10-05): + 14 bài tự sáng tác cho tuần củng cố / tuần nhịp mới (giữ đủ 56 bài cũ)
   expect(SONGS).toHaveLength(70);
   expect(new Set(SONGS.map((s) => s.id)).size).toBe(70);
   const weeks = new Set(SONGS.map((s) => s.week));
-  for (let w = 2; w <= 29; w++) if (w !== 20) expect(weeks.has(w), `tuần ${w}`).toBe(true);
+  for (let w = 2; w <= 30; w++) if (w !== 21) expect(weeks.has(w), `tuần ${w}`).toBe(true);
 });
 
 it('giảm bài lặp (OWNER duyệt 2026-10-05): Bài ca niềm vui ≤ 6, Chú cừu ≤ 3; có 4 bài tự sáng tác mới', () => {

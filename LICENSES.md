@@ -33,7 +33,8 @@ Mã nguồn app do dự án tự viết, dùng riêng cho gia đình (OWNER: Pha
 
 Thuật toán YIN (A. de Cheveigné & H. Kawahara, J. Acoust. Soc. Am. 111(4), 2002) — tự cài đặt lại
 trong `src/audio/pitchDetect.ts`, không dùng thư viện ngoài. Âm thanh micro chỉ được phân tích trong bộ nhớ,
-không lưu, không gửi đi.
+không lưu, không gửi đi. "Nghe lại con đàn" (`src/audio/recorder.ts`) dùng `MediaRecorder` có sẵn của trình duyệt,
+giữ bản ghi tạm trong bộ nhớ — không thư viện ngoài, không lưu, không gửi đi.
 
 ## Bài hát (`src/data/songs/`)
 

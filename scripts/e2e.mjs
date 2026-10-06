@@ -15,7 +15,7 @@
  * Kịch bản:
  *   A  Lần đầu mở app → Bắt đầu → Hướng dẫn (4 thẻ) → màn chính → Học tiếp (tuần 1 bài 1) → tổng kết →
  *      màn chính có tiến độ → học hết tuần 1 (cả thử thách Đô giữa 10 lần) → lên Tuần 2.
- *   B  Cổng phụ huynh (nhấn giữ 2 giây + phép cộng) → chọn tuần 12, 18, 22, 28 → mỗi tuần một buổi "Học tiếp";
+ *   B  Cổng phụ huynh (nhấn giữ 2 giây + phép cộng) → chọn tuần 12, 19, 23, 29 → mỗi tuần một buổi "Học tiếp";
  *      thêm các bài có kiểu bước còn thiếu (phím đen, đối đáp, sáng tác, nốt mốc, to-nhỏ, ngắt-liền, đọc nhạc).
  *      (--quick: bỏ phần bổ sung)
  *   C  Thư viện → mở bài → Xem mẫu → quay lại; Sổ sticker; màn Phụ huynh (Nâng cao, Sao lưu không lỗi).
@@ -51,8 +51,8 @@ const ONLY = (opt('--only') ?? 'A,B,C,D,E').toUpperCase().split(',').map((s) => 
 const SKIP_BUILD = flag('--skip-build');
 const QUICK = flag('--quick');
 const KEEP_PROFILE = flag('--keep-profile');
-// --weeks 12,18 : tuần cho phần chính của kịch bản B (mặc định 12,18,22,28; "none" = bỏ)
-const B_WEEKS = (opt('--weeks') ?? '12,18,22,28').split(',').map(Number).filter((n) => n >= 1);
+// --weeks 12,19 : tuần cho phần chính của kịch bản B (mặc định 12,19,23,29 — giáo trình 31 tuần v5.1; "none" = bỏ)
+const B_WEEKS = (opt('--weeks') ?? '12,19,23,29').split(',').map(Number).filter((n) => n >= 1);
 
 function defaultOutRoot() {
   const scratch = 'C:\\Users\\Admin\\AppData\\Local\\Temp\\claude\\C--Users-Admin-Desktop\\f9a5e6cb-5b62-4383-9275-dbaf4ea4aaf4\\scratchpad';
@@ -366,6 +366,8 @@ const screenKind = () => {
   if (q('.parent-head')) return 'parent';
   if (q('.screen.stickers')) return 'stickers';
   if (q('.end-actions')) return 'session-end';
+  // v5.1: màn kết = thẻ "Con làm thầy" + "Hôm nay con thấy thế nào?" trên CÙNG một màn
+  if (q('.closing-teach') && q('.rating-options')) return 'closing';
   if (q('.rating-options') || title.startsWith('Hôm nay con thấy')) return 'rating';
   if (txt(q('.step-tag')) === 'Con làm thầy') return 'teach';
   if (txt(q('.step-tag')).startsWith('Tư thế')) return 'posture';
@@ -790,7 +792,7 @@ async function main() {
 
   // ---------- B ----------
   const allKinds = new Set();
-  await scenario('B', 'Phụ huynh đổi tuần 12/18/22/28 → mỗi tuần một buổi (+ các kiểu bước còn lại)', async (notes) => {
+  await scenario('B', `Phụ huynh đổi tuần ${B_WEEKS.join('/')} → mỗi tuần một buổi (+ các kiểu bước còn lại)`, async (notes) => {
     await navigate(APP_URL);
     await toHome();
     for (const w of B_WEEKS) {
@@ -807,8 +809,8 @@ async function main() {
         { w: 11, lesson: 'w11-l1', want: 'quiz:landmark' },
         { w: 11, lesson: 'w11-l3', want: 'improv:question-answer' },
         { w: 12, lesson: 'w12-stac', want: 'dynamics' },
-        { w: 22, lesson: 'w22-l3', want: 'sight' },
-        { w: 22, lesson: 'w22-l4', want: 'improv:compose' },
+        { w: 23, lesson: 'w23-l3', want: 'sight' },
+        { w: 23, lesson: 'w23-l1', want: 'improv:compose' },
         { w: 13, lesson: 'w13-l4', want: 'quiz:interval' },
       ];
       let curW = B_WEEKS[B_WEEKS.length - 1] ?? 0;
@@ -831,8 +833,8 @@ async function main() {
     }
     const kinds = [...allKinds].filter((k) => !['home', 'other'].includes(k)).sort();
     notes.push(`Các loại màn đã chạy hết: ${kinds.join(', ')}`);
-    const want = ['posture', 'notes', 'technique', 'song', 'review-song', 'teach', 'rating', 'session-end', 'quiz:read'];
-    if (B_WEEKS.includes(18)) want.push('rhythm'); // nhịp: bài đầu tuần 18
+    const want = ['posture', 'notes', 'technique', 'song', 'review-song', 'closing', 'session-end', 'quiz:read'];
+    if (B_WEEKS.some((w) => [15, 17, 18, 19].includes(w))) want.push('rhythm'); // nhịp: bài đầu các tuần này
     if (!QUICK) want.push('quiz:interval', 'improv:black-keys', 'improv:question-answer', 'improv:compose', 'quiz:landmark', 'dynamics', 'sight');
     const missing = want.filter((k) => !allKinds.has(k));
     assert(!missing.length, `Chưa gặp các màn: ${missing.join(', ')}`);

@@ -22,6 +22,12 @@ import { DEFAULT_DETECT, NoteTracker, detectPitch, type DetectOptions, type Hear
  * 7. Mức ồn nền chỉ được NÂNG lên ở khung "không có tiếng đàn" (không cao độ rõ, không gõ) và có trần
  *    → nốt ngân dài (> 10 s) không còn bị coi dần thành tiếng ồn rồi bị cắt.
  * 8. Mốc GÕ PHÍM được định vị trong khung 2048 mẫu (năng lượng bật lên ở khối 64 mẫu nào) thay vì lấy giờ của khung.
+ *
+ * 2026-10-06 (OWNER: "iPad đã nghe được nhưng chưa tốt lắm"):
+ * 9. iOS vừa mở micro thường trả vài trăm ms toàn số 0 → mức ồn nền bị khởi tạo ≈ 0, rồi chỉ lên RẤT chậm (τ ≈ 12 s)
+ *    → ngưỡng quá thấp lúc đầu (tiếng ồn lọt qua, nốt "thừa"). Giờ: khung toàn 0 không dùng để khởi tạo; trong 2 GIÂY ĐẦU,
+ *    CHỪNG NÀO CHƯA CÓ LẦN GÕ NÀO, mức ồn nền được lên nhanh (τ ≈ 0,5 s) để bắt kịp phòng. Có lần gõ (bé đã đàn) là
+ *    về tốc độ chậm như cũ — đuôi nốt đàn (không rõ cao độ vì vang/rung) không được đẩy ngưỡng lên (đo: tụt 16/16 → 7/16).
  */
 
 /**
@@ -58,6 +64,11 @@ const ONSET_RATIO = 1.5;
 /** Mức ồn nền tăng tối đa bao nhiêu mỗi khung (tỉ lệ), và trần tuyệt đối. */
 const FLOOR_RISE = 0.002;
 export const FLOOR_MAX = 0.03;
+/** Thời gian "làm quen phòng" sau khi bật micro (giây) và tốc độ lên của mức ồn nền trong lúc đó. */
+export const WARMUP_S = 2;
+const FLOOR_RISE_WARM = 0.05;
+/** Khung nhỏ hơn mức này = micro chưa chạy (số 0 kỹ thuật số) — không dùng để khởi tạo mức ồn nền. */
+const DIGITAL_SILENCE = 1e-6;
 /** Khối năng lượng để định vị lần gõ trong khung (64 mẫu ≈ 1,3 ms). */
 const ONSET_BLOCK = 64;
 
@@ -122,6 +133,9 @@ export class MicAnalyzer {
   /** Khung phát hiện lần gõ gần nhất (để giãn cách, tránh một lần gõ đếm hai lần) */
   private lastOnsetFrame = -1;
   private floor = -1;
+  /** Thời điểm khung "có tín hiệu" đầu tiên (NaN = chưa có) — để tính 2 giây làm quen phòng */
+  private warmFrom = NaN;
+  private warm = false;
   private filtered = new Float32Array(0);
   private decimated = new Float32Array(0);
   private energies = new Float32Array(0);
@@ -205,7 +219,12 @@ export class MicAnalyzer {
       if (v > level) level = v;
     }
     const r = Math.sqrt(sum / buf.length);
-    if (this.floor < 0) this.floor = r;
+    if (this.floor < 0 && r > DIGITAL_SILENCE) {
+      this.floor = r;
+      this.warmFrom = t;
+      this.warm = true;
+    }
+    if (this.warm && t - this.warmFrom >= WARMUP_S) this.warm = false;
     const gate = this.gate();
     // "Gõ" (đánh phím / vỗ tay): vượt ngưỡng và tăng vọt so với mức thấp nhất ~3 khung gần đây
     let base = r;
@@ -214,6 +233,7 @@ export class MicAnalyzer {
     let onsetAt = -1;
     if (onset) {
       this.lastOnsetFrame = t;
+      this.warm = false; // bé đã đàn → thôi "làm quen phòng"
       // Gõ phím trùng lúc micro bị bịt tai (app === 'click') chỉ lộ ra sau đó → lấy mốc lúc bắt đầu bịt
       const clickFrom = this.clickFrom;
       onsetAt = clickFrom >= 0 && t - clickFrom < 0.2 ? clickFrom + 0.01 : this.locateOnset(x, sampleRate, t);
@@ -264,11 +284,26 @@ export class MicAnalyzer {
 
   /** Mức ồn nền: theo xuống NHANH khi phòng im; lên RẤT CHẬM và chỉ ở khung không có tiếng đàn; có trần. */
   private updateFloor(r: number, mayRise: boolean): void {
+    if (this.floor < 0) return; // micro chưa chạy (toàn 0) → chưa có mức ồn nền
     if (r < this.floor) this.floor += (r - this.floor) * 0.5;
-    else if (mayRise) this.floor = Math.min(FLOOR_MAX, this.floor + (r - this.floor) * FLOOR_RISE);
+    else if (mayRise) this.floor = Math.min(FLOOR_MAX, this.floor + (r - this.floor) * (this.warm ? FLOOR_RISE_WARM : FLOOR_RISE));
   }
 
+  /** Đang trong 2 giây đầu "làm quen phòng" (để nhật ký chẩn đoán). */
+  get warmingUp(): boolean {
+    return this.warm;
+  }
+
+  /**
+   * requireOnset = false: bật micro mới (MicListener.start) → học lại mức ồn nền của phòng từ đầu.
+   * requireOnset = true: chỉ bỏ nốt đang ngân (chờ nốt mới) — giữ mức ồn nền.
+   */
   reset(requireOnset = true): void {
+    if (!requireOnset) {
+      this.floor = -1;
+      this.warmFrom = NaN;
+      this.warm = false;
+    }
     this.pendingOnset = false;
     this.tracker.reset(requireOnset);
   }

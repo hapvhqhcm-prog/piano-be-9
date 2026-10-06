@@ -5,8 +5,10 @@ import type { HeardNote, PitchResult } from './pitchDetect';
 
 /**
  * Micro nghe đàn cơ (OWNER mở khóa ARCHITECTURE LOCK ngày 2026-10-04).
- * - Xử lý ngay trên iPad, KHÔNG ghi âm, KHÔNG gửi đi đâu, chạy offline.
- * - Tắt lọc tiếng vọng/giảm ồn/tự chỉnh âm lượng để giữ nguyên cao độ.
+ * - Xử lý ngay trên iPad, KHÔNG gửi đi đâu, chạy offline. Không ghi âm — TRỪ "Nghe lại con đàn" (recorder.ts,
+ *   OWNER duyệt 2026-10-06): ghi tạm trong bộ nhớ khi bé bấm, rời màn là xóa, không lưu/gửi.
+ * - Tắt lọc tiếng vọng/giảm ồn/tự chỉnh âm lượng/tách giọng để giữ nguyên tiếng đàn. iOS có thể vẫn ÉP bật
+ *   (track.getSettings() cho biết) → `trackInfo()` báo lại để màn "Thử micro" ghi vào nhật ký.
  * - Bỏ qua khi chính app đang phát tiếng (âm mẫu, phím ảo) để không tự "nghe" mình.
  *   Tiếng tích máy đếm nhịp (≥ 5 kHz) bị bộ lọc chặn → KHÔNG bịt tai micro lúc có tiếng tích nữa.
  * - iOS hay làm micro "điếc" mà không báo (cuộc gọi, Siri, khóa màn hình, chuyển app): track bị 'mute',
@@ -31,6 +33,71 @@ export interface MicFrame {
 export const MIC_STALE_MS = 1000;
 /** Track bị iOS 'mute' bao lâu (không tự 'unmute') thì coi là điếc. */
 export const MIC_MUTE_GRACE_MS = 1000;
+/** Thông tin micro THẬT SỰ được áp dụng (để nhật ký chẩn đoán). */
+export interface MicTrackInfo {
+  /** Bộ lọc xử lý giọng nói mà trình duyệt báo là đang BẬT (undefined = trình duyệt không báo) */
+  echoCancellation?: boolean;
+  noiseSuppression?: boolean;
+  autoGainControl?: boolean;
+  voiceIsolation?: boolean;
+  sampleRate?: number;
+  channelCount?: number;
+  latency?: number;
+  /** Phải xin lại micro bằng { audio: true } vì trình duyệt từ chối các tùy chọn tắt lọc */
+  fallback: boolean;
+  /** Các bộ lọc bị ÉP bật dù app xin tắt (vd ['autoGainControl']) */
+  forced: string[];
+}
+
+/** Thống kê từ lúc bật micro (nhật ký chẩn đoán): khung bị trễ = iPad bận / hẹn giờ bị dồn. */
+export interface MicStats {
+  frames: number;
+  /** Khoảng cách lớn nhất giữa 2 khung (ms) — thiết kế 25 ms */
+  maxGapMs: number;
+  /** Số lần hai khung cách nhau > 60 ms */
+  slowGaps: number;
+  onsets: number;
+  notes: number;
+  /** Số khung bỏ qua vì app đang phát tiếng */
+  appFrames: number;
+}
+
+/** Tùy chọn xin micro: tắt mọi xử lý giọng nói (giữ nguyên tiếng đàn). voiceIsolation: Safari/Chrome mới. */
+export const MIC_CONSTRAINTS = {
+  echoCancellation: false,
+  noiseSuppression: false,
+  autoGainControl: false,
+  voiceIsolation: false,
+  channelCount: { ideal: 1 },
+} as MediaTrackConstraints;
+
+const PROCESSING_KEYS = ['echoCancellation', 'noiseSuppression', 'autoGainControl', 'voiceIsolation'] as const;
+
+/** Đọc track.getSettings() an toàn (thiết bị/đối tượng giả có thể không có). */
+export function readTrackInfo(track: MediaStreamTrack | undefined, fallback: boolean): MicTrackInfo {
+  let st: Record<string, unknown> = {};
+  try {
+    st = (track?.getSettings?.() ?? {}) as Record<string, unknown>;
+  } catch {
+    /* bỏ qua */
+  }
+  const bool = (k: string) => (typeof st[k] === 'boolean' ? (st[k] as boolean) : undefined);
+  const num = (k: string) => (typeof st[k] === 'number' ? (st[k] as number) : undefined);
+  const info: MicTrackInfo = {
+    echoCancellation: bool('echoCancellation'),
+    noiseSuppression: bool('noiseSuppression'),
+    autoGainControl: bool('autoGainControl'),
+    voiceIsolation: bool('voiceIsolation'),
+    sampleRate: num('sampleRate'),
+    channelCount: num('channelCount'),
+    latency: num('latency'),
+    fallback,
+    forced: [],
+  };
+  info.forced = PROCESSING_KEYS.filter((k) => info[k] === true);
+  return info;
+}
+
 /** Số mẫu lấy làm "chữ ký" để nhận ra bộ đệm y hệt khung trước. */
 const PROBES = 8;
 /** Khung phân tích cao độ / gõ phím (mẫu) — MicAnalyzer luôn nhận 2048 mẫu gần nhất. */
@@ -55,6 +122,9 @@ export class MicListener {
   private timer: number | undefined;
   private analyzer = new MicAnalyzer();
   private lastClapAt = -1;
+  private usedFallback = false;
+  private lastTickAt = -1;
+  private _stats: MicStats = MicListener.emptyStats();
   private noteListeners = new Set<(n: HeardNote) => void>();
   private onsetListeners = new Set<(atCtxTime: number) => void>();
   private frameListeners = new Set<(f: MicFrame) => void>();
@@ -99,6 +169,36 @@ export class MicListener {
   }
   set sensitivity(s: Sensitivity) {
     this.analyzer.sensitivity = s;
+  }
+
+  private static emptyStats(): MicStats {
+    return { frames: 0, maxGapMs: 0, slowGaps: 0, onsets: 0, notes: 0, appFrames: 0 };
+  }
+
+  /** Luồng micro đang mở (null khi tắt) — recorder.ts ghi "Nghe lại con đàn" từ đây (cùng luồng, không ảnh hưởng nhận nốt). */
+  get mediaStream(): MediaStream | null {
+    return this._state === 'on' ? this.stream : null;
+  }
+
+  /** Bộ âm thanh dùng chung (recorder.ts phát lại qua đây → micro biết app đang phát, không tự nghe mình). */
+  get engine(): AudioEngine {
+    return this.audio;
+  }
+
+  /** Bộ lọc thật sự được áp dụng cho micro (null khi micro tắt). Đọc lại mỗi lần gọi (iOS có thể đổi khi phát tiếng). */
+  trackInfo(): MicTrackInfo | null {
+    const tr = this.stream?.getAudioTracks()[0];
+    return tr ? readTrackInfo(tr, this.usedFallback) : null;
+  }
+
+  /** Thống kê từ lần bật micro gần nhất. */
+  get stats(): MicStats {
+    return { ...this._stats };
+  }
+
+  /** Mức ồn nền đang trong 2 giây "làm quen phòng". */
+  get warmingUp(): boolean {
+    return this.analyzer.warmingUp;
   }
 
   constructor(private readonly audio: AudioEngine) {
@@ -240,10 +340,17 @@ export class MicListener {
     let stream: MediaStream;
     try {
       this.audio.setMicActive(true);
-      stream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
-        video: false,
-      });
+      this.usedFallback = false;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: MIC_CONSTRAINTS, video: false });
+      } catch (e) {
+        // Trình duyệt cũ từ chối tùy chọn (OverconstrainedError/TypeError) → xin micro "trơn"; bị CHẶN thì thôi
+        const name = (e as { name?: string })?.name;
+        if (name !== 'OverconstrainedError' && name !== 'TypeError') throw e;
+        if (myGen !== this.gen) throw e;
+        this.usedFallback = true;
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      }
     } catch (e) {
       if (myGen !== this.gen) return this._state;
       this.audio.setMicActive(false);
@@ -285,6 +392,8 @@ export class MicListener {
     // KHÔNG nối ra loa → không có tiếng hú
     this.source.connect(this.analyser);
     this.analyzer.reset(false);
+    this._stats = MicListener.emptyStats();
+    this.lastTickAt = -1;
     this.lastOnsetAt = -1;
     this.probe.fill(NaN);
     this.staleSince = -1;
@@ -348,6 +457,15 @@ export class MicListener {
     if (!analyser || !buf || !ctx) return;
     analyser.getFloatTimeDomainData(buf);
     if (this.checkStale(buf)) return;
+    const st = this._stats;
+    const wall = this.clock();
+    if (this.lastTickAt >= 0) {
+      const gap = wall - this.lastTickAt;
+      if (gap > st.maxGapMs) st.maxGapMs = gap;
+      if (gap > 60) st.slowGaps++;
+    }
+    this.lastTickAt = wall;
+    st.frames++;
     const since = this.audio.msSinceSound();
     const now = ctx.currentTime;
     this.bufTime = now;
@@ -360,12 +478,14 @@ export class MicListener {
           : 'quiet';
     // Không ai cần cao độ (vd chỉ chấm vỗ nhịp) → bỏ YIN, đỡ CPU iPad cũ
     const needPitch = this.noteListeners.size > 0 || this.frameListeners.size > 0;
+    if (app !== 'quiet') st.appFrames++;
     const f = this.analyzer.process(buf.subarray(buf.length - ANALYSIS_FRAME), ctx.sampleRate, now, app, needPitch);
     // "Gõ/vỗ" (chấm vỗ nhịp): mốc thời gian định vị trong khung phân tích
     if (f.onset && now - this.lastClapAt > 0.15) {
       this.lastClapAt = now;
       const at = f.onsetAt >= 0 ? Math.min(now, f.onsetAt) : now - 0.035;
       this.lastOnsetAt = at;
+      st.onsets++;
       this.onsetListeners.forEach((fn) => fn(at));
     }
     this.serveChords();
@@ -375,6 +495,7 @@ export class MicListener {
     }
     if (f.note) {
       const n = f.note;
+      st.notes++;
       this.noteListeners.forEach((fn) => fn(n));
     }
   }

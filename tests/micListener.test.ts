@@ -198,3 +198,64 @@ describe('MicListener: iOS làm micro "điếc" → báo tắt, cần bật lạ
     offNote();
   });
 });
+
+describe('MicListener: bộ lọc iOS thật sự áp dụng, luồng cho "Nghe lại", thống kê', () => {
+  it('xin micro tắt mọi xử lý giọng nói (cả voiceIsolation); trackInfo báo bộ lọc bị iOS ÉP bật', async () => {
+    const { mic, getUserMedia } = setup();
+    getUserMedia.mockImplementationOnce(async () => {
+      const tr = {
+        readyState: 'live',
+        muted: false,
+        stop: vi.fn(),
+        onended: null,
+        onmute: null,
+        onunmute: null,
+        getSettings: () => ({ echoCancellation: false, noiseSuppression: true, autoGainControl: true, sampleRate: 48000, channelCount: 1 }),
+      };
+      return { getAudioTracks: () => [tr], getTracks: () => [tr] };
+    });
+    expect(mic.mediaStream).toBeNull();
+    expect(mic.trackInfo()).toBeNull();
+    await mic.start();
+    const req = (getUserMedia.mock.calls[0] as unknown as [MediaStreamConstraints])[0].audio as Record<string, unknown>;
+    expect(req).toMatchObject({ echoCancellation: false, noiseSuppression: false, autoGainControl: false, voiceIsolation: false });
+    const info = mic.trackInfo()!;
+    expect(info.forced).toEqual(['noiseSuppression', 'autoGainControl']);
+    expect(info.sampleRate).toBe(48000);
+    expect(info.fallback).toBe(false);
+    expect(mic.mediaStream).not.toBeNull();
+    mic.stop();
+    expect(mic.mediaStream).toBeNull();
+  });
+
+  it('trình duyệt cũ từ chối tùy chọn (OverconstrainedError) → xin micro "trơn", vẫn bật; bị CHẶN thì báo denied', async () => {
+    const { mic, getUserMedia } = setup();
+    getUserMedia.mockImplementationOnce(async () => {
+      throw Object.assign(new Error('x'), { name: 'OverconstrainedError' });
+    });
+    expect(await mic.start()).toBe('on');
+    expect((getUserMedia.mock.calls[1] as unknown as [MediaStreamConstraints])[0].audio).toBe(true);
+    expect(mic.trackInfo()!.fallback).toBe(true);
+    expect(mic.trackInfo()!.forced).toEqual([]); // track giả không có getSettings → không đoán
+    mic.stop();
+    getUserMedia.mockImplementationOnce(async () => {
+      throw Object.assign(new Error('x'), { name: 'NotAllowedError' });
+    });
+    expect(await mic.start()).toBe('denied');
+    expect(getUserMedia).toHaveBeenCalledTimes(3); // không thử lại khi bị chặn
+  });
+
+  it('thống kê khung: đếm khung, khoảng cách lớn nhất; bật lại thì đếm lại', async () => {
+    const { mic } = setup();
+    await mic.start();
+    vi.advanceTimersByTime(1000);
+    const st = mic.stats;
+    expect(st.frames).toBeGreaterThanOrEqual(38);
+    expect(st.maxGapMs).toBeLessThanOrEqual(30);
+    expect(st.slowGaps).toBe(0);
+    expect(mic.engine).toBeDefined();
+    mic.stop();
+    await mic.start();
+    expect(mic.stats.frames).toBe(0);
+  });
+});

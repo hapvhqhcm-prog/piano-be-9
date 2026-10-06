@@ -418,3 +418,32 @@ Ba chuyên gia đánh giá độc lập: sư phạm piano thiếu nhi, khoa họ
   - ngày sáng tác dạng "📅 5 thg 10";
   - chữ P/T không còn bị phím đen che;
   - khởi động 5 ngón không chạy đè đồng hồ.
+
+## 22. v5.1 — chuyên gia chấm lại + OWNER duyệt (2026-10-06)
+
+Chuyên gia chấm lại bản 0.9.1: sư phạm **B** (trước C+/B−), trải nghiệm **B/B+**. OWNER duyệt 4 đề xuất, đồng thời báo: "iPad đã nghe được nhưng chưa tốt lắm".
+
+- **Buổi học gọn:**
+  - tối đa 7 màn, ước tính ≤ 12 phút;
+  - "Con làm thầy" gộp với tự chấm;
+  - khởi động kỹ thuật 30 giây ở mọi buổi (trong bước tư thế, xoay vòng);
+  - bỏ khởi động tai khi bài có ≥ 3 bài hát;
+  - lượt khuông chạy dời sang bài sau.
+- **Tách tay có sẵn trong bài** (phải → trái → hai tay) ở 6 bài hai tay. Đàn xong cả bài có nút "🔁 Lặp câu khó" mở câu sai nhiều nhất.
+- **31 tuần:** tuần 18 tách thành "Móc kép & Tập-tễnh" và tuần 19 mới "Phố Xích Lô" (nghịch phách & dây nối). Dữ liệu chuyển tự động (curriculumRev 4).
+- **Tiêu chí:**
+  - Silent Night, Minuet, Für Elise phải đàn theo nhịp ≥ 50;
+  - tuần chấm bằng app cũng phải đạt ở 2 ngày;
+  - tuần dòng kẻ phụ và nốt cao cần thêm một lượt đọc nhạc trên phím;
+  - mục tiêu tuần có lời cho bé, kèm chấm ●○ số ngày đã đạt;
+  - phiếu chấm ở chế độ "từng nốt" chỉ 2 ý (không hỏi "đều nhịp").
+- **"Tuần chăm chỉ"** tính theo số NGÀY tập (≥ 4), không theo số buổi.
+- **🎧 Nghe lại con đàn:** ghi tạm trong bộ nhớ khi micro bật, rời màn là xóa. Lời hứa quyền riêng tư đã cập nhật.
+- **Micro:**
+  - tự chỉnh độ nhạy sau "Kiểm tra 5 nốt";
+  - đếm độ chính xác thật khi bố mẹ chấm đúng/sai;
+  - nhật ký v2 ghi bộ lọc iOS thực tế, top-3 nốt ứng viên, độ trễ, khoảng trống khung;
+  - không còn yêu cầu iOS bật voice isolation;
+  - thích nghi phòng nhanh hơn lúc micro khởi động.
+  - Bench 99%, kể cả kịch bản AGC/khởi động.
+- 934 test qua; robot e2e qua kịch bản A, B, C.

@@ -89,6 +89,8 @@ export type Activity =
    * v5 — KHỞI ĐỘNG KỸ THUẬT (~1 phút, OWNER duyệt 2026-10-05): thầy làm mẫu (hình/hoạt hình), bé làm theo, bố mẹ xác nhận.
    * arm-drop = thả rơi cánh tay "cầu vồng"; wrist-circle = xoay cổ tay; finger-tap = gõ ngón trên nắp đàn;
    * five-finger = 5 ngón lên-xuống (p rồi f); thumb-under = chuẩn bị luồn ngón cái; hand-shape = tay tròn "ôm bóng".
+   * v5.1: giáo trình KHÔNG còn dùng hoạt động này trong bài — khởi động ~30 giây nằm ở bước tư thế mỗi buổi (WeekPlan.drills).
+   * Giữ kiểu để session.ts vẫn chạy được (vd bài tự tạo về sau).
    */
   | { kind: 'technique'; title: string; drills: TechniqueDrill[] }
   /**
@@ -146,11 +148,16 @@ export interface WeekPlan {
   criterion: { text: string; who: CriterionWho };
   /** v5.1 — Mục tiêu tuần bằng lời CHO BÉ (ngắn, vui) hiện ở màn chính; `criterion.text` (lời người lớn) cho bố mẹ */
   kidGoal?: string;
+  /**
+   * v5.1 — Bài khởi động kỹ thuật của tuần: MỖI buổi một bài ~30 giây ngay sau bước tư thế, xoay vòng trong danh sách
+   * (lessonEngine.sessionDrill). Không có → xoay vòng mặc định theo tuần. Thay cho hoạt động `technique` 1 phút trong bài đầu tuần.
+   */
+  drills?: TechniqueDrill[];
   /** Tuần dùng tay trái */
   leftHand?: boolean;
 }
 
-/** Cấp độ: 8 tuần mỗi cấp. */
+/** Cấp độ: v5.1 — Cấp 1 tuần 1–10, Cấp 2 tuần 11–21, Cấp 3 tuần 22–31. */
 export interface LevelInfo {
   level: 1 | 2 | 3;
   name: string;

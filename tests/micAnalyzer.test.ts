@@ -97,3 +97,37 @@ describe('matchHeard — hợp âm nghe thành nốt trầm chung', () => {
     expect(matchHeard(37, [60, 64])).toBe('none');
   });
 });
+
+describe('MicAnalyzer — làm quen phòng khi vừa bật micro (iOS trả toàn 0 lúc đầu)', () => {
+  const run = (sig: Float32Array, a: MicAnalyzer, until: number) => {
+    const hop = Math.round(0.025 * SIM_RATE);
+    let f = a.process(sig.subarray(0, 2048), SIM_RATE, 2048 / SIM_RATE);
+    for (let i = 2048 + hop; i < Math.min(sig.length, until * SIM_RATE); i += hop) f = a.process(sig.subarray(i - 2048, i), SIM_RATE, i / SIM_RATE);
+    return f;
+  };
+  it('khung toàn 0 không làm mức ồn nền ≈ 0; phòng ồn dần lên → ngưỡng bắt kịp trong 2 giây đầu', () => {
+    // 0,3 s toàn 0, rồi phòng yên; từ 0,5 s quạt bật (ồn gấp 3)
+    const quiet = renderPiano([], 3, { noise: 0.002, hum: 0, warmup: 0.3 });
+    const loud = renderPiano([], 3, { noise: 0.006, hum: 0, seed: 3 });
+    const sig = quiet.map((v, i) => (i / SIM_RATE < 0.5 ? v : loud[i]));
+    const a = new MicAnalyzer();
+    const f0 = run(sig, a, 0.2);
+    expect(f0.floor).toBe(-1); // chưa có tín hiệu thật
+    const f = run(sig, new MicAnalyzer(), 2.2);
+    // ồn trắng biên độ 0,006 (RMS 0,006/√3) sau lọc thông thấp 1,6 kHz còn ~√(1,6/24) ≈ 0,26 → ~0,0009.
+    // Cách cũ (lên τ ≈ 12 s) sau 1,7 s mới ~0,0004; giờ phải bắt kịp ít nhất một nửa.
+    const loudRms = (0.006 / Math.sqrt(3)) * 0.26;
+    expect(f.floor).toBeGreaterThan(loudRms * 0.5);
+  });
+  it('có lần gõ phím (bé đã đàn) → thôi lên nhanh', () => {
+    const a = new MicAnalyzer();
+    const sig = renderPiano([{ midi: 60, start: 0.4, dur: 0.5 }], 1.5, REAL);
+    run(sig, a, 1.2);
+    expect(a.warmingUp).toBe(false);
+    const b = new MicAnalyzer();
+    run(renderPiano([], 1.5, { noise: 0.004 }), b, 1);
+    expect(b.warmingUp).toBe(true);
+    b.reset(false);
+    expect(b.warmingUp).toBe(false);
+  });
+});

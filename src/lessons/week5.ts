@@ -15,7 +15,9 @@ export const WEEK5: WeekPlan = {
   story: 'Trên Đồi Năm Ngón có ếch con, giọt mưa và chiếc thuyền giấy. Năm ngón tay của con sẽ kể chuyện về các bạn ấy!',
   warmup: { variant: 'stepskip', pool: ['C4', 'D4', 'E4', 'F4', 'G4'], rounds: 8 },
   teach: { emoji: '👨‍🏫', text: 'Con dạy bố/mẹ "Ếch con nhảy": Đô – Mi – Sol là ngón 1 – 3 – 5, nhảy qua một phím!' },
+  drills: ['five-finger', 'wrist-circle'],
   criterion: { text: 'Chơi trọn "Ếch con nhảy" theo nhịp — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
+  kidGoal: 'Đàn Ếch con nhảy thật đều — 2 hôm nhé! 🐸',
   lessons: [
     {
       id: 'w5-l1',
@@ -23,7 +25,6 @@ export const WEEK5: WeekPlan = {
       title: 'Ếch con nhảy',
       emoji: '🐸',
       activities: [
-        { kind: 'technique', title: 'Năm ngón leo đồi 🖐', drills: ['five-finger', 'wrist-circle'] },
         { kind: 'song', songId: 'frog_hop', mode: 'wait', hints: 'full', intro: 'Ếch con nhảy cóc: Đô – Mi – Sol, mỗi lần nhảy qua một phím. Ngón 1 – 3 – 5!' },
         { kind: 'song', songId: 'frog_hop', mode: 'tempo', level: 2, hints: 'full' },
       ],

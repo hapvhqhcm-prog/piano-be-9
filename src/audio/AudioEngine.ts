@@ -123,6 +123,8 @@ export class AudioEngine {
   private listeners = new Set<(s: EngineState) => void>();
   private generation = 0;
   private busyCount = 0;
+  /** Tiếng phát ngoài bộ tổng hợp đang giữ "bận" (holdBusy) — stopAll() dừng hết. */
+  private externals = new Set<{ stop: () => void }>();
   private idleWaiters: Array<() => void> = [];
 
   constructor(private readonly factory: ContextFactory = defaultFactory) {}
@@ -542,6 +544,38 @@ export class AudioEngine {
     return wait(110).then(() => this.playFreq(1046.5, 0.25, 0.5));
   }
 
+  /**
+   * Tiếng phát NGOÀI bộ tổng hợp (vd "Nghe lại con đàn" — recorder.ts): đánh dấu app đang phát để micro bỏ qua.
+   * Trả về hàm thả (gọi nhiều lần không sao). `stop` (tùy chọn) được gọi khi stopAll() — rời màn là tắt tiếng.
+   */
+  holdBusy(stop?: () => void): () => void {
+    this.busyCount++;
+    let done = false;
+    const entry = { stop: stop ?? (() => undefined) };
+    const release = () => {
+      if (done) return;
+      done = true;
+      this.externals.delete(entry);
+      this.lastSoundEnd = Date.now() + REVERB_GUARD_MS;
+      this.busyCount--;
+      if (this.busyCount === 0) {
+        const w = this.idleWaiters;
+        this.idleWaiters = [];
+        w.forEach((fn) => fn());
+      }
+    };
+    entry.stop = () => {
+      try {
+        stop?.();
+      } catch {
+        /* bỏ qua */
+      }
+      release();
+    };
+    this.externals.add(entry);
+    return release;
+  }
+
   /** Resolve khi không còn âm mẫu nào đang phát. */
   whenIdle(): Promise<void> {
     if (this.busyCount === 0) return Promise.resolve();
@@ -564,6 +598,7 @@ export class AudioEngine {
 
   stopAll(): void {
     this.generation++;
+    for (const e of [...this.externals]) e.stop();
     const ctx = this.ctx;
     if (!ctx) return;
     const now = ctx.currentTime;

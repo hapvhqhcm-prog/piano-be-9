@@ -55,6 +55,14 @@ export const SONG_CHECKS: ReadonlyArray<CheckItem<'notes' | 'beat' | 'fingers'>>
   { key: 'fingers', icon: '🖐️', label: 'Đúng ngón & dáng tay' },
 ];
 
+/**
+ * v5.1 — Chế độ "Từng nốt" (chờ): app CHỜ bé nên không có nhịp để chấm → chỉ 2 ý (Đúng nốt · Đúng ngón & dáng tay).
+ * SongRun.checklist vẫn giữ đủ {notes, beat, fingers}: song.ts ghi `beat: true` (không áp dụng = không trừ).
+ */
+export const SONG_CHECKS_WAIT: ReadonlyArray<CheckItem<'notes' | 'fingers'>> = SONG_CHECKS.filter(
+  (c): c is CheckItem<'notes' | 'fingers'> => c.key !== 'beat',
+);
+
 /** Hai ý chấm của trò vỗ nhịp (không có ngón tay). */
 export const RHYTHM_CHECKS: ReadonlyArray<CheckItem<'notes' | 'beat'>> = [
   { key: 'notes', icon: '👏', label: 'Đúng tiếng vỗ' },

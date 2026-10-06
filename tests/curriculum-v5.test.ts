@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LEVELS, WEEKS, estimateLessonMinutes, weekPassed } from '../src/lessons/lessonEngine';
+import { LEVELS, WEEKS, buildSessionPlan, estimateLessonMinutes, sessionDrill, weekPassed } from '../src/lessons/lessonEngine';
 import type { Activity, Lesson, RhythmSymbol, TechniqueDrill } from '../src/lessons/types';
 import { findTune } from '../src/music/exercises';
 import { gradeTiming, TIMING_WINDOWS } from '../src/music/timing';
@@ -266,32 +266,36 @@ describe('KỸ THUẬT & SÁNG TẠO', () => {
   const DRILLS: TechniqueDrill[] = ['arm-drop', 'wrist-circle', 'finger-tap', 'five-finger', 'thumb-under', 'hand-shape'];
   const nonStage = WEEKS.filter((w) => !w.lessons.every((l) => l.activities.some((a) => a.kind === 'stage')));
 
-  it('khởi động kỹ thuật ở ĐẦU bài đầu tiên của hầu hết các tuần (≥ 80% tuần có bài thường), drill hợp lệ', () => {
-    const withTech = nonStage.filter((w) => {
-      const first = w.lessons.find((l) => !l.isWeekTest)!;
-      return first.activities[0]?.kind === 'technique';
-    });
-    expect(withTech.length / nonStage.length).toBeGreaterThanOrEqual(0.8);
-    for (const w of WEEKS)
-      for (const l of w.lessons)
-        l.activities.forEach((a, i) => {
-          if (a.kind !== 'technique') return;
-          expect(i, l.id).toBe(0); // luôn mở đầu bài
-          expect(a.drills.length).toBeGreaterThan(0);
-          for (const d of a.drills) expect(DRILLS).toContain(d);
-        });
+  it('v5.1: khởi động kỹ thuật ~30" MỖI buổi (bước tư thế) — hầu hết các tuần có bài khởi động riêng, drill hợp lệ, xoay vòng', () => {
+    // Không còn hoạt động `technique` 1 phút trong bài (đã gộp vào bước tư thế)
+    for (const w of WEEKS) for (const l of w.lessons) expect(l.activities.some((a) => a.kind === 'technique'), l.id).toBe(false);
+    const withDrills = nonStage.filter((w) => (w.drills?.length ?? 0) > 0);
+    expect(withDrills.length / nonStage.length).toBeGreaterThanOrEqual(0.8);
+    for (const w of WEEKS) for (const d of w.drills ?? []) expect(DRILLS).toContain(d);
+    // Mọi tuần (kể cả tuần không ghi drills) đều có bài khởi động cho buổi; buổi kế tiếp xoay sang bài khác nếu tuần có ≥ 2 bài
+    for (const w of WEEKS) {
+      expect(DRILLS).toContain(sessionDrill(w.week, 0));
+      if ((w.drills?.length ?? 0) >= 2) expect(sessionDrill(w.week, 1)).not.toBe(sessionDrill(w.week, 0));
+    }
+    // Bước tư thế mang bài khởi động; buổi sân khấu không có tư thế
+    for (const w of nonStage) {
+      const l = w.lessons.find((x) => !x.isWeekTest)!;
+      const p = buildSessionPlan(l)[0];
+      expect(p.kind === 'posture' && DRILLS.includes(p.drill), l.id).toBe(true);
+    }
   });
 
   it('luồn ngón cái bắt đầu 2–3 tuần TRƯỚC tuần gam; giai đoạn đầu chỉ thả tay / xoay cổ tay / tay tròn', () => {
     const scaleWeek = songUses('scale_c_rh')[0].week;
-    const thumbWeeks = ORDERED.filter((x) => acts(x.lesson).some((a) => a.kind === 'technique' && a.drills.includes('thumb-under'))).map((x) => x.week);
+    const thumbWeeks = WEEKS.filter((w) => w.drills?.includes('thumb-under')).map((w) => w.week);
     const first = Math.min(...thumbWeeks);
     expect(scaleWeek - first).toBeGreaterThanOrEqual(2);
     expect(scaleWeek - first).toBeLessThanOrEqual(3);
     for (let w = first; w <= scaleWeek; w++) expect(thumbWeeks, `tuần ${w}`).toContain(w);
-    const early = ORDERED.filter((x) => x.week <= 3).flatMap((x) => acts(x.lesson)).filter((a) => a.kind === 'technique');
-    expect(early.length).toBeGreaterThan(0);
-    for (const a of early) if (a.kind === 'technique') for (const d of a.drills) expect(['arm-drop', 'wrist-circle', 'hand-shape']).toContain(d);
+    // Trước tuần đó, kể cả xoay vòng mặc định, không có bài luồn ngón cái
+    for (let w = 1; w < first; w++) for (let n = 0; n < 6; n++) expect(sessionDrill(w, n), `tuần ${w}`).not.toBe('thumb-under');
+    for (let w = 1; w <= 3; w++)
+      for (let n = 0; n < 6; n++) expect(['arm-drop', 'wrist-circle', 'hand-shape'], `tuần ${w}`).toContain(sessionDrill(w, n));
   });
 
   it('sáng tạo: phím đen ≥ 2 lần ở Cấp 1; hỏi – đáp cuối Cấp 1 & Cấp 2; sáng tác 4 ô ở Cấp 2 và Cấp 3', () => {

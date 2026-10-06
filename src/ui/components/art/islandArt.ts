@@ -332,7 +332,7 @@ const PROPS: Record<number, { base: Base; art: string }> = {
   },
 };
 
-/* ---------- 5 đảo của các tuần mới trong giáo trình v5 (30 tuần) ---------- */
+/* ---------- đảo của các tuần mới trong giáo trình v5 (30 tuần) và v5.1 (31 tuần: tuần 19 mới, Cầu Vạch Phụ thành tuần 23) ---------- */
 const NEW_PROPS: Record<number, { base: Base; art: string }> = {
   // 5 · Đồi Năm Ngón — đồi xanh với 5 bông hoa (5 ngón)
   5: {
@@ -372,8 +372,20 @@ const NEW_PROPS: Record<number, { base: Base; art: string }> = {
       <path d="M36 22 Q40 30 38 36 M46 26 Q48 34 46 42" stroke="#fff" stroke-width="1.4" fill="none" stroke-linecap="round"/>
       ${beamedNotes(62, 30, 3.4, P.indigo)}`,
   },
-  // 22 · Cầu Vạch Phụ — cây cầu có các vạch kẻ phụ như khuông nhạc
-  22: {
+  // 19 · Phố Xích Lô (v5.1, tách từ tuần 18) — xích lô trên phố, nốt nhạc nhảy lệch phách
+  19: {
+    base: 'sand',
+    art: `
+      <path d="M12 52 H84" stroke="${P.stone}" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="30" cy="44" r="8" fill="none" stroke="${P.ink}" stroke-opacity=".8" stroke-width="2"/>
+      <circle cx="64" cy="44" r="8" fill="none" stroke="${P.ink}" stroke-opacity=".8" stroke-width="2"/>
+      <path d="M30 44 L46 44 L60 30 M46 44 L64 44" fill="none" stroke="${P.ink}" stroke-opacity=".8" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M22 36 Q22 24 34 24 H40 V38 H24 Z" fill="${P.coral}"/>
+      <path d="M58 30 H66" stroke="${P.ink}" stroke-opacity=".8" stroke-width="2" stroke-linecap="round"/>
+      ${noteGlyph(74, 22, 3, P.indigo)}${noteGlyph(50, 14, 3, P.violet)}${sparkle(84, 34, 2.2, P.sun)}`,
+  },
+  // 23 · Cầu Vạch Phụ — cây cầu có các vạch kẻ phụ như khuông nhạc (tuần 22 ở v5)
+  23: {
     base: 'grass',
     art: `
       <path d="M16 44 Q48 20 80 44" fill="none" stroke="${P.wood}" stroke-width="4" stroke-linecap="round"/>
@@ -383,17 +395,17 @@ const NEW_PROPS: Record<number, { base: Base; art: string }> = {
 };
 
 /**
- * Giáo trình v5 (30 tuần): tuần MỚI → hình của tuần CŨ cùng nội dung (theo bảng chuyển dữ liệu
- * src/progress/migrations.ts). Hình vẽ PROPS vẫn đánh số theo giáo trình 25 tuần cũ.
+ * Giáo trình v5.1 (31 tuần): tuần MỚI → hình của tuần CŨ cùng nội dung (theo các bảng chuyển dữ liệu
+ * src/progress/migrations.ts: rev 2 → 3 rồi rev 3 → 4, tuần ≥ 19 +1). Hình vẽ PROPS vẫn đánh số theo giáo trình 25 tuần cũ.
  */
 const ART_OF_WEEK: Record<number, number> = {
   1: 1, 2: 2, 3: 3, 4: 4, 6: 5, 7: 6, 8: 7, 10: 8, 11: 9, 12: 10, 14: 11, 15: 12, 16: 13, 17: 14,
-  19: 15, 20: 16, 21: 17, 23: 18, 24: 19, 25: 20, 26: 23, 27: 24, 28: 21, 29: 22, 30: 25,
+  20: 15, 21: 16, 22: 17, 24: 18, 25: 19, 26: 20, 27: 23, 28: 24, 29: 21, 30: 22, 31: 25,
 };
 
 const FALLBACK = { base: 'grass' as Base, art: beamedNotes(40, 46, 4, P.violet) };
 
-/** Biểu tượng đảo tuần `week` (1–30, giáo trình v5) ở trạng thái `state`. */
+/** Biểu tượng đảo tuần `week` (1–31, giáo trình v5.1) ở trạng thái `state`. */
 export function islandIcon(week: number, state: IslandState): SVGElement {
   const p = NEW_PROPS[week] ?? PROPS[ART_OF_WEEK[week] ?? -1] ?? FALLBACK;
   const body = `<g stroke="rgba(61,52,102,.3)" stroke-width="1.1" stroke-linejoin="round">${base(p.base)}${p.art}</g>`;
@@ -423,12 +435,12 @@ export function islandIcon(week: number, state: IslandState): SVGElement {
   return svg;
 }
 
-/** Bảng xem thử toàn bộ 30 đảo × 3 trạng thái (chỉ để phát triển / chụp màn hình). */
+/** Bảng xem thử toàn bộ 31 đảo × 3 trạng thái (chỉ để phát triển / chụp màn hình). */
 export function islandArtPreview(): HTMLElement {
   const wrap = document.createElement('div');
   wrap.setAttribute('style', 'display:grid;grid-template-columns:repeat(8,1fr);gap:6px;padding:8px;background:#fff8ee');
   const states: IslandState[] = ['current', 'done', 'locked'];
-  for (let w = 1; w <= 30; w++) {
+  for (let w = 1; w <= 31; w++) {
     const cell = document.createElement('div');
     cell.setAttribute('style', 'display:flex;flex-direction:column;align-items:center;font:12px sans-serif;color:#3d3466');
     const icon = islandIcon(w, states[w % 3]);

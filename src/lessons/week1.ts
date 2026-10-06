@@ -21,7 +21,9 @@ export const WEEK1: WeekPlan = {
     'Trên Đảo Phím Đen có hai gia đình: anh em SINH ĐÔI (2 phím đen) và anh em SINH BA (3 phím đen). Nhà của bạn Đô ở ngay cạnh anh em sinh đôi!',
   warmup: { variant: 'updown', pool: ['C3', 'G3', 'C4', 'G4', 'C5'], rounds: 6 },
   teach: { emoji: '👨‍🏫', text: 'Con chỉ cho bố/mẹ: anh em sinh đôi ở đâu? Nhà Đô ở đâu?' },
+  drills: ['arm-drop', 'hand-shape'],
   criterion: { text: 'Tìm Đô giữa (C4) đúng 10 lần (trượt tối đa 1 lần)', who: 'PARENT/MIC' },
+  kidGoal: 'Thám tử tìm Đô giữa 10 lần — trượt 1 lần cũng không sao! 🕵️',
   lessons: [
     {
       id: 'w1-l1',
@@ -125,7 +127,6 @@ export const WEEK1: WeekPlan = {
       title: 'Ngón tay bí ẩn',
       emoji: '✋',
       activities: [
-        { kind: 'technique', title: 'Cánh tay cầu vồng 🌈', drills: ['arm-drop', 'hand-shape'] },
         notes({
           id: 'w1-b5a',
           step: 'B5',

@@ -10,12 +10,13 @@ import { pitchToMidi } from '../src/piano/pitchTable';
  */
 const FOLK: Array<{ id: string; week: number; lessonId: string }> = [
   // v5 (OWNER duyệt 2026-10-05): mỗi bài đặt SAU tuần dạy nhịp của nó — 2/4 (tuần 9), móc kép (tuần 18)
+  // v5.1 (2026-10-06): tách tuần 18 → Bắc kim thang ở tuần 19 mới (sau Tập-tễnh tuần 18); tuần ≥ 19 cũ +1
   { id: 'ly_cay_da', week: 18, lessonId: 'w18-l2' },
   { id: 'inh_la_oi', week: 9, lessonId: 'w9-l2' },
   { id: 'xoe_hoa', week: 9, lessonId: 'w9-l4' },
-  { id: 'bac_kim_thang', week: 18, lessonId: 'w18-bkt' },
-  { id: 'ly_ngua_o', week: 23, lessonId: 'w23-l1' },
-  { id: 'ly_cay_bong', week: 26, lessonId: 'w26-l1' },
+  { id: 'bac_kim_thang', week: 19, lessonId: 'w19-bkt' },
+  { id: 'ly_ngua_o', week: 24, lessonId: 'w24-l1' },
+  { id: 'ly_cay_bong', week: 27, lessonId: 'w27-l1' },
 ];
 
 const lessonSongs = (lessonId: string) =>
@@ -156,6 +157,6 @@ describe('dân ca — giai điệu & vị trí trong giáo trình', () => {
 
   it('"Cầu London — chấm dôi" (bài lặp) đã được thay bằng "Bắc kim thang"', () => {
     expect(findSong('london_bridge_dotted')).toBeUndefined();
-    expect(lessonSongs('w18-bkt')).toEqual(['bac_kim_thang', 'bac_kim_thang']);
+    expect(lessonSongs('w19-bkt')).toEqual(['bac_kim_thang', 'bac_kim_thang']);
   });
 });

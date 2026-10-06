@@ -8,7 +8,10 @@ chỉ phím, chỉ ngón, phát âm mẫu. Khi bật micro, app **nghe đàn cơ
 - Vite + TypeScript + Vanilla DOM + Web Audio (OscillatorNode) + PWA + localStorage
 - **0 thư viện runtime.** Không backend, không đăng nhập, không analytics, không CDN.
 - **Micro (tùy chọn, mặc định tắt):** app nghe đàn cơ và tự chấm từng nốt — xử lý ngay trên iPad,
-  không ghi âm, không gửi đi đâu. Đây là quyền duy nhất app xin (OWNER mở khóa ngày 2026-10-04).
+  không gửi đi đâu. Đây là quyền duy nhất app xin (OWNER mở khóa ngày 2026-10-04).
+- **🎧 Nghe lại con đàn (OWNER duyệt 2026-10-06):** khi micro đang bật, app ghi **tạm** lượt đàn (tối đa 60 giây)
+  để bé nghe lại. Bản ghi chỉ nằm trong bộ nhớ (Blob), **không lưu xuống máy, không gửi đi**; lượt mới, rời màn
+  hay tắt app là xóa. Micro tắt thì không bao giờ ghi.
 - Offline-first: sau lần mở đầu tiên từ GitHub Pages, app chạy hoàn toàn không cần mạng.
 
 ## Có gì trong app
@@ -142,6 +145,15 @@ scripts/          make-icons.mjs (sinh icon PNG), deploy.mjs
 5. Vào bài học: sau khi âm mẫu phát xong, dòng "🎤 Đang nghe…" xuất hiện → bé đàn trên đàn cơ.
 
 Đặt iPad trên giá nhạc là đủ gần. Nếu nhận sai nhiều: tắt TV/quạt to, làm lại bước "Chỉnh theo đàn nhà".
+
+**Kiểm tra 5 nốt** giờ **tự chỉnh độ nhạy** (Thấp/Vừa/Cao) theo độ to của từng nốt so với tiếng ồn phòng
+(vd "Đã tự chỉnh độ nhạy: Cao — vì tiếng đàn tới micro khá nhỏ"), gợi ý "Chỉnh theo đàn nhà" khi nốt đủ to mà
+bị nghe lệch nửa cung, hoặc bớt ồn; bấm **Kiểm tra lại** để thử với độ nhạy mới. Phần **Đàn tự do — bố mẹ chấm
+micro**: mỗi nốt micro nghe được, bố mẹ chạm ✅ Đúng / ❌ Sai → ra tỉ lệ nhận đúng THẬT với đàn nhà.
+**Sao chép nhật ký** (gửi người hỗ trợ) gồm: tần số lấy mẫu, độ trễ, kiểu phiên âm thanh iOS, các bộ lọc iOS
+**thật sự** áp dụng cho micro (`track.getSettings()`: lọc tiếng vọng / giảm ồn / tự chỉnh âm lượng — app xin tắt
+nhưng iOS có thể ép bật, màn hình cũng cảnh báo), thống kê khung (khung trễ), từng nốt kiểm tra (độ to, ồn nền,
+ngưỡng, 3 nốt ứng viên + độ rõ + lệch cents, độ trễ gõ phím → nhận nốt), kết quả tự chỉnh và bảng chấm của bố mẹ.
 Bản LAN (`http://192.168…`) **không** dùng được micro — iOS chỉ cho micro trên https.
 
 ## Hạn chế đã biết

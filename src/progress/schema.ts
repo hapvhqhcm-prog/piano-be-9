@@ -10,10 +10,12 @@ export const SCHEMA_VERSION = 1 as const;
  * (OWNER duyệt 2026-10-05). Dữ liệu thiếu trường này = rev 1 → migrations.ts đánh số lại một lần.
  * 3 = 30 tuần (giáo trình v5, OWNER duyệt 2026-10-05): 3 cấp × 10 tuần, thêm tuần củng cố / nhịp 2/4 / móc kép /
  * dòng kẻ phụ, Minuet & Für Elise dời xuống cuối Cấp 3 — bảng đánh số OLD→NEW trong migrations.ts (rev 1 đi qua rev 2 trước).
+ * 4 = 31 tuần (giáo trình v5.1, OWNER duyệt 2026-10-06): tách tuần 18 thành 18 (móc kép, Tập-tễnh) và 19 MỚI (nghịch phách,
+ * dây nối); tuần 19–30 cũ → 20–31; bài "w18-l3" → "w19-l1", "w18-bkt" → "w19-bkt" (migrations.ts, rev 1/2 đi qua rev 3 trước).
  */
-export const CURRICULUM_REV = 3;
+export const CURRICULUM_REV = 4;
 /**
- * Giới hạn kiểm tra tuần (giáo trình hiện có 30 tuần; để rộng cho các cấp sau).
+ * Giới hạn kiểm tra tuần (giáo trình hiện có 31 tuần; để rộng cho các cấp sau).
  * LỖI ĐÃ SỬA 2026-10-04: trước đây giới hạn là 8 → lên tuần 9 thì dữ liệu bị coi là hỏng và bị đặt lại.
  */
 export const MAX_WEEK_LIMIT = 52;

@@ -1,4 +1,4 @@
-import { LEFT_HAND_WEEK, MAX_WEEK, WEEKS, findLesson, levelOf, masteredSongs, weekPassed, weekPlan } from '../../lessons/lessonEngine';
+import { LEFT_HAND_WEEK, MAX_WEEK, WEEKS, criterionProgress, findLesson, levelOf, masteredSongs, weekPassed, weekPlan } from '../../lessons/lessonEngine';
 import { SONGS } from '../../music/tune';
 import { parentTip } from '../../lessons/parentTips';
 import { findTune } from '../../music/exercises';
@@ -76,7 +76,9 @@ function segmented<T extends string | number>(
 function tonightCard(d: Readonly<AppData>, now: Date): HTMLElement {
   const t = tonightPlan(d, now);
   const g = t.goal;
-  const pct = Math.min(100, Math.round((g.sessionsThisWeek / 4) * 100));
+  // v5.1: mục tiêu chăm chỉ tính theo NGÀY (hai buổi cùng ngày = một ngày)
+  const days = g.daysThisWeek;
+  const pct = Math.min(100, Math.round((days / 4) * 100));
   return h(
     'section',
     { class: 'card todo-card' },
@@ -103,7 +105,7 @@ function tonightCard(d: Readonly<AppData>, now: Date): HTMLElement {
       h('b', {}, g.text),
       ` (${g.who}).`,
     ),
-    h('p', { class: 'todo-goal' }, `Tuần này đã học ${g.sessionsThisWeek} buổi — nên 4–5 buổi, nghỉ ngày nào cũng được.`),
+    h('p', { class: 'todo-goal' }, `Tuần này đã học ${days} ngày — nên 4–5 ngày, nghỉ ngày nào cũng được.`),
     h('div', { class: 'todo-meter', 'aria-hidden': 'true' }, h('i', { style: { width: `${pct}%` } })),
   );
 }
@@ -236,7 +238,18 @@ export function parentScreen(app: App) {
           { class: 'card' },
           h('h2', {}, 'Tổng quan'),
           h('p', {}, `Tuần hiện tại: `, h('b', {}, `Tuần ${week} — ${plan.title}`)),
-          h('p', {}, `Mục tiêu qua tuần: ${plan.criterion.text} (${WHO_TEXT[plan.criterion.who]}) — `, weekPassed(week, d) ? '✅ đã đạt' : '⏳ chưa đạt'),
+          (() => {
+            // v5.1: lời tiêu chí ĐẦY ĐỦ (màn của bé chỉ hiện lời ngắn) + tiến độ theo ngày nếu tiêu chí tính theo ngày
+            const cp = criterionProgress(week, d);
+            return h(
+              'p',
+              {},
+              `Mục tiêu qua tuần: ${plan.criterion.text} (${WHO_TEXT[plan.criterion.who]}) — `,
+              weekPassed(week, d) ? '✅ đã đạt' : '⏳ chưa đạt',
+              cp && cp.needDays > 0 ? ` · ${Math.min(cp.days, cp.needDays)}/${cp.needDays} ngày` : '',
+              plan.kidGoal ? h('span', { class: 'muted' }, ` · Bé thấy: “${plan.kidGoal}”`) : null,
+            );
+          })(),
           h('p', {}, `Số buổi tuần này (từ thứ Hai ${monday}): `, h('b', {}, String(sessionsThisWeek.length)), ` · học xong: ${sessionsThisWeek.filter((s) => s.completed).length}`),
           h('h3', {}, 'Phút luyện / ngày (7 ngày)'),
           table(['Ngày', 'Phút', 'Sao'], days),
@@ -499,7 +512,12 @@ export function parentScreen(app: App) {
           h(
             'p',
             { class: 'muted' },
-            'App nghe đàn cơ và tự chấm từng nốt. Xử lý ngay trên iPad, không ghi âm, không gửi đi đâu. Nút "Đúng rồi" của bố mẹ vẫn dùng được. Hãy "Thử micro" trước khi bật.',
+            'App nghe đàn cơ và tự chấm từng nốt. Xử lý ngay trên iPad, không gửi đi đâu; chỉ ghi TẠM khi bé đàn để "🎧 Nghe lại" (rời màn là xóa). Nút "Đúng rồi" của bố mẹ vẫn dùng được. Hãy "Thử micro" trước khi bật.',
+          ),
+          h(
+            'p',
+            { class: 'muted' },
+            '🎧 "Nghe lại con đàn": khi micro bật, app giữ TẠM tiếng đàn của lượt vừa chơi để bé bấm nghe lại và tự nhận xét. Bản ghi chỉ nằm trong bộ nhớ — không lưu vào máy, không gửi đi; chơi lượt mới hoặc rời màn là xoá. Micro tắt thì không ghi gì.',
           ),
           h(
             'div',

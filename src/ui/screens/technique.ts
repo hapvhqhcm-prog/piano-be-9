@@ -18,6 +18,11 @@ export interface TechniqueHooks {
   record(noteId: string, result: ParentResult): void;
   onDone(): void;
   onBack(): void;
+  /**
+   * v5.1 — bản RÚT GỌN (~30 giây, ngay sau tư thế, mỗi buổi một bài): bỏ màn giới thiệu và màn "Tay đã sẵn sàng",
+   * có nút "Để sau"; xong bài cuối → onDone ngay.
+   */
+  mini?: boolean;
 }
 
 export const DRILL_INFO: Record<TechniqueDrill, { emoji: string; name: string; how: string; secs: number; times: number }> = {
@@ -166,14 +171,17 @@ export function techniqueScreen(app: App, hooks: TechniqueHooks) {
       }
       const said = `${info.name}. ${info.how} Làm ${info.times} lần nhé.`;
       stage.replaceChildren(
-        h('div', { class: 'progress' }, `Bài ${i + 1} / ${hooks.drills.length}`),
+        hooks.mini
+          ? h('div', { class: 'step-tag' }, 'Khởi động tay · 30 giây')
+          : h('div', { class: 'progress' }, `Bài ${i + 1} / ${hooks.drills.length}`),
         h('h1', { class: 'title' }, `${info.emoji} ${info.name}`),
         h('div', { class: `tq-art-box${five ? ' five' : ''}` }, art),
         h('p', { class: 'lead tq-how' }, info.how, speakChip(app, said)),
         h('div', { class: 'tq-times' }, `Làm ${info.times} lần`),
       );
       setBar(
-        backButton(() => (i > 0 ? ((i -= 1), show()) : intro())),
+        backButton(() => (i > 0 ? ((i -= 1), show()) : hooks.mini ? (halt(), hooks.onBack()) : intro())),
+        hooks.mini ? button({ icon: '⏭', label: 'Để sau', onTap: () => (halt(), hooks.onDone()) }) : null,
         five ? button({ icon: '🎬', label: 'Thầy làm mẫu', onTap: () => demoFive() }) : null,
         button({ icon: '▶', label: 'Con làm nào', kind: 'primary', onTap: () => run() }),
       );
@@ -240,8 +248,9 @@ export function techniqueScreen(app: App, hooks: TechniqueHooks) {
             hooks.record(id, 'correct');
             void app.audio.chime();
             i++;
-            if (i >= hooks.drills.length) done();
-            else show();
+            if (i < hooks.drills.length) show();
+            else if (hooks.mini) (halt(), hooks.onDone());
+            else done();
           },
         }),
       );
@@ -259,7 +268,8 @@ export function techniqueScreen(app: App, hooks: TechniqueHooks) {
       setBar(button({ icon: '▶', label: 'Tiếp', kind: 'primary', onTap: hooks.onDone }));
     }
 
-    if (!hooks.drills.length) done();
+    if (!hooks.drills.length) (hooks.mini ? window.setTimeout(hooks.onDone, 0) : done());
+    else if (hooks.mini) show();
     else intro();
     return () => {
       halt();

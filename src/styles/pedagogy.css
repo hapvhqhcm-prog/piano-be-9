@@ -56,3 +56,90 @@
   opacity: 0.4;
   filter: grayscale(0.6);
 }
+
+/* v5.1 — Dòng trạng thái bài hát: các dòng xếp dọc (lời dẫn một dòng · hướng dẫn · nghe lại) */
+.song-lines {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  max-width: 100%;
+}
+.song-intro {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--violet-600);
+}
+.song-intro-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* 🎧 Nghe lại con đàn: nút nhỏ + một câu hỏi nhẹ */
+.take-row:empty {
+  display: none;
+}
+.take-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 20px;
+}
+.take-row {
+  margin-bottom: 6px;
+}
+.take-row .take-btn {
+  min-height: 44px;
+  padding: 2px 16px;
+  font-size: 20px;
+}
+.take-ask {
+  font-weight: 700;
+  color: var(--ink-2);
+}
+
+/* Màn chính: chấm tiến độ tiêu chí theo ngày (🎯 ●○ hôm nay ✓ / còn N hôm) — hàng 2, dạt phải */
+.goal-days {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  white-space: nowrap;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--violet-600);
+}
+.goal-days .gd {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--violet-50);
+  box-shadow: inset 0 0 0 2px var(--violet-200);
+}
+.goal-days .gd.on {
+  background: var(--mint-500);
+  box-shadow: 0 0 0 2px #fff;
+}
+.goal-days .gd-note.today {
+  color: var(--mint-700);
+}
+.goal-target {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.goal-target .goal-text {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

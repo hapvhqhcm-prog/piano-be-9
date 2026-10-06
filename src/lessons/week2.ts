@@ -16,7 +16,9 @@ export const WEEK2: WeekPlan = {
   story: 'Ở Làng Đô Rê Mi, ba bạn Đô, Rê, Mi sống cạnh nhau. Ngón 1, 2, 3 của con sẽ đến thăm từng nhà!',
   warmup: { variant: 'updown', pool: ['C4', 'D4', 'E4'], rounds: 8 },
   teach: { emoji: '👨‍🏫', text: 'Con dạy bố/mẹ: ngón nào đánh Đô, ngón nào đánh Rê, ngón nào đánh Mi?' },
+  drills: ['arm-drop', 'hand-shape'],
   criterion: { text: 'Đàn trọn "Bánh nóng" (chế độ chờ) — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
+  kidGoal: 'Đàn trọn "Bánh nóng" thơm phức — 2 hôm nhé! 🥐',
   lessons: [
     {
       id: 'w2-l1',
@@ -24,7 +26,6 @@ export const WEEK2: WeekPlan = {
       title: 'Đô – Rê – Mi',
       emoji: '🎵',
       activities: [
-        { kind: 'technique', title: 'Cánh tay cầu vồng 🌈', drills: ['arm-drop', 'hand-shape'] },
         notes({
           id: 'w2-l1-a',
           step: 'Bài mới',

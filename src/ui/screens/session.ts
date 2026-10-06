@@ -10,18 +10,17 @@ import { dynamicsScreen } from './dynamics';
 import { homeScreen } from './home';
 import { postureScreen } from './posture';
 import { practiceScreen } from './practice';
-import { ratingScreen } from './rating';
+import { closingScreen } from './rating';
 import { rhythmScreen } from './rhythm';
 import { sessionEndScreen } from './sessionEnd';
 import { songScreen } from './song';
 import { stageScreen } from './stage';
-import { teachScreen } from './teach';
 import { techniqueScreen } from './technique';
 import { improvScreen } from './improv';
 
 /**
- * Chạy một buổi (v2): Tư thế → Ôn nhanh → Khởi động tai/đọc nốt → Bài mới → Con làm thầy → Tổng kết.
- * Hết thời lượng buổi: sau hoạt động đang làm → sang Con làm thầy/Tổng kết (§9, không khóa).
+ * Chạy một buổi (v5.1 — ≤ 7 màn): Tư thế + khởi động tay 30" → Ôn nhanh → Khởi động tai/đọc nốt → Bài mới → (Ôn bài cũ)
+ * → Màn kết (Con làm thầy + Dễ/Vừa/Khó). Hết thời lượng buổi: sau hoạt động đang làm → sang màn kết (§9, không khóa).
  */
 export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean } = {}): void {
   const store = app.store;
@@ -32,7 +31,7 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
   const session = store.startSession(lesson.id);
   // songReview: thêm bước "Ôn bài cũ" (một câu của bài 2–4 tuần trước) — không tính vào hoàn thành bài
   const steps = buildSessionPlan(lesson, store.get(), { ...opts, songReview: true, now: Date.now() });
-  const wrapUp = steps.findIndex((s) => s.kind === 'teach' || s.kind === 'rating');
+  const wrapUp = steps.findIndex((s) => s.kind === 'closing');
   const deadline = Date.now() + store.settings.sessionMinutes * 60_000;
   let lessonFinished = false;
 
@@ -97,7 +96,8 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
         return songScreen(
           app,
           tune,
-          { mode: a.mode, level: a.level, hints: a.hints, intro: a.intro },
+          // v5.1 — tách tay sẵn trong bài (hand: 'RH' | 'LH'); lượt một tay không tính tiêu chí tuần
+          { mode: a.mode, level: a.level, hints: a.hints, intro: a.intro, hand: a.hand },
           { onRun: (run) => store.addSongRun(session.id, run), onDone: onComplete, onBack: onExit },
         );
       }
@@ -204,8 +204,23 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
     // Hết giờ: bỏ qua phần còn lại của bài, sang phần kết
     const nextOrWrap = () => (Date.now() >= deadline && i + 1 < wrapUp ? go(wrapUp) : next());
     switch (step.kind) {
-      case 'posture':
-        return show(postureScreen(app, { short: step.short, onDone: next, onBack: back }));
+      case 'posture': {
+        // v5.1 — tư thế rồi MỘT bài khởi động tay ~30 giây (cùng một chấm tiến trình); ghi PARENT_ASSESSMENT `tech:${drill}`
+        const posture = (): void =>
+          show(postureScreen(app, { short: step.short, onDone: drill, onBack: back }));
+        const drill = (): void =>
+          show(
+            techniqueScreen(app, {
+              title: 'Khởi động tay',
+              drills: [step.drill],
+              mini: true,
+              record: (id, r) => store.addParentAssessment(session.id, id, r),
+              onDone: next,
+              onBack: posture,
+            }),
+          );
+        return posture();
+      }
       case 'review':
         return show(segmentScreen(step.segment, nextOrWrap, back));
       case 'quiz':
@@ -238,7 +253,8 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
       case 'review-song': {
         const tune = findTune(step.songId);
         if (!tune || Date.now() >= deadline) return next();
-        return app.show(
+        // v5.1: qua show() như mọi bước → vạch tiến trình buổi không biến mất ở bước này
+        return show(
           songScreen(
             app,
             tune,
@@ -247,22 +263,11 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
           ),
         );
       }
-      case 'teach':
+      case 'closing':
         return show(
-          teachScreen(app, {
-            emoji: step.emoji,
-            text: step.text,
-            onDone: () => {
-              store.addParentAssessment(session.id, 'teach-back', 'correct');
-              next();
-            },
-            onSkip: next,
-            onBack: back,
-          }),
-        );
-      case 'rating':
-        return show(
-          ratingScreen(app, {
+          closingScreen(app, {
+            teach: step.teach,
+            onTaught: () => store.addParentAssessment(session.id, 'teach-back', 'correct'),
             onRate: (r) => store.setSelfRating(session.id, r),
             onDone: finish,
             onBack: back,

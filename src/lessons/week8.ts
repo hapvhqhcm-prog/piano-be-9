@@ -19,7 +19,9 @@ export const WEEK8: WeekPlan = {
   story: 'Trong Thư viện Nốt, mỗi nốt nhạc có một chỗ ngồi trên 5 sợi dây. Bạn Đô giữa ngồi dưới cùng và "đội mũ" vạch phụ!',
   warmup: { variant: 'read', pool: ['C4', 'D4', 'E4', 'F4', 'G4'], rounds: 8 },
   teach: { emoji: '👨‍🏫', text: 'Con chỉ trên khuông cho bố/mẹ: Đô "đội mũ", Mi "trên vạch 1", Sol "trên vạch 2".' },
+  drills: ['finger-tap', 'wrist-circle'],
   criterion: { text: 'Chơi "Bài ca niềm vui" chỉ nhìn khuông nhạc — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
+  kidGoal: 'Chỉ nhìn khuông mà đàn được Bài ca niềm vui — 2 hôm nhé! 📖',
   lessons: [
     {
       id: 'w8-l1',
@@ -27,7 +29,6 @@ export const WEEK8: WeekPlan = {
       title: 'Chỗ ngồi của nốt',
       emoji: '🎼',
       activities: [
-        { kind: 'technique', title: 'Ngón tay gõ cửa 🚪', drills: ['finger-tap', 'wrist-circle'] },
         notes({
           id: 'w8-staff',
           step: 'Bài mới',

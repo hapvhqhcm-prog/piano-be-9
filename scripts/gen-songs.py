@@ -246,7 +246,7 @@ S += [
  song("ferry_song","Ferry Song","Đò qua sông",ORIG,9,"RH",
   "p E4:0.5 F4:0.5 G4  E4:0.5 D4:0.5 C4  D4 E4  D4:2  E4:0.5 F4:0.5 G4  A4 G4  F4:0.5 E4:0.5 D4  C4:2",[0,4],"A4",ts="2/4",arr=ORIG),
 ]
-# ---------------------------------------------------------------- CẤP 2 (tuần 11–20): hai tay, thế mới, phím đen, nhịp
+# ---------------------------------------------------------------- CẤP 2 (tuần 11–21): hai tay, thế mới, phím đen, nhịp
 S += [
  # Tuần 11 — Đô giữa tay trái, khuông Fa, hai tay luân phiên
  song("au_clair_mc_lh","Au clair de la lune (middle C, left hand)","Dưới ánh trăng — Đô giữa tay trái","Dân ca Pháp (traditional)",11,"LH",
@@ -296,12 +296,12 @@ S += [
  # Tuần 16 — bài tự sáng tác ở thế Rê (thay "Chú cừu — thế Rê"): nhảy Rê–Fa♯–La, đàn TO
  song("superhero_fly","Superhero Takes Off","Siêu nhân bay",ORIG,16,"RH",
   "f D4 F#4 A4:2  A4 G4 F#4 E4  D4 F#4 A4:2  A4:4  mf G4 E4 G4 E4  F#4 D4 F#4 D4  f E4 F#4 G4 E4  D4 A4 D4:2",[0,4],pos="D",arr=ORIG),
- # Tuần 17 — nhịp chấm dôi & móc đơn
+ # Tuần 17 — nốt đen chấm dôi "Đi-chấm chạy" (móc đơn đã học từ tuần 4)
  song("ode_to_joy_original","Ode to Joy (original rhythm)","Bài ca niềm vui — nhịp chấm dôi","Ludwig van Beethoven",17,"RH",
   "mf E4 E4 F4 G4  G4 F4 E4 D4  C4 C4 D4 E4  E4:1.5 D4:0.5 D4:2  E4 E4 F4 G4  G4 F4 E4 D4  C4 C4 D4 E4  D4:1.5 C4:0.5 C4:2",[0,4]),
  # Dân ca (thay "Cầu London — chấm dôi", bài lặp): Bắc kim thang — hạ một cung xuống Fa trưởng ngũ cung (Đô Rê Fa Sol La,
  # toàn phím trắng), bàn tay ngũ cung Đô1 Rê2 Fa3 Sol4 La5 (như "Xòe hoa"). Nhịp chấm dôi "Đi-chấm chạy" ở ô 1, 3, 5, 7, 9; dấu luyến theo bản ký âm gốc.
- song("bac_kim_thang","Bac Kim Thang (Vietnamese folk song)","Bắc kim thang (dân ca Nam Bộ)","Dân ca Nam Bộ",18,"RH",fingered(
+ song("bac_kim_thang","Bac Kim Thang (Vietnamese folk song)","Bắc kim thang (dân ca Nam Bộ)","Dân ca Nam Bộ",19,"RH",fingered(
   "mf R A4:0.5 G4:0.5  F4:0.75 C4:0.25 F4:0.5 (G4:0.25 F4:0.25)  D4 D4:0.5 F4:0.5  C4:0.75 C4:0.25 C4:0.5 F4:0.5  D4 A4:0.5 A4:0.5  "
   "C4:0.75 D4:0.25 C4:0.5 D4:0.5  A4 A4:0.5 A4:0.5  A4:0.75 A4:0.25 D4:0.5 (D4:0.25 F4:0.25)  G4 G4:0.5 G4:0.5  "
   "G4:0.75 A4:0.25 A4:0.5 (D4:0.25 F4:0.25)  C4 F4:0.5 C4:0.5  D4:0.5 (D4:0.25 F4:0.25) C4:0.5 A4:0.5  F4:0.5 C4:0.5 F4:0.5 R:0.5",PENTA_F),
@@ -318,84 +318,84 @@ S += [
  song("echo_valley","Echo Valley","Thung lũng tiếng vọng",ORIG,13,"BOTH",
   "f (C4 D4 E4 F4)  G4:2 G4:2  p (C4 D4 E4 F4)  G4:2 G4:2  f G4' F4' E4' D4'  C4:4  p G4' F4' E4' D4'  C4:4",[0,4],
   lh="C3:4  C3:4  C3:4  C3:4  G3:4  C3:4  G3:4  C3:4",arr=ORIG),
- # Tuần 18 (v5, móc kép & nghịch phách): "Chạy-chạy-chạy-chạy", "Chạy chạy-chạy"; "Chạy-Đi-chạy"
+ # Tuần 18 (v5, móc kép): "Chạy-chạy-chạy-chạy", "Chạy chạy-chạy" · tuần 19 (v5.1, tách từ tuần 18): nghịch phách "Chạy-Đi-chạy"
  song("rabbit_run","Running Rabbit","Thỏ con chạy",ORIG,18,"RH",
   "mf C4:0.25 D4:0.25 E4:0.25 F4:0.25 G4 G4:2  F4:0.25 E4:0.25 D4:0.25 C4:0.25 D4 D4:2  "
   "E4:0.5 E4:0.25 F4:0.25 G4 E4:0.5 D4:0.5 C4  D4:0.5 D4:0.25 E4:0.25 D4 C4:2",[0,2],arr=ORIG),
- song("cyclo_ride","Cyclo Ride","Xích lô dạo phố",ORIG,18,"RH",
+ song("cyclo_ride","Cyclo Ride","Xích lô dạo phố",ORIG,19,"RH",
   "mf C4:0.5 E4 E4:0.5 G4:2  F4:0.5 D4 D4:0.5 E4:2  E4:0.5 G4 G4:0.5 F4 E4  D4:0.5 E4 D4:0.5 C4:2",[0,2],arr=ORIG),
- # Tuần 19 — gam Đô trưởng, luồn ngón cái
- song("scale_c_rh","C major scale (right hand)","Gam Đô trưởng — tay phải","Bài tập (traditional)",19,"RH",
+ # Tuần 20 (v5.1: tuần 19 cũ) — gam Đô trưởng, luồn ngón cái
+ song("scale_c_rh","C major scale (right hand)","Gam Đô trưởng — tay phải","Bài tập (traditional)",20,"RH",
   "mf (C4/1 D4/2 E4/3 F4/1  G4/2 A4/3 B4/4 C5/5)  (C5/5 B4/4 A4/3 G4/2  F4/1 E4/3 D4/2 C4/1)",[0,2],pos="free",arr=ORIG),
- song("scale_c_lh","C major scale (left hand)","Gam Đô trưởng — tay trái","Bài tập (traditional)",19,"LH",
+ song("scale_c_lh","C major scale (left hand)","Gam Đô trưởng — tay trái","Bài tập (traditional)",20,"LH",
   "mf (C3/5 D3/4 E3/3 F3/2  G3/1 A3/3 B3/2 C4/1)  (C4/1 B3/2 A3/3 G3/1  F3/2 E3/3 D3/4 C3/5)",[0,2],pos="free",arr=ORIG),
- song("joy_to_the_world","Joy to the World","Niềm vui cho thế giới","Lowell Mason (1839), theo G. F. Handel",19,"RH",
+ song("joy_to_the_world","Joy to the World","Niềm vui cho thế giới","Lowell Mason (1839), theo G. F. Handel",20,"RH",
   "f C5:2/5 B4:1.5/4 A4:0.5/3  G4:3/2 F4/1  E4:2/3 D4:2/2  C4:4/1  C5:2/5 B4:1.5/4 A4:0.5/3  G4:3/2 F4/1  E4:2/3 D4:2/2  C4:4/1",[0,4],pos="free"),
 ]
-# ---------------------------------------------------------------- CẤP 3 (tuần 21–30): hợp âm, vạch phụ, đổi thế, nốt cao, cổ điển
+# ---------------------------------------------------------------- CẤP 3 (tuần 22–31; v5.1: +1 sau khi tách tuần 18): hợp âm, vạch phụ, đổi thế, nốt cao, cổ điển
 I = "C3+E3+G3"; IV = "C3+F3"; V = "D3+G3"
 S += [
- # Tuần 21 — hợp âm tay trái
- song("twinkle_both","Twinkle Twinkle (hands together, chords)","Ngôi sao nhỏ — hai tay hợp âm","Dân ca Pháp (traditional)",21,"BOTH",
+ # Tuần 22 — hợp âm tay trái
+ song("twinkle_both","Twinkle Twinkle (hands together, chords)","Ngôi sao nhỏ — hai tay hợp âm","Dân ca Pháp (traditional)",22,"BOTH",
   "mf C4 C4 G4 G4  A4 A4 G4:2  F4 F4 E4 E4  D4 D4 C4:2  G4 G4 F4 F4  E4 E4 D4:2  G4 G4 F4 F4  E4 E4 D4:2  p C4 C4 G4 G4  A4 A4 G4:2  F4 F4 E4 E4  D4 D4 C4:2",[0,4,8],"A4",
   lh=f"{I}:4  {IV}:2 {I}:2  {IV}:2 {I}:2  {V}:2 {I}:2  {I}:2 {IV}:2  {I}:2 {V}:2  {I}:2 {IV}:2  {I}:2 {V}:2  {I}:4  {IV}:2 {I}:2  {IV}:2 {I}:2  {V}:2 {I}:2"),
- song("ode_to_joy_chords","Ode to Joy (hands together, chords)","Bài ca niềm vui — hai tay hợp âm","Ludwig van Beethoven",21,"BOTH",
+ song("ode_to_joy_chords","Ode to Joy (hands together, chords)","Bài ca niềm vui — hai tay hợp âm","Ludwig van Beethoven",22,"BOTH",
   "mf E4 E4 F4 G4  G4 F4 E4 D4  C4 C4 D4 E4  E4 D4 D4:2  E4 E4 F4 G4  G4 F4 E4 D4  C4 C4 D4 E4  D4 C4 C4:2",[0,4],
   lh=f"{I}:4  {V}:4  {I}:4  {V}:4  {I}:4  {V}:4  {I}:4  {V}:2 {I}:2"),
- song("jingle_bells_both","Jingle Bells (hands together)","Chuông ngân vang — hai tay","James Lord Pierpont (1857)",21,"BOTH",
+ song("jingle_bells_both","Jingle Bells (hands together)","Chuông ngân vang — hai tay","James Lord Pierpont (1857)",22,"BOTH",
   "f E4 E4 E4:2  E4 E4 E4:2  E4 G4 C4 D4  E4:4  F4 F4 F4 F4  F4 E4 E4 E4  E4 D4 D4 E4  D4:2 G4:2  E4 E4 E4:2  E4 E4 E4:2  E4 G4 C4 D4  E4:4  F4 F4 F4 F4  F4 E4 E4 E4  G4 G4 F4 D4  C4:4",[0,4,8,12],
   lh=f"{I}:4  {I}:4  {I}:4  {I}:4  {IV}:4  {I}:4  {V}:4  {V}:4  {I}:4  {I}:4  {I}:4  {I}:4  {IV}:4  {I}:4  {V}:4  {I}:4"),
- # Tuần 22 (v5, Cầu Vạch Phụ): khuông lớn hai tay luân phiên · thế La thứ trên dòng kẻ phụ · hai tay hợp âm I – V
- song("grand_duet","Grand Staff Duet","Song ca hai khóa",ORIG,22,"BOTH",
+ # Tuần 23 (v5, Cầu Vạch Phụ): khuông lớn hai tay luân phiên · thế La thứ trên dòng kẻ phụ · hai tay hợp âm I – V
+ song("grand_duet","Grand Staff Duet","Song ca hai khóa",ORIG,23,"BOTH",
   "mf E4 G4 F4 D4  E4:2 C4:2  R:4  R:4  p G4 F4 E4 D4  E4:2 D4:2  R:4  R:4",[0,4],
   lh="R:4  R:4  A3 B3 C4 A3  G3:4  R:4  R:4  F3 A3 G3 B3  C4:4",lhpos="MC",arr=ORIG),
- song("stepping_stones","Stepping Stones","Bước qua vạch phụ",ORIG,22,"RH",
+ song("stepping_stones","Stepping Stones","Bước qua vạch phụ",ORIG,23,"RH",
   "mf C4 B3 A3 B3  C4 D4 E4:2  D4 C4 B3 C4  A3:4  p E4 D4 C4 B3  A3 B3 C4:2  D4 C4 B3 B3  A3:4",[0,4],pos="Am",arr=ORIG),
- song("lantern_parade","Lantern Parade","Rước đèn",ORIG,22,"BOTH",
+ song("lantern_parade","Lantern Parade","Rước đèn",ORIG,23,"BOTH",
   "f G4 E4 G4 E4  F4 D4 F4:2  E4 C4 E4 D4  C4:4  p G4 E4 G4 E4  F4 D4 F4:2  E4 D4 E4 D4  C4:4",[0,4],
   lh=f"{I}:4  {V}:4  {I}:2 {V}:2  {I}:4  {I}:4  {V}:4  {I}:2 {V}:2  {I}:4",arr=ORIG),
- # Tuần 23 — đổi thế tay
- song("silent_night","Silent Night","Đêm thánh vô cùng","Franz Xaver Gruber (1818)",23,"RH",
+ # Tuần 24 — đổi thế tay
+ song("silent_night","Silent Night","Đêm thánh vô cùng","Franz Xaver Gruber (1818)",24,"RH",
   # Đổi thế (luôn ở nốt dài): thế Mi (E1 G2 A3 B4 C5) → thế Sol (G1…D5) → thế Mi → thế Si (B1 C2 D3 E4 F5)
   # → "sleep in heavenly peace": thế Sol, ngón 3 vắt qua xuống Mi (như gam đi xuống) → thế Đô, kết ở Đô.
   "p (G4:1.5/2 A4:0.5/3 G4/2)  E4:3/1  (G4:1.5/2 A4:0.5/3 G4/2)  E4:3/1  D5:2/5 D5/5  B4:3/3  C5:2/4 C5/4  G4:3/1  "
   "mf A4:2/3 A4/3  C5:1.5/5 B4:0.5/4 A4/3  G4:1.5/2 A4:0.5/3 G4/2  E4:3/1  A4:2/3 A4/3  C5:1.5/5 B4:0.5/4 A4/3  G4:1.5/2 A4:0.5/3 G4/2  E4:3/1  "
   "p D5:2/3 D5/3  F5:1.5/5 D5:0.5/3 B4/1  C5:3/2  E5:3/4  C5:1.5/4 G4:0.5/1 E4/3  G4:1.5/5 F4:0.5/4 D4/2  C4:3/1",[0,4,8,12,16,20],pos="free",ts="3/4"),
- # Tuần 23 — dân ca: Lý ngựa ô (12 ô đầu, Đô trưởng ngũ cung Rê Fa Sol La Đô — tầm quãng 7: quá rộng cho MỘT bàn tay bé).
+ # Tuần 24 — dân ca: Lý ngựa ô (12 ô đầu, Đô trưởng ngũ cung Rê Fa Sol La Đô — tầm quãng 7: quá rộng cho MỘT bàn tay bé).
  # Chia theo âm vực, hai tay LUÂN PHIÊN (như "Lý cây bông"): tay phải thế Sol (Sol1 La2 Đô4), tay trái giữ Rê–Fa
  # (Fa ngón cái, Rê ngón 3 — "Rê Fa Rê Fa" trọn trong tay trái). Mỗi ngón một phím, không bàn tay nào rộng quá quãng 4.
- song("ly_ngua_o","Ly Ngua O (Vietnamese folk song)","Lý ngựa ô (dân ca Nam Bộ)","Dân ca Nam Bộ",23,"BOTH",
+ song("ly_ngua_o","Ly Ngua O (Vietnamese folk song)","Lý ngựa ô (dân ca Nam Bộ)","Dân ca Nam Bộ",24,"BOTH",
   "mf R C5:0.5 A4:0.5  R:2  G4:2  R:2  R C5:0.5 A4:0.5  R:2  G4:1.5 R:0.5  G4 G4  "
   "C5:1.5 G4:0.5  C5:0.5 A4:0.5 R  G4:2  A4:0.5 G4:0.5 R:0.5 A4:0.5  G4:2",[0,4,9],pos="G",
   lh="R:2  D4:0.5/3 F4:0.5/1 D4:0.5/3 F4:0.5/1  R:2  R:2  R:2  D4:0.5/3 F4:0.5/1 D4:0.5/3 F4:0.5/1  R:1.5 F4:0.5/1  R:2  "
   "R:2  R D4:0.5/3 F4:0.5/1  R:2  R F4:0.5/1 R:0.5  R:2",lhpos="free",ts="2/4",arr=FOLK),
- # Tuần 24 — trưởng & thứ: bài tự sáng tác giọng La thứ (thay "Bài ca niềm vui — La thứ"): NHỎ, NGẮT, ô cuối TO
- song("ninja_tiptoe","Tiptoe Ninja","Ninja rón rén",ORIG,24,"RH",
+ # Tuần 25 — trưởng & thứ: bài tự sáng tác giọng La thứ (thay "Bài ca niềm vui — La thứ"): NHỎ, NGẮT, ô cuối TO
+ song("ninja_tiptoe","Tiptoe Ninja","Ninja rón rén",ORIG,25,"RH",
   "p A3' A3' C4' A3'  B3' B3' D4' B3'  A3' C4' E4' C4'  B3:2 R:2  A3' A3' C4' A3'  B3' D4' C4' B3'  "
   "C4:0.5' B3:0.5' A3:0.5' B3:0.5' C4' D4'  f E4' R A3' R",[0,4],pos="Am",arr=ORIG),
- # Tuần 25 — đọc nốt cao: bài tự sáng tác ở thế Đô cao (Đô5–Sol5), LIỀN và NHỎ
- song("drifting_boat","Drifting Boat","Thuyền trôi",ORIG,25,"RH",
+ # Tuần 26 — đọc nốt cao: bài tự sáng tác ở thế Đô cao (Đô5–Sol5), LIỀN và NHỎ
+ song("drifting_boat","Drifting Boat","Thuyền trôi",ORIG,26,"RH",
   "p (E5:2 D5  C5:2 D5  E5 F5 G5  E5:3)  mf (G5:2 F5  E5:2 D5  p F5 E5 D5  C5:3)",[0,4],pos="C5",ts="3/4",arr=ORIG),
- # Tuần 28 — Minuet (sắc thái/kiểu đàn theo cách đàn phổ biến — bản gốc không ghi)
- song("minuet_g","Minuet in G (BWV Anh. 114)","Minuet Sol trưởng","Christian Petzold (khoảng 1725)",28,"RH",
+ # Tuần 29 — Minuet (sắc thái/kiểu đàn theo cách đàn phổ biến — bản gốc không ghi)
+ song("minuet_g","Minuet in G (BWV Anh. 114)","Minuet Sol trưởng","Christian Petzold (khoảng 1725)",29,"RH",
   "mf D5/5 (G4:0.5/1 A4:0.5/2 B4:0.5/3 C5:0.5/4)  D5/5 G4/1' G4/1'  E5/3 (C5:0.5/1 D5:0.5/2 E5:0.5/3 F#5:0.5/4)  G5/5 G4/1' G4/1'  C5/4 (D5:0.5/5 C5:0.5/4 B4:0.5/3 A4:0.5/2)  B4/3 (C5:0.5/4 B4:0.5/3 A4:0.5/2 G4:0.5/1)  F#4/1 (G4:0.5/2 A4:0.5/3 B4:0.5/4 G4:0.5/2)  A4:3/3",[0,4],pos="free",ts="3/4"),
- # Tuần 29 — Für Elise
- song("fur_elise","Für Elise (opening)","Für Elise (đoạn mở đầu)","Ludwig van Beethoven (1810)",29,"RH",
+ # Tuần 30 — Für Elise
+ song("fur_elise","Für Elise (opening)","Für Elise (đoạn mở đầu)","Ludwig van Beethoven (1810)",30,"RH",
   # Mỗi ô 3/4 = một ô 3/8 của bản gốc (móc kép = nửa phách). "Mi–Rê♯" là nhịp lấy đà (phách 3 của ô 0).
   "p R:2 E5:0.5/5 D#5:0.5/4  E5:0.5/5 D#5:0.5/4 E5:0.5/5 B4:0.5/2 D5:0.5/4 C5:0.5/3  A4/1 R:0.5 C4:0.5/1 E4:0.5/2 A4:0.5/4  "
   "B4/5 R:0.5 E4:0.5/1 G#4:0.5/3 B4:0.5/4  C5/5 R:0.5 E4:0.5/1 E5:0.5/5 D#5:0.5/4  "
   "E5:0.5/5 D#5:0.5/4 E5:0.5/5 B4:0.5/2 D5:0.5/4 C5:0.5/3  A4/1 R:0.5 C4:0.5/1 E4:0.5/2 A4:0.5/4  "
   "B4/5 R:0.5 E4:0.5/1 C5:0.5/5 B4:0.5/4  A4:2/3 R",[0,5],pos="free",ts="3/4"),
- # Tuần 26 — Canon (hai tay, đọc hai khóa)
- song("canon","Canon in D (theme, simplified in C)","Khúc Canon (giản lược)","Johann Pachelbel (khoảng 1680)",26,"BOTH",
+ # Tuần 27 — Canon (hai tay, đọc hai khóa)
+ song("canon","Canon in D (theme, simplified in C)","Khúc Canon (giản lược)","Johann Pachelbel (khoảng 1680)",27,"BOTH",
   # Tay phải: ngón cái ở La suốt bài (La1 Si2 Đô3 Rê4 Mi5); Sol bằng ngón 3 VẮT qua ngón cái rồi ngón cái luồn về La (như gam).
   # Tay trái: thế Đô mở rộng Đô3–La3 (Đô5 Mi4 Fa3 Sol2 La1) — không nhảy ngón cái.
   "p E5:2/5 D5:2/4  C5:2/3 B4:2/2  A4:2/1 G4:2/3  A4:2/1 B4:2/2  E5:2/5 D5:2/4  C5:2/3 B4:2/2  A4:2/1 G4:2/3  A4:2/1 G4:2/3",[0,4],pos="free",
   lh="p C3:2/5 G3:2/2  A3:2/1 E3:2/4  F3:2/3 C3:2/5  F3:2/3 G3:2/2  C3:2/5 G3:2/2  A3:2/1 E3:2/4  F3:2/3 C3:2/5  F3:2/3 C3:2/5",lhpos="free"),
- # Tuần 26 — dân ca hai khóa: Lý cây bông (La ngũ cung, giọng gốc Sol3–Đô5, tầm quãng 11 — quá một thế tay).
+ # Tuần 27 — dân ca hai khóa: Lý cây bông (La ngũ cung, giọng gốc Sol3–Đô5, tầm quãng 11 — quá một thế tay).
  # Chia theo âm vực, hai tay LUÂN PHIÊN (không đánh cùng lúc): Mi4 trở lên tay phải "thế Mi" (Mi1 Sol2 La3 Đô5 — như
  # "Đêm thánh vô cùng"), Rê4 trở xuống tay trái thế Sol giữa (Sol3=5 La3=4 Đô4=2 Rê4=1). Mỗi ngón chỉ một phím.
- song("ly_cay_bong","Ly Cay Bong (Vietnamese folk song)","Lý cây bông (dân ca Nam Bộ)","Dân ca Nam Bộ",26,"BOTH",
+ song("ly_cay_bong","Ly Cay Bong (Vietnamese folk song)","Lý cây bông (dân ca Nam Bộ)","Dân ca Nam Bộ",27,"BOTH",
   "mf R A4:0.5/3 G4:0.5/2  A4/3 A4:0.5/3 G4:0.25/2 A4:0.25/3  C5:0.5/5 E4:0.5/1 G4:0.5/2 E4:0.5/1  G4/2 A4:0.25/3 G4:0.25/2 E4:0.25/1 G4:0.25/2  A4:1.5/3 A4:0.5/3  "
   "A4:0.5/3 G4:0.5/2 R:0.5 G4:0.5/2  E4:0.75/1 G4:0.25/2 A4:0.25/3 G4:0.25/2 E4:0.25/1 G4:0.25/2  A4:1.5/3 R:0.5  "
   "p E4:0.75/1 G4:0.25/2 E4:0.25/1 R:0.25 R:0.5  R:2  R R:0.5 R:0.25 E4:0.25/1  R:2  E4:0.75/1 G4:0.25/2 E4:0.5/1 R:0.5  R:2  R R:0.5 R:0.25 E4:0.25/1  R:2",
@@ -403,11 +403,11 @@ S += [
   lh="R:2  R:2  R:2  R:2  R:2  R C4:0.5/2 R:0.5  R:2  R R:0.5 D4:0.5/1  "
   "R R:0.25 D4:0.25/1 C4:0.5/2  A3:2/4  C4:0.5/2 G3:0.5/5 A3:0.25/4 C4:0.25/2 D4:0.25/1 R:0.25  D4:1.5/1 D4:0.5/1  R R:0.5 D4:0.25/1 C4:0.25/2  A3:2/4  "
   "C4:0.5/2 G3:0.5/5 A3:0.25/4 C4:0.25/2 D4:0.25/1 R:0.25  D4:2/1",lhpos="free",ts="2/4",arr=FOLK),
- # Tuần 27 — bài hai tay
- song("saints_both","When the Saints (hands together)","Các thánh tiến bước — hai tay","Spiritual (traditional)",27,"BOTH",
+ # Tuần 28 — bài hai tay
+ song("saints_both","When the Saints (hands together)","Các thánh tiến bước — hai tay","Spiritual (traditional)",28,"BOTH",
   "f R C4 E4 F4  G4:4  R C4 E4 F4  G4:4  R C4 E4 F4  G4:2 E4:2  C4:2 E4:2  D4:4  R E4 E4 D4  C4:3 C4  E4:2 G4 G4  F4:4  E4 F4 G4:2  E4:2 C4:2  D4:4  C4:4",[0,4,8,12],
   lh=f"{I}:4  {I}:4  {I}:4  {I}:4  {I}:4  {I}:4  {I}:4  {V}:4  {I}:4  {I}:4  {IV}:4  {IV}:4  {I}:4  {I}:4  {V}:4  {I}:4"),
- song("oh_susanna_both","Oh! Susanna (hands together)","Ô Susanna — hai tay","Stephen Foster (1848)",27,"BOTH",
+ song("oh_susanna_both","Oh! Susanna (hands together)","Ô Susanna — hai tay","Stephen Foster (1848)",28,"BOTH",
   "mf C4 D4 E4 G4  G4 A4 G4 E4  C4 D4 E4 E4  D4 C4 D4:2  C4 D4 E4 G4  G4 A4 G4 E4  C4 D4 E4 E4  D4 D4 C4:2",[0,4],"A4",
   lh=f"{I}:4  {I}:4  {I}:4  {V}:4  {I}:4  {I}:4  {I}:4  {V}:2 {I}:2"),
 ]

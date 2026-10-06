@@ -1,15 +1,32 @@
 import { describe, expect, it } from 'vitest';
-import { activityDoneId, buildSessionPlan, findLesson, nextLesson, weekComplete, weekPassed, weekPlan } from '../src/lessons/lessonEngine';
+import {
+  MAX_SESSION_STEPS,
+  WEEKS,
+  activityDoneId,
+  buildSessionPlan,
+  estimateLessonMinutes,
+  findLesson,
+  nextLesson,
+  weekComplete,
+  weekPassed,
+  weekPlan,
+} from '../src/lessons/lessonEngine';
+import { findTune } from '../src/music/exercises';
 import { MemoryStorage, ProgressStore } from '../src/progress/ProgressStore';
 
-const store = () => new ProgressStore(new MemoryStorage(), () => new Date(2026, 9, 5));
+let today = 5;
+const store = () => new ProgressStore(new MemoryStorage(), () => new Date(2026, 9, today));
 
-/** Tuần 3: tiêu chí APP = đoán nốt đúng 10/10 trong một buổi */
+/** Tuần 3: tiêu chí APP = đoán nốt đúng 8/10 — v5.1: ở 2 NGÀY khác nhau */
 function passWeek3Criterion(st: ProgressStore): void {
   st.setCurrentWeek(3);
-  const s = st.startSession(weekPlan(3).lessons[0].id);
-  for (let i = 0; i < 10; i++) st.addAppAssessment(s.id, 'E4', 'E4');
-  st.finishSession(s.id);
+  for (const d of [5, 6]) {
+    today = d;
+    const s = st.startSession(weekPlan(3).lessons[0].id);
+    for (let i = 0; i < 10; i++) st.addAppAssessment(s.id, 'E4', 'E4');
+    st.finishSession(s.id);
+  }
+  today = 5;
 }
 
 describe('nhịp độ giáo trình (rà soát 2026-10-05)', () => {
@@ -50,10 +67,10 @@ describe('nhịp độ giáo trình (rà soát 2026-10-05)', () => {
     if (w9) expect(q2 && q2.kind === 'quiz' && q2.quiz.variant).toBe(w9.variant);
   });
 
-  it('tuần chấm bằng khởi động (tuần 25 đọc nốt cao): buổi đầu học bài TRƯỚC rồi mới khởi động-chấm', () => {
+  it('tuần chấm bằng khởi động (tuần 26 đọc nốt cao): buổi đầu học bài TRƯỚC rồi mới khởi động-chấm', () => {
     const st = store();
-    st.setCurrentWeek(25);
-    const kinds = buildSessionPlan(weekPlan(25).lessons[0], st.get()).map((s) => s.kind);
+    st.setCurrentWeek(26);
+    const kinds = buildSessionPlan(weekPlan(26).lessons[0], st.get()).map((s) => s.kind);
     const firstAct = kinds.indexOf('activity');
     const quizAt = kinds.lastIndexOf('quiz');
     expect(quizAt).toBeGreaterThan(firstAct);
@@ -62,7 +79,7 @@ describe('nhịp độ giáo trình (rà soát 2026-10-05)', () => {
   it('giả lập "bé giỏi": mọi bài thường của mọi tuần đều được học trước khi sang tuần', () => {
     const st = store();
     // Không giả lập tiêu chí; chỉ kiểm: nextLesson luôn mời bài thường chưa học trước bài kiểm tra
-    for (let w = 1; w <= 30; w++) {
+    for (let w = 1; w <= WEEKS.length; w++) {
       st.setCurrentWeek(w);
       const regular = weekPlan(w).lessons.filter((l) => !l.isWeekTest);
       for (const l of regular) {
@@ -86,5 +103,100 @@ describe('Ôn nhanh ôn cả kiến thức gần đây (lỗi chuyên gia phát 
       seg?.targets.forEach((t) => seen.add(`${t.keys[0]}|${t.staff ? 'staff' : ''}`));
     }
     expect([...seen].some((k) => k.endsWith('|staff'))).toBe(true);
+  });
+});
+
+/**
+ * v5.1 (OWNER duyệt 2026-10-06 sau rà soát chuyên gia): buổi NGẮN — ≤ 7 màn (tư thế + khởi động tay, ôn nhanh, khởi động
+ * tai/đọc nốt, các hoạt động, ôn bài cũ, màn kết) và ≤ ~12 phút ước lượng.
+ */
+describe('v5.1 — buổi ngắn: ≤ 7 màn, ≤ 12 phút', () => {
+  /** Kho "đang học tuần w" có lịch sử đủ để mọi bước phụ đều có thể xuất hiện (ôn nhanh, ôn bài cũ). */
+  function storeAt(week: number, doneLessons: string[]): ProgressStore {
+    const st = store();
+    for (const w of WEEKS) if (w.week < week) for (const l of w.lessons) st.markLessonCompleted(l.id);
+    doneLessons.forEach((id) => st.markLessonCompleted(id));
+    st.setCurrentWeek(week);
+    // vài buổi cũ → tư thế rút gọn, ôn bài cũ có ứng viên
+    for (let i = 0; i < 4; i++) st.finishSession(st.startSession(WEEKS[Math.max(0, week - 3)].lessons[0].id).id);
+    return st;
+  }
+
+  it(`mọi bài của mọi tuần: ≤ ${MAX_SESSION_STEPS} màn — buổi đầu tiên của bài và khi học lại (cả khi bật "Ôn bài cũ")`, () => {
+    expect(MAX_SESSION_STEPS).toBe(7);
+    const counts: string[] = [];
+    for (const w of WEEKS) {
+      const done: string[] = [];
+      for (const l of w.lessons) {
+        for (const rng of [() => 0.1, () => 0.7]) {
+          const st = storeAt(w.week, done);
+          const plan = buildSessionPlan(l, st.get(), { songReview: true, rng, now: new Date(2026, 9, 20) });
+          expect(plan.length, `${l.id}: ${plan.map((x) => x.kind).join(',')}`).toBeLessThanOrEqual(MAX_SESSION_STEPS);
+          // Màn kết luôn là bước cuối; hoạt động của bài không bao giờ bị cắt
+          expect(plan[plan.length - 1].kind).toBe('closing');
+          expect(plan.filter((x) => x.kind === 'activity')).toHaveLength(l.activities.length);
+          counts.push(`${l.id}:${plan.length}`);
+        }
+        done.push(l.id);
+      }
+    }
+    expect(counts.length).toBeGreaterThan(100);
+  });
+
+  it('ước lượng mỗi buổi ≤ 12 phút (bộ ba lượt chờ → nhịp → băng chuyền đã được tách)', () => {
+    for (const w of WEEKS) for (const l of w.lessons) expect(estimateLessonMinutes(l), l.id).toBeLessThanOrEqual(12);
+    // Không còn bài nào có ≥ 3 lượt cùng một bài hát (trừ bài tách tay: tay phải, tay trái, hai tay…)
+    for (const w of WEEKS)
+      for (const l of w.lessons) {
+        const per = new Map<string, number>();
+        for (const a of l.activities) if (a.kind === 'song' && !a.hand) per.set(a.songId, (per.get(a.songId) ?? 0) + 1);
+        for (const [id, n] of per) expect(n, `${l.id} ${id}`).toBeLessThanOrEqual(2);
+      }
+  });
+
+  it('bỏ khởi động tai/đọc nốt khi bài có ≥ 3 lượt bài hát (trừ tuần chấm bằng khởi động)', () => {
+    for (const w of WEEKS) {
+      if (!w.warmup) continue;
+      for (const l of w.lessons) {
+        const songs = l.activities.filter((a) => a.kind === 'song').length;
+        if (songs < 3) continue;
+        const st = storeAt(w.week, w.lessons.filter((x) => x !== l).map((x) => x.id));
+        const hasWarm = buildSessionPlan(l, st.get()).some((x) => x.kind === 'quiz' && x.warmup);
+        expect(hasWarm, l.id).toBe(w.criterion.who === 'APP');
+      }
+    }
+  });
+
+  it('"Ôn bài cũ": bài có móc kép (tốc độ mặc định 40) mở ở tốc độ 40', () => {
+    // Tuần 21: ứng viên ôn là bài tuần 17–19 — gồm bài có móc kép (Lý cây đa, Thỏ con, Bắc kim thang…)
+    let seen40 = false;
+    for (let k = 0; k < 30; k++) {
+      const st = storeAt(21, []);
+      let x = k + 1;
+      const rng = () => ((x = (x * 9301 + 49297) % 233280) / 233280);
+      const plan = buildSessionPlan(weekPlan(21).lessons[0], st.get(), { songReview: true, rng, now: new Date(2026, 9, 20) });
+      const rs = plan.find((p) => p.kind === 'review-song');
+      if (!rs || rs.kind !== 'review-song') continue;
+      const t = findTune(rs.songId)!;
+      if (t.bpm <= 40) {
+        expect(rs.bpm, rs.songId).toBe(40);
+        seen40 = true;
+      } else expect(rs.bpm).toBeGreaterThanOrEqual(50);
+    }
+    expect(seen40).toBe(true);
+  });
+
+  it('tách tay sẵn ở bài hai tay đầu các tuần hai tay: chờ tay phải → chờ tay trái → hai tay', () => {
+    const lessonsWithHands = WEEKS.flatMap((w) => w.lessons).filter((l) => l.activities.some((a) => a.kind === 'song' && a.hand));
+    const weeks = [...new Set(lessonsWithHands.map((l) => l.week))];
+    for (const w of [12, 13, 22, 23, 27, 28]) expect(weeks, `tuần ${w}`).toContain(w);
+    for (const l of lessonsWithHands) {
+      const songs = l.activities.filter((a) => a.kind === 'song');
+      const id = songs.find((a) => a.kind === 'song' && a.hand === 'RH')!;
+      if (id.kind !== 'song') throw new Error();
+      expect(findTune(id.songId)?.hand, l.id).toBe('BOTH');
+      const seq = songs.filter((a) => a.kind === 'song' && a.songId === id.songId).map((a) => (a.kind === 'song' ? `${a.mode}:${a.hand ?? 'BOTH'}` : ''));
+      expect(seq.slice(0, 3), l.id).toEqual(['wait:RH', 'wait:LH', 'wait:BOTH']);
+    }
   });
 });
