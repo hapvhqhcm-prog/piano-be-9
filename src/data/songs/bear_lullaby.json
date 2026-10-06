@@ -1,0 +1,135 @@
+{
+ "id": "bear_lullaby",
+ "title": "Bear Cub's Lullaby",
+ "titleVi": "Gấu con đi ngủ",
+ "composer": "Bài tự sáng tác cho app (piano-be-9)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Bài tự sáng tác cho app (piano-be-9)",
+ "attributionRequired": false,
+ "hand": "LH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 14,
+ "position": "G",
+ "phrases": [
+  0,
+  4
+ ],
+ "notes": [
+  {
+   "pitch": "D3",
+   "beats": 2,
+   "finger": 1,
+   "dyn": "p",
+   "slur": "start"
+  },
+  {
+   "pitch": "B2",
+   "beats": 2,
+   "finger": 3,
+   "slur": "end"
+  },
+  {
+   "pitch": "C3",
+   "beats": 1,
+   "finger": 2,
+   "slur": "start"
+  },
+  {
+   "pitch": "B2",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "A2",
+   "beats": 2,
+   "finger": 4,
+   "slur": "end"
+  },
+  {
+   "pitch": "B2",
+   "beats": 1,
+   "finger": 3,
+   "slur": "start"
+  },
+  {
+   "pitch": "C3",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "D3",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "B2",
+   "beats": 1,
+   "finger": 3,
+   "slur": "end"
+  },
+  {
+   "pitch": "A2",
+   "beats": 4,
+   "finger": 4
+  },
+  {
+   "pitch": "D3",
+   "beats": 2,
+   "finger": 1,
+   "slur": "start"
+  },
+  {
+   "pitch": "B2",
+   "beats": 2,
+   "finger": 3,
+   "slur": "end"
+  },
+  {
+   "pitch": "C3",
+   "beats": 1,
+   "finger": 2,
+   "slur": "start"
+  },
+  {
+   "pitch": "A2",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "B2",
+   "beats": 2,
+   "finger": 3,
+   "slur": "end"
+  },
+  {
+   "pitch": "C3",
+   "beats": 1,
+   "finger": 2,
+   "dyn": "mf",
+   "slur": "start"
+  },
+  {
+   "pitch": "B2",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "A2",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "B2",
+   "beats": 1,
+   "finger": 3,
+   "slur": "end"
+  },
+  {
+   "pitch": "G2",
+   "beats": 4,
+   "finger": 5,
+   "dyn": "p"
+  }
+ ]
+}

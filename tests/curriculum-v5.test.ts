@@ -97,7 +97,19 @@ describe('cấu trúc 30 tuần', () => {
       expect(songUses(id).length, id).toBeGreaterThan(0);
     }
     // + 12 bài Việt Nam (2026-10-06): 9 dân ca + 3 ca khúc public domain (Lý ngựa ô thay bản đầy đủ — cùng id)
-    expect(SONGS.length).toBe(56 + NEW.length + 12);
+    // + 13 bài tự sáng tác bổ sung (2026-10-06, rà soát kho bài theo tuần) — xem phần "BÀI TỰ SÁNG TÁC BỔ SUNG" trong gen-songs.py
+    const EXTRA = ['duckling_waddle', 'snail_stroll', 'choo_choo_train', 'little_elephant', 'bear_lullaby', 'mid_autumn_night',
+      'robot_dance', 'tet_rice_cake', 'kitten_stalks', 'flying_kite', 'boat_race', 'sparrow_minuet', 'summer_shower'];
+    for (const id of EXTRA) {
+      const t = SONGS.find((s) => s.id === id);
+      expect(t, id).toBeDefined();
+      expect(t!.composer).toBe('Bài tự sáng tác cho app (piano-be-9)');
+      expect(t!.arrangementBy).toContain('tự sáng tác');
+    }
+    // Bài tự sáng tác bổ sung đưa vào bài học ở tuần chỉ có 1–2 bài
+    for (const [id, week] of [['snail_stroll', 3], ['sparrow_minuet', 29], ['summer_shower', 30]] as const)
+      expect(songUses(id).map((u) => u.week), id).toContain(week);
+    expect(SONGS.length).toBe(56 + NEW.length + 12 + EXTRA.length);
   });
 
   it('mục tiêu cuối nói thật: ≈ Faber cấp 1 / đầu cấp 2', () => {

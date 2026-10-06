@@ -51,16 +51,10 @@ export function fingerFor(pitch: Pitch, hand: Hand, extended = false): number | 
   return extended && hand === 'RH' ? RH_EXTENSION[pitch] : undefined;
 }
 
-/** Các nốt hợp lệ của thế 5 ngón (có thể kèm nốt duỗi). */
-export function handRange(hand: Hand, extended = false): Pitch[] {
-  const base = Object.keys(fingeringFor(hand));
-  return extended && hand === 'RH' ? [...base, ...Object.keys(RH_EXTENSION)] : base;
-}
-
 /**
  * THẾ TAY (Cấp 2–3, OWNER yêu cầu hoàn thiện giáo trình 2026-10-04) — bảng số ngón cố định cho từng thế.
  * 'C' (§6) · 'MC' Đô giữa tay trái · 'G' thế Sol · 'D' thế Rê (Fa♯) · 'Cm' Đô thứ (Mi♭) · 'Am' La thứ
- * · 'C5' thế Đô cao tay phải (Đô5–Sol5, tuần 20 — OWNER duyệt 2026-10-05).
+ * · 'C5' thế Đô cao tay phải (Đô5–Sol5, OWNER duyệt 2026-10-05; tuần 26 "Đọc nốt cao" ở giáo trình v5.1 31 tuần).
  * Bài có `position: "free"` dùng số ngón ghi riêng từng nốt (gam luồn ngón, đổi thế, bài cổ điển).
  */
 export type PositionId = 'C' | 'MC' | 'G' | 'D' | 'Cm' | 'Am' | 'C5' | 'free';

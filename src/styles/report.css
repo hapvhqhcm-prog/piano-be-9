@@ -1,0 +1,432 @@
+/* =========================================================
+   📊 Báo cáo tiến bộ (src/ui/screens/report.ts) — trang cho bố mẹ xem / in / chia sẻ.
+   Dùng token của theme.css. Bản in: A4 dọc (@media print ở cuối tệp).
+   ========================================================= */
+.report-wrap {
+  flex: 1;
+  min-height: 0;
+  padding: 14px 24px calc(32px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.report-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 1000px;
+  width: 100%;
+  margin: 0 auto;
+}
+.report-bar-gap {
+  flex: 1;
+}
+.report-privacy {
+  max-width: 1000px;
+  width: 100%;
+  margin: 0 auto;
+  font-size: 15px;
+  color: var(--ink-2);
+}
+
+.report-sheet {
+  max-width: 1000px;
+  width: 100%;
+  margin: 0 auto;
+  background: var(--surface);
+  border: 2px solid var(--line);
+  border-radius: var(--r-xl);
+  box-shadow: var(--e2);
+  padding: 22px 26px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  color: var(--ink);
+}
+
+/* ---- Đầu trang ---- */
+.rp-head {
+  display: grid;
+  grid-template-columns: 1fr 210px;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 26px;
+  border-radius: var(--r-lg);
+  background:
+    radial-gradient(circle at 85% 50%, rgba(255, 255, 255, 0.16) 0 120px, transparent 121px),
+    linear-gradient(135deg, var(--violet-500), #8a6cff);
+  color: #fff;
+}
+.rp-head-art {
+  order: 2;
+}
+.rp-hero-island {
+  width: 210px;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 6px 10px rgba(44, 39, 82, 0.25));
+}
+.rp-kicker {
+  margin: 0;
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--sun-100);
+}
+.rp-name {
+  margin: 2px 0 0;
+  font-size: 46px;
+  line-height: 1.1;
+  color: #fff;
+}
+.rp-dates {
+  margin: 4px 0 10px;
+  font-size: 19px;
+  font-weight: 800;
+  opacity: 0.92;
+}
+.rp-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.rp-chip {
+  padding: 4px 12px;
+  border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, 0.2);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+/* ---- Mục ---- */
+.rp-sec {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.rp-sec h2 {
+  margin: 0;
+  font-size: 26px;
+}
+.rp-sec h3 {
+  margin: 0;
+  font-size: 20px;
+}
+.rp-note {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+.rp-tiles {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+.rp-tile {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 16px;
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  border: 2px solid var(--line);
+}
+.rp-tile b {
+  font-family: var(--font-display);
+  font-size: 30px;
+  line-height: 1.15;
+  color: var(--violet-600);
+}
+.rp-tile span {
+  font-size: 15px;
+  color: var(--ink-2);
+}
+
+.rp-strip {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 10px 12px 6px;
+  border-radius: var(--r-md);
+  background: linear-gradient(180deg, var(--sky-100), #fff);
+  border: 2px solid var(--line);
+}
+.rp-isl {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.rp-isl svg {
+  width: 100%;
+  max-width: 76px;
+  height: auto;
+}
+.rp-isl figcaption {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--ink-2);
+}
+.rp-isl.locked figcaption {
+  color: var(--ink-3);
+}
+.rp-isl.current svg {
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255, 203, 61, 0.55), rgba(255, 203, 61, 0));
+}
+.rp-isl.current figcaption {
+  color: var(--violet-600);
+}
+
+.rp-two {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 12px;
+}
+.rp-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: var(--r-md);
+  border: 2px solid var(--line);
+  min-width: 0;
+}
+.rp-chart {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.rp-chart .rp-axis {
+  font: 700 13px var(--font-body);
+  fill: var(--ink-2);
+}
+.rp-chart .rp-axis-goal {
+  fill: var(--mint-700);
+}
+.rp-chart .rp-val {
+  font: 800 15px var(--font-body);
+  fill: var(--ink);
+}
+.rp-songs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  columns: 2;
+  column-gap: 14px;
+}
+.rp-songs li {
+  break-inside: avoid;
+  padding: 3px 0 3px 26px;
+  text-indent: -26px;
+  line-height: 1.3;
+  font-size: 16px;
+  font-weight: 800;
+}
+.rp-songs li.faded {
+  color: var(--ink-2);
+}
+.rp-songs li.faded .rp-star {
+  opacity: 0.45;
+}
+.rp-star {
+  display: inline-block;
+  width: 26px;
+  text-indent: 0;
+}
+.rp-vn {
+  margin-left: 6px;
+  font-size: 15px;
+}
+
+/* ---- Kỹ năng ---- */
+.rp-skills {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.rp-skill {
+  display: grid;
+  grid-template-columns: 32px 110px 1fr 56px;
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 10px;
+  row-gap: 2px;
+  padding: 10px 14px;
+  border-radius: var(--r-md);
+  border: 2px solid var(--line);
+}
+.rp-skill-icon {
+  font-size: 24px;
+  grid-row: span 2;
+}
+.rp-skill-name {
+  font-family: var(--font-display);
+  font-size: 20px;
+}
+.rp-bar {
+  height: 16px;
+  border-radius: var(--r-pill);
+  background: var(--violet-100);
+  overflow: hidden;
+}
+.rp-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--violet-500);
+}
+.rp-skill-pct {
+  text-align: right;
+  font-family: var(--font-display);
+  font-size: 22px;
+}
+.rp-skill.empty .rp-skill-pct {
+  color: var(--ink-3);
+}
+.rp-skill-text {
+  grid-column: 2 / -1;
+  font-size: 15px;
+  color: var(--ink-2);
+}
+.rp-facts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+.rp-fact {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  border: 2px solid var(--line);
+}
+.rp-fact-icon {
+  font-size: 22px;
+  line-height: 1.2;
+}
+.rp-fact-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.rp-fact-label {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.rp-fact b {
+  font-family: var(--font-display);
+  font-size: 19px;
+  line-height: 1.2;
+}
+.rp-fact small {
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+/* ---- Điểm mạnh & bước tiếp theo ---- */
+.rp-words ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.rp-words li {
+  display: flex;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: var(--r-md);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+.rp-words li.good {
+  background: var(--mint-50);
+  color: var(--mint-800);
+}
+.rp-words li.next {
+  background: var(--sun-50);
+  color: var(--sun-800);
+}
+.rp-foot {
+  text-align: center;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+/* ---- Bản in: A4 dọc, chỉ in trang báo cáo ---- */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm;
+  }
+  html.report-print,
+  html.report-print body {
+    position: static !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+  html.report-print #app {
+    position: static !important;
+    display: block !important;
+    padding: 0 !important;
+  }
+  html.report-print .screen,
+  html.report-print .report-wrap {
+    display: block !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+  html.report-print #app::after {
+    content: none !important;
+    display: none !important;
+  }
+  html.report-print .report-bar,
+  html.report-print .report-privacy,
+  html.report-print .toast,
+  html.report-print .dialog-wrap {
+    display: none !important;
+  }
+  html.report-print .report-sheet {
+    max-width: none;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    gap: 14px;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    font-size: 12px;
+  }
+  html.report-print .rp-head {
+    padding: 14px 18px;
+    grid-template-columns: 1fr 150px;
+  }
+  html.report-print .rp-hero-island {
+    width: 150px;
+  }
+  html.report-print .rp-name {
+    font-size: 34px;
+  }
+  html.report-print .rp-tile b {
+    font-size: 22px;
+  }
+  html.report-print .rp-sec h2 {
+    font-size: 20px;
+  }
+  html.report-print .rp-sec,
+  html.report-print .rp-box,
+  html.report-print .rp-skill,
+  html.report-print .rp-words li {
+    break-inside: avoid;
+  }
+  html.report-print .rp-facts {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

@@ -26,8 +26,7 @@ export const LATENCY_GAP = 0.6;
 export const LATENCY_MAX = 0.5;
 /** Trên mức này: rất có thể đang dùng tai nghe / loa Bluetooth. */
 export const BLUETOOTH_LIKELY_MS = 120;
-/** Giới hạn lưu trong Cài đặt (ms). */
-export const MIC_LATENCY_MAX_MS = 1000;
+// Giới hạn lưu trong Cài đặt: MIC_LATENCY_MAX_MS ở progress/schema.ts (kết quả đo luôn ≤ LATENCY_MAX = 500 ms).
 
 export interface LatencyEstimate {
   /** Độ trễ khứ hồi (ms, trung vị các lần đo hợp lệ) */

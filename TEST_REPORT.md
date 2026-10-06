@@ -482,3 +482,15 @@ Chuyên gia chấm lại bản 0.9.1: sư phạm **B** (trước C+/B−), trả
 - sửa nhãn dân ca nước ngoài.
 
 **Kiểm tra:** 1156 test; robot e2e qua cả 5 kịch bản.
+
+## 24. Báo cáo tiến bộ, 13 bài sáng tác mới, soát mã (2026-10-06)
+
+- **📊 Báo cáo tiến bộ** (Phụ huynh → 📊 Báo cáo):
+  - nội dung: hành trình qua các đảo, số ngày tập 8 tuần (biểu đồ, vạch mục tiêu 4 ngày), bài đã thuộc (🇻🇳 chỉ cho bài Việt Nam thật), kỹ năng đọc nốt / tai nghe / vỗ nhịp có so sánh 2 tuần trước, hai tay, tốc độ, sắc thái, sáng tác, điểm mạnh và bước tiếp theo;
+  - **📤 Chia sẻ** thành ảnh PNG (qua bảng Chia sẻ của iPad) hoặc **🖨️ In** khổ A4.
+- **13 bài sáng tác mới** (tổng 95), lấp chỗ thiếu: tuần nào cũng ≥ 2 bài; thêm bài tay trái, giọng thứ, ngũ cung Việt Nam, bài chuẩn bị Minuet / Für Elise.
+- **Soát mã:**
+  - tách màn bài hát thành 4 module;
+  - bỏ 6 export thừa;
+  - sửa 2 lỗi: lời kể chuyện ở màn chính có thể đọc đè sang màn sau; huy chương cấp 3 ghi sai "30 tuần".
+- 1242 test; robot e2e qua 5 kịch bản.

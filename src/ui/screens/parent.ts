@@ -21,6 +21,7 @@ import { PRIVACY_NOTE, customTuneTitle, parentSongToTune } from '../../practice/
 import { measureCount } from '../../music/tune';
 import { songEditorScreen } from './songEditor';
 import { playSong } from './library';
+import { reportScreen } from './report';
 
 const RATING_LABEL = { all: '😄 Dễ — đàn được', some: '🙂 Vừa — còn vấp chút', hard: '😅 Khó — cần tập thêm' } as const;
 
@@ -260,6 +261,7 @@ export function parentScreen(app: App) {
           h(
             'div',
             { class: 'parent-head-actions' },
+            button({ icon: '📊', label: 'Báo cáo', onTap: () => app.show(reportScreen(app, { onBack: () => app.show(parentScreen(app)) })) }),
             button({ icon: '📖', label: 'Hướng dẫn', onTap: () => app.show(onboardingScreen(app, { onDone: () => app.show(parentScreen(app)) })) }),
             button({ icon: '←', label: 'Về màn của bé', kind: 'primary', onTap: () => app.show(homeScreen(app)) }),
           ),

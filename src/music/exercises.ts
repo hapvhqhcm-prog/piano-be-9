@@ -1,4 +1,4 @@
-import { SONGS, findSong, type Tune, type TuneNote } from './tune';
+import { findSong, type Tune, type TuneNote } from './tune';
 
 /** Bài tập nhịp tuần 4 (không phải bài hát) — tự soạn, chỉ dùng nốt thế Đô. */
 const RH: Record<string, number> = { C4: 1, D4: 2, E4: 3, F4: 4, G4: 5 };
@@ -41,5 +41,3 @@ export const EXERCISES: readonly Tune[] = [
 export function findTune(id: string): Tune | undefined {
   return findSong(id) ?? EXERCISES.find((e) => e.id === id);
 }
-
-export const ALL_TUNES: readonly Tune[] = [...SONGS, ...EXERCISES];

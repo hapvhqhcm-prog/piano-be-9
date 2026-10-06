@@ -8,6 +8,7 @@ import {
   PracticeStateMachine,
   type ParentResult,
   type PracticeEffect,
+  type PracticeEvent,
   type ResultSource,
 } from '../../practice/PracticeStateMachine';
 import { keyboardRangeFor, midiToPitch, noteLabel, pitchToMidi, samePitch, viName } from '../../piano/pitchTable';
@@ -212,7 +213,7 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
     /** Tăng mỗi lần vẽ lại → mọi tác vụ async cũ tự hủy. */
     let token = 0;
     const target = () => seg.targets[sm.snapshot.index];
-    const send = (type: Parameters<typeof sm.send>[0]['type']) => sm.send({ type } as never);
+    const send = (type: PracticeEvent['type']) => sm.send({ type });
     const later = (fn: () => void, ms = 0) => {
       const tk = token;
       window.setTimeout(() => tk === token && fn(), ms);

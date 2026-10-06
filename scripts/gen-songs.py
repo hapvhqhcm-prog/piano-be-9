@@ -623,6 +623,63 @@ S += [
   [0, 7, 13], dyn={0: "p", 7: "mf", 13: "p"}, slurs=[(3, 0, 3, 2)]),
 ]
 
+# ---------------------------------------------------------------- BÀI TỰ SÁNG TÁC BỔ SUNG (2026-10-06): lấp chỗ mỏng của kho bài
+# Rà soát kho bài theo tuần: tuần 2–4, 19, 25–26, 28 chỉ có 2 bài; tuần 29–30 chỉ có 1 bài; bài GIAI ĐIỆU TAY TRÁI chỉ toàn bài
+# chuyển từ tay phải; ít bài giọng thứ, ít bài ngũ cung tự sáng tác, chỉ một bài hai tay có tay trái "đi" nốt đen.
+# Mỗi bài 8 ô nhịp, câu hỏi (ô 0–3) – câu trả lời (ô 4–7) kết về chủ âm, CHỈ dùng kỹ năng đã học tới tuần của bài.
+# Phần lớn vào Thư viện (mở theo tuần); "Ốc sên", "Minuet chim sẻ", "Mưa rào mùa hạ" vào bài học (tuần chỉ có 1–2 bài).
+PENTA_C = {"C4": 1, "D4": 2, "E4": 3, "G4": 4, "A4": 5}   # ngũ cung Đô (Đô Rê Mi Sol La)
+MUA_RAO = {"A4": 1, "B4": 2, "C5": 3, "D5": 4, "D#5": 4, "E5": 5}   # câu 1 dùng Rê, câu 2 dùng Rê♯ (cùng ngón 4, khác câu)
+S += [
+ # Tuần 2 — chỉ Đô Rê Mi, nốt đen/trắng/tròn. Vịt lạch bạch: hai nốt lặp "Đô Đô Mi Mi"; câu hỏi dừng ở Rê, câu trả lời về Đô.
+ song("duckling_waddle","Duckling Waddle","Vịt con lạch bạch",ORIG,2,"RH",
+  "C4 C4 E4 E4  D4 D4 C4:2  E4 D4 C4 D4  E4:2 D4:2  C4 C4 E4 E4  D4 D4 C4:2  E4 D4 E4 D4  C4:4",[0,4],arr=ORIG),
+ # Tuần 3 — thế Đô đủ 5 ngón, chưa có móc đơn / dấu lặng. Ốc sên bò chậm lên lá (nốt trắng đi lên) rồi trượt xuống.
+ song("snail_stroll","Snail's Stroll","Ốc sên đi chơi",ORIG,3,"RH",
+  "C4:2 D4:2  E4:2 F4:2  G4 F4 E4 D4  E4:4  G4:2 F4:2  E4:2 D4:2  C4 E4 D4:2  C4:4",[0,4],arr=ORIG),
+ # Tuần 4 — móc đơn "Chạy-chạy" + dấu lặng "Suỵt": tàu xình xịch (4 móc đơn cùng phím) rồi kéo còi.
+ song("choo_choo_train","Choo-choo Train","Tàu hỏa xình xịch",ORIG,4,"RH",
+  "C4:0.5 C4:0.5 C4:0.5 C4:0.5 E4 E4  D4:0.5 D4:0.5 E4:0.5 F4:0.5 G4:2  G4:0.5 G4:0.5 F4:0.5 F4:0.5 E4 D4  D4:2 R:2  "
+  "C4:0.5 C4:0.5 C4:0.5 C4:0.5 E4 E4  D4:0.5 D4:0.5 E4:0.5 F4:0.5 G4:2  G4:0.5 F4:0.5 E4:0.5 D4:0.5 E4 D4  C4:3 R",[0,4],arr=ORIG),
+ # Tuần 7 — GIAI ĐIỆU TAY TRÁI tự sáng tác (thế Đô tay trái Đô3–Sol3): voi bước nặng TO, rồi phun nước NHỎ.
+ song("little_elephant","Little Elephant","Chú voi con",ORIG,7,"LH",
+  "f C3 C3 G3:2  E3 E3 C3:2  D3 E3 F3 D3  E3:2 G3:2  p E3 F3 G3 E3  F3 D3 E3:2  mf G3 F3 E3 D3  f C3:4",[0,4],arr=ORIG),
+ # Tuần 14 — giai điệu TAY TRÁI ở thế Sol (Sol2–Rê3): bài ru, NHỎ và LIỀN.
+ song("bear_lullaby","Bear Cub's Lullaby","Gấu con đi ngủ",ORIG,14,"LH",
+  "p (D3:2 B2:2)  (C3 B2 A2:2)  (B2 C3 D3 B2)  A2:4  (D3:2 B2:2)  (C3 A2 B2:2)  mf (C3 B2 A2 B2)  p G2:4",[0,4],pos="G",arr=ORIG),
+ # Tuần 16 — thế Rê (Fa♯): đèn lồng đung đưa "La – Fa♯ – Rê", móc đơn đi lên; câu trả lời LIỀN, về Rê.
+ song("mid_autumn_night","Mid-Autumn Night","Đêm Trung thu",ORIG,16,"RH",
+  "mf A4 F#4 D4 F#4  E4:0.5 F#4:0.5 G4 A4:2  G4 E4 G4 F#4  E4:4  p A4 F#4 D4 F#4  E4:0.5 F#4:0.5 G4 A4:2  mf (G4 F#4 E4 F#4)  D4:4",[0,4],pos="D",arr=ORIG),
+ # Tuần 19 — nghịch phách "Chạy-Đi-chạy" + NGẮT: rô-bốt giật cục, đứng hình ở ô 4.
+ song("robot_dance","Robot Dance","Robot nhảy",ORIG,19,"RH",
+  "f C4:0.5' E4' C4:0.5' G4' G4'  F4:0.5' D4' F4:0.5' E4:2  E4:0.5' G4' E4:0.5' F4' D4'  E4:2 R:2  "
+  "p C4:0.5' E4' C4:0.5' G4' G4'  F4:0.5' D4' F4:0.5' E4' C4'  f D4:0.5' E4' F4:0.5' G4' G4'  G4' R C4' R",[0,4],arr=ORIG),
+ # Tuần 22 — NGŨ CUNG (Đô Rê Mi Sol La, không có Fa — âm hưởng Việt Nam) tay phải + hợp âm I – IV – V tay trái.
+ # Bàn tay ngũ cung Đô1 Rê2 Mi3 Sol4 La5 (như "Xòe hoa" / "Gà gáy": Mi–Sol cách một phím bằng ngón 3-4) — mỗi ngón một phím, không dời tay.
+ song("tet_rice_cake","Tet Rice Cakes","Bánh chưng ngày Tết",ORIG,22,"BOTH",fingered(
+  "f C4 D4 E4 G4  A4:0.5 G4:0.5 E4 G4:2  E4 D4 C4 D4  E4:2 D4:2  mf C4 D4 E4 G4  A4:0.5 G4:0.5 A4:0.5 G4:0.5 E4:2  f G4 E4 D4 E4  C4:4",PENTA_C),
+  [0,4],pos="free",lh=f"{I}:4  {IV}:2 {I}:2  {I}:2 {V}:2  {I}:2 {V}:2  {I}:4  {IV}:2 {I}:2  {I}:2 {V}:2  {I}:4",arr=ORIG),
+ # Tuần 25 — giọng THỨ ở thế Đô thứ (Mi♭): mèo rón rén NHỎ & NGẮT, rình… rồi vồ TO.
+ song("kitten_stalks","Kitten Stalks the Mouse","Mèo con rình chuột",ORIG,25,"RH",
+  "p C4' R Eb4' R  D4' R F4' R  Eb4' F4' G4' Eb4'  D4:2 R:2  C4' R Eb4' R  D4' F4' Eb4' D4'  "
+  "mf (C4:0.5 D4:0.5 Eb4:0.5 F4:0.5) G4:2  f G4' R C4' R",[0,4],pos="Cm",arr=ORIG),
+ # Tuần 26 — thế Đô cao (Đô5–Sol5), NGŨ CUNG Đô Rê Mi Sol: diều bay LIỀN, có "Đi-chấm chạy"; câu cuối diều vút cao TO.
+ song("flying_kite","Flying a Kite","Thả diều",ORIG,26,"RH",
+  "mf (C5 D5 E5 G5)  G5:1.5 E5:0.5 D5:2  (E5 G5 E5 D5)  E5:2 D5:2  p (C5 D5 E5 G5)  f G5:1.5 E5:0.5 G5:2  mf (E5 D5 C5 D5)  C5:4",[0,4],pos="C5",arr=ORIG),
+ # Tuần 28 — hai tay, TAY TRÁI ĐI NỐT ĐEN (Đô–Sol–Mi–Sol như mái chèo) dưới nốt trắng tay phải; kết hợp âm Đô trưởng.
+ song("boat_race","Boat Race","Đua thuyền",ORIG,28,"BOTH",
+  "mf E4:2 G4:2  F4:2 D4:2  E4 F4 G4 E4  D4:4  f G4:2 E4:2  F4:2 D4:2  E4 G4 F4 D4  C4:4",[0,4],
+  lh=f"C3 G3 E3 G3  D3 G3 F3 G3  C3 G3 E3 G3  D3 G3 F3 G3  C3 G3 E3 G3  D3 G3 F3 G3  C3 G3 D3 G3  {I}:4",arr=ORIG),
+ # Tuần 29 — chuẩn bị Minuet (thế Sol, 3/4): nốt đen + bốn móc đơn LIỀN, hai nốt NGẮT — đúng "dáng" Minuet, giai điệu mới.
+ song("sparrow_minuet","Sparrow's Minuet","Minuet chim sẻ",ORIG,29,"RH",
+  "mf G4 (B4:0.5 A4:0.5 B4:0.5 C5:0.5)  D5 G4' G4'  C5 (A4:0.5 B4:0.5 C5:0.5 B4:0.5)  A4:3  "
+  "p B4 (C5:0.5 D5:0.5 C5:0.5 B4:0.5)  C5 A4' A4'  mf B4 (D5:0.5 C5:0.5 B4:0.5 A4:0.5)  G4:3",[0,4],pos="G",ts="3/4",arr=ORIG),
+ # Tuần 30 — chuẩn bị Für Elise (La thứ, 3/4, tay phải La4–Mi5): hợp âm rải La thứ LIỀN, "Mi – Rê♯ – Mi" như chớp lóe.
+ song("summer_shower","Summer Shower","Mưa rào mùa hạ",ORIG,30,"RH",fingered(
+  "p (A4:0.5 C5:0.5 E5:0.5 C5:0.5) A4  (B4:0.5 D5:0.5 E5:0.5 D5:0.5) B4  (C5:0.5 B4:0.5 A4:0.5 B4:0.5) C5  E5:2 R  "
+  "mf E5 D#5 E5  (C5:0.5 B4:0.5 A4:0.5 B4:0.5) C5  p (C5:0.5 B4:0.5 C5:0.5 B4:0.5) E5  A4:2 R",MUA_RAO),[0,4],pos="free",ts="3/4",arr=ORIG),
+]
+
 # Bài Việt Nam (OWNER 2026-10-06) — mục "🇻🇳 Bài Việt Nam" của Thư viện:
 #   vn = "folk"   : dân ca Việt Nam
 #   vn = "lyrics" : giai điệu nước ngoài (public domain) mà trẻ em Việt Nam quen hát lời Việt

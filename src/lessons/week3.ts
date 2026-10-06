@@ -67,9 +67,13 @@ export const WEEK3: WeekPlan = {
     {
       id: 'w3-l3',
       week: 3,
-      title: 'Bài hát: Chú cừu nhỏ',
+      title: 'Bài hát: Chú cừu nhỏ & Ốc sên',
       emoji: '🐑',
-      activities: [{ kind: 'song', songId: 'mary_lamb', mode: 'wait', hints: 'full', intro: 'Bài này có Sol nữa đấy — ngón 5 chuẩn bị!' }],
+      activities: [
+        { kind: 'song', songId: 'mary_lamb', mode: 'wait', hints: 'full', intro: 'Bài này có Sol nữa đấy — ngón 5 chuẩn bị!' },
+        // 2026-10-06: bài tự sáng tác — tuần 3 trước chỉ có 2 bài; đi bậc lên Sol bằng nốt trắng rồi về Đô
+        { kind: 'song', songId: 'snail_stroll', mode: 'wait', hints: 'full', intro: 'Ốc sên bò thật chậm lên tới Sol rồi trượt xuống. Nốt trắng "Đi-i": giữ phím đủ 2 phách nhé!' },
+      ],
     },
     {
       id: 'w3-l4',

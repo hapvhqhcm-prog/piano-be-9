@@ -19,6 +19,8 @@ export const CURRICULUM_REV = 4;
  * LỖI ĐÃ SỬA 2026-10-04: trước đây giới hạn là 8 → lên tuần 9 thì dữ liệu bị coi là hỏng và bị đặt lại.
  */
 export const MAX_WEEK_LIMIT = 52;
+/** (+) Giới hạn hợp lệ của settings.micLatencyMs (ms). */
+const MIC_LATENCY_MAX_MS = 1000;
 
 export type ParentResult = 'correct' | 'retry';
 export type SelfRating = 'all' | 'some' | 'hard';
@@ -260,7 +262,7 @@ export function validateAppData(x: unknown): string[] {
     if (typeof st.micAutoNext !== 'boolean') errs.push('settings.micAutoNext');
     if (!['low', 'normal', 'high'].includes(st.micSensitivity as string)) errs.push('settings.micSensitivity');
     const ml = st.micLatencyMs as number;
-    if (typeof ml !== 'number' || !(ml >= 0 && ml <= 1000)) errs.push('settings.micLatencyMs');
+    if (typeof ml !== 'number' || !(ml >= 0 && ml <= MIC_LATENCY_MAX_MS)) errs.push('settings.micLatencyMs');
     if (typeof st.accompaniment !== 'boolean') errs.push('settings.accompaniment');
     if (!['easy', 'normal', 'strict'].includes(st.timing as string)) errs.push('settings.timing');
     if (typeof st.lastBackupAt !== 'number') errs.push('settings.lastBackupAt');

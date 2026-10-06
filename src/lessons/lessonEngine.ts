@@ -173,11 +173,6 @@ export function runDays(sessions: readonly Session[], ok: (r: Run) => boolean): 
   return new Set(sessions.filter((s) => s.songRuns.some((r) => ok(r) && runIsEvidence(r))).map((s) => s.date)).size;
 }
 
-/** Có lượt hợp lệ (runIsEvidence) thỏa `ok` ở ít nhất `days` ngày KHÁC NHAU (theo session.date). */
-export function passedOnDays(sessions: readonly Session[], ok: (r: Run) => boolean, days = CRITERION_DAYS): boolean {
-  return runDays(sessions, ok) >= days;
-}
-
 /** Tuần có tiêu chí "huy chương" (buổi biểu diễn cuối mỗi cấp). */
 const MEDAL_WEEKS = new Set(LEVELS.map((l) => l.weeks[1]));
 

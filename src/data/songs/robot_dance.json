@@ -1,0 +1,224 @@
+{
+ "id": "robot_dance",
+ "title": "Robot Dance",
+ "titleVi": "Robot nhảy",
+ "composer": "Bài tự sáng tác cho app (piano-be-9)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Bài tự sáng tác cho app (piano-be-9)",
+ "attributionRequired": false,
+ "hand": "RH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 19,
+ "phrases": [
+  0,
+  4
+ ],
+ "notes": [
+  {
+   "pitch": "C4",
+   "beats": 0.5,
+   "finger": 1,
+   "dyn": "f",
+   "stac": true
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3,
+   "stac": true
+  },
+  {
+   "pitch": "C4",
+   "beats": 0.5,
+   "finger": 1,
+   "stac": true
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5,
+   "stac": true
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5,
+   "stac": true
+  },
+  {
+   "pitch": "F4",
+   "beats": 0.5,
+   "finger": 4,
+   "stac": true
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2,
+   "stac": true
+  },
+  {
+   "pitch": "F4",
+   "beats": 0.5,
+   "finger": 4,
+   "stac": true
+  },
+  {
+   "pitch": "E4",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 3,
+   "stac": true
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5,
+   "stac": true
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 3,
+   "stac": true
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4,
+   "stac": true
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2,
+   "stac": true
+  },
+  {
+   "pitch": "E4",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "rest": true,
+   "beats": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 0.5,
+   "finger": 1,
+   "dyn": "p",
+   "stac": true
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3,
+   "stac": true
+  },
+  {
+   "pitch": "C4",
+   "beats": 0.5,
+   "finger": 1,
+   "stac": true
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5,
+   "stac": true
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5,
+   "stac": true
+  },
+  {
+   "pitch": "F4",
+   "beats": 0.5,
+   "finger": 4,
+   "stac": true
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2,
+   "stac": true
+  },
+  {
+   "pitch": "F4",
+   "beats": 0.5,
+   "finger": 4,
+   "stac": true
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3,
+   "stac": true
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1,
+   "stac": true
+  },
+  {
+   "pitch": "D4",
+   "beats": 0.5,
+   "finger": 2,
+   "dyn": "f",
+   "stac": true
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3,
+   "stac": true
+  },
+  {
+   "pitch": "F4",
+   "beats": 0.5,
+   "finger": 4,
+   "stac": true
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5,
+   "stac": true
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5,
+   "stac": true
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5,
+   "stac": true
+  },
+  {
+   "rest": true,
+   "beats": 1
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1,
+   "stac": true
+  },
+  {
+   "rest": true,
+   "beats": 1
+  }
+ ]
+}

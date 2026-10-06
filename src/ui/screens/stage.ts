@@ -1,4 +1,4 @@
-import { LEVELS } from '../../lessons/lessonEngine';
+import { LEVELS, WEEKS } from '../../lessons/lessonEngine';
 import { songsUpToWeek, type Tune } from '../../music/tune';
 import type { SongRun } from '../../progress/schema';
 import type { App } from '../App';
@@ -6,22 +6,22 @@ import { backButton, button, h } from '../components/dom';
 import { songScreen } from './song';
 
 export interface StageHooks {
-  /** Cấp của buổi hòa nhạc: 1 = tay phải tuần 1–8, 2 = thêm bài hai tay, 3 = mọi bài */
+  /** Cấp của buổi hòa nhạc (tuần cuối mỗi cấp, xem LEVELS): 1 = bài tay phải, 2 = thêm bài hai tay, 3 = mọi bài */
   level?: 1 | 2 | 3;
   onRun(run: Omit<SongRun, 'ts'>): void;
-  /** Phụ huynh tặng huy chương — tiêu chí tuần 8 (PARENT) */
+  /** Phụ huynh tặng huy chương — tiêu chí tuần hòa nhạc cuối cấp (PARENT) */
   onMedal(): void;
   onDone(): void;
   onBack(): void;
 }
 
 /**
- * Tuần 8 — Sân khấu: bé TỰ CHỌN 2–3 bài, mời khán giả, biểu diễn theo nhịp, nhận vỗ tay & huy chương.
+ * Tuần hòa nhạc cuối mỗi cấp — Sân khấu: bé TỰ CHỌN 2–3 bài, mời khán giả, biểu diễn theo nhịp, nhận vỗ tay & huy chương.
  */
 export function stageScreen(app: App, hooks: StageHooks) {
   return (root: HTMLElement) => {
     const level = hooks.level ?? 1;
-    // Tuần cuối của cấp (Cấp 3 = tuần 17–25 từ 2026-10-05)
+    // Tuần cuối của cấp (LEVELS — v5.1: tuần 10 / 21 / 31)
     const upTo = LEVELS[level - 1].weeks[1];
     // Cấp 1: bài tay phải; Cấp 2–3: mọi bài đã mở (ưu tiên bài mới của cấp đó lên đầu)
     const choices = songsUpToWeek(upTo)
@@ -135,7 +135,7 @@ export function stageScreen(app: App, hooks: StageHooks) {
                     h(
             'h1',
             { class: 'hero-title' },
-            level === 1 ? 'Con đã chinh phục Lâu đài Âm nhạc!' : level === 2 ? 'Huy chương Cấp 2 — nghệ sĩ hai tay!' : '🏆 Huy chương vàng — con đã đi hết 30 tuần học đàn!',
+            level === 1 ? 'Con đã chinh phục Lâu đài Âm nhạc!' : level === 2 ? 'Huy chương Cấp 2 — nghệ sĩ hai tay!' : `🏆 Huy chương vàng — con đã đi hết ${WEEKS.length} tuần học đàn!`,
           ),
                     button({ icon: '▶', label: 'Tiếp', kind: 'primary', big: true, onTap: hooks.onDone }),
                   ),

@@ -1,5 +1,5 @@
 /**
- * Biểu tượng đảo cho bản đồ 25 tuần: mỗi tuần một hòn đảo nhỏ vẽ theo chủ đề (đảo phím đen, làng Đô Rê Mi,
+ * Biểu tượng đảo cho bản đồ các tuần (giáo trình v5.1: 31 tuần): mỗi tuần một hòn đảo nhỏ vẽ theo chủ đề (đảo phím đen, làng Đô Rê Mi,
  * cầu thang Sol, rừng nhịp, sân khấu…). Dựng từ khối chung: nền đảo + đồ vật theo chủ đề.
  *
  *  - 'done'    : đủ màu + ngôi sao nhỏ ở góc

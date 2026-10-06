@@ -390,6 +390,8 @@ export const WEEK29: WeekPlan = {
   kidGoal: 'Nhảy Minuet theo nhịp cùng các quý tộc — 2 hôm nhé! 👑',
   lessons: [
     { id: 'w29-l1', week: 29, title: 'Minuet — từng câu', emoji: '👑', activities: [
+        // 2026-10-06: bài tự sáng tác chuẩn bị — cùng "dáng" Minuet (đen + 4 móc đơn liền, 2 nốt ngắt) nhưng gọn trong thế Sol
+        song('sparrow_minuet', 'wait', 2, 'full', 'Khởi động: chim sẻ cũng nhảy Minuet! Bốn nốt móc đơn dưới dấu luyến đàn LIỀN, hai nốt có chấm đàn NGẮT.'),
         song('minuet_g', 'wait', 2, 'full', 'Tập từng câu một — chọn "Câu 1" rồi "Câu 2". Bốn nốt móc đơn dưới dấu luyến: đàn LIỀN; hai nốt Sol có chấm: đàn NGẮT.')] },
     pair('w29-l2', 29, 'Minuet — cả bài', '💃', 'minuet_g'),
   ],
@@ -408,6 +410,8 @@ export const WEEK30: WeekPlan = {
   kidGoal: 'Für Elise "Mi – Rê♯ – Mi" theo nhịp — 2 hôm nhé! 🌹',
   lessons: [
     { id: 'w30-l1', week: 30, title: 'Für Elise — từng câu', emoji: '🌹', activities: [
+        // 2026-10-06: bài tự sáng tác chuẩn bị — La thứ 3/4, hợp âm rải liền và "Mi – Rê♯ – Mi" trong một thế tay
+        song('summer_shower', 'wait', 2, 'full', 'Khởi động: mưa rào La thứ — rải "La – Đô – Mi" thật liền, rồi chớp lóe "Mi – Rê♯ – Mi" (Rê♯ ngón 4).'),
         song('fur_elise', 'wait', 2, 'full')] },
     pair('w30-l2', 30, 'Für Elise — cả đoạn', '🎼', 'fur_elise'),
   ],

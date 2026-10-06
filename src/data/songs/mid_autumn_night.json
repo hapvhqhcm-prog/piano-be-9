@@ -1,0 +1,155 @@
+{
+ "id": "mid_autumn_night",
+ "title": "Mid-Autumn Night",
+ "titleVi": "Đêm Trung thu",
+ "composer": "Bài tự sáng tác cho app (piano-be-9)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Bài tự sáng tác cho app (piano-be-9)",
+ "attributionRequired": false,
+ "hand": "RH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 16,
+ "position": "D",
+ "phrases": [
+  0,
+  4
+ ],
+ "notes": [
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 5,
+   "dyn": "mf"
+  },
+  {
+   "pitch": "F#4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "F#4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "F#4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "A4",
+   "beats": 2,
+   "finger": 5
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "F#4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 4,
+   "finger": 2
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 5,
+   "dyn": "p"
+  },
+  {
+   "pitch": "F#4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "F#4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "F#4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "A4",
+   "beats": 2,
+   "finger": 5
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 4,
+   "dyn": "mf",
+   "slur": "start"
+  },
+  {
+   "pitch": "F#4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "F#4",
+   "beats": 1,
+   "finger": 3,
+   "slur": "end"
+  },
+  {
+   "pitch": "D4",
+   "beats": 4,
+   "finger": 1
+  }
+ ]
+}

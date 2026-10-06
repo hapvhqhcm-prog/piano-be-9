@@ -42,8 +42,6 @@ export const STREAK_RETIRED_AFTER = '2026-10-05';
 export const BUSY_WEEK_MILESTONES = [1, 3, 6, 10] as const;
 /** v5.1 — số NGÀY học khác nhau trong một tuần để là "tuần chăm chỉ". */
 export const BUSY_WEEK_DAYS = 4;
-/** @deprecated v5.1 — giữ tên cũ (màn chính đang dùng); nay là số NGÀY, cùng giá trị với BUSY_WEEK_DAYS. */
-export const BUSY_WEEK_SESSIONS = BUSY_WEEK_DAYS;
 /** v5.1 — ngày bắt đầu tính "tuần chăm chỉ" theo NGÀY; buổi trước ngày này giữ quy tắc cũ (≥ 4 BUỔI) để không mất sticker. */
 export const EFFORT_BY_DAYS_FROM = '2026-10-06';
 /** Số lượt đúng tối thiểu (các lượt khác nhau, trong một buổi) để tính là "chơi xong" trò to/nhỏ – ngắt/liền. */

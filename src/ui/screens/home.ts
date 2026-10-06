@@ -291,8 +291,12 @@ export function homeScreen(app: App, banner?: string) {
       ),
     );
     // Đọc to câu chuyện của tuần — mỗi ngày một lần (không phải mỗi lần về màn chính)
-    if (shouldTellStory(today, plan.week)) window.setTimeout(() => void speak(app, plan.story), 600);
-    return () => cancelSpeech();
+    // (hẹn giờ được gỡ khi rời màn — trước đây rời màn trong 0,6 s thì câu chuyện vẫn đọc đè lên màn kế tiếp)
+    const storyTimer = shouldTellStory(today, plan.week) ? window.setTimeout(() => void speak(app, plan.story), 600) : 0;
+    return () => {
+      window.clearTimeout(storyTimer);
+      cancelSpeech();
+    };
   };
 }
 

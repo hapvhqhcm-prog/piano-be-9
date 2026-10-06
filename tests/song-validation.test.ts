@@ -21,14 +21,16 @@ const ALLOWED = [
   'hand', 'bpm', 'timeSignature', 'week', 'extension', 'position', 'lh', 'lhPosition', 'phrases', 'notes',
 ];
 
-it('có 82 bài hát (56 cũ + 14 bài tự sáng tác v5 + 12 bài Việt Nam 2026-10-06), id không trùng, đủ tuần 2–30 (trừ 21 — hòa nhạc Cấp 2; v5.1: 31 tuần)', () => {
+it('có 95 bài hát (56 cũ + 14 bài tự sáng tác v5 + 12 bài Việt Nam + 13 bài tự sáng tác bổ sung 2026-10-06), id không trùng, đủ tuần 2–30 (trừ 21 — hòa nhạc Cấp 2; v5.1: 31 tuần)', () => {
   // 51 bài + 6 bài dân ca Việt Nam − "Cầu London — chấm dôi" (bài lặp, thay bằng "Bắc kim thang") — OWNER yêu cầu 2026-10-05
   // v5 (OWNER duyệt 2026-10-05): + 14 bài tự sáng tác cho tuần củng cố / tuần nhịp mới (giữ đủ 56 bài cũ)
   // 2026-10-06: + 9 dân ca + 3 ca khúc nhạc sĩ Việt Nam đã thuộc về công chúng (Lý ngựa ô thay bằng bản đầy đủ — cùng id)
-  expect(SONGS).toHaveLength(82);
-  expect(new Set(SONGS.map((s) => s.id)).size).toBe(82);
+  // 2026-10-06 (rà soát kho bài): + 13 bài tự sáng tác lấp tuần mỏng — mỗi tuần 2–30 (trừ 21) giờ có ≥ 2 bài, tuần 29–30 có 2
+  expect(SONGS).toHaveLength(95);
+  expect(new Set(SONGS.map((s) => s.id)).size).toBe(95);
   const weeks = new Set(SONGS.map((s) => s.week));
   for (let w = 2; w <= 30; w++) if (w !== 21) expect(weeks.has(w), `tuần ${w}`).toBe(true);
+  for (let w = 2; w <= 30; w++) if (w !== 21) expect(SONGS.filter((s) => s.week === w).length, `tuần ${w}`).toBeGreaterThanOrEqual(2);
 });
 
 it('bài Việt Nam (2026-10-06): 15 dân ca vn=folk; 3 ca khúc PD vn=composed; bài quen hát lời Việt vn=lyrics, tên gọi khác chỉ là tên', () => {
