@@ -9,6 +9,7 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host",
     "test": "vitest run",
+    "e2e": "node scripts/e2e.mjs",
     "icons": "node scripts/make-icons.mjs",
     "deploy": "node scripts/deploy.mjs"
   },

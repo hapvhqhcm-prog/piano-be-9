@@ -121,6 +121,7 @@ export function homeScreen(app: App, banner?: string) {
         {
           class: `lesson-row${l.id === next.id ? ' is-next' : ''}${done.has(l.id) ? ' is-done' : ''}`,
           type: 'button',
+          'data-lesson': l.id,
           onClick: () => (overLimit ? restToast() : startSession(app, l)),
         },
         h('span', { class: 'lesson-emoji', 'aria-hidden': 'true' }, l.emoji),

@@ -471,6 +471,8 @@ export class StaffView {
           ry: 6.2,
           transform: `rotate(-20 ${x} ${y})`,
           class: hollow ? 'staff-head hollow' : 'staff-head',
+          // Kiểm thử tự động (scripts/e2e.mjs) đọc nốt trên khuông — không ảnh hưởng hiển thị
+          'data-e2e-pitch': p,
         }),
       );
       const acc = pitchInfo(p).accidental;
