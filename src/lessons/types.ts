@@ -67,6 +67,8 @@ export type Activity =
       level?: 2 | 3;
       hints: 'full' | 'names' | 'staff';
       intro?: string;
+      /** v5.1 — Tập TÁCH TAY có sẵn trong bài (bài hai tay): chỉ tay này; không có = hai tay */
+      hand?: 'RH' | 'LH';
     }
   | { kind: 'rhythm'; title: string; intro: string; patterns: RhythmSymbol[][] }
   /** Đọc nhạc ngẫu nhiên: sinh `count` đoạn nhạc mới trong một thế tay */
@@ -142,6 +144,8 @@ export interface WeekPlan {
   /** "Con làm thầy" 1' cuối buổi */
   teach: { emoji: string; text: string };
   criterion: { text: string; who: CriterionWho };
+  /** v5.1 — Mục tiêu tuần bằng lời CHO BÉ (ngắn, vui) hiện ở màn chính; `criterion.text` (lời người lớn) cho bố mẹ */
+  kidGoal?: string;
   /** Tuần dùng tay trái */
   leftHand?: boolean;
 }

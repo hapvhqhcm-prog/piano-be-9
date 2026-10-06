@@ -822,3 +822,11 @@ export function streakDays(data: Readonly<AppData>, today: Date): number {
   }
   return n;
 }
+
+/**
+ * v5.1 — Tiến độ tiêu chí theo NGÀY cho màn chính (vd ●○ "còn 1 hôm"): null = tiêu chí không tính theo ngày.
+ * HỢP ĐỒNG: agent giáo trình hiện thực chính xác; agent giao diện hiển thị.
+ */
+export function criterionProgress(_week: number, _data: Readonly<AppData>): { days: number; needDays: number } | null {
+  return null;
+}

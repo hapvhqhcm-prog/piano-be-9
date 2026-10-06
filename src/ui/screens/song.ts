@@ -45,6 +45,8 @@ export interface SongOptions {
   bpm?: number;
   /** v5 — Bước "Ôn bài cũ" trong buổi: khoá câu (không hiện nút chọn câu), luôn hiện lời dẫn */
   review?: boolean;
+  /** v5.1 — Bài học chỉ định tập tách tay: mở sẵn tay này (bé vẫn đổi được) */
+  hand?: 'RH' | 'LH';
 }
 
 /** Tập tách tay (bài hai tay): RH / LH = chỉ chấm tay đó; BOTH = hai tay như thường. */
