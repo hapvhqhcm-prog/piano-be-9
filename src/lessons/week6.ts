@@ -12,7 +12,7 @@ export const WEEK6: WeekPlan = {
   islandEmoji: '🎪',
   title: 'Bài hát đầu tiên',
   story: 'Ở Sân khấu nhỏ, cả làng chờ nghe con đàn "Bài ca niềm vui". Bố mẹ sẽ đàn cùng con!',
-  warmup: { variant: 'identify', pool: ['C4', 'D4', 'E4', 'F4', 'G4'], rounds: 8, reference: 'C4' },
+  warmup: { variant: 'identify', pool: ['C4', 'D4', 'E4', 'F4', 'G4'], rounds: 6, reference: 'C4' },
   teach: { emoji: '👨‍🏫', text: 'Con dạy bố/mẹ câu đầu "Bài ca niềm vui": Mi Mi Fa Sol – Sol Fa Mi Rê. Đàn một lần TO (f), một lần NHỎ (p)!' },
   drills: ['five-finger', 'finger-tap'],
   criterion: { text: 'Chơi trọn "Bài ca niềm vui" ở tốc độ 60 — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },

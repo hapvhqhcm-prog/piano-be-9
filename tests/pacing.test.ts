@@ -12,18 +12,20 @@ import {
   weekPlan,
 } from '../src/lessons/lessonEngine';
 import { findTune } from '../src/music/exercises';
+import { phraseRanges, slice } from '../src/music/tune';
+import { pitchToMidi } from '../src/piano/pitchTable';
 import { MemoryStorage, ProgressStore } from '../src/progress/ProgressStore';
 
 let today = 5;
 const store = () => new ProgressStore(new MemoryStorage(), () => new Date(2026, 9, today));
 
-/** Tuần 3: tiêu chí APP = đoán nốt đúng 8/10 — v5.1: ở 2 NGÀY khác nhau */
+/** Tuần 3: tiêu chí APP = đoán nốt đúng ≥ 5/6 trong một buổi (chơi thử 2026-10-06; trước 8/10) — ở 2 NGÀY khác nhau */
 function passWeek3Criterion(st: ProgressStore): void {
   st.setCurrentWeek(3);
   for (const d of [5, 6]) {
     today = d;
     const s = st.startSession(weekPlan(3).lessons[0].id);
-    for (let i = 0; i < 10; i++) st.addAppAssessment(s.id, 'E4', 'E4');
+    for (let i = 0; i < 6; i++) st.addAppAssessment(s.id, 'E4', 'E4');
     st.finishSession(s.id);
   }
   today = 5;
@@ -186,7 +188,7 @@ describe('v5.1 — buổi ngắn: ≤ 7 màn, ≤ 12 phút', () => {
     expect(seen40).toBe(true);
   });
 
-  it('tách tay sẵn ở bài hai tay đầu các tuần hai tay: chờ tay phải → chờ tay trái → hai tay', () => {
+  it('tách tay sẵn ở bài hai tay đầu các tuần hai tay: chờ tay phải → chờ tay trái (CÂU KHÓ) → hai tay cả bài', () => {
     const lessonsWithHands = WEEKS.flatMap((w) => w.lessons).filter((l) => l.activities.some((a) => a.kind === 'song' && a.hand));
     const weeks = [...new Set(lessonsWithHands.map((l) => l.week))];
     for (const w of [12, 13, 22, 23, 27, 28]) expect(weeks, `tuần ${w}`).toContain(w);
@@ -197,6 +199,36 @@ describe('v5.1 — buổi ngắn: ≤ 7 màn, ≤ 12 phút', () => {
       expect(findTune(id.songId)?.hand, l.id).toBe('BOTH');
       const seq = songs.filter((a) => a.kind === 'song' && a.songId === id.songId).map((a) => (a.kind === 'song' ? `${a.mode}:${a.hand ?? 'BOTH'}` : ''));
       expect(seq.slice(0, 3), l.id).toEqual(['wait:RH', 'wait:LH', 'wait:BOTH']);
+    }
+  });
+
+  it('chơi thử 2026-10-06: tách tay chỉ trên MỘT câu khó (nhiều nốt + bước nhảy nhất), hai tay thì cả bài', () => {
+    const lessonsWithHands = WEEKS.flatMap((w) => w.lessons).filter((l) => l.activities.some((a) => a.kind === 'song' && a.hand));
+    expect(lessonsWithHands.map((l) => l.id).sort()).toEqual(['w12-l1', 'w13-l1', 'w22-l2', 'w23-l4', 'w27-l2', 'w28-l1']);
+    /** Độ khó một câu: số nốt hai tay + số bước nhảy (≥ quãng 3 thứ) mỗi tay */
+    const hardness = (songId: string, [a, b]: [number, number]) => {
+      const t = slice(findTune(songId)!, a, b);
+      const score = (v: typeof t.notes) => {
+        const ms = v.filter((n) => !n.rest).map((n) => pitchToMidi(n.pitch!));
+        return ms.length + ms.slice(1).filter((m, i) => Math.abs(m - ms[i]) >= 3).length;
+      };
+      return score(t.notes) + score(t.lh ?? []);
+    };
+    for (const l of lessonsWithHands) {
+      const songs = l.activities.flatMap((a) => (a.kind === 'song' ? [a] : []));
+      const apart = songs.filter((a) => a.hand);
+      expect(apart.map((a) => a.hand), l.id).toEqual(['RH', 'LH']);
+      const phrase = apart[0].phrase!;
+      expect(phrase, l.id).toBeTruthy();
+      expect(apart[1].phrase, l.id).toEqual(phrase);
+      const ranges = phraseRanges(findTune(apart[0].songId)!);
+      expect(ranges.length, l.id).toBeGreaterThan(1);
+      expect(ranges, l.id).toContainEqual(phrase);
+      const best = Math.max(...ranges.map((r) => hardness(apart[0].songId, r)));
+      expect(hardness(apart[0].songId, phrase), `${l.id} chọn câu khó nhất`).toBe(best);
+      // Hai tay: CẢ BÀI (không câu)
+      for (const a of songs.filter((x) => !x.hand && x.songId === apart[0].songId)) expect(a.phrase, l.id).toBeUndefined();
+      expect(songs.some((a) => !a.hand && a.songId === apart[0].songId && a.mode === 'wait'), l.id).toBe(true);
     }
   });
 });

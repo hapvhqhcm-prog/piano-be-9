@@ -12,7 +12,8 @@
  *   (trò trong bài + khởi động của tuần / tuần trước; bài "Luyện tập mỗi ngày" có thể có "Nốt nào đây?").
  *   Buổi có cả hai loại → không xếp (không đoán bừa).
  */
-import { LEVELS, MAX_WEEK, findLesson, levelOf, masteredSongs, songFresh, weekComplete, weekPlan } from '../lessons/lessonEngine';
+import { LEVELS, MAX_WEEK, findLesson, levelOf, masteredSongs, songFresh, songStats, weekComplete, weekPlan } from '../lessons/lessonEngine';
+import { firstSessionDate, hist } from './history';
 import { allStickers, dynamicsDone } from '../lessons/stickers';
 import type { LevelInfo } from '../lessons/types';
 import type { QuizVariant } from '../practice/quiz';
@@ -137,9 +138,11 @@ export function minutesText(min: number): string {
 /** Ngày có học: suy ra từ progress.practiceDays (ProgressStore.recomputePracticeDays — buổi có phút / có tự chấm). */
 function practiceDays(d: Readonly<AppData>): Record<string, { minutes: number }> {
   const pd = d.progress.practiceDays ?? {};
-  if (Object.keys(pd).length || !d.sessions.length) return pd;
-  // Dữ liệu chưa tính practiceDays → tính từ sessions
+  const hpd = hist(d).practiceDays;
+  if (Object.keys(pd).length || (!d.sessions.length && !Object.keys(hpd).length)) return pd;
+  // Dữ liệu chưa tính practiceDays → tính từ sessions (+ phần đã gộp)
   const out: Record<string, { minutes: number }> = {};
+  for (const [date, [minutes]] of Object.entries(hpd)) out[date] = { minutes };
   for (const s of d.sessions) {
     if (s.minutes === 0 && !s.selfRating) continue;
     (out[s.date] ??= { minutes: 0 }).minutes += s.minutes;
@@ -217,24 +220,33 @@ const acc = (correct: number, total: number): Accuracy => ({
   pct: total ? Math.round((correct / total) * 100) : null,
 });
 
-/** Mỗi câu trả lời (theo kỹ năng) kèm ngày buổi học. */
-function answers(d: Readonly<AppData>): Array<{ skill: SkillKind; ok: boolean; date: string }> {
-  const out: Array<{ skill: SkillKind; ok: boolean; date: string }> = [];
-  for (const s of d.sessions) {
-    if (s.appAssessments.length) {
-      const v = sessionQuizVariants(s);
-      for (const a of s.appAssessments) {
-        const k = classifyAppAssessment(a.expected, v);
-        if (k) out.push({ skill: k, ok: a.correct, date: s.date });
-      }
+/** Các câu trả lời (theo kỹ năng) của MỘT buổi — dùng chung cho báo cáo và gộp lịch sử (compaction.ts). */
+export function sessionAnswers(s: Session): Array<{ skill: SkillKind; ok: boolean }> {
+  const out: Array<{ skill: SkillKind; ok: boolean }> = [];
+  if (s.appAssessments.length) {
+    const v = sessionQuizVariants(s);
+    for (const a of s.appAssessments) {
+      const k = classifyAppAssessment(a.expected, v);
+      if (k) out.push({ skill: k, ok: a.correct });
     }
-    for (const a of s.parentAssessments) {
-      if (a.note.startsWith('rhythm:')) out.push({ skill: 'rhythm', ok: a.result === 'correct', date: s.date });
-    }
+  }
+  for (const a of s.parentAssessments) {
+    if (a.note.startsWith('rhythm:')) out.push({ skill: 'rhythm', ok: a.result === 'correct' });
   }
   return out;
 }
 
+/** Mỗi câu trả lời (theo kỹ năng) kèm ngày buổi học — các buổi còn giữ. */
+function answers(d: Readonly<AppData>): Array<{ skill: SkillKind; ok: boolean; date: string }> {
+  const out: Array<{ skill: SkillKind; ok: boolean; date: string }> = [];
+  for (const s of d.sessions) for (const a of sessionAnswers(s)) out.push({ ...a, date: s.date });
+  return out;
+}
+
+/**
+ * Độ chính xác theo kỹ năng. `recent` / `before` (2 × RECENT_DAYS ngày) đọc từ buổi còn giữ (luôn giữ ≥ 8 tuần gần nhất);
+ * `all` = tổng hợp đã gộp (history.skills) + buổi còn giữ.
+ */
 export function skillAccuracy(d: Readonly<AppData>, skill: SkillKind, now: Date, days = RECENT_DAYS): SkillAccuracy {
   const since = localDateStr(new Date(now.getTime() - days * DAY));
   const since2 = localDateStr(new Date(now.getTime() - 2 * days * DAY));
@@ -247,13 +259,11 @@ export function skillAccuracy(d: Readonly<AppData>, skill: SkillKind, now: Date,
     const diff = (recent.pct ?? 0) - (before.pct ?? 0);
     trend = diff >= 5 ? 'up' : diff <= -5 ? 'down' : 'flat';
   }
-  return { recent, before, all: count(list), trend };
+  const [hc, ht] = hist(d).skills[skill];
+  return { recent, before, all: acc(hc + list.filter((x) => x.ok).length, ht + list.length), trend };
 }
 
 /* ---------------- Bài hát ---------------- */
-
-type Run = Session['songRuns'][number];
-const wholeTogether = (r: Run) => r.passed && !r.phrase && !r.hand;
 
 function songsReport(d: Readonly<AppData>, now: Date): ReportSong[] {
   return masteredSongs(d).map((id) => {
@@ -265,21 +275,22 @@ function songsReport(d: Readonly<AppData>, now: Date): ReportSong[] {
 function handsTogether(d: Readonly<AppData>): { songs: number; available: number } {
   const twoHand = SONGS.filter((t) => t.hand === 'BOTH' || !!t.lh);
   const ids = new Set(twoHand.map((t) => t.id));
-  const played = new Set<string>();
-  for (const s of d.sessions) for (const r of s.songRuns) if (ids.has(r.songId) && wholeTogether(r)) played.add(r.songId);
+  // songStats: h = từng chơi trọn, đủ tay, đạt (tổng hợp đã gộp + buổi còn giữ)
+  const stats = songStats(d);
+  const played = [...ids].filter((id) => stats[id]?.h).length;
   const week = d.progress.currentWeek;
-  return { songs: played.size, available: twoHand.filter((t) => (t.week ?? 1) <= week).length };
+  return { songs: played, available: twoHand.filter((t) => (t.week ?? 1) <= week).length };
 }
 
 function maxBpm(d: Readonly<AppData>): number {
+  // b = tốc độ nhanh nhất chơi trọn theo nhịp, đủ tay, đạt (không tính đọc nhạc ngẫu nhiên)
   let m = 0;
-  for (const s of d.sessions)
-    for (const r of s.songRuns) if (r.mode === 'tempo' && wholeTogether(r) && !r.songId.startsWith('sight') && r.bpm > m) m = r.bpm;
+  for (const a of Object.values(songStats(d))) if ((a.b ?? 0) > m) m = a.b ?? 0;
   return m;
 }
 
 function dynamicsRounds(d: Readonly<AppData>): number {
-  let n = 0;
+  let n = hist(d).dynamicsRounds;
   for (const s of d.sessions) for (const a of s.parentAssessments) if (a.note.startsWith('dyn:') && a.result === 'correct') n++;
   return n;
 }
@@ -352,7 +363,7 @@ export function buildReport(d: Readonly<AppData>, now: Date): ProgressReport {
   const plan = weekPlan(week);
   const pd = practiceDays(d);
   const dates = Object.keys(pd).sort();
-  const firstSession = d.sessions.reduce<string | null>((m, s) => (m === null || s.date < m ? s.date : m), null);
+  const firstSession = firstSessionDate(d); // gồm cả buổi đã gộp
   const to = localDateStr(now);
   const from = firstSession ?? dates[0] ?? d.learner.createdAt ?? to;
   const currentDone = weekComplete(week, d);
@@ -380,7 +391,7 @@ export function buildReport(d: Readonly<AppData>, now: Date): ProgressReport {
     currentDone,
     daysPractised: dates.length,
     totalMinutes: Object.values(pd).reduce((s, v) => s + v.minutes, 0),
-    sessions: d.sessions.filter((s) => s.minutes > 0 || s.completed).length,
+    sessions: hist(d).counted + d.sessions.filter((s) => s.minutes > 0 || s.completed).length,
     weekly,
     avgDays4,
     songs: songsReport(d, now),

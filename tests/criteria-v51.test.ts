@@ -7,7 +7,7 @@ import { defaultData, type AppData, type Session, type SongRun } from '../src/pr
 /**
  * v5.1 (OWNER duyệt 2026-10-06 sau rà soát chuyên gia): tiêu chí chặt hơn & tiến độ theo NGÀY.
  * - Đêm thánh / Minuet / Für Elise: lượt THEO NHỊP ≥ 50 (không còn tính chế độ chờ).
- * - Tiêu chí APP (tai nghe / đọc nốt 8/10): cũng cần 2 ngày.
+ * - Tiêu chí APP (tai nghe / đọc nốt — chơi thử 2026-10-06: trò ≤ 6 lượt, tiêu chí ≥ 5/6 trong một buổi): cũng cần 2 ngày.
  * - Tuần dòng kẻ phụ (23) / nốt cao (26): thêm một lượt đọc nhạc đạt trong dải đó.
  * - criterionProgress(week, data) → { days, needDays } cho tiêu chí theo ngày (null nếu không theo ngày).
  * - Chăm chỉ theo NGÀY: daysThisWeek; sticker "tuần chăm chỉ" = ≥ 4 ngày, không mất sticker cũ.
@@ -23,10 +23,10 @@ const run = (o: Partial<SongRun>): Omit<SongRun, 'ts'> => ({
   songId: 'x', mode: 'tempo', level: 2, bpm: 60, hints: 'names', phrase: null, total: 20, hits: 20, source: 'mic', passed: true, ...o,
 });
 const runIn = (st: ProgressStore, lessonId: string, r: Omit<SongRun, 'ts'>) => st.addSongRun(st.startSession(lessonId).id, r);
-/** Một buổi trả lời đúng `n` câu nốt `note` (APP). */
-function quizIn(st: ProgressStore, lessonId: string, note: string, n = 10): void {
+/** Một buổi trả lời `n` câu nốt `note` (APP) — `wrong` = chỉ số các câu trả lời SAI. */
+function quizIn(st: ProgressStore, lessonId: string, note: string, n = 6, wrong: number[] = []): void {
   const s = st.startSession(lessonId);
-  for (let i = 0; i < n; i++) st.addAppAssessment(s.id, note, note);
+  for (let i = 0; i < n; i++) st.addAppAssessment(s.id, note, wrong.includes(i) ? 'B4' : note);
 }
 
 describe('Đêm thánh / Minuet / Für Elise: cần lượt THEO NHỊP ≥ 50', () => {
@@ -64,14 +64,16 @@ describe('tiêu chí APP theo 2 ngày (tuần 3, 7, 23, 25, 26)', () => {
     expect(weekPassed(3, st.get())).toBe(false);
     expect(criterionProgress(3, st.get())).toEqual({ days: 1, needDays: 2 });
     day(2);
-    quizIn(st, 'w3-l3', 'F4', 9);
-    expect(weekPassed(3, st.get())).toBe(false); // chỉ 9 câu — chưa đủ 10 câu liên tiếp
-    quizIn(st, 'w3-l3', 'F4');
+    quizIn(st, 'w3-l3', 'F4', 5);
+    expect(weekPassed(3, st.get())).toBe(false); // chỉ 5 câu — chưa đủ 6 câu liên tiếp
+    quizIn(st, 'w3-l3', 'F4', 6, [1, 4]);
+    expect(weekPassed(3, st.get())).toBe(false); // 4/6 — chưa đủ
+    quizIn(st, 'w3-l3', 'F4', 6, [3]);
     expect(weekPassed(3, st.get())).toBe(true);
     expect(criterionProgress(3, st.get())).toEqual({ days: 2, needDays: 2 });
   });
 
-  it('tuần 23 dòng kẻ phụ: 2 ngày 8/10 + một lượt đọc nhạc qua vạch phụ; "●●" chỉ khi đủ cả hai', () => {
+  it('tuần 23 dòng kẻ phụ: 2 ngày ≥ 5/6 + một lượt đọc nhạc qua vạch phụ; "●●" chỉ khi đủ cả hai', () => {
     const { st, day } = clock();
     quizIn(st, 'w23-l1', 'A3');
     day(1);

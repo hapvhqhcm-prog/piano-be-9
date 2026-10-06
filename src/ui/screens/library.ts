@@ -1,4 +1,5 @@
-import { LEVELS, songFresh, songMastered } from '../../lessons/lessonEngine';
+import { songEverPlayed, songFresh, songMastered } from '../../lessons/lessonEngine';
+import { starsFor } from '../../music/timing';
 import { SONGS, type Tune } from '../../music/tune';
 import { compositionToTune } from '../../practice/compose';
 import { PRIVACY_NOTE, parentSongToTune } from '../../practice/parentSongs';
@@ -7,7 +8,9 @@ import type { App } from '../App';
 import { actionBar, backButton, h, toast } from '../components/dom';
 import { homeScreen } from './home';
 import { songScreen } from './song';
+import { shortTitle, songEmoji } from '../components/songArt';
 import '../../styles/parentSongs.css';
+import '../../styles/kidux.css';
 
 /** Bộ lọc Thư viện (giữ trong lúc mở app): tất cả · 🇻🇳 Bài Việt Nam */
 let libFilter: 'all' | 'vn' = 'all';
@@ -20,22 +23,53 @@ export function libraryScreen(app: App) {
   return (root: HTMLElement) => {
     const data = app.store.get();
     const week = data.progress.currentWeek;
+    // Số sao tốt nhất của từng bài (lượt chơi cả bài — không tính lượt tách tay)
+    const best = new Map<string, number>();
+    for (const ses of data.sessions)
+      for (const r of ses.songRuns) {
+        if (r.hand || r.total <= 0) continue;
+        const st = starsFor(r.hits / r.total);
+        if (st > (best.get(r.songId) ?? 0)) best.set(r.songId, st);
+      }
     const card = (s: Tune) => {
       const open = (s.week ?? 1) <= week;
       const star = open && songMastered(data, s.id);
       // v5: đã thuộc nhưng lâu (> 3 tuần) chưa chơi lại → sao mờ, nhắc ôn (sticker vẫn giữ "đã từng thuộc")
       const faded = star && !songFresh(s.id, data);
+      const nStars = star ? 3 : (best.get(s.id) ?? 0);
+      if (!open) {
+        // Bài chưa mở: BÓNG bí ẩn (emoji mờ + "?") — bé biết sắp có bài mới, không cần đọc chữ
+        return h(
+          'button',
+          {
+            class: 'song-card locked',
+            type: 'button',
+            'aria-label': `Bài khóa — mở ở Tuần ${s.week ?? '?'}`,
+            onClick: () => toast(s.week ? `🔒 Bài này mở ở Tuần ${s.week} nhé` : '🔒 Bài này mở sau nhé'),
+          },
+          h('span', { class: 'song-card-emoji', 'aria-hidden': 'true' }, songEmoji(s)),
+          h('div', { class: 'song-card-title' }, '? ? ?'),
+          h('div', { class: 'song-card-week' }, `🔒 Tuần ${s.week}`),
+        );
+      }
       return h(
         'button',
         {
-          class: `song-card${open ? '' : ' locked'}`,
+          class: `song-card${star ? ' is-star' : ''}`,
           type: 'button',
-          onClick: () => (open ? playSong(app, s) : toast(s.week ? `🔒 Bài này mở ở Tuần ${s.week} nhé` : '🔒 Bài này mở sau nhé')),
+          onClick: () => playSong(app, s),
         },
+        h('span', { class: 'song-card-emoji', 'aria-hidden': 'true' }, songEmoji(s)),
         h(
           'div',
           { class: 'song-card-title' },
-          open ? h('span', {}, star ? h('span', { class: faded ? 'star-faded' : undefined }, '⭐ ') : '', s.titleVi) : `🔒 ${s.titleVi}`,
+          h('span', {}, s.vn ? h('span', { class: 'vn-flag', title: 'Bài Việt Nam' }, '🇻🇳 ') : '', shortTitle(s)),
+        ),
+        h(
+          'div',
+          { class: `song-card-stars${faded ? ' star-faded' : ''}`, 'aria-label': `${nStars} trên 3 sao` },
+          '★'.repeat(nStars),
+          h('span', { class: 'stars-off' }, '★'.repeat(3 - nStars)),
         ),
         h(
           'div',
@@ -110,14 +144,30 @@ export function libraryScreen(app: App) {
       parentSection,
       parents.length ? null : h('p', { class: 'muted lib-note' }, '📝 Bố mẹ có thể thêm bài con thích ở màn Phụ huynh → "📝 Thêm bài hát".'),
     ];
-    const levelSections = LEVELS.map((lv) =>
-      h(
-        'section',
-        {},
-        h('h2', { class: 'lib-level' }, lv.name),
-        h('div', { class: 'library' }, ...SONGS.filter((x) => (x.week ?? 1) >= lv.weeks[0] && (x.week ?? 1) <= lv.weeks[1]).map(card)),
-      ),
-    );
+    // Playtest 2026-10: bé thấy NGAY bài đang tập + bài đã thuộc; bài đã mở khác ở dưới; bài chưa mở gom vào "Sắp mở" (gập)
+    const isOpen = (x: Tune) => (x.week ?? 1) <= week;
+    const learned = SONGS.filter((x) => isOpen(x) && songMastered(data, x.id));
+    const current = SONGS.filter(
+      (x) => isOpen(x) && !songMastered(data, x.id) && ((x.week ?? 1) >= week - 1 || songEverPlayed(data, x.id)),
+    ).sort((a, b) => (b.week ?? 0) - (a.week ?? 0));
+    const shown = new Set([...learned, ...current]);
+    const otherOpen = SONGS.filter((x) => isOpen(x) && !shown.has(x)).sort((a, b) => (b.week ?? 0) - (a.week ?? 0));
+    const locked = SONGS.filter((x) => !isOpen(x));
+    const soon = locked.length
+      ? h(
+          'details',
+          // Chưa mở bài nào (tuần 1): mở sẵn để bé thấy "sắp có bài"
+          { class: 'lib-soon', ...(learned.length + current.length + otherOpen.length === 0 ? { open: true } : {}) },
+          h('summary', { class: 'lib-level' }, `🔒 Sắp mở (${locked.length} bài)`),
+          h('div', { class: 'library' }, ...locked.map(card)),
+        )
+      : null;
+    const levelSections = [
+      grid('🎯 Bài con đang tập', current),
+      grid('⭐ Bài con đã thuộc', learned),
+      grid('📚 Bài khác đã mở', otherOpen),
+      soon,
+    ];
     const mineSection = mine.length
       ? h('section', { class: 'lib-mine' }, h('h2', { class: 'lib-level' }, '🎼 Bài con sáng tác'), h('div', { class: 'library' }, ...mine.map(compCard)))
       : null;

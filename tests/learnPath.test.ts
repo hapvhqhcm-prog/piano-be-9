@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MAX_WEEK, buildSessionPlan, nextLesson, weekComplete } from '../src/lessons/lessonEngine';
+import { MAX_QUIZ_ROUNDS, MAX_WEEK, buildSessionPlan, nextLesson, weekComplete } from '../src/lessons/lessonEngine';
 import type { Lesson } from '../src/lessons/types';
 import { makeQuestion, type QuizSpec } from '../src/practice/quiz';
 import { MemoryStorage, ProgressStore } from '../src/progress/ProgressStore';
@@ -18,7 +18,8 @@ describe('đi hết giáo trình chỉ bằng "Học tiếp"', () => {
     const rng = () => ((x = (x * 9301 + 49297) % 233280) / 233280);
     const quiz = (sid: string, q: QuizSpec) => {
       let prev;
-      for (let k = 0; k < Math.max(10, q.rounds); k++) {
+      // chơi thử 2026-10-06: trò tai nghe / đọc nốt ≤ 6 lượt (tiêu chí ≥ 5/6) — đúng số lượt app hỏi
+      for (let k = 0; k < Math.min(q.rounds, MAX_QUIZ_ROUNDS); k++) {
         prev = makeQuestion(q, rng, prev);
         st.addAppAssessment(sid, prev.expected, prev.expected);
       }
@@ -32,8 +33,8 @@ describe('đi hết giáo trình chỉ bằng "Học tiếp"', () => {
         if (a.kind === 'notes') a.segment.targets.forEach((t) => st.addParentAssessment(s.id, t.noteId, 'correct'));
         else if (a.kind === 'quiz') quiz(s.id, a.quiz);
         else if (a.kind === 'song')
-          // v5.1: lượt tách tay ghi `hand` (không tính cho tiêu chí) — như song.ts
-          st.addSongRun(s.id, { songId: a.songId, mode: a.mode, level: a.mode === 'tempo' ? (a.level ?? 2) : undefined, bpm: 72, hints: a.hints, phrase: null, total: 8, hits: 8, source: 'mic', passed: true, ...(a.hand ? { hand: a.hand } : {}) });
+          // v5.1: lượt tách tay ghi `hand` + câu khó `phrase` (không tính cho tiêu chí) — như song.ts
+          st.addSongRun(s.id, { songId: a.songId, mode: a.mode, level: a.mode === 'tempo' ? (a.level ?? 2) : undefined, bpm: 72, hints: a.hints, phrase: a.phrase ?? null, total: 8, hits: 8, source: 'mic', passed: true, ...(a.hand ? { hand: a.hand } : {}) });
         else if (a.kind === 'sight')
           for (let k = 0; k < a.count; k++)
             st.addSongRun(s.id, { songId: `sight:${a.position}:${a.hand}`, mode: 'wait', bpm: 60, hints: a.hints, phrase: null, total: 8, hits: 8, source: 'mic', passed: true });

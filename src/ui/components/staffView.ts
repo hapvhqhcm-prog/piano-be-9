@@ -60,7 +60,8 @@ export interface StaffOptions {
   dimHand?: Hand | null;
 }
 
-export type NoteMark = 'now' | 'hit' | 'miss' | null;
+/** hit = app NGHE/thấy đúng (xanh) · miss = trượt · parent = bố mẹ bấm "tiếp" (đã qua nhưng app không xác nhận — không tô xanh) */
+export type NoteMark = 'now' | 'hit' | 'miss' | 'parent' | null;
 
 interface Stave {
   clef: Clef;
@@ -636,10 +637,11 @@ export class StaffView {
     g.classList.toggle('now', m === 'now');
     g.classList.toggle('hit', m === 'hit');
     g.classList.toggle('miss', m === 'miss');
+    g.classList.toggle('parent', m === 'parent');
   }
 
   clearMarks(): void {
     this.cursorKey = '';
-    this.noteEls.forEach((g) => g.classList.remove('now', 'hit', 'miss'));
+    this.noteEls.forEach((g) => g.classList.remove('now', 'hit', 'miss', 'parent'));
   }
 }

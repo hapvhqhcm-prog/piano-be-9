@@ -84,7 +84,8 @@ describe('Gõ chữ — vạch nhịp, câu, lấy đà', () => {
     expect(r.warnings[0].message).toContain('vắt qua vạch nhịp');
   });
   it('gõ dấu phẩy để ngăn cách → nhắc "," là quãng thấp; dấu phẩy đứng riêng bỏ qua', () => {
-    expect(P('Đô, Rê, Mi, Fa, Sol').warnings.some((w) => w.message.includes('THẤP'))).toBe(true);
+    // phẩy ngăn cách → LỖI chặn lưu, có sửa một chạm
+    expect(P('Đô, Rê, Mi, Fa, Sol').errors.some((w) => w.message.includes('THẤP') && w.fix === 'commas')).toBe(true);
     // bài thật nhiều nốt thấp (có dấu phẩy giữa chữ: "Sol,/.") → không nhắc
     expect(P('Sol,/. Sol,// | La, Sol, Đô | Si,- Sol,/. Sol,// | La, Sol, Rê | Đô-', 3).warnings).toEqual([]);
     expect(pitches('Đô , Rê ; Mi')).toEqual(['C4', 'D4', 'E4']);

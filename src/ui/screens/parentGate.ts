@@ -3,25 +3,41 @@ import { actionBar, backButton, h } from '../components/dom';
 import { homeScreen } from './home';
 import { parentScreen } from './parent';
 
-/** Cổng phụ huynh: phép cộng đơn giản (chống bé vào nhầm, không phải bảo mật). */
+/**
+ * Câu hỏi của cổng phụ huynh (rà soát 2026-10-06: "6 + 7" bé 9 tuổi làm được → khó hơn):
+ * số có hai chữ số × số có một chữ số (vd 17 × 6), đôi khi thêm một bước cộng (vd 14 × 3 + 8).
+ * Bố mẹ nhẩm được trong vài giây; bé lớp 3 chưa học nhân số có hai chữ số. Không phải bảo mật.
+ */
+export function gateQuestion(rand: () => number = Math.random): { text: string; answer: number } {
+  const pick = (lo: number, hi: number) => lo + Math.floor(rand() * (hi - lo + 1));
+  let a = pick(12, 29);
+  if (a % 10 === 0) a++; // tránh 20 × b (dễ quá)
+  const b = pick(3, 9);
+  if (rand() < 0.35) {
+    const c = pick(2, 9);
+    return { text: `${a} × ${b} + ${c} = ?`, answer: a * b + c };
+  }
+  return { text: `${a} × ${b} = ?`, answer: a * b };
+}
+
+/** Cổng phụ huynh: một phép nhân (chống bé vào nhầm, không phải bảo mật). Nút "Phụ huynh" vẫn phải nhấn giữ 2 giây. */
 export function parentGateScreen(app: App) {
   return (root: HTMLElement) => {
-    let a = 0;
-    let b = 0;
+    let answer = 0;
     let entry = '';
     const q = h('div', { class: 'gate-q' });
     const display = h('div', { class: 'gate-display' });
     const newQuestion = () => {
-      a = 6 + Math.floor(Math.random() * 4);
-      b = 3 + Math.floor(Math.random() * 7);
+      const g = gateQuestion();
+      answer = g.answer;
       entry = '';
-      q.textContent = `${a} + ${b} = ?`;
+      q.textContent = g.text;
       display.textContent = ' ';
     };
     const press = (k: string) => {
       if (k === '⌫') entry = entry.slice(0, -1);
       else if (k === 'OK') {
-        if (Number(entry) === a + b) return app.show(parentScreen(app));
+        if (entry && Number(entry) === answer) return app.show(parentScreen(app));
         display.classList.add('shake');
         window.setTimeout(() => display.classList.remove('shake'), 400);
         return newQuestion();
@@ -39,7 +55,7 @@ export function parentGateScreen(app: App) {
           h(
             'div',
             { class: 'gate-card' },
-            h('p', { class: 'lead' }, '👪 Dành cho bố mẹ'),
+            h('p', { class: 'lead' }, '👪 Dành cho bố mẹ — tính nhẩm rồi bấm OK'),
             q,
             display,
             h(

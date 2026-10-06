@@ -155,6 +155,18 @@ export function migrateCurriculum(data: Record<string, unknown>): Record<string,
   return out;
 }
 
+/**
+ * (+ 2026-10-06) Dữ liệu do BẢN APP MỚI HƠN ghi (schemaVersion hoặc curriculumRev lớn hơn bản này hiểu)?
+ * ProgressStore KHÔNG được coi là hỏng / đặt lại / ghi đè — giữ nguyên và báo "hãy cập nhật app".
+ */
+export function isFutureData(raw: unknown): boolean {
+  if (!isObj(raw)) return false;
+  return (
+    (typeof raw.schemaVersion === 'number' && raw.schemaVersion > SCHEMA_VERSION) ||
+    (typeof raw.curriculumRev === 'number' && raw.curriculumRev > CURRICULUM_REV)
+  );
+}
+
 /** Nâng dữ liệu thô lên phiên bản hiện tại và điền mặc định cho trường thiếu. */
 export function migrate(raw: unknown): AppData {
   if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
@@ -180,6 +192,12 @@ function fillDefaults(d: Record<string, unknown>): AppData {
   const out = { ...base, ...d } as AppData;
   out.learner = { ...base.learner, ...(d.learner as object) };
   out.settings = { ...defaultSettings(), ...(d.settings as object) };
+  // (2026-10-06) autoAdvance nay mặc định BẬT (bé tự sang nốt sau khi đúng). Dữ liệu cũ chưa có cờ → bật MỘT lần;
+  // từ đó lựa chọn của phụ huynh được giữ nguyên (cờ autoAdvanceMigrated).
+  if (!isObj(d.settings) || d.settings.autoAdvanceMigrated !== true) {
+    out.settings.autoAdvance = true;
+    out.settings.autoAdvanceMigrated = true;
+  }
   out.progress = { ...base.progress, ...(d.progress as object) };
   out.sessions = Array.isArray(d.sessions)
     ? (d.sessions as Partial<Session>[]).map(

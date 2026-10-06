@@ -1,0 +1,324 @@
+/* =========================================================
+   PHỤ HUYNH — trải nghiệm bố mẹ (rà soát hành trình phụ huynh 2026-10-06)
+   Màn Phụ huynh · Cài micro 3 bước · phiếu chấm · câu nói cho bố mẹ · trình soạn bài.
+   Chỉ dùng token của theme.css.
+   ========================================================= */
+
+/* ---------- Phiếu chấm: một dòng hướng dẫn dưới mỗi ý ---------- */
+.pcheck-item.has-hint {
+  border-radius: var(--r-lg);
+  max-width: 330px;
+  text-align: left;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+.pcheck-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.pcheck-hint {
+  font-family: var(--font-body, inherit);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--ink-2);
+}
+.pcheck-item.on .pcheck-hint {
+  color: var(--mint-800);
+}
+
+/* ---------- 👪 Câu nói cho bố mẹ (bước tư thế) ---------- */
+.coach-box {
+  align-self: center;
+  background: var(--sun-50);
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 2px var(--sun-300);
+  padding: 8px 16px;
+  text-align: left;
+  color: var(--sun-800);
+  font-size: 17px;
+  max-width: 560px;
+}
+.coach-box b {
+  font-family: var(--font-display);
+  font-size: 18px;
+}
+.coach-box ul {
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-weight: 700;
+}
+
+/* ---------- Trình soạn bài: thông báo ℹ️ + nút sửa một chạm ---------- */
+.se-info {
+  background: var(--sky-100);
+  color: var(--ink);
+}
+.se-fix {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.se-fix .btn {
+  min-height: 44px;
+  font-size: 17px;
+  padding: 4px 14px;
+}
+
+/* ---------- Màn Phụ huynh ---------- */
+.parent-head h1 {
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+.parent-head-actions {
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.parent-head-actions .btn {
+  min-height: 56px;
+  padding: 6px 16px;
+  font-size: 19px;
+}
+.parent-head-actions .btn-icon {
+  font-size: 22px;
+}
+.mic-setup-card .row {
+  flex-wrap: wrap;
+}
+.backup-btn.warn {
+  box-shadow: inset 0 0 0 3px var(--sun-400), var(--e1);
+}
+.backup-line {
+  font-size: 17px;
+  color: var(--ink-2);
+  margin: 0;
+}
+.backup-line.warn {
+  color: var(--sun-800);
+  font-weight: 700;
+}
+
+/* Cài micro (3 bước) — thẻ nổi bật đầu trang khi micro đang tắt */
+.mic-setup-card {
+  background: linear-gradient(180deg, #fff, var(--sky-100));
+  box-shadow: var(--e2), inset 0 0 0 3px var(--sea-300);
+}
+.mic-setup-card h2 {
+  font-size: 28px;
+}
+.mic-steps {
+  list-style: none;
+  margin: 6px 0 10px;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  font-size: 19px;
+  font-weight: 700;
+}
+.mic-steps li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.mic-steps li b {
+  min-width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--sea-500);
+  color: #fff;
+  text-align: center;
+  line-height: 30px;
+  font-family: var(--font-display);
+}
+.mic-steps li.done b {
+  background: var(--mint-500);
+}
+
+/* Việc tối nay: nút Làm ngay + dòng nhắc */
+.todo-go {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin: 4px 0 8px;
+}
+.todo-go .muted {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--violet-700);
+}
+.todo-card.welcome {
+  background: linear-gradient(180deg, #fffaf0, var(--sun-50));
+  box-shadow: var(--e2), inset 0 0 0 3px var(--sun-300);
+}
+
+/* Sẵn sàng sang tuần mới? */
+.ready-card {
+  border-left: 10px solid var(--line-strong);
+}
+.ready-card.ready {
+  border-left-color: var(--mint-500);
+}
+.ready-card.more {
+  border-left-color: var(--sun-400);
+}
+.ready-card.slow {
+  border-left-color: var(--coral-500);
+}
+.ready-title {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 800;
+  margin: 0 0 4px;
+}
+.ready-card ul {
+  margin: 0 0 8px;
+  padding-left: 22px;
+  font-size: 18px;
+}
+.hold-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+}
+.hold-row > span {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+/* Thẻ nhắc nhanh cho bố mẹ */
+.quick-tips ol {
+  margin: 4px 0 0;
+  padding-left: 26px;
+  font-size: 19px;
+  line-height: 1.45;
+}
+.quick-tips li b {
+  color: var(--violet-700);
+}
+.onb-text .quick-tips {
+  margin-top: 8px;
+  padding: 8px 14px;
+  box-shadow: inset 0 0 0 2px var(--line);
+}
+.onb-text .quick-tips h2 {
+  font-size: 20px;
+  margin: 0;
+}
+.onb-text .quick-tips ol {
+  font-size: 16px;
+  line-height: 1.35;
+}
+
+/* "Chi tiết" (bảng theo nốt) — thu gọn */
+.parent-details > summary {
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--ink-2);
+  padding: 10px 0;
+}
+.parent-details[open] > summary {
+  margin-bottom: 6px;
+}
+.parent-details > .card {
+  box-shadow: none;
+  border: 2px solid var(--line);
+  margin-bottom: 12px;
+}
+
+/* ---------- Cài micro (micTest) ---------- */
+.mictest .stage {
+  gap: 10px;
+  padding-bottom: 24px;
+}
+.mic-wizard {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.mic-wizard li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px 6px 6px;
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 2px var(--line-strong);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.mic-wizard li b {
+  min-width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--line);
+  color: var(--ink-2);
+  text-align: center;
+  line-height: 32px;
+  font-family: var(--font-display);
+}
+.mic-wizard li.now {
+  box-shadow: inset 0 0 0 3px var(--violet-500);
+  color: var(--ink);
+}
+.mic-wizard li.now b {
+  background: var(--violet-500);
+  color: #fff;
+}
+.mic-wizard li.done {
+  box-shadow: inset 0 0 0 2px var(--mint-400);
+  color: var(--mint-800);
+}
+.mic-wizard li.done b {
+  background: var(--mint-500);
+  color: #fff;
+}
+.mic-use {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.mic-use .btn-big {
+  font-size: 24px;
+}
+.mic-help {
+  width: 100%;
+  max-width: 760px;
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  box-shadow: var(--e1);
+  padding: 0 16px;
+  text-align: center;
+}
+.mic-help > summary {
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink-2);
+  padding: 12px 0;
+  text-align: left;
+}
+.mic-help[open] {
+  padding-bottom: 12px;
+}
+.mic-help h3 {
+  margin: 10px 0 4px;
+}

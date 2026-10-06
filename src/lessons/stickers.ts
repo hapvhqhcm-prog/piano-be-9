@@ -1,5 +1,6 @@
 import { SONGS } from '../music/tune';
 import type { AppData } from '../progress/schema';
+import { completedDates, dayKey, hist, memo, mondayKey, weekdayIndex } from '../progress/history';
 import { LEVELS, WEEKS, masteredSongs, weekComplete, weekPassed } from './lessonEngine';
 
 /**
@@ -8,6 +9,8 @@ import { LEVELS, WEEKS, masteredSongs, weekComplete, weekPassed } from './lesson
  * sao lưu/nhập JSON là có đủ sticker. Hàm thuần — có test (tests/stickers.test.ts).
  *
  * Sticker đã nhận KHÔNG mất (mọi mốc tính trên toàn bộ lịch sử, chỉ tăng).
+ * (+ 2026-10-06) "Toàn bộ lịch sử" = tổng hợp đã gộp (AppData.history — progress/compaction.ts) + buổi còn giữ.
+ * Riêng sticker đảo / huy chương được LƯU (history.stickers) trước khi bố mẹ lùi tuần, để không bị mất.
  *
  * "Tuần chăm chỉ" (2026-10-05) thay cho "chuỗi ngày liền": chuỗi ngày bị đứt làm trẻ nản; mục tiêu tuần
  * khớp với giáo trình 4–5 buổi/tuần và được nghỉ ngày nào cũng không sao.
@@ -47,41 +50,38 @@ export const EFFORT_BY_DAYS_FROM = '2026-10-06';
 /** Số lượt đúng tối thiểu (các lượt khác nhau, trong một buổi) để tính là "chơi xong" trò to/nhỏ – ngắt/liền. */
 export const DYNAMICS_ROUNDS = 3;
 
-const dayKey = (x: Date) =>
-  `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`;
-
-/** Thứ 2 của tuần chứa ngày "YYYY-MM-DD". */
-function mondayKey(date: string): string {
-  const [y, m, d] = date.split('-').map(Number);
-  const x = new Date(y, m - 1, d);
-  x.setDate(x.getDate() - ((x.getDay() + 6) % 7));
-  return dayKey(x);
-}
+/** Đếm số bit 1 (số ngày trong bitmask tuần). */
+const popcount = (x: number) => {
+  let n = 0;
+  for (; x; x &= x - 1) n++;
+  return n;
+};
 
 /**
  * Số tuần (thứ 2 → CN) "chăm chỉ" — chỉ tăng, không bao giờ giảm. v5.1: một tuần là chăm chỉ khi có ≥ BUSY_WEEK_DAYS
  * NGÀY khác nhau có buổi hoàn thành; HOẶC (giữ sticker đã nhận) ≥ 4 BUỔI hoàn thành tính riêng các buổi trước
  * EFFORT_BY_DAYS_FROM (quy tắc cũ — một tuần đã đạt theo quy tắc cũ không bao giờ bị mất).
+ * (+ 2026-10-06) Gồm cả các buổi đã gộp (history.weeks: bitmask ngày + số buổi theo quy tắc cũ của từng tuần).
  */
 export function busyWeeks(data: Readonly<AppData>): number {
-  const days = new Map<string, Set<string>>();
-  const legacySessions = new Map<string, number>();
+  const weeks = new Map<string, [number, number]>();
+  for (const [k, [mask, legacy]] of Object.entries(hist(data).weeks)) weeks.set(k, [mask, legacy]);
   for (const s of data.sessions) {
     if (!s.completed) continue;
     const k = mondayKey(s.date);
-    days.set(k, (days.get(k) ?? new Set()).add(s.date));
-    if (s.date < EFFORT_BY_DAYS_FROM) legacySessions.set(k, (legacySessions.get(k) ?? 0) + 1);
+    const w = weeks.get(k) ?? [0, 0];
+    w[0] |= 1 << weekdayIndex(s.date);
+    if (s.date < EFFORT_BY_DAYS_FROM) w[1]++;
+    weeks.set(k, w);
   }
   let n = 0;
-  for (const [k, d] of days) if (d.size >= BUSY_WEEK_DAYS || (legacySessions.get(k) ?? 0) >= 4) n++;
+  for (const [mask, legacy] of weeks.values()) if (popcount(mask) >= BUSY_WEEK_DAYS || legacy >= 4) n++;
   return n;
 }
 
 /** Chuỗi ngày học liên tiếp DÀI NHẤT từng có (chỉ tính buổi đã hoàn thành). `until`: chỉ tính các ngày ≤ until. */
 export function bestStreak(data: Readonly<AppData>, until?: string): number {
-  const days = [
-    ...new Set(data.sessions.filter((s) => s.completed && (!until || s.date <= until)).map((s) => s.date)),
-  ].sort();
+  const days = [...completedDates(data)].filter((d) => !until || d <= until).sort();
   const set = new Set(days);
   let best = 0;
   for (const d of days) {
@@ -101,6 +101,7 @@ export function bestStreak(data: Readonly<AppData>, until?: string): number {
 
 /** Bé đàn trọn một bài (cả bài, đủ cả hai tay — không phải một câu / một tay) mà micro chấm đúng hết mọi nốt. */
 export function micPerfectRun(data: Readonly<AppData>): boolean {
+  if (hist(data).micPerfect) return true;
   return data.sessions.some((s) =>
     s.songRuns.some((r) => r.source === 'mic' && r.passed && !r.phrase && !r.hand && r.total > 0 && r.hits >= r.total),
   );
@@ -110,6 +111,7 @@ export const FOLK_SONG_IDS: readonly string[] = SONGS.filter((t) => t.composer?.
 
 /** Đã chơi xong trò sắc thái `mode` (≥ DYNAMICS_ROUNDS lượt khác nhau được chấm đúng trong cùng một buổi). */
 export function dynamicsDone(data: Readonly<AppData>, mode: 'loud-soft' | 'stac-leg'): boolean {
+  if (hist(data).dynamicsDone.includes(mode)) return true;
   const prefix = `dyn:${mode}:`;
   return data.sessions.some(
     (s) =>
@@ -118,12 +120,32 @@ export function dynamicsDone(data: Readonly<AppData>, mode: 'loud-soft' | 'stac-
   );
 }
 
-/** Đảo tuần `week` đã qua — cùng quy tắc với bản đồ ở màn chính. */
-const islandDone = (week: number, data: Readonly<AppData>) =>
-  week < data.progress.currentWeek || weekComplete(week, data);
+/**
+ * Đảo tuần `week` đã qua — cùng quy tắc với bản đồ ở màn chính.
+ * (+ 2026-10-06) Đảo đã nhận KHÔNG mất khi bố mẹ lùi tuần (history.stickers — ProgressStore.setCurrentWeek ghi lại).
+ * Màn chính nên dùng hàm này cho bản đồ để đảo đã qua vẫn sáng.
+ */
+export function islandPassed(week: number, data: Readonly<AppData>): boolean {
+  return week < data.progress.currentWeek || hist(data).stickers.includes(`island-${week}`) || weekComplete(week, data);
+}
 
-/** Toàn bộ sticker (thứ tự hiển thị cố định), mỗi cái có cờ earned. */
+/** Huy chương cấp (tuần biểu diễn `week`) — đã nhận thì giữ (history.stickers). */
+const medalEarned = (level: number, week: number, data: Readonly<AppData>) =>
+  hist(data).stickers.includes(`medal-${level}`) || weekPassed(week, data);
+
+/** Sticker đảo / huy chương đang nhận được — ProgressStore lưu lại (history.stickers) trước khi lùi tuần. */
+export function monotonicStickerIds(data: Readonly<AppData>): string[] {
+  return allStickers(data)
+    .filter((s) => s.earned && (s.kind === 'island' || s.kind === 'medal'))
+    .map((s) => s.id);
+}
+
+/** Toàn bộ sticker (thứ tự hiển thị cố định), mỗi cái có cờ earned. Ghi nhớ theo phiên bản dữ liệu (trả về bản sao). */
 export function allStickers(data: Readonly<AppData>): Sticker[] {
+  return memo(data, 'allStickers', () => computeStickers(data)).map((s) => ({ ...s }));
+}
+
+function computeStickers(data: Readonly<AppData>): Sticker[] {
   const out: Sticker[] = [];
   for (const w of WEEKS) {
     out.push({
@@ -131,7 +153,7 @@ export function allStickers(data: Readonly<AppData>): Sticker[] {
       kind: 'island',
       title: w.island,
       hint: `Qua ${w.island}`,
-      earned: islandDone(w.week, data),
+      earned: islandPassed(w.week, data),
       week: w.week,
     });
   }
@@ -142,12 +164,13 @@ export function allStickers(data: Readonly<AppData>): Sticker[] {
       kind: 'medal',
       title: `Huy chương Cấp ${lv.level}`,
       hint: `Lên sân khấu tuần ${wk}`,
-      earned: weekPassed(wk, data),
+      earned: medalEarned(lv.level, wk, data),
       week: wk,
       level: lv.level,
     });
   }
-  const songs = masteredSongs(data).length;
+  const mastered = masteredSongs(data);
+  const songs = mastered.length;
   for (const n of SONG_MILESTONES) {
     out.push({
       id: `songs-${n}`,
@@ -180,7 +203,7 @@ export function allStickers(data: Readonly<AppData>): Sticker[] {
     kind: 'folk',
     title: 'Dân ca',
     hint: 'Thuộc một bài dân ca',
-    earned: FOLK_SONG_IDS.some((id) => masteredSongs(data).includes(id)),
+    earned: FOLK_SONG_IDS.some((id) => mastered.includes(id)),
   });
   out.push({
     id: 'mic-perfect',

@@ -3,7 +3,7 @@ import type { WeekPlan } from './types';
 
 /**
  * TUẦN 7 (tuần 6 cũ) — Tấm gương: tay trái = "tấm gương" của tay phải (ngón 5→1 trên C3–G3, §6).
- * Lặp bài tuần 2–3 bằng tay trái. v5: tay trái tự bật từ tuần 7 (lessonEngine.leftHandActive). Tiêu chí: như tuần 3 — tai nghe đúng 8/10 (APP), dải tay trái.
+ * Lặp bài tuần 2–3 bằng tay trái. v5: tay trái tự bật từ tuần 7 (lessonEngine.leftHandActive). Tiêu chí: như tuần 3 — tai nghe đúng ≥ 5/6 trong một buổi, ở 2 ngày (APP), dải tay trái.
  */
 export const WEEK7: WeekPlan = {
   week: 7,
@@ -12,11 +12,11 @@ export const WEEK7: WeekPlan = {
   title: 'Tay trái',
   story: 'Ở Hồ Tấm Gương, tay trái là cái bóng của tay phải: ngón út (5) đứng ở Đô, ngón cái (1) đứng ở Sol.',
   leftHand: true,
-  warmup: { variant: 'identify', pool: ['C3', 'D3', 'E3', 'F3', 'G3'], rounds: 10, reference: 'C3' },
+  warmup: { variant: 'identify', pool: ['C3', 'D3', 'E3', 'F3', 'G3'], rounds: 6, reference: 'C3' },
   teach: { emoji: '👨‍🏫', text: 'Con giơ hai tay lên và chỉ cho bố/mẹ: ngón số 1 của tay trái và tay phải ở đâu?' },
   drills: ['hand-shape', 'five-finger'],
-  criterion: { text: 'Tai nghe tay trái (có mốc Đô) đúng 8/10 — ở 2 ngày khác nhau', who: 'APP' },
-  kidGoal: 'Tai giỏi tay trái: đoán đúng 8 nốt trầm trong 10 — 2 hôm nhé! 🫲',
+  criterion: { text: 'Tai nghe tay trái (có mốc Đô) đúng ít nhất 5/6 trong một buổi — ở 2 ngày khác nhau', who: 'APP' },
+  kidGoal: 'Tai giỏi tay trái: đoán đúng 5 nốt trầm trong 6 — 2 hôm nhé! 🫲',
   lessons: [
     {
       id: 'w7-l1',

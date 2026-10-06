@@ -1,9 +1,12 @@
 import { button, h } from './dom';
+import '../../styles/parentux.css';
 
 export interface CheckItem<K extends string> {
   key: K;
   icon: string;
   label: string;
+  /** Một dòng hướng dẫn chấm bằng lời thường cho bố mẹ không biết nhạc (rà soát 2026-10-06) */
+  hint?: string;
 }
 
 /**
@@ -20,10 +23,12 @@ export function parentChecklist<K extends string>(
   for (const it of items) {
     const b = h(
       'button',
-      { class: 'pcheck-item', type: 'button', 'aria-pressed': 'false' },
+      { class: `pcheck-item${it.hint ? ' has-hint' : ''}`, type: 'button', 'aria-pressed': 'false' },
       h('span', { class: 'pcheck-box', 'aria-hidden': 'true' }, ''),
       h('span', { class: 'pcheck-icon', 'aria-hidden': 'true' }, it.icon),
-      h('span', { class: 'pcheck-label' }, it.label),
+      it.hint
+        ? h('span', { class: 'pcheck-text' }, h('span', { class: 'pcheck-label' }, it.label), h('span', { class: 'pcheck-hint' }, it.hint))
+        : h('span', { class: 'pcheck-label' }, it.label),
     );
     b.addEventListener('click', () => {
       values[it.key] = !values[it.key];
@@ -50,9 +55,9 @@ export function parentChecklist<K extends string>(
 
 /** Ba ý chấm của bài hát (SongRun.checklist). */
 export const SONG_CHECKS: ReadonlyArray<CheckItem<'notes' | 'beat' | 'fingers'>> = [
-  { key: 'notes', icon: '🎵', label: 'Đúng nốt' },
-  { key: 'beat', icon: '🥁', label: 'Đều nhịp' },
-  { key: 'fingers', icon: '🖐️', label: 'Đúng ngón & dáng tay' },
+  { key: 'notes', icon: '🎵', label: 'Đúng nốt', hint: 'Bé bấm đúng phím đang sáng' },
+  { key: 'beat', icon: '🥁', label: 'Đều nhịp', hint: 'Không dừng chờ quá 1 tiếng tích' },
+  { key: 'fingers', icon: '🖐️', label: 'Đúng ngón & dáng tay', hint: 'Đúng số ngón trên màn, ngón cong' },
 ];
 
 /**
@@ -65,6 +70,6 @@ export const SONG_CHECKS_WAIT: ReadonlyArray<CheckItem<'notes' | 'fingers'>> = S
 
 /** Hai ý chấm của trò vỗ nhịp (không có ngón tay). */
 export const RHYTHM_CHECKS: ReadonlyArray<CheckItem<'notes' | 'beat'>> = [
-  { key: 'notes', icon: '👏', label: 'Đúng tiếng vỗ' },
-  { key: 'beat', icon: '🥁', label: 'Đều nhịp' },
+  { key: 'notes', icon: '👏', label: 'Đúng tiếng vỗ', hint: 'Vỗ đủ tiếng, dài–ngắn giống mẫu' },
+  { key: 'beat', icon: '🥁', label: 'Đều nhịp', hint: 'Không dừng chờ quá 1 tiếng tích' },
 ];

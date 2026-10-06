@@ -5,6 +5,25 @@ import { mascot } from '../components/mascot';
 import { postureArt } from '../components/postureArt';
 import { whenCorrectBox } from '../components/whenCorrect';
 import { installCard } from '../components/installCard';
+import '../../styles/parentux.css';
+
+/** THẺ NHẮC NHANH CHO BỐ MẸ (5 ý) — hiện ở Hướng dẫn (thẻ 3) và màn Phụ huynh. [chữ đậm, phần còn lại] */
+export const QUICK_TIPS: ReadonlyArray<[string, string]> = [
+  ['Ngồi cạnh con 10–15 phút', ', bấm “Học tiếp” — app tự chọn bài, không cần soạn gì.'],
+  ['Bấm “Đúng rồi”', ' khi con đàn đúng phím sáng, đúng số ngón; sai thì “Thử lại” — không chê.'],
+  ['Con vấp?', ' Nói “Con thử chậm hơn nhé” · “Ngón số mấy nhỉ?” — chậm mà đúng hơn nhanh mà sai.'],
+  ['Khen cụ thể', ' (“ngón con cong đẹp quá”), không so sánh với bạn khác.'],
+  ['Con mệt hay cáu:', ' “Nghỉ 1 phút rồi làm lại” — hoặc dừng buổi, mai học tiếp.'],
+];
+
+export function quickTipsCard(tag: 'section' | 'div' = 'section'): HTMLElement {
+  return h(
+    tag,
+    { class: 'card quick-tips' },
+    h('h2', {}, '🗒️ Thẻ nhắc nhanh cho bố mẹ'),
+    h('ol', {}, ...QUICK_TIPS.map(([b, t]) => h('li', {}, h('b', {}, b), t))),
+  );
+}
 
 /**
  * HƯỚNG DẪN NHANH CHO BỐ MẸ (lần đầu mở app; mở lại được ở màn Phụ huynh → "📖 Hướng dẫn").
@@ -114,17 +133,23 @@ const CARDS: Card[] = [
     extra: () => whenCorrectBox('div'),
   },
   {
+    art: () => mascot('wave', 150),
+    title: 'Ngồi cạnh con thế nào?',
+    lines: [],
+    extra: () => quickTipsCard('div'),
+  },
+  {
     art: artMic,
     title: 'Micro nghe đàn (tuỳ chọn)',
     lines: [['🎤', 'App tự nghe và chấm nốt bé đàn']],
-    chain: ['Phụ huynh', 'Thử micro', 'Kiểm tra 5 nốt', 'Bật micro'],
+    chain: ['Phụ huynh', '🎤 Cài micro (3 bước)', 'Kiểm tra 5 nốt', '✅ Dùng micro cho các buổi học'],
   },
   {
     art: artParent,
     title: 'Khu vực bố mẹ',
     lines: [
-      ['👪', 'Nhấn giữ nút “Phụ huynh” 2 giây + làm 1 phép cộng'],
-      ['💾', 'Sao lưu: Phụ huynh → Nâng cao → “Sao lưu dữ liệu”'],
+      ['🔢', 'Nhấn giữ nút “Phụ huynh” 2 giây + tính một phép nhân'],
+      ['💾', 'Sao lưu mỗi tuần: Phụ huynh → nút “💾 Sao lưu” trên cùng'],
     ],
     // Mở bằng tab trình duyệt → nhắc thêm vào Màn hình chính (null khi đã cài)
     extra: () => installCard(),

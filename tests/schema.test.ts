@@ -13,7 +13,7 @@ describe('schema v1 (§7)', () => {
     expect(d.learner.createdAt).toBe('2026-10-04');
     expect(d.settings).toEqual({
       sessionMinutes: 15,
-      autoAdvance: false,
+      autoAdvance: true, // (2026-10-06) mặc định BẬT — đúng nốt thì tự sang nốt sau
       autoAdvanceDelaySec: 4,
       leftHandEnabled: false,
       dailyLimit: 'none',
@@ -27,6 +27,7 @@ describe('schema v1 (§7)', () => {
       lastBackupAt: 0,
       onboardedAt: 0,
       voice: true, // giọng đọc hướng dẫn mặc định BẬT
+      autoAdvanceMigrated: true,
     });
   });
 
@@ -35,10 +36,24 @@ describe('schema v1 (§7)', () => {
     expect(() => migrate({ ...defaultData(), schemaVersion: 99 })).toThrow();
   });
 
+  it('(+ 2026-10-06) trường tùy chọn của màn phụ huynh: không có cũng được, có thì phải đúng kiểu', () => {
+    const d = defaultData(fixedNow());
+    expect(validateAppData({ ...d, settings: { ...d.settings, holdWeek: 12, micSetupHidden: true, backupAskedAt: 123 } })).toEqual([]);
+    expect(validateAppData({ ...d, settings: { ...d.settings, holdWeek: null } })).toEqual([]);
+    expect(validateAppData({ ...d, settings: { ...d.settings, holdWeek: 'x' } })).toContain('settings.holdWeek');
+    expect(validateAppData({ ...d, settings: { ...d.settings, holdWeek: 2.5 } })).toContain('settings.holdWeek');
+    expect(validateAppData({ ...d, settings: { ...d.settings, micSetupHidden: 1 } })).toContain('settings.micSetupHidden');
+    expect(validateAppData({ ...d, settings: { ...d.settings, backupAskedAt: 'hôm qua' } })).toContain('settings.backupAskedAt');
+  });
+
   it('migrate điền trường thiếu', () => {
     const raw = { schemaVersion: 1, sessions: [{ id: 'a', date: '2026-10-04', lessonId: 'w1-l1' }] };
     const d = migrate(raw);
-    expect(d.settings.autoAdvance).toBe(false);
+    expect(d.settings.autoAdvance).toBe(true); // dữ liệu cũ (chưa có cờ) → bật MỘT lần
+    expect(d.settings.autoAdvanceMigrated).toBe(true);
+    // Đã có cờ → giữ lựa chọn của phụ huynh (tắt)
+    const off = migrate({ ...raw, settings: { autoAdvance: false, autoAdvanceMigrated: true } });
+    expect(off.settings.autoAdvance).toBe(false);
     expect(d.settings.onboardedAt).toBe(0); // dữ liệu cũ chưa có trường hướng dẫn → 0
     expect(d.settings.voice).toBe(true); // dữ liệu cũ chưa có giọng đọc → bật
     expect(d.sessions[0].parentAssessments).toEqual([]);

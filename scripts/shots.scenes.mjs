@@ -328,7 +328,8 @@ export const V5_SCENES = [
       const c = await import('/src/practice/compose.ts'); const s = await import('/src/ui/screens/song.ts');
       app.show(s.songScreen(app, c.compositionToTune(app.store.findComposition('c2')), { mode: 'wait', hints: 'full', free: true }, { onRun() {}, onDone() {}, onBack() {} }));
       await tapAny('Bắt đầu'); for (let k = 0; k < 3; k++) await tapAny('Bố mẹ: tiếp');
-      await sleep(200); document.querySelectorAll('.pcheck-item')[0].click(); document.querySelectorAll('.pcheck-item')[2].click(); await sleep(200);`,
+      // Chế độ Từng nốt chỉ có 2 ý chấm (không chấm nhịp) → tích ý đầu, để trống ý cuối
+      await sleep(200); document.querySelectorAll('.pcheck-item')[0].click(); await sleep(200);`,
   },
   {
     name: 'v5-rhythm-checklist',
@@ -340,3 +341,38 @@ export const V5_SCENES = [
 ];
 
 SCENES.push(...V5_SCENES);
+
+/** Trải nghiệm phụ huynh (2026-10-06): cài micro 3 bước, Làm ngay, sẵn sàng sang tuần, sao lưu, Chi tiết, trình soạn dễ tính. */
+const showParent = `const m = await import('/src/ui/screens/parent.ts'); app.show(m.parentScreen(app)); await new Promise((r) => setTimeout(r, 300));`;
+const editorWith = (txt) => `${tapAny} const m = await import('/src/ui/screens/songEditor.ts'); app.show(m.songEditorScreen(app, null, { onDone() {} }));
+  await sleep(300); const a = document.querySelector('.se-area'); a.value = ${JSON.stringify(txt)}; a.dispatchEvent(new Event('input')); await sleep(600);`;
+SCENES.push(
+  { name: 'pux-parent-top', js: `${seedParent} ${showParent}` },
+  { name: 'pux-parent-ready', js: `${seedParent} ${showParent} document.querySelector('.ready-card').scrollIntoView();` },
+  {
+    name: 'pux-parent-welcome',
+    js: `${seedParent} app.store.get().sessions.forEach((s, i) => { const x = new Date(); x.setDate(x.getDate() - 6 - i); s.date = x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'); }); ${showParent} document.querySelector('.todo-card').scrollIntoView();`,
+  },
+  {
+    name: 'pux-parent-details',
+    js: `${seedParent} ${showParent} const det = document.querySelector('details.parent-details'); det.open = true; det.scrollIntoView(); await new Promise((r) => setTimeout(r, 200));`,
+  },
+  { name: 'pux-mictest', js: `const m = await import('/src/ui/screens/micTest.ts'); app.show(m.micTestScreen(app));` },
+  {
+    name: 'pux-mictest-help',
+    js: `const m = await import('/src/ui/screens/micTest.ts'); app.show(m.micTestScreen(app)); await new Promise((r) => setTimeout(r, 200));
+      const det = document.querySelector('details.mic-help'); det.open = true; det.dispatchEvent(new Event('toggle')); det.scrollIntoView();`,
+  },
+  { name: 'pux-gate', js: `const m = await import('/src/ui/screens/parentGate.ts'); app.show(m.parentGateScreen(app));` },
+  { name: 'pux-editor-commas', js: editorWith('Đô, Rê, Mi, Đô, Đô, Rê, Mi, Đô, Mi, Fa, Sol') },
+  { name: 'pux-editor-hyphen', js: editorWith('Đô-Rê-Mi-Đô Đô-Rê-Mi-Đô / Mi-Fa-Sol- / Mi-Fa-Sol-') },
+  { name: 'pux-editor-period', js: editorWith('Đô Rê Mi Đô. Đô Rê Mi Đô. Mi Fa Sol-.') },
+  {
+    name: 'pux-posture',
+    js: `const m = await import('/src/ui/screens/posture.ts'); app.show(m.postureScreen(app, { onDone() {}, onBack() {} }));`,
+  },
+  {
+    name: 'pux-onb-tips',
+    js: `${tapAny} const m = await import('/src/ui/screens/onboarding.ts'); app.show(m.onboardingScreen(app, { onDone() {} })); await tapAny('Tiếp'); await tapAny('Tiếp'); await sleep(400);`,
+  },
+);

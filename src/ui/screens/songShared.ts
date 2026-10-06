@@ -23,6 +23,8 @@ export interface SongOptions {
   review?: boolean;
   /** v5.1 — Bài học chỉ định tập tách tay: mở sẵn tay này (bé vẫn đổi được) */
   hand?: 'RH' | 'LH';
+  /** Cùng `phrase`: mở thẳng chế độ "🔁 Lặp 3 lần đúng" của câu đó (vd "▶ Làm ngay" ở màn Phụ huynh) */
+  loop?: boolean;
 }
 
 /** Tập tách tay (bài hai tay): RH / LH = chỉ chấm tay đó; BOTH = hai tay như thường. */

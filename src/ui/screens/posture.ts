@@ -1,8 +1,21 @@
 import type { App } from '../App';
 import { backButton, button, h } from '../components/dom';
 import { postureArt, type PosturePart } from '../components/postureArt';
+import '../../styles/parentux.css';
 
-const SHORT = { emoji: '🧘', part: 'all' as PosturePart, text: 'Ngồi thẳng · chân vững · tay tròn', sub: 'Con đã quen rồi — kiểm tra nhanh nhé!' };
+/** 👪 Ba câu ngắn bố mẹ nói khi bé vấp — thay cho chê / giục (rà soát hành trình phụ huynh 2026-10-06). */
+export const PARENT_PHRASES = ['“Con thử chậm hơn nhé”', '“Ngón số mấy nhỉ?”', '“Nghỉ 1 phút rồi làm lại”'];
+
+function coachBox(): HTMLElement {
+  return h(
+    'aside',
+    { class: 'coach-box', 'aria-label': 'Câu nói cho bố mẹ' },
+    h('b', {}, '👪 Khi con vấp, bố mẹ nói:'),
+    h('ul', {}, ...PARENT_PHRASES.map((t) => h('li', {}, t))),
+  );
+}
+
+const SHORT = { emoji: '🧘', part: 'all' as PosturePart, text: 'Ngồi thẳng · chân vững · tay tròn', sub: 'Kiểm tra nhanh tư thế nhé!' };
 
 const ALL_CARDS = [
   { emoji: '🪑', part: 'back' as PosturePart, text: 'Ngồi thẳng lưng', sub: 'Ngồi nửa trước ghế' },
@@ -27,6 +40,8 @@ export function postureScreen(_app: App, hooks: { short?: boolean; onDone(): voi
         h('div', { class: 'posture-wrap' }, postureArt(c.part)),
         h('h1', { class: 'title' }, c.text),
         h('p', { class: 'lead' }, c.sub),
+        // Thẻ đầu (bé đang ngồi vào đàn): bố mẹ đọc nhanh 3 câu động viên
+        ...(i === 0 ? [coachBox()] : []),
       );
       bar.replaceChildren(
         backButton(() => (i > 0 ? (i--, render()) : hooks.onBack())),

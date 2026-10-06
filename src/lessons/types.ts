@@ -69,6 +69,11 @@ export type Activity =
       intro?: string;
       /** v5.1 — Tập TÁCH TAY có sẵn trong bài (bài hai tay): chỉ tay này; không có = hai tay */
       hand?: 'RH' | 'LH';
+      /**
+       * v5.1 (OWNER duyệt 2026-10-06 sau buổi bé chơi thử) — chỉ tập MỘT câu: [ô bắt đầu, ô kết thúc) như phraseRanges.
+       * Dùng cho tập tách tay trên CÂU KHÓ (không cả bài). Lượt ghi phrase ≠ null → không tính tiêu chí tuần.
+       */
+      phrase?: [number, number];
     }
   | { kind: 'rhythm'; title: string; intro: string; patterns: RhythmSymbol[][] }
   /** Đọc nhạc ngẫu nhiên: sinh `count` đoạn nhạc mới trong một thế tay */

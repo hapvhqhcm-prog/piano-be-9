@@ -5,8 +5,12 @@ import { CandidateTally, chooseSensitivity, type Candidate, type NoteCheck, type
 import { PianoKeyboard } from '../../piano/PianoKeyboard';
 import { midiToPitch, noteLabel, pitchFreq, pitchToMidi, type Pitch } from '../../piano/pitchTable';
 import type { App } from '../App';
-import { actionBar, backButton, button, h } from '../components/dom';
+import { actionBar, backButton, button, h, toast } from '../components/dom';
 import { parentScreen } from './parent';
+import '../../styles/parentux.css';
+
+/** Kiểm tra 5 nốt "tốt" (đủ để dùng micro cho buổi học): nghe đúng ít nhất bấy nhiêu nốt */
+export const MIC_GOOD = 4;
 
 const STATE_TEXT: Record<MicState, string> = {
   off: 'Micro đang tắt',
@@ -74,7 +78,10 @@ interface StepLog {
 }
 
 /**
- * Màn phụ huynh "Thử micro" = TRÌNH CHẨN ĐOÁN:
+ * Màn phụ huynh "🎤 Cài micro (3 bước)" (rà soát 2026-10-06 — trước đây không có bước nào bật settings.micEnabled):
+ *   1) Cho phép micro → 2) Kiểm tra 5 nốt (tự chỉnh độ nhạy) → 3) kết quả tốt: nút to "✅ Dùng micro cho các buổi học"
+ *   (đặt micEnabled = true; có nút tắt lại). Công cụ kỹ thuật nằm trong "🔧 Dành cho người hỗ trợ".
+ * Bên trong vẫn là TRÌNH CHẨN ĐOÁN:
  * - thanh âm lượng có vạch ngưỡng (tiếng đàn phải vượt vạch mới được nghe)
  * - chỉnh độ nhạy, chỉnh theo đàn nhà (đàn cơ lâu không lên dây lệch vài chục cents)
  * - kiểm tra 5 nốt → kết luận + lời khuyên cụ thể; sao chép nhật ký để gửi người hỗ trợ
@@ -93,6 +100,12 @@ export function micTestScreen(app: App) {
     const report = h('div', { class: 'mic-report' });
     const kb = new PianoKeyboard({ labels: 'all', fingerOnPress: false });
     kb.setEnabled(false);
+    const kbWrap = h('div', { class: 'keyboard-wrap short' }, kb.el);
+    const wizard = h('ol', { class: 'mic-wizard', 'aria-label': 'Các bước cài micro' });
+    const useBox = h('div', { class: 'mic-use' });
+    const helper = h('details', { class: 'mic-help' });
+    /** Kết quả lần kiểm tra 5 nốt gần nhất (số nốt nghe đúng); null = chưa kiểm tra */
+    let lastOk: number | null = null;
 
     let calibrating = false;
     let samples: number[] = [];
@@ -211,6 +224,7 @@ export function micTestScreen(app: App) {
     const finishCheck = () => {
       window.clearTimeout(stepTimer);
       checking = -1;
+      showKb();
       kb.clear();
       const ok = steps.filter((s) => s.result === 'ok').length;
       const none = steps.filter((s) => s.result === 'none');
@@ -246,7 +260,7 @@ export function micTestScreen(app: App) {
       if (offs.length >= 2) tip(TIP_TEXT.calibrate);
       if (wrong.some((s) => s.heard.some((p) => (pitchToMidi(p as Pitch) - pitchToMidi(s.want)) % 12 === 0)))
         tips.push('Có lúc nghe nhầm quãng 8 (cùng tên nốt, khác cao độ) — thường do micro quá gần búa đàn; dịch iPad ra xa thêm ~20 cm.');
-      if (ok === steps.length) tip('Micro nghe tốt với đàn nhà. Có thể bật "Micro nghe đàn" trong Cài đặt. ✅');
+      if (ok === steps.length) tip('Micro nghe tốt với đàn nhà. ✅');
       const ms = steps.filter((s) => s.ms !== undefined).map((s) => s.ms!);
       report.replaceChildren(
         h('h3', {}, `Kết quả: nghe đúng ${ok}/${steps.length} nốt${ms.length ? ` · nhận sau ~${Math.round(ms.reduce((a, b) => a + b, 0) / ms.length / 100) / 10} giây` : ''}`),
@@ -270,14 +284,77 @@ export function micTestScreen(app: App) {
         ),
         h('p', { class: 'lead' }, (adv.changed ? '🎚️ ' : '✔️ ') + adv.message),
         ...tips.map((t) => h('p', {}, '💡 ' + t)),
-        h('div', { class: 'row' }, button({ icon: '🔁', label: 'Kiểm tra lại', kind: 'good', onTap: () => void runCheck() })),
+        h('div', { class: 'row' }, button({ icon: '🔁', label: 'Kiểm tra lại', onTap: () => void runCheck() })),
       );
-      calib.textContent = adv.changed
-        ? 'Xong bài kiểm tra — đã đổi độ nhạy. Bấm "Kiểm tra lại" để thử với độ nhạy mới.'
-        : 'Xong bài kiểm tra. Có thể bấm "Sao chép nhật ký" để gửi người hỗ trợ.';
+      lastOk = ok;
+      calib.textContent =
+        ok >= MIC_GOOD
+          ? 'Xong bài kiểm tra — micro nghe tốt! Bước 3: bấm nút xanh bên dưới.'
+          : adv.changed
+            ? 'Xong bài kiểm tra — đã đổi độ nhạy. Bấm "Kiểm tra lại" để thử với độ nhạy mới.'
+            : 'Xong bài kiểm tra — micro chưa nghe rõ. Làm theo gợi ý rồi "Kiểm tra lại" (hoặc nhờ người hỗ trợ).';
+      renderSteps();
     };
 
-    const unState = app.mic.onState((s) => (status.textContent = STATE_TEXT[s]));
+    /** Bước nào đang làm: 1 cho phép micro · 2 kiểm tra 5 nốt · 3 dùng micro cho buổi học */
+    function stepNow(): 1 | 2 | 3 {
+      if (store.settings.micEnabled || (lastOk !== null && lastOk >= MIC_GOOD)) return 3;
+      return app.mic.state === 'on' ? 2 : 1;
+    }
+
+    function renderSteps(): void {
+      const now = stepNow();
+      const enabled = store.settings.micEnabled;
+      const labels = ['Cho phép micro', 'Kiểm tra 5 nốt', 'Dùng micro cho buổi học'];
+      wizard.replaceChildren(
+        ...labels.map((t, i) => {
+          const k = i + 1;
+          const done = k < now || (k === 3 && enabled);
+          return h('li', { class: done ? 'done' : k === now ? 'now' : '' }, h('b', {}, done ? '✓' : String(k)), t);
+        }),
+      );
+      if (enabled) {
+        useBox.replaceChildren(
+          h('p', { class: 'lead' }, '✅ Micro đang được dùng cho các buổi học — app tự nghe và chấm nốt.'),
+          button({
+            icon: '🔇',
+            label: 'Tắt micro (bố mẹ tự bấm “Đúng rồi”)',
+            onTap: () => {
+              store.updateSettings({ micEnabled: false });
+              toast('Đã tắt micro cho buổi học');
+              renderSteps();
+            },
+          }),
+        );
+      } else if (lastOk !== null) {
+        const good = lastOk >= MIC_GOOD;
+        useBox.replaceChildren(
+          good || lastOk >= 3
+            ? button({
+                icon: good ? '✅' : '🎤',
+                label: good ? 'Dùng micro cho các buổi học' : 'Vẫn dùng micro (chưa thật tốt)',
+                kind: good ? 'good' : 'plain',
+                big: good,
+                onTap: () => {
+                  store.updateSettings({ micEnabled: true });
+                  toast('🎤 Đã bật micro cho các buổi học', 2600);
+                  renderSteps();
+                },
+              })
+            : h('p', { class: 'muted' }, 'Micro mới nghe đúng ' + lastOk + '/5 nốt — chưa nên dùng. Bố mẹ vẫn chấm bằng nút “Đúng rồi” như thường.'),
+        );
+      } else useBox.replaceChildren();
+    }
+
+    /** Bàn phím chỉ hiện khi cần (đang kiểm tra 5 nốt / chỉnh theo đàn nhà) — không che chữ của màn. */
+    function showKb(): void {
+      kbWrap.hidden = !(checking >= 0 || calibrating);
+    }
+
+    const unState = app.mic.onState((s) => {
+      status.textContent = STATE_TEXT[s];
+      renderSteps();
+    });
     const unFrame = app.mic.onFrame((f) => {
       lastFrame = f;
       levelBar.style.width = `${meterPct(f)}%`;
@@ -351,6 +428,7 @@ export function micTestScreen(app: App) {
         store.updateSettings({ micTuningCents: clamped });
         app.mic.tuningCents = clamped;
         calibrating = false;
+        showKb();
         calib.textContent =
           Math.abs(clamped) >= 40
             ? `Đã chỉnh: đàn nhà lệch ${clamped} cents. Lệch khá nhiều — nên gọi thợ lên dây khi có dịp.`
@@ -388,6 +466,7 @@ export function micTestScreen(app: App) {
       autoTune = null;
       report.replaceChildren();
       checking = 0;
+      showKb();
       askStep();
     }
 
@@ -477,79 +556,93 @@ export function micTestScreen(app: App) {
       }
     };
 
+    const calibrate = async () => {
+      if (measuring || !(await startMic())) return;
+      checking = -1;
+      window.clearTimeout(stepTimer);
+      calibrating = true;
+      samples = [];
+      app.mic.tuningCents = 0;
+      showKb();
+      calib.textContent = 'Đàn phím Đô giữa (C4) 3 lần, mỗi lần cách nhau 1 giây.';
+    };
+
+    // 🔧 Dành cho người hỗ trợ: độ nhạy (app đã tự chỉnh), bù lệch dây đàn (cents), độ trễ, chấm micro, nhật ký
+    helper.append(
+      h('summary', {}, '🔧 Dành cho người hỗ trợ (kỹ thuật)'),
+      h('h3', {}, 'Độ nhạy micro (bài kiểm tra 5 nốt tự chỉnh)'),
+      sensBox,
+      h('h3', {}, 'Đàn nhà lệch dây'),
+      tuning,
+      h(
+        'div',
+        { class: 'row mic-tools' },
+        button({ icon: '🎯', label: 'Chỉnh theo đàn nhà', onTap: () => void calibrate() }),
+        button({
+          icon: '↺',
+          label: 'Bù = 0',
+          onTap: () => {
+            store.updateSettings({ micTuningCents: 0 });
+            app.mic.tuningCents = 0;
+            calibrating = false;
+            showKb();
+            calib.textContent = '';
+            showTuning();
+          },
+        }),
+      ),
+      h('h3', {}, 'Độ trễ loa → micro (chấm nhịp)'),
+      latencyText,
+      h('div', { class: 'row mic-tools' }, button({ icon: '⏱️', label: 'Đo độ trễ', onTap: () => void measureLatency() })),
+      h('h3', {}, 'Đàn tự do — bố mẹ chấm micro'),
+      freeText,
+      h(
+        'div',
+        { class: 'row mic-tools' },
+        button({ icon: '✅', label: 'Đúng', onTap: () => judge('ok') }),
+        button({ icon: '❌', label: 'Sai', onTap: () => judge('wrong') }),
+        button({ icon: '📋', label: 'Sao chép nhật ký', onTap: () => void copyLog() }),
+      ),
+    );
+
     root.append(
       h(
         'div',
-        { class: 'screen' },
+        { class: 'screen mictest' },
         h(
           'div',
           { class: 'stage scrollable' },
-          h('h1', { class: 'title' }, '🎤 Thử micro với đàn nhà'),
+          h('h1', { class: 'title' }, '🎤 Cài micro (3 bước)'),
+          wizard,
           status,
           big,
           detail,
           h('div', { class: 'mic-level wide with-gate' }, levelBar),
           meterText,
-          h('h3', {}, 'Độ nhạy micro'),
-          sensBox,
           calib,
-          tuning,
-          latencyText,
           report,
-          h('h3', {}, 'Đàn tự do — bố mẹ chấm micro'),
-          freeText,
-          h(
-            'div',
-            { class: 'row mic-tools' },
-            button({ icon: '✅', label: 'Đúng', onTap: () => judge('ok') }),
-            button({ icon: '❌', label: 'Sai', onTap: () => judge('wrong') }),
-          ),
-          // Nút phụ (ít dùng) để trong vùng cuộn — thanh dưới chỉ giữ 4 nút chính
-          h(
-            'div',
-            { class: 'row mic-tools' },
-            button({
-              icon: '↺',
-              label: 'Bù = 0',
-              onTap: () => {
-                store.updateSettings({ micTuningCents: 0 });
-                app.mic.tuningCents = 0;
-                calibrating = false;
-                calib.textContent = '';
-                showTuning();
-              },
-            }),
-            button({ icon: '⏱️', label: 'Đo độ trễ', onTap: () => void measureLatency() }),
-            button({ icon: '📋', label: 'Sao chép nhật ký', onTap: () => void copyLog() }),
-          ),
+          useBox,
           h(
             'p',
             { class: 'muted small' },
             'Mẹo: đặt iPad trên giá nhạc, mic hướng về đàn; tắt TV/quạt; bé đàn rõ từng nốt. Micro chỉ phân tích ngay trên iPad, không gửi đi đâu; màn này không ghi âm.',
           ),
+          helper,
         ),
-        h('div', { class: 'keyboard-wrap short' }, kb.el),
+        kbWrap,
         actionBar(
           backButton(() => app.show(parentScreen(app))),
-          button({ icon: '🎤', label: 'Bật micro', kind: 'primary', onTap: () => void startMic() }),
           button({
-            icon: '🩺',
-            label: 'Kiểm tra 5 nốt',
-            kind: 'good',
-            onTap: () => void runCheck(),
+            icon: '🎤',
+            label: '1. Cho phép micro',
+            kind: app.mic.state === 'on' ? 'plain' : 'primary',
+            onTap: () => void startMic().then(renderSteps),
           }),
           button({
-            icon: '🎯',
-            label: 'Chỉnh theo đàn nhà',
-            onTap: async () => {
-              if (measuring || !(await startMic())) return;
-              checking = -1;
-              window.clearTimeout(stepTimer);
-              calibrating = true;
-              samples = [];
-              app.mic.tuningCents = 0;
-              calib.textContent = 'Đàn phím Đô giữa (C4) 3 lần, mỗi lần cách nhau 1 giây.';
-            },
+            icon: '🩺',
+            label: '2. Kiểm tra 5 nốt',
+            kind: 'good',
+            onTap: () => void runCheck(),
           }),
         ),
       ),
@@ -559,6 +652,8 @@ export function micTestScreen(app: App) {
     showLatency();
     renderSens();
     showFree();
+    renderSteps();
+    showKb();
 
     return () => {
       disposed = true;

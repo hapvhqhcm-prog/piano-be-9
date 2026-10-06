@@ -2,7 +2,9 @@ import { LEFT_HAND_WEEK, MAX_WEEK, WEEKS, criterionProgress, findLesson, levelOf
 import { SONGS } from '../../music/tune';
 import { parentTip } from '../../lessons/parentTips';
 import { findTune } from '../../music/exercises';
+import * as progressStoreModule from '../../progress/ProgressStore';
 import { isEmptySession } from '../../progress/ProgressStore';
+import { completedSessionCount, parentStats, sessionCount } from '../../progress/history';
 import { CHECKLIST_ITEMS, localDateStr, type AppData, type Session, type Settings } from '../../progress/schema';
 import type { App } from '../App';
 import { button, confirmDialog, h, toast } from '../components/dom';
@@ -11,7 +13,13 @@ import { micTestScreen } from './micTest';
 import { APP_VERSION, checkForUpdate, isUpdateReady } from '../../pwa/updater';
 import { startScreen } from './start';
 import { onboardingScreen } from './onboarding';
-import { WHO_TEXT, tonightPlan } from './tonight';
+import { WHO_TEXT, noteLabelForParent, readiness, tonightPlan, tonightSegment, type HoldSettings, type TonightPractice } from './tonight';
+import { quickTipsCard } from './onboarding';
+import { practiceScreen } from './practice';
+import { songScreen } from './song';
+import { compositionToTune } from '../../practice/compose';
+import type { Tune } from '../../music/tune';
+import '../../styles/parentux.css';
 import { whenCorrectBox } from '../components/whenCorrect';
 import { cancelSpeech, hasVietnameseVoice, speak } from '../../audio/voice';
 
@@ -22,6 +30,67 @@ import { measureCount } from '../../music/tune';
 import { songEditorScreen } from './songEditor';
 import { playSong } from './library';
 import { reportScreen } from './report';
+
+/** Settings thêm (cộng dồn, không cần migration) của màn Phụ huynh. */
+type ParentUxSettings = Settings &
+  HoldSettings & {
+    /** Bố mẹ bấm "Để sau" ở thẻ Cài micro → không hiện thẻ đầu trang nữa (vẫn cài được ở Nâng cao) */
+    micSetupHidden?: boolean;
+    /** Lần cuối hỏi "Sao lưu luôn?" sau khi xem Báo cáo (ms) — hỏi tối đa mỗi tuần một lần */
+    backupAskedAt?: number;
+  };
+const DAY_MS = 86_400_000;
+
+/** "2026-10-06" → "06/10" (bố mẹ đọc ngày kiểu Việt Nam). */
+export function fmtDate(key: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(key);
+  return m ? `${m[3]}/${m[2]}` : key;
+}
+function fmtMs(ms: number): string {
+  const d = new Date(ms);
+  return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+const EAR_WORD: Record<string, string> = {
+  up: 'Đi lên',
+  down: 'Đi xuống',
+  same: 'Giữ nguyên',
+  step: 'Liền bậc',
+  skip: 'Nhảy bậc',
+  major: 'Trưởng (vui)',
+  minor: 'Thứ (buồn)',
+};
+/** Mã nốt / việc → lời thường cho bảng của bố mẹ ("F4" → "Fa (F4)", "twins-4" → "Sinh đôi"). */
+export function parentLabel(id: string): string {
+  if (EAR_WORD[id]) return EAR_WORD[id];
+  return noteLabelForParent(id).label.replace(/^Nốt /, '');
+}
+
+/** Dung lượng lưu trữ — dùng storageStatus() của ProgressStore nếu có (DATA agent), không có thì bỏ qua. */
+function storageText(store: unknown): Promise<string | null> {
+  const mod = progressStoreModule as unknown as Record<string, unknown>;
+  const s = store as Record<string, unknown>;
+  const fn = (typeof s.storageStatus === 'function' ? (s.storageStatus as () => unknown).bind(store) : null) ??
+    (typeof mod.storageStatus === 'function' ? () => (mod.storageStatus as (x: unknown) => unknown)(store) : null);
+  if (!fn) return Promise.resolve(null);
+  const kb = (b: number) => (b >= 1024 * 1024 ? `${(b / 1024 / 1024).toFixed(1).replace('.', ',')} MB` : `${Math.max(1, Math.round(b / 1024))} KB`);
+  return Promise.resolve()
+    .then(fn)
+    .then((r) => {
+      if (r == null) return null;
+      if (typeof r === 'string') return r;
+      const o = r as Record<string, unknown>;
+      if (typeof o.text === 'string') return o.text;
+      if (typeof o.message === 'string') return o.message;
+      const num = (...ks: string[]) => ks.map((k) => o[k]).find((v): v is number => typeof v === 'number');
+      const used = num('usedBytes', 'bytes', 'used', 'usage', 'size');
+      const quota = num('quotaBytes', 'quota', 'limit', 'max');
+      if (used === undefined) return null;
+      const pct = num('percent', 'pct') ?? (quota ? Math.round((used / quota) * 100) : undefined);
+      return `Bộ nhớ dữ liệu: ${kb(used)}${quota ? ` / ${kb(quota)}` : ''}${pct !== undefined ? ` (${pct}%)` : ''}`;
+    })
+    .catch(() => null);
+}
 
 const RATING_LABEL = { all: '😄 Dễ — đàn được', some: '🙂 Vừa — còn vấp chút', hard: '😅 Khó — cần tập thêm' } as const;
 
@@ -77,8 +146,11 @@ function segmented<T extends string | number>(
   );
 }
 
-/** "Việc cần làm tối nay": 3 chỗ khó (2 tuần) · 1 việc cụ thể · tiêu chí tuần bằng lời thường + tiến độ. */
-function tonightCard(d: Readonly<AppData>, now: Date): HTMLElement {
+/**
+ * "Việc cần làm tối nay" (đầu trang): 1 việc cụ thể + "▶ Làm ngay (5')" + 3 chỗ khó + tiêu chí tuần.
+ * Nghỉ ≥ 5 ngày → lời "Mừng con quay lại" (ôn nhẹ), chỗ khó cũ hơn 7 ngày bị bỏ.
+ */
+function tonightCard(d: Readonly<AppData>, now: Date, onPractice: (p: TonightPractice) => void): HTMLElement {
   const t = tonightPlan(d, now);
   const g = t.goal;
   // v5.1: mục tiêu chăm chỉ tính theo NGÀY (hai buổi cùng ngày = một ngày)
@@ -86,21 +158,29 @@ function tonightCard(d: Readonly<AppData>, now: Date): HTMLElement {
   const pct = Math.min(100, Math.round((days / 4) * 100));
   return h(
     'section',
-    { class: 'card todo-card' },
-    h('h2', {}, '📝 Việc cần làm tối nay'),
+    { class: `card todo-card${t.welcomeBack ? ' welcome' : ''}` },
+    h('h2', {}, t.welcomeBack ? `👋 Mừng con quay lại (nghỉ ${t.daysAway} ngày)` : '📝 Việc cần làm tối nay'),
     h('p', { class: 'todo-action' }, t.action),
+    t.practice
+      ? h(
+          'div',
+          { class: 'todo-go' },
+          button({ icon: '▶', label: t.welcomeBack ? "Ôn nhẹ ngay (5')" : "Làm ngay (5')", kind: 'good', onTap: () => onPractice(t.practice!) }),
+          h('span', { class: 'muted' }, 'Làm trước khi bấm “Học tiếp”.'),
+        )
+      : null,
     t.struggles.length
       ? h(
           'div',
           {},
-          h('h3', {}, 'Chỗ bé hay vấp (2 tuần gần đây)'),
+          h('h3', {}, t.welcomeBack ? 'Chỗ bé hay vấp (7 ngày gần đây)' : 'Chỗ bé hay vấp (2 tuần gần đây)'),
           h(
             'ol',
             { class: 'todo-list' },
             ...t.struggles.map((x, i) => h('li', {}, h('b', {}, String(i + 1)), h('span', {}, `${x.label} — vấp ${x.misses} lần`))),
           ),
         )
-      : h('p', { class: 'muted' }, 'Chưa thấy chỗ nào bé vấp nhiều trong 2 tuần gần đây. 👍'),
+      : h('p', { class: 'muted' }, t.welcomeBack ? 'Sau kỳ nghỉ, app bỏ qua các chỗ khó cũ — bắt đầu lại nhẹ nhàng. 👍' : 'Chưa thấy chỗ nào bé vấp nhiều trong 2 tuần gần đây. 👍'),
     h(
       'p',
       { class: 'todo-goal' },
@@ -129,6 +209,90 @@ export function parentScreen(app: App) {
     let message = '';
     /** Mục "Nâng cao" đang mở (giữ trạng thái khi vẽ lại) */
     let advOpen = false;
+    /** Mục "Chi tiết" (bảng theo nốt / lượt chơi) đang mở */
+    let detailsOpen = false;
+    const ux = () => store.settings as Readonly<ParentUxSettings>;
+    const setUx = (patch: Partial<ParentUxSettings>) => store.updateSettings(patch as Partial<Settings>);
+
+    const backup = () => void exportBackup(store).then((r) => say(BACKUP_MESSAGE[r]));
+
+    /** 📊 Báo cáo → khi quay lại: chưa sao lưu tuần này thì hỏi (tối đa mỗi tuần một lần). */
+    const openReport = () =>
+      app.show(
+        reportScreen(app, {
+          onBack: () => {
+            app.show(parentScreen(app));
+            const now = Date.now();
+            const s = ux();
+            if (now - (s.lastBackupAt ?? 0) > 7 * DAY_MS && now - (s.backupAskedAt ?? 0) > 7 * DAY_MS) {
+              setUx({ backupAskedAt: now });
+              confirmDialog({
+                title: '💾 Sao lưu luôn?',
+                text: s.lastBackupAt
+                  ? `Lần sao lưu gần nhất: ${fmtMs(s.lastBackupAt)}. Sao lưu mỗi tuần để không mất tiến độ của bé nếu iPad bị xóa dữ liệu.`
+                  : 'Chưa sao lưu lần nào. Tiến độ của bé chỉ nằm trên iPad này — sao lưu mỗi tuần (Lưu vào Tệp) cho chắc.',
+                okIcon: '💾',
+                okLabel: 'Sao lưu ngay',
+                onOk: () => void exportBackup(store).then((r) => toast(BACKUP_MESSAGE[r], 3200)),
+              });
+            }
+          },
+        }),
+      );
+
+    /** "▶ Làm ngay (5')": luyện riêng chỗ khó rồi về màn của bé để bấm "Học tiếp". */
+    const runPractice = (p: TonightPractice) => {
+      const week = store.get().progress.currentWeek;
+      const finish = (sessionId: string, done: boolean) => {
+        app.mic.stop();
+        const cur = store.get().sessions.find((x) => x.id === sessionId);
+        if (cur && (cur.parentAssessments.length || cur.micAssessments.length || cur.songRuns.length)) store.finishSession(sessionId);
+        else store.discardSessionIfEmpty(sessionId);
+        if (done) {
+          app.show(homeScreen(app));
+          toast('✅ Xong phần ôn — giờ bấm “Học tiếp” nhé!', 3200);
+        } else app.show(parentScreen(app));
+      };
+      if (p.kind === 'notes') {
+        const seg = tonightSegment(p.noteIds);
+        if (!seg.targets.length) return toast('Chưa tìm được bài tập cho chỗ này');
+        const session = store.startSession(`w${week}-daily`);
+        app.show(
+          practiceScreen(app, seg, {
+            record: (t, result) => store.addParentAssessment(session.id, t.noteId, result),
+            recordMic: (t, info) =>
+              store.addMicAssessment(session.id, { expected: t.keys.join('+'), firstHeard: info.firstHeard, wrongCount: info.wrongCount }),
+            amendLast: (result, source) =>
+              source === 'mic' ? store.overrideLastMic(session.id, result) : store.amendLastParentAssessment(session.id, result),
+            onComplete: () => finish(session.id, true),
+            onExit: () => finish(session.id, false),
+          }),
+        );
+        return;
+      }
+      const ps = store.findParentSong(p.songId);
+      const comp = store.findComposition(p.songId);
+      const tune: Tune | undefined = findTune(p.songId) ?? (ps ? parentSongToTune(ps) : comp ? compositionToTune(comp) : undefined);
+      if (!tune) return toast('Không tìm thấy bài này');
+      // Câu khó: câu của lượt CHƯA ĐẠT gần nhất mà bé tập riêng một câu → mở thẳng "🔁 Lặp 3 lần đúng" câu đó
+      const hardPhrase =
+        store
+          .get()
+          .sessions.flatMap((s) => s.songRuns)
+          .filter((r) => r.songId === tune.id && r.phrase && !r.passed)
+          .pop()?.phrase ?? null;
+      const session = store.startSession(`w${week}-song-${tune.id}`);
+      app.show(
+        songScreen(
+          app,
+          tune,
+          hardPhrase
+            ? { mode: 'wait', hints: 'full', free: true, phrase: hardPhrase, loop: true }
+            : { mode: 'wait', hints: 'full', free: true, intro: 'Tập chậm từng nốt. Chỗ hay vấp: chọn câu đó, bấm “Lặp câu” cho tới khi đúng 3 lần liền.' },
+          { onRun: (run) => store.addSongRun(session.id, run), onDone: () => finish(session.id, true), onBack: () => finish(session.id, false) },
+        ),
+      );
+    };
 
     const render = () => {
       const top = scroller.scrollTop;
@@ -206,51 +370,95 @@ export function parentScreen(app: App) {
         const x = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
         const key = localDateStr(x);
         const pd = d.progress.practiceDays[key];
-        days.push([key, pd?.minutes ?? 0, pd?.stars ? '★'.repeat(Math.min(pd.stars, 9)) : '—']);
+        days.push([fmtDate(key), pd?.minutes ?? 0, pd?.stars ? '★'.repeat(Math.min(pd.stars, 9)) : '—']);
       }
 
-      // PARENT_ASSESSMENT — tổng hợp theo nốt
-      const pAgg = new Map<string, { c: number; r: number }>();
-      d.sessions.forEach((s) =>
-        s.parentAssessments.forEach((a) => {
-          const e = pAgg.get(a.note) ?? { c: 0, r: 0 };
-          if (a.result === 'correct') e.c++;
-          else e.r++;
-          pAgg.set(a.note, e);
-        }),
-      );
+      // Bảng tổng hợp theo nốt (PARENT / APP / MIC) + "Kỹ năng của con" — TỪ ĐẦU, kể cả các buổi đã gộp vào lịch sử
+      const { pAgg, aAgg, micAgg, skills } = parentStats(d);
 
-      // APP_ASSESSMENT — tổng hợp theo nốt + điểm từng lượt chơi
-      const aAgg = new Map<string, { c: number; t: number }>();
+      // Điểm từng lượt chơi (các buổi còn giữ)
       const games: (string | number)[][] = [];
       d.sessions.forEach((s) => {
         if (!s.appAssessments.length) return;
-        s.appAssessments.forEach((a) => {
-          const e = aAgg.get(a.expected) ?? { c: 0, t: 0 };
-          e.t++;
-          if (a.correct) e.c++;
-          aAgg.set(a.expected, e);
-        });
-        games.push([s.date, lessonName(s.lessonId, d), `${s.appAssessments.filter((a) => a.correct).length}/${s.appAssessments.length}`]);
+        games.push([fmtDate(s.date), lessonName(s.lessonId, d), `${s.appAssessments.filter((a) => a.correct).length}/${s.appAssessments.length}`]);
       });
 
       const rated = d.sessions.filter((s) => s.selfRating).slice(-10).reverse();
 
-      // MIC_ASSESSMENT — tổng hợp theo nốt
-      const micAgg = new Map<string, { t: number; first: number; over: number }>();
-      d.sessions.forEach((s) =>
-        s.micAssessments.forEach((a) => {
-          const e = micAgg.get(a.expected) ?? { t: 0, first: 0, over: 0 };
-          e.t++;
-          if (a.firstTry && a.parentOverride !== 'retry') e.first++;
-          if (a.parentOverride) e.over++;
-          micAgg.set(a.expected, e);
-        }),
+
+      const set = (patch: Partial<ParentUxSettings>) => {
+        store.updateSettings(patch as Partial<Settings>);
+        render();
+      };
+
+      // 💾 Sao lưu: dòng trạng thái dưới tiêu đề (cảnh báo khi > 14 ngày / chưa lần nào mà đã học vài buổi)
+      const lastBackup = d.settings.lastBackupAt ?? 0;
+      const backupStale = lastBackup ? Date.now() - lastBackup > 14 * DAY_MS : completedSessionCount(d) >= 3;
+      const storageSpan = h('span', {});
+      void storageText(store).then((t) => (storageSpan.textContent = t ? ` · ${t}` : ''));
+      const backupLine = h(
+        'p',
+        { class: `backup-line${backupStale ? ' warn' : ''}` },
+        lastBackup
+          ? `💾 Đã sao lưu ngày ${fmtMs(lastBackup)}${backupStale ? ' — đã hơn 2 tuần, bấm “💾 Sao lưu” để giữ tiến độ của bé' : ''}`
+          : `💾 Chưa sao lưu lần nào${backupStale ? ' — bấm “💾 Sao lưu” (Lưu vào Tệp) để không mất tiến độ' : ''}`,
+        storageSpan,
       );
 
-      const set = (patch: Partial<Settings>) => {
-        store.updateSettings(patch);
-        render();
+      /** 🎤 Cài micro (3 bước) — thẻ nổi bật khi micro đang tắt */
+      const micSetupCard = (): HTMLElement | null => {
+        if (d.settings.micEnabled || ux().micSetupHidden) return null;
+        return h(
+          'section',
+          { class: 'card mic-setup-card' },
+          h('h2', {}, '🎤 Cài micro (3 bước)'),
+          h('p', { class: 'muted' }, 'Micro giúp app tự nghe đàn và chấm từng nốt — bố mẹ đỡ phải bấm. Không bắt buộc; xử lý ngay trên iPad, không gửi đi đâu.'),
+          h(
+            'ol',
+            { class: 'mic-steps' },
+            h('li', {}, h('b', {}, '1'), 'Cho phép micro'),
+            h('li', {}, h('b', {}, '2'), 'Kiểm tra 5 nốt'),
+            h('li', {}, h('b', {}, '3'), 'Dùng micro cho các buổi học'),
+          ),
+          h(
+            'div',
+            { class: 'row' },
+            button({ icon: '🎤', label: 'Bắt đầu cài micro', kind: 'primary', onTap: () => app.show(micTestScreen(app)) }),
+            button({ label: 'Để sau', onTap: () => set({ micSetupHidden: true }) }),
+          ),
+        );
+      };
+
+      /** 🟢🟡🔴 Sẵn sàng sang tuần mới? + "Ở lại tuần này thêm" + cảnh báo ≥ 14 ngày ở một tuần */
+      const readinessCard = (data: Readonly<AppData>, at: Date): HTMLElement => {
+        const r = readiness(data, at);
+        return h(
+          'section',
+          { class: `card ready-card ${r.level}` },
+          h('p', { class: 'ready-title' }, r.title),
+          h('ul', {}, ...r.reasons.map((x) => h('li', {}, x))),
+          r.stuck
+            ? h(
+                'div',
+                { class: 'banner warn' },
+                `⚠️ Bé đã ở tuần ${week} được ${r.daysOnWeek} ngày. Bình thường thôi nếu bé bận/ốm — nhưng nếu tuần nào cũng thấy khó, hãy tập chậm lại, ôn bài cũ và hỏi người hỗ trợ.`,
+              )
+            : null,
+          h(
+            'div',
+            { class: 'hold-row' },
+            h('span', {}, '⏸ Ở lại tuần này thêm:'),
+            segmented(
+              [
+                { value: 'off', label: 'Không — tự sang tuần mới' },
+                { value: 'on', label: `Có — giữ ở tuần ${week}` },
+              ],
+              r.held ? 'on' : 'off',
+              (v) => set({ holdWeek: v === 'on' ? week : null }),
+            ),
+          ),
+          r.held ? h('p', { class: 'muted' }, `App sẽ KHÔNG tự sang tuần mới khi bé đạt mục tiêu — bố mẹ chọn “Không” khi bé sẵn sàng.`) : null,
+        );
       };
 
       const sections: (HTMLElement | null)[] = [
@@ -261,17 +469,26 @@ export function parentScreen(app: App) {
           h(
             'div',
             { class: 'parent-head-actions' },
-            button({ icon: '📊', label: 'Báo cáo', onTap: () => app.show(reportScreen(app, { onBack: () => app.show(parentScreen(app)) })) }),
+            button({ icon: '📊', label: 'Báo cáo', onTap: openReport }),
+            (() => {
+              const b = button({ icon: '💾', label: 'Sao lưu', onTap: backup });
+              b.classList.add('backup-btn');
+              if (backupStale) b.classList.add('warn');
+              return b;
+            })(),
             button({ icon: '📖', label: 'Hướng dẫn', onTap: () => app.show(onboardingScreen(app, { onDone: () => app.show(parentScreen(app)) })) }),
             button({ icon: '←', label: 'Về màn của bé', kind: 'primary', onTap: () => app.show(homeScreen(app)) }),
           ),
         ),
+        backupLine,
         message ? h('div', { class: 'banner' }, message) : null,
         store.recoveredFromBackup
           ? h('div', { class: 'banner' }, '✅ App đã tự khôi phục tiến độ của bé từ bản sao lưu trong máy (do lỗi cũ khi lên tuần 9).')
           : null,
-        installCard(),
-        tonightCard(d, now),
+        store.lastSaveError ? h('div', { class: 'banner warn' }, `Lỗi lưu dữ liệu: ${store.lastSaveError}`) : null,
+        micSetupCard(),
+        tonightCard(d, now, runPractice),
+        readinessCard(d, now),
         h(
           'section',
           { class: 'card tip-card' },
@@ -279,17 +496,8 @@ export function parentScreen(app: App) {
           h('p', {}, parentTip(week)),
           whenCorrectBox(),
         ),
-        // Nhắc sao lưu: dữ liệu chỉ nằm trên iPad
-        d.sessions.length >= 3 && Date.now() - (d.settings.lastBackupAt ?? 0) > 14 * 86_400_000
-          ? h(
-              'div',
-              { class: 'banner warn' },
-              d.settings.lastBackupAt
-                ? `💾 Đã hơn 2 tuần chưa sao lưu tiến độ — mở mục "Nâng cao" ở cuối trang → "Sao lưu dữ liệu".`
-                : `💾 Chưa sao lưu lần nào — mở mục "Nâng cao" ở cuối trang → "Sao lưu dữ liệu".`,
-            )
-          : null,
-        store.lastSaveError ? h('div', { class: 'banner warn' }, `Lỗi lưu dữ liệu: ${store.lastSaveError}`) : null,
+        quickTipsCard(),
+        installCard(),
 
         h(
           'section',
@@ -308,21 +516,13 @@ export function parentScreen(app: App) {
               plan.kidGoal ? h('span', { class: 'muted' }, ` · Bé thấy: “${plan.kidGoal}”`) : null,
             );
           })(),
-          h('p', {}, `Số buổi tuần này (từ thứ Hai ${monday}): `, h('b', {}, String(sessionsThisWeek.length)), ` · học xong: ${sessionsThisWeek.filter((s) => s.completed).length}`),
+          h('p', {}, `Số buổi tuần này (từ thứ Hai ${fmtDate(monday)}): `, h('b', {}, String(sessionsThisWeek.length)), ` · học xong: ${sessionsThisWeek.filter((s) => s.completed).length}`),
           h('h3', {}, 'Phút luyện / ngày (7 ngày)'),
           table(['Ngày', 'Phút', 'Sao'], days),
         ),
 
         (() => {
           // Kỹ năng của con (mục tiêu: ≈ hết Faber cấp 1 / đầu cấp 2)
-          const pa = d.sessions.flatMap((x) => x.parentAssessments).filter((a) => /^[A-G]/.test(a.note));
-          const mic = d.sessions.flatMap((x) => x.micAssessments);
-          const findOk = pa.filter((a) => a.result === 'correct').length + mic.filter((a) => a.firstTry).length;
-          const findAll = pa.length + mic.length;
-          const app2 = d.sessions.flatMap((x) => x.appAssessments);
-          const ear = app2.filter((a) => /^[A-G]/.test(a.expected) || ['up', 'down', 'step', 'skip', 'major', 'minor'].includes(a.expected));
-          const tempo = d.sessions.flatMap((x) => x.songRuns).filter((r) => r.mode === 'tempo' && !r.phrase);
-          const sight = d.sessions.flatMap((x) => x.songRuns).filter((r) => r.songId.startsWith('sight'));
           const pct = (a: number, b: number) => (b ? `${Math.round((a / b) * 100)}%` : '—');
           const mastered = masteredSongs(d);
           return h(
@@ -333,10 +533,10 @@ export function parentScreen(app: App) {
             table(
               ['Kỹ năng', 'Kết quả', 'Số lần'],
               [
-                ['Tìm đúng nốt trên đàn (bố mẹ / micro)', pct(findOk, findAll), findAll],
-                ['Nghe & đọc nốt (trò chơi)', pct(ear.filter((a) => a.correct).length, ear.length), ear.length],
-                ['Giữ nhịp cả bài', pct(tempo.filter((r) => r.passed).length, tempo.length), tempo.length],
-                ['Đọc nhạc ngẫu nhiên', pct(sight.filter((r) => r.passed).length, sight.length), sight.length],
+                ['Tìm đúng nốt trên đàn (bố mẹ / micro)', pct(skills.find.ok, skills.find.all), skills.find.all],
+                ['Nghe & đọc nốt (trò chơi)', pct(skills.ear.ok, skills.ear.all), skills.ear.all],
+                ['Giữ nhịp cả bài', pct(skills.tempo.ok, skills.tempo.all), skills.tempo.all],
+                ['Đọc nhạc ngẫu nhiên', pct(skills.sight.ok, skills.sight.all), skills.sight.all],
               ],
             ),
             h('p', {}, `⭐ Bài đã thuộc: `, h('b', {}, `${mastered.length}/${SONGS.length}`)),
@@ -346,78 +546,89 @@ export function parentScreen(app: App) {
           );
         })(),
 
-        h(
-          'section',
-          { class: 'card' },
-          h('h2', {}, '👪 Bố mẹ chấm — bé đàn trên đàn thật'),
-          h('p', { class: 'muted' }, 'Các lần bố mẹ bấm “Đúng rồi” / “Thử lại” (khi micro tắt, app không nghe đàn).'),
-          table(
-            ['Nốt / việc', '✓ Đúng rồi', '↻ Thử lại'],
-            [...pAgg.entries()].map(([k, v]) => [k, v.c, v.r]),
-          ),
-        ),
-
-        h(
-          'section',
-          { class: 'card' },
-          h('h2', {}, '📱 Trò chơi tai nghe — app tự chấm'),
-          h('p', { class: 'muted' }, 'Bé chạm phím trên iPad nên app biết chính xác bé chọn đúng hay sai.'),
-          table(
-            ['Nốt app phát', 'Đúng', 'Tổng', '%'],
-            [...aAgg.entries()].map(([k, v]) => [k, v.c, v.t, `${Math.round((v.c / v.t) * 100)}%`]),
-          ),
-          h('h3', {}, 'Từng lượt chơi'),
-          table(['Ngày', 'Buổi', 'Điểm'], games.slice(-10).reverse()),
-        ),
-
-        h(
-          'section',
-          { class: 'card' },
-          h('h2', {}, '🎤 Micro nghe đàn thật — app tự chấm'),
+        (() => {
+          // Bảng theo nốt / từng lượt chơi — thu gọn trong "Chi tiết" (bố mẹ bận chỉ cần các thẻ ở trên)
+          const det = h(
+            'details',
+            { class: 'parent-details' },
+            h('summary', {}, '📋 Chi tiết: từng nốt, từng lượt chơi'),
           h(
-            'p',
-            { class: 'muted' },
-            '"Đúng ngay" = không đàn nhầm phím nào trước đó. "Bố mẹ sửa" = micro nghe nhầm, người lớn đã bấm Sửa.',
+            'section',
+            { class: 'card' },
+            h('h2', {}, '👪 Bố mẹ chấm — bé đàn trên đàn thật'),
+            h('p', { class: 'muted' }, 'Các lần bố mẹ bấm “Đúng rồi” / “Thử lại” (khi micro tắt, app không nghe đàn).'),
+            table(
+              ['Nốt / việc', '✓ Đúng rồi', '↻ Thử lại'],
+              [...pAgg.entries()].map(([k, v]) => [parentLabel(k), v.c, v.r]),
+            ),
           ),
-          table(
-            ['Nốt', 'Hoàn thành', 'Đúng ngay', '%', 'Bố mẹ sửa'],
-            [...micAgg.entries()].map(([k, v]) => [k, v.t, v.first, `${Math.round((v.first / v.t) * 100)}%`, v.over]),
-          ),
-        ),
 
-        h(
-          'section',
-          { class: 'card' },
-          h('h2', {}, 'Bài hát & nhịp — các lượt chơi'),
-          h('p', { class: 'muted' }, '"Ai chấm": 🎤 micro tự chấm từng nốt, 👪 bố mẹ đánh giá cả lượt.'),
-          table(
-            ['Ngày', 'Bài', 'Chế độ', 'Gợi ý', 'Nhịp', 'Kết quả', 'Ai chấm'],
-            d.sessions
-              .flatMap((s) => s.songRuns.map((r) => ({ s, r })))
-              .slice(-12)
-              .reverse()
-              .map(({ s, r }) => [
-                s.date,
-                (findTune(r.songId)?.titleVi ?? customTuneTitle(r.songId, d) ?? r.songId) + (r.phrase ? ` (ô ${r.phrase[0] + 1}–${r.phrase[1]})` : ''),
-                MODE_LABEL[r.mode] + (r.level ? ` M${r.level}` : ''),
-                HINT_LABEL[r.hints],
-                r.mode === 'tempo' ? r.bpm : '—',
-                `${r.passed ? '✅' : '⏳'} ${r.source === 'mic' ? `${r.hits}/${r.total}` : ''}`,
-                r.source === 'mic' ? '🎤' : '👪',
-              ]),
+          h(
+            'section',
+            { class: 'card' },
+            h('h2', {}, '📱 Trò chơi tai nghe — app tự chấm'),
+            h('p', { class: 'muted' }, 'Bé chạm phím trên iPad nên app biết chính xác bé chọn đúng hay sai.'),
+            table(
+              ['Nốt app phát', 'Đúng', 'Tổng', '%'],
+              [...aAgg.entries()].map(([k, v]) => [parentLabel(k), v.c, v.t, `${Math.round((v.c / v.t) * 100)}%`]),
+            ),
+            h('h3', {}, 'Từng lượt chơi'),
+            table(['Ngày', 'Buổi', 'Điểm'], games.slice(-10).reverse()),
           ),
-        ),
 
-        h(
-          'section',
-          { class: 'card' },
-          h('h2', {}, 'Bé kể: hôm nay thấy thế nào?'),
-          h('p', { class: 'muted' }, 'Câu nào bé cũng được 3 sao (thưởng vì học xong buổi) — để bé dám nói thật. “Khó” nhiều buổi liền = nên tập chậm lại.'),
-          table(
-            ['Ngày', 'Bài', 'Bé chọn'],
-            rated.map((s) => [s.date, lessonName(s.lessonId, d), RATING_LABEL[s.selfRating!]]),
+          h(
+            'section',
+            { class: 'card' },
+            h('h2', {}, '🎤 Micro nghe đàn thật — app tự chấm'),
+            h(
+              'p',
+              { class: 'muted' },
+              '"Đúng ngay" = không đàn nhầm phím nào trước đó. "Bố mẹ sửa" = micro nghe nhầm, người lớn đã bấm Sửa.',
+            ),
+            table(
+              ['Nốt', 'Hoàn thành', 'Đúng ngay', '%', 'Bố mẹ sửa'],
+              [...micAgg.entries()].map(([k, v]) => [parentLabel(k), v.t, v.first, `${Math.round((v.first / v.t) * 100)}%`, v.over]),
+            ),
           ),
-        ),
+
+          h(
+            'section',
+            { class: 'card' },
+            h('h2', {}, 'Bài hát & nhịp — các lượt chơi'),
+            h('p', { class: 'muted' }, '"Ai chấm": 🎤 micro tự chấm từng nốt, 👪 bố mẹ đánh giá cả lượt.'),
+            table(
+              ['Ngày', 'Bài', 'Chế độ', 'Gợi ý', 'Nhịp', 'Kết quả', 'Ai chấm'],
+              d.sessions
+                .flatMap((s) => s.songRuns.map((r) => ({ s, r })))
+                .slice(-12)
+                .reverse()
+                .map(({ s, r }) => [
+                  fmtDate(s.date),
+                  (findTune(r.songId)?.titleVi ?? customTuneTitle(r.songId, d) ?? r.songId) + (r.phrase ? ` (ô ${r.phrase[0] + 1}–${r.phrase[1]})` : ''),
+                  MODE_LABEL[r.mode] + (r.level ? ` M${r.level}` : ''),
+                  HINT_LABEL[r.hints],
+                  r.mode === 'tempo' ? r.bpm : '—',
+                  `${r.passed ? '✅' : '⏳'} ${r.source === 'mic' ? `${r.hits}/${r.total}` : ''}`,
+                  r.source === 'mic' ? '🎤' : '👪',
+                ]),
+            ),
+          ),
+
+          h(
+            'section',
+            { class: 'card' },
+            h('h2', {}, 'Bé kể: hôm nay thấy thế nào?'),
+            h('p', { class: 'muted' }, 'Câu nào bé cũng được 3 sao (thưởng vì học xong buổi) — để bé dám nói thật. “Khó” nhiều buổi liền = nên tập chậm lại.'),
+            table(
+              ['Ngày', 'Bài', 'Bé chọn'],
+              rated.map((s) => [fmtDate(s.date), lessonName(s.lessonId, d), RATING_LABEL[s.selfRating!]]),
+            ),
+          ),
+          );
+          det.open = detailsOpen;
+          det.addEventListener('toggle', () => (detailsOpen = det.open));
+          return det;
+        })(),
       ];
 
       if (latest) {
@@ -426,7 +637,7 @@ export function parentScreen(app: App) {
             'section',
             { class: 'card' },
             h('h2', {}, 'Checklist quan sát — buổi gần nhất'),
-            h('p', { class: 'muted' }, `${latest.date} · ${lessonName(latest.lessonId, d)}`),
+            h('p', { class: 'muted' }, `${fmtDate(latest.date)} · ${lessonName(latest.lessonId, d)}`),
             h(
               'div',
               { class: 'checklist' },
@@ -468,7 +679,7 @@ export function parentScreen(app: App) {
                           render();
                         },
                       },
-                      `${i + 1}. ${a.note}: ${a.result === 'correct' ? '✓ Đúng' : '↻ Thử lại'}`,
+                      `${i + 1}. ${parentLabel(a.note)}: ${a.result === 'correct' ? '✓ Đúng' : '↻ Thử lại'}`,
                     ),
                   ),
                 )
@@ -560,9 +771,23 @@ export function parentScreen(app: App) {
               if (w.week === week) o.setAttribute('selected', '');
               sel.append(o);
             }
+            // Đổi tuần phải xác nhận (chạm nhầm ô chọn = bé nhảy cóc / học lại cả tuần)
             sel.addEventListener('change', () => {
-              store.setCurrentWeek(Number(sel.value));
-              render();
+              const to = Number(sel.value);
+              sel.value = String(week);
+              if (to === week) return;
+              confirmDialog({
+                title: `Chuyển bé sang tuần ${to}?`,
+                text:
+                  to > week
+                    ? `Bé sẽ bỏ qua bài của tuần ${week}${to > week + 1 ? `–${to - 1}` : ''}. Chỉ nên làm khi bé đã biết những bài đó. Kết quả cũ vẫn giữ.`
+                    : `Bé quay lại học tuần ${to}. Kết quả cũ vẫn giữ; app tự sang tuần mới khi bé đạt mục tiêu.`,
+                okLabel: `Sang tuần ${to}`,
+                onOk: () => {
+                  store.setCurrentWeek(to);
+                  say(`Đã chuyển sang tuần ${to}.`);
+                },
+              });
             });
             return sel;
           })(),
@@ -570,7 +795,7 @@ export function parentScreen(app: App) {
           h(
             'p',
             { class: 'muted' },
-            'App nghe đàn cơ và tự chấm từng nốt. Xử lý ngay trên iPad, không gửi đi đâu; chỉ ghi TẠM khi bé đàn để "🎧 Nghe lại" (rời màn là xóa). Nút "Đúng rồi" của bố mẹ vẫn dùng được. Hãy "Thử micro" trước khi bật.',
+            'App nghe đàn cơ và tự chấm từng nốt. Xử lý ngay trên iPad, không gửi đi đâu; chỉ ghi TẠM khi bé đàn để "🎧 Nghe lại" (rời màn là xóa). Nút "Đúng rồi" của bố mẹ vẫn dùng được. Bật bằng "Cài micro (3 bước)".',
           ),
           h(
             'p',
@@ -586,9 +811,9 @@ export function parentScreen(app: App) {
                 { value: 'on', label: 'Bật' },
               ],
               s.micEnabled ? 'on' : 'off',
-              (v) => set({ micEnabled: v === 'on' }),
+              (v) => (v === 'on' && !s.micEnabled ? app.show(micTestScreen(app)) : set({ micEnabled: v === 'on' })),
             ),
-            button({ icon: '🎤', label: 'Thử micro', onTap: () => app.show(micTestScreen(app)) }),
+            button({ icon: '🎤', label: s.micEnabled ? 'Thử / chỉnh micro' : 'Cài micro (3 bước)', onTap: () => app.show(micTestScreen(app)) }),
           ),
           s.micEnabled
             ? h(
@@ -656,9 +881,20 @@ export function parentScreen(app: App) {
       );
 
       // Dữ liệu — nhập JSON phải xác nhận trước (thay TOÀN BỘ dữ liệu hiện tại; bản cũ vẫn được lưu dự phòng)
-      const doImport = (text: string) => {
-        const r = store.importJSON(text);
-        say(r.ok ? '✅ Đã nhập dữ liệu.' : `❌ Không nhập được: ${r.error}`);
+      const doImport = (text: string, force = false) => {
+        const r = store.importJSON(text, { force });
+        if (r.ok) return say('✅ Đã nhập dữ liệu.');
+        // Không cất được bản dự phòng (bộ nhớ đầy) → hỏi lại trước khi ghi đè mà KHÔNG có bản dự phòng
+        if ('archiveFailed' in r && r.archiveFailed) {
+          return confirmDialog({
+            title: 'Không cất được bản dự phòng',
+            text: 'Bộ nhớ iPad gần đầy nên không cất được bản dự phòng dữ liệu hiện tại. Nên bấm "💾 Sao lưu" trước. Vẫn nhập và thay dữ liệu?',
+            okIcon: '⬆',
+            okLabel: 'Vẫn nhập',
+            onOk: () => doImport(text, true),
+          });
+        }
+        say(`❌ Không nhập được: ${r.error}`);
       };
       const confirmImport = (text: string) => {
         let incoming: { progress?: { currentWeek?: unknown }; sessions?: unknown } | null = null;
@@ -671,7 +907,7 @@ export function parentScreen(app: App) {
         const ns = Array.isArray(incoming?.sessions) ? incoming.sessions.length : '?';
         confirmDialog({
           title: 'Thay dữ liệu?',
-          text: `Thay dữ liệu hiện tại (tuần ${d.progress.currentWeek}, ${d.sessions.length} buổi) bằng dữ liệu nhập (tuần ${wk}, ${ns} buổi)?`,
+          text: `Thay dữ liệu hiện tại (tuần ${d.progress.currentWeek}, ${sessionCount(d)} buổi) bằng dữ liệu nhập (tuần ${wk}, ${ns} buổi)?`,
           okIcon: '⬆',
           okLabel: 'Thay dữ liệu',
           danger: true,
@@ -752,7 +988,20 @@ export function parentScreen(app: App) {
                     kind: 'danger',
                     onTap: () => {
                       if (confirmIn.value.trim().toUpperCase() !== 'XOA') return say('Chưa gõ đúng chữ XOA.');
-                      store.resetAll();
+                      const r = store.resetAll();
+                      if (!r.ok && 'archiveFailed' in r && r.archiveFailed) {
+                        // Bộ nhớ đầy: không cất được bản dự phòng → hỏi lần nữa trước khi xóa hẳn
+                        return confirmDialog({
+                          title: 'Không cất được bản dự phòng',
+                          text: 'Bộ nhớ iPad gần đầy nên KHÔNG cất được bản dự phòng. Xóa rồi sẽ không lấy lại được. Vẫn xóa hẳn?',
+                          okIcon: '🗑',
+                          okLabel: 'Vẫn xóa',
+                          onOk: () => {
+                            store.resetAll({ force: true });
+                            app.show(startScreen(app));
+                          },
+                        });
+                      }
                       app.show(startScreen(app));
                     },
                   }),

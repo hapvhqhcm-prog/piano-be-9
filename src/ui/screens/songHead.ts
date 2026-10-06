@@ -67,17 +67,20 @@ export class SongHead {
         opts.review ? h('span', { class: 'hand-tag review-tag' }, '🔁 ôn bài cũ') : null,
       ),
     );
-    if (twoHand && !opts.stage) {
+    // Playtest 2026-10: trong BUỔI HỌC, tay tập & câu do bài học chọn sẵn (opts.hand / opts.phrase) → chip nằm trong ⚙️
+    // cho gọn màn của bé; chỉ ở Thư viện (free) chip mới nằm ngay trên hàng chính.
+    const inRow = !!opts.free;
+    const handChips = () => [
+      chip('🫱 Tay phải', c.handSel === 'RH', { handSel: 'RH' }),
+      chip('🫲 Tay trái', c.handSel === 'LH', { handSel: 'LH' }),
+      chip('🙌 Hai tay', c.handSel === 'BOTH', { handSel: 'BOTH' }),
+    ];
+    if (twoHand && !opts.stage && inRow) {
       // v5: tập TÁCH TAY trước rồi mới ghép hai tay (lượt tách tay không tính tiêu chí tuần / "đã thuộc")
-      row.append(
-        h(
-          'div',
-          { class: 'seg-group hand-sel', role: 'group', 'aria-label': 'Tay tập' },
-          chip('🫱 Tay phải', c.handSel === 'RH', { handSel: 'RH' }),
-          chip('🫲 Tay trái', c.handSel === 'LH', { handSel: 'LH' }),
-          chip('🙌 Hai tay', c.handSel === 'BOTH', { handSel: 'BOTH' }),
-        ),
-      );
+      row.append(h('div', { class: 'seg-group hand-sel', role: 'group', 'aria-label': 'Tay tập' }, ...handChips()));
+    } else if (twoHand && !opts.stage && c.handSel !== 'BOTH') {
+      // Bài học chỉ định tập một tay: nhãn nhỏ (không bấm) để bé biết đang tập tay nào
+      row.append(h('span', { class: 'hand-tag hand-now' }, c.handSel === 'RH' ? '🫱 tay phải' : '🫲 tay trái'));
     }
     if (opts.free) {
       row.append(
@@ -90,21 +93,24 @@ export class SongHead {
       );
     }
     const ranges = phraseRanges(full);
-    if (ranges.length > 1 && !opts.stage && !opts.review) {
-      row.append(
-        h(
-          'div',
-          { class: 'seg-group', role: 'group', 'aria-label': 'Chọn câu' },
-          chip('Cả bài', !c.phrase, { phrase: null }),
-          ...ranges.map(([a, b], i) => chip(`Câu ${i + 1}`, !!c.phrase && c.phrase[0] === a, { phrase: [a, b] })),
-        ),
-      );
+    const phraseChips = () => [
+      chip('Cả bài', !c.phrase, { phrase: null }),
+      ...ranges.map(([a, b], i) => chip(`Câu ${i + 1}`, !!c.phrase && c.phrase[0] === a, { phrase: [a, b] })),
+    ];
+    const phraseOk = ranges.length > 1 && !opts.stage && !opts.review;
+    if (phraseOk && inRow) {
+      row.append(h('div', { class: 'seg-group', role: 'group', 'aria-label': 'Chọn câu' }, ...phraseChips()));
+    } else if (phraseOk && c.phrase) {
+      const i = ranges.findIndex(([a]) => a === c.phrase![0]);
+      if (i >= 0) row.append(h('span', { class: 'hand-tag hand-now' }, `Câu ${i + 1}`));
     }
 
     // Tuỳ chọn phụ (ít dùng) gom vào bảng bật/tắt
     const sections: HTMLElement[] = [];
     const section = (label: string, ...chips: HTMLElement[]) =>
       sections.push(h('div', { class: 'opts-sec' }, h('div', { class: 'opts-label' }, label), h('div', { class: 'seg-group' }, ...chips)));
+    if (twoHand && !opts.stage && !inRow) section('✋ Tay tập', ...handChips());
+    if (phraseOk && !inRow) section('🧩 Câu', ...phraseChips());
     if (opts.free) {
       section(
         '💡 Gợi ý',

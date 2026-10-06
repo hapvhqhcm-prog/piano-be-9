@@ -12,7 +12,7 @@ import type { Activity, Lesson, WeekPlan } from './types';
  * v5: khởi động kỹ thuật (v5.1: luồn ngón cái từ tuần 17 — 3 tuần trước gam tuần 20); đọc khóa Fa theo nốt mốc (tuần 11),
  * đọc theo quãng tới quãng 5; sáng tác 4 ô nhịp (tuần 13, 17). Tiêu chí bài hát: đạt ở 2 NGÀY khác nhau (lessonEngine.weekPassed).
  * v5.1: khởi động kỹ thuật ~30 giây MỖI buổi (WeekPlan.drills, ngay sau tư thế) thay cho hoạt động 1 phút ở bài đầu tuần;
- * bài hai tay cùng lúc đầu tuần 12, 13 TÁCH TAY sẵn (chờ tay phải → chờ tay trái → hai tay).
+ * bài hai tay cùng lúc đầu tuần 12, 13 TÁCH TAY sẵn trên CÂU KHÓ (chờ tay phải → chờ tay trái → hai tay cả bài).
  */
 
 const song = (songId: string, mode: 'wait' | 'tempo', level: 2 | 3 = 2, hints: 'full' | 'names' | 'staff' = 'full', intro?: string): Activity => ({
@@ -33,13 +33,15 @@ const pair = (id: string, week: number, title: string, emoji: string, songId: st
 });
 
 /**
- * v5.1 — TÁCH TAY có sẵn (bài hai tay cùng lúc đầu tuần): chờ TAY PHẢI → chờ TAY TRÁI → HAI TAY chờ → HAI TAY theo nhịp.
- * Lượt một tay KHÔNG tính cho tiêu chí tuần (lessonEngine.passedWhole bỏ lượt có `hand`).
+ * v5.1 — TÁCH TAY có sẵn (bài hai tay cùng lúc đầu tuần). OWNER duyệt 2026-10-06 sau buổi bé chơi thử (đàn cả bài 3 lần
+ * liền thấy nhàm): tách tay chỉ trên MỘT CÂU KHÓ (`phrase` — câu nhiều nốt / nhiều bước nhảy nhất, tests/pacing.test.ts)
+ * → chờ TAY PHẢI câu đó → chờ TAY TRÁI câu đó → HAI TAY cả bài (chờ) → HAI TAY theo nhịp.
+ * Lượt một tay / một câu KHÔNG tính cho tiêu chí tuần (lessonEngine.passedWhole bỏ lượt có `hand` hoặc `phrase`).
  */
-const handsApart = (songId: string, rhIntro: string, lhIntro: string): Activity[] => [
-  { kind: 'song', songId, mode: 'wait', level: 2, hints: 'full', hand: 'RH', intro: rhIntro },
-  { kind: 'song', songId, mode: 'wait', level: 2, hints: 'full', hand: 'LH', intro: lhIntro },
-  song(songId, 'wait', 2, 'full', 'Ghép HAI TAY — chậm thôi, đúng trước nhanh sau!'),
+const handsApart = (songId: string, phrase: [number, number], phraseNo: number, rhIntro: string, lhIntro: string): Activity[] => [
+  { kind: 'song', songId, mode: 'wait', level: 2, hints: 'full', hand: 'RH', phrase, intro: `Câu ${phraseNo} — câu khó nhất. ${rhIntro}` },
+  { kind: 'song', songId, mode: 'wait', level: 2, hints: 'full', hand: 'LH', phrase, intro: `Câu ${phraseNo}. ${lhIntro}` },
+  song(songId, 'wait', 2, 'full', 'Ghép HAI TAY cả bài — chậm thôi, đúng trước nhanh sau!'),
   song(songId, 'tempo'),
 ];
 
@@ -50,7 +52,7 @@ export const WEEK11: WeekPlan = {
   title: 'Đô giữa tay trái · hai tay luân phiên',
   story: 'Qua Cầu Hai Tay, hai bàn tay gặp nhau ở Đô giữa: ngón cái tay phải và ngón cái tay trái là hàng xóm!',
   leftHand: true,
-  warmup: { variant: 'read', pool: ['F3', 'G3', 'A3', 'B3', 'C4'], rounds: 8, clef: 'bass' },
+  warmup: { variant: 'read', pool: ['F3', 'G3', 'A3', 'B3', 'C4'], rounds: 6, clef: 'bass' },
   teach: { emoji: '👨‍🏫', text: 'Con chỉ cho bố/mẹ khóa Fa: nốt Fa ở giữa hai dấu chấm, Đô giữa ở trên cùng.' },
   drills: ['hand-shape', 'five-finger'],
   criterion: { text: 'Chơi trọn "Hỏi – Đáp" hai tay luân phiên — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
@@ -86,7 +88,7 @@ export const WEEK11: WeekPlan = {
           kind: 'quiz',
           title: 'Nốt mốc khóa Fa 🧭',
           intro: 'Khóa Fa có hai dấu chấm ôm lấy vạch 4: đó là nốt FA. Đô giữa "đội mũ" vạch phụ ở TRÊN khuông; Đô trầm ở khe 2.',
-          quiz: { variant: 'landmark', pool: ['C4', 'F3', 'C3'], rounds: 8, clef: 'bass' },
+          quiz: { variant: 'landmark', pool: ['C4', 'F3', 'C3'], rounds: 6, clef: 'bass' },
         },
       ],
     },
@@ -125,7 +127,7 @@ export const WEEK12: WeekPlan = {
   title: 'Hai tay cùng lúc',
   story: 'Trong Thung lũng Song Ca, hai tay hát CÙNG LÚC: tay trái giữ một nốt dài làm nền, tay phải hát giai điệu.',
   leftHand: true,
-  warmup: { variant: 'identify', pool: ['C3', 'D3', 'E3', 'F3', 'G3'], rounds: 8, reference: 'C3' },
+  warmup: { variant: 'identify', pool: ['C3', 'D3', 'E3', 'F3', 'G3'], rounds: 6, reference: 'C3' },
   teach: { emoji: '👨‍🏫', text: 'Con chỉ bố/mẹ: tay trái bấm Đô và GIỮ, tay phải đàn Mi Rê Đô. Rồi đàn Đô Rê Mi NGẮT (nảy như bóng) và LIỀN (nối như dòng nước).' },
   drills: ['finger-tap', 'five-finger'],
   criterion: { text: 'Chơi trọn "Bài ca niềm vui — hai tay" theo nhịp — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
@@ -137,7 +139,8 @@ export const WEEK12: WeekPlan = {
       title: 'Bánh nóng — hai tay',
       emoji: '🥐',
       activities: [
-        ...handsApart('hot_cross_buns_both', 'Tay phải trước: bài "Bánh nóng" quen thuộc.', 'Giờ tay trái: bấm Đô và GIỮ thật lâu — tay phải nghỉ.'),
+        // Câu 2 (ô 3–4): 11 nốt tay phải chạy nhanh trong khi tay trái đổi nốt
+        ...handsApart('hot_cross_buns_both', [2, 4], 2, 'Tay phải trước: "Bánh nóng" quen thuộc.', 'Giờ tay trái: bấm rồi GIỮ thật lâu — tay phải nghỉ.'),
       ],
     },
     {
@@ -181,7 +184,7 @@ export const WEEK13: WeekPlan = {
   title: 'Củng cố hai tay',
   story: 'Trong Vườn Tháp Chuông, chuông lớn (tay trái) ngân dài, chuông nhỏ (tay phải) hát giai điệu. Hai tay cùng làm nên bản nhạc!',
   leftHand: true,
-  warmup: { variant: 'identify', pool: ['C3', 'D3', 'E3', 'F3', 'G3'], rounds: 8, reference: 'C3' },
+  warmup: { variant: 'identify', pool: ['C3', 'D3', 'E3', 'F3', 'G3'], rounds: 6, reference: 'C3' },
   teach: { emoji: '👨‍🏫', text: 'Con chỉ bố/mẹ: tay trái giữ nốt nào, giữ bao lâu? Rồi đàn "Tháp chuông" một lần TO, một lần NHỎ.' },
   drills: ['wrist-circle', 'five-finger'],
   criterion: { text: 'Chơi trọn "Tháp chuông" hai tay theo nhịp — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
@@ -193,9 +196,12 @@ export const WEEK13: WeekPlan = {
       title: 'Tháp chuông',
       emoji: '🔔',
       activities: [
+        // Câu 2 (ô 5–8): nửa sau đàn NHỎ (p) — giữ chuông lớn trong khi chuông nhỏ đi nhẹ là chỗ khó nhất
         ...handsApart(
           'bell_tower',
-          'Chuông nhỏ (tay phải) hát trước. Nửa sau đàn NHỎ (p) như chuông ở xa.',
+          [4, 8],
+          2,
+          'Chuông nhỏ (tay phải) hát trước — câu này đàn NHỎ (p) như chuông ở xa.',
           'Tay trái là chuông lớn: bấm một nốt rồi GIỮ cả ô nhịp.',
         ),
       ],
@@ -222,7 +228,7 @@ export const WEEK13: WeekPlan = {
           kind: 'quiz',
           title: 'Bước, nhảy hay nhảy xa? 🐸',
           intro: 'Khuông hiện HAI nốt. Đếm số vạch + khe từ nốt này tới nốt kia: bước (quãng 2), nhảy (quãng 3), nhảy xa (quãng 4). Lên hay xuống?',
-          quiz: { variant: 'interval', pool: ['C4', 'D4', 'E4', 'F4', 'G4'], rounds: 8, maxInterval: 4 },
+          quiz: { variant: 'interval', pool: ['C4', 'D4', 'E4', 'F4', 'G4'], rounds: 6, maxInterval: 4 },
         },
         {
           kind: 'improv',
@@ -243,7 +249,7 @@ export const WEEK14: WeekPlan = {
   islandEmoji: '⛰️',
   title: 'Thế Sol',
   story: 'Leo lên Núi Sol: cả bàn tay dời sang phải, ngón cái đứng ở Sol. Có thêm bạn mới: Si, Đô cao, Rê cao!',
-  warmup: { variant: 'identify', pool: ['G4', 'A4', 'B4', 'C5', 'D5'], rounds: 8, reference: 'G4' },
+  warmup: { variant: 'identify', pool: ['G4', 'A4', 'B4', 'C5', 'D5'], rounds: 6, reference: 'G4' },
   teach: { emoji: '👨‍🏫', text: 'Con dạy bố/mẹ dời tay từ thế Đô sang thế Sol: ngón cái nhảy từ Đô lên Sol.' },
   drills: ['five-finger', 'hand-shape'],
   criterion: { text: 'Chơi trọn "Bài ca niềm vui — thế Sol" theo nhịp — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
@@ -314,7 +320,7 @@ export const WEEK15: WeekPlan = {
   story: 'Ở Vũ hội Valse mọi người nhảy "MỘT-hai-ba, MỘT-hai-ba". Phách 1 mạnh, phách 2–3 nhẹ.',
   leftHand: true,
   // v5: đọc theo QUÃNG trên khuông (tới quãng 4) ở thế Sol
-  warmup: { variant: 'interval', pool: ['G4', 'A4', 'B4', 'C5', 'D5'], rounds: 8, maxInterval: 4 },
+  warmup: { variant: 'interval', pool: ['G4', 'A4', 'B4', 'C5', 'D5'], rounds: 6, maxInterval: 4 },
   teach: { emoji: '👨‍🏫', text: 'Con vỗ tay cho bố/mẹ nhịp 3: MẠNH-nhẹ-nhẹ, MẠNH-nhẹ-nhẹ.' },
   drills: ['arm-drop', 'wrist-circle'],
   criterion: { text: 'Chơi trọn "Điệu valse con mèo" theo nhịp — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
@@ -353,7 +359,7 @@ export const WEEK16: WeekPlan = {
   islandEmoji: '🦇',
   title: 'Phím đen: thăng ♯ & giáng ♭',
   story: 'Trong Hang Phím Đen: dấu THĂNG ♯ đẩy nốt lên phím đen bên PHẢI, dấu GIÁNG ♭ kéo nốt xuống phím đen bên TRÁI.',
-  warmup: { variant: 'identify', pool: ['D4', 'E4', 'F#4', 'G4', 'A4'], rounds: 8, reference: 'D4' },
+  warmup: { variant: 'identify', pool: ['D4', 'E4', 'F#4', 'G4', 'A4'], rounds: 6, reference: 'D4' },
   teach: { emoji: '👨‍🏫', text: 'Con chỉ cho bố/mẹ: Fa thăng ở đâu? Mi giáng ở đâu?' },
   drills: ['five-finger', 'hand-shape'],
   criterion: { text: 'Chơi trọn "Bài ca niềm vui — thế Rê" theo nhịp — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
@@ -410,7 +416,7 @@ export const WEEK17: WeekPlan = {
   // v5.1 (chuyên gia): móc đơn "Chạy-chạy" đã học từ tuần 4 — tuần này chỉ MỚI nốt đen chấm dôi
   title: 'Nốt đen chấm dôi',
   story: 'Con lạc đà đi "Đi-chấm chạy": nốt có CHẤM dài thêm một nửa, nốt sau đó ngắn lại cho vừa.',
-  warmup: { variant: 'read', pool: ['C4', 'D4', 'E4', 'F4', 'G4', 'A4'], rounds: 8 },
+  warmup: { variant: 'read', pool: ['C4', 'D4', 'E4', 'F4', 'G4', 'A4'], rounds: 6 },
   teach: { emoji: '👨‍🏫', text: 'Con đọc to cho bố/mẹ nhịp "Đi-chấm chạy Đi Đi" (nốt chấm dôi).' },
   drills: ['thumb-under', 'finger-tap'],
   criterion: { text: 'Chơi "Bài ca niềm vui" đúng nhịp chấm dôi, 60 nhịp/phút — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
@@ -475,7 +481,7 @@ export const WEEK18: WeekPlan = {
   islandEmoji: '🏞️',
   title: 'Móc kép & Tập-tễnh',
   story: 'Ở Suối Móc Kép, nước chảy róc rách: bốn giọt nước rơi trong MỘT phách — "Chạy-chạy-chạy-chạy"! Thỏ con chạy thật nhanh, còn bạn cà nhắc đi "Tập-tễnh".',
-  warmup: { variant: 'interval', pool: ['C4', 'D4', 'E4', 'F4', 'G4', 'A4'], rounds: 8, maxInterval: 5 },
+  warmup: { variant: 'interval', pool: ['C4', 'D4', 'E4', 'F4', 'G4', 'A4'], rounds: 6, maxInterval: 5 },
   teach: { emoji: '👨‍🏫', text: 'Con đọc to cho bố/mẹ: "Chạy-chạy-chạy-chạy, Đi" rồi "Tập-tễnh, Đi" — vỗ tay theo.' },
   drills: ['thumb-under', 'five-finger'],
   criterion: { text: 'Chơi trọn "Lý cây đa" theo nhịp — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
@@ -551,7 +557,7 @@ export const WEEK19: WeekPlan = {
   islandEmoji: '🛺',
   title: 'Nghịch phách & dây nối',
   story: 'Xích lô đi dạo phố "Chạy-Đi-chạy": tiếng chuông kêu LỆCH phách, vui tai ghê! Còn dây nối thì giống sợi dây buộc hai nốt thành một.',
-  warmup: { variant: 'interval', pool: ['C4', 'D4', 'E4', 'F4', 'G4', 'A4'], rounds: 8, maxInterval: 5 },
+  warmup: { variant: 'interval', pool: ['C4', 'D4', 'E4', 'F4', 'G4', 'A4'], rounds: 6, maxInterval: 5 },
   teach: { emoji: '👨‍🏫', text: 'Con vỗ cho bố/mẹ "Chạy-Đi-chạy, Đi-i" rồi chỉ một dây nối: vỗ MẤY lần?' },
   drills: ['finger-tap', 'thumb-under'],
   criterion: { text: 'Chơi trọn "Bắc kim thang" theo nhịp — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
@@ -613,7 +619,7 @@ export const WEEK20: WeekPlan = {
   title: 'Gam Đô trưởng — luồn ngón',
   story: 'Ở Thác Gam, nước chảy 8 bậc từ Đô đến Đô. Ngón cái LUỒN dưới bàn tay để đi tiếp — như con cá lặn qua!',
   leftHand: true,
-  warmup: { variant: 'identify', pool: ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5'], rounds: 8, reference: 'C4' },
+  warmup: { variant: 'identify', pool: ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5'], rounds: 6, reference: 'C4' },
   teach: { emoji: '👨‍🏫', text: 'Con chỉ bố/mẹ cách luồn ngón cái dưới ngón 3 khi đi lên gam.' },
   drills: ['thumb-under', 'wrist-circle'],
   criterion: { text: 'Chơi gam Đô trưởng hai tay (lần lượt) theo nhịp — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
@@ -654,8 +660,8 @@ export const WEEK21: WeekPlan = {
       title: 'Tổng ôn đọc nhạc',
       emoji: '📖',
       activities: [
-        { kind: 'quiz', title: 'Đọc nốt khóa Sol 📖', intro: 'Thế Đô và thế Sol.', quiz: { variant: 'read', pool: ['C4', 'E4', 'G4', 'B4', 'D5'], rounds: 8 } },
-        { kind: 'quiz', title: 'Đọc nốt khóa Fa 📖', intro: 'Tay trái.', quiz: { variant: 'read', pool: ['C3', 'E3', 'G3', 'A3', 'C4'], rounds: 8, clef: 'bass' } },
+        { kind: 'quiz', title: 'Đọc nốt khóa Sol 📖', intro: 'Thế Đô và thế Sol.', quiz: { variant: 'read', pool: ['C4', 'E4', 'G4', 'B4', 'D5'], rounds: 6 } },
+        { kind: 'quiz', title: 'Đọc nốt khóa Fa 📖', intro: 'Tay trái.', quiz: { variant: 'read', pool: ['C3', 'E3', 'G3', 'A3', 'C4'], rounds: 6, clef: 'bass' } },
         { kind: 'sight', title: 'Đọc nhạc tổng hợp', position: 'G', hand: 'RH', count: 2, rhythm: 2, hints: 'names' },
       ],
     },

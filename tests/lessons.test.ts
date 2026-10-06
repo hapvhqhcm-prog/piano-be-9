@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LEVELS, MAX_WEEK, WEEKS, buildSessionPlan, dailyLesson, daysThisWeek, findLesson, levelOf, nextLesson, sessionsThisWeek, songMastered, streakDays, weekPassed } from '../src/lessons/lessonEngine';
+import { LEVELS, MAX_QUIZ_ROUNDS, MAX_WEEK, WEEKS, buildSessionPlan, criterionProgress, dailyLesson, daysThisWeek, findLesson, levelOf, nextLesson, sessionsThisWeek, songMastered, streakDays, weekPassed } from '../src/lessons/lessonEngine';
 import { PARENT_TIPS } from '../src/lessons/parentTips';
 import { findTune } from '../src/music/exercises';
 import { SONGS } from '../src/music/tune';
@@ -22,11 +22,32 @@ function runIn(st: ProgressStore, lessonId: string, r: Omit<SongRun, 'ts'>): voi
 }
 
 describe('lessonEngine', () => {
-  it('buổi tuần 1: Tư thế (+ khởi động tay) → Khởi động "Lên hay xuống?" → Bài mới → Màn kết (con làm thầy + tự chấm)', () => {
+  it('buổi tuần 1 (chơi thử 2026-10-06): Tư thế 1 thẻ (+ khởi động tay) → Bài mới trên đàn thật → Khởi động "Lên hay xuống?" 3 lượt → Màn kết', () => {
     const plan = buildSessionPlan(findLesson('w1-l1')!);
-    expect(plan.map((s) => s.kind)).toEqual(['posture', 'quiz', 'activity', 'activity', 'closing']);
+    expect(plan.map((s) => s.kind)).toEqual(['posture', 'activity', 'activity', 'quiz', 'closing']);
+    // buổi ĐẦU TIÊN: tư thế rút gọn 1 thẻ → màn thứ 3 (tư thế · khởi động tay · lời dẫn) đã là tìm sinh đôi trên đàn thật
+    expect(plan[0].kind === 'posture' && plan[0].short).toBe(true);
+    const first = plan[1];
+    expect(first.kind === 'activity' && first.activity.kind === 'notes' && first.activity.segment.id).toBe('w1-b1');
+    const q = plan[3];
+    expect(q.kind === 'quiz' && q.warmup && q.quiz.variant === 'updown' && q.quiz.rounds).toBe(3);
     const last = plan[plan.length - 1];
     expect(last.kind === 'closing' && last.teach?.text).toBe(WEEKS[0].teach.text);
+  });
+
+  it('tư thế: buổi đầu 1 thẻ, buổi 2–3 đủ 3 thẻ, từ buổi 4 lại 1 thẻ', () => {
+    const st = store();
+    const short = () => {
+      const p = buildSessionPlan(findLesson('w1-l2')!, st.get())[0];
+      return p.kind === 'posture' && p.short;
+    };
+    expect(short()).toBe(true);
+    st.finishSession(st.startSession('w1-l1').id);
+    expect(short()).toBe(false);
+    st.finishSession(st.startSession('w1-l1').id);
+    expect(short()).toBe(false);
+    st.finishSession(st.startSession('w1-l1').id);
+    expect(short()).toBe(true);
   });
 
   it('từ tuần 2 có "Ôn nhanh" (nốt cũ); "Chơi lại" chỉ còn bài + tổng kết', () => {
@@ -135,19 +156,20 @@ describe('lessonEngine', () => {
     expect(weekPassed(2, st.get())).toBe(true);
   });
 
-  it('tuần 3 qua khi tai nghe đúng ≥ 8/10 (APP) — v5.1: ở 2 ngày khác nhau', () => {
+  it('tuần 3 qua khi tai nghe đúng ≥ 5/6 trong một buổi (APP; chơi thử 2026-10-06 — trước 8/10) — ở 2 ngày khác nhau', () => {
     const { st, day } = clock();
     const s = st.startSession('w3-l1');
-    for (let i = 0; i < 7; i++) st.addAppAssessment(s.id, 'C4', 'C4');
-    for (let i = 0; i < 3; i++) st.addAppAssessment(s.id, 'G4', 'F4');
-    expect(weekPassed(3, st.get())).toBe(false);
+    // 4/6: chưa đạt
+    for (const ok of [true, false, true, true, false, true]) st.addAppAssessment(s.id, 'C4', ok ? 'C4' : 'D4');
+    expect(criterionProgress(3, st.get())).toEqual({ days: 0, needDays: 2 });
     const s2 = st.startSession('w3-l2');
-    for (let i = 0; i < 8; i++) st.addAppAssessment(s2.id, 'E4', 'E4');
-    for (let i = 0; i < 2; i++) st.addAppAssessment(s2.id, 'E4', 'D4');
+    // 5/6: đạt (một ngày)
+    for (const ok of [true, true, false, true, true, true]) st.addAppAssessment(s2.id, 'E4', ok ? 'E4' : 'D4');
     expect(weekPassed(3, st.get())).toBe(false); // mới 1 ngày
+    expect(criterionProgress(3, st.get())).toEqual({ days: 1, needDays: 2 });
     day(1);
     const s3 = st.startSession('w3-l3');
-    for (let i = 0; i < 10; i++) st.addAppAssessment(s3.id, 'D4', 'D4');
+    for (let i = 0; i < 6; i++) st.addAppAssessment(s3.id, 'D4', 'D4');
     expect(weekPassed(3, st.get())).toBe(true);
   });
 
@@ -233,17 +255,17 @@ describe('tiêu chí tuần 4–10 (v5: bài hát cần 2 ngày)', () => {
     expect(weekPassed(8, st.get())).toBe(true);
   });
 
-  it('tuần 7: tai nghe tay trái 8/10 ở 2 ngày; tuần 10: huy chương', () => {
+  it('tuần 7: tai nghe tay trái ≥ 5/6 ở 2 ngày; tuần 10: huy chương', () => {
     const { st, day } = clock();
     const s7 = st.startSession('w7-l1');
     for (let i = 0; i < 8; i++) st.addAppAssessment(s7.id, 'E4', 'E4'); // dải tay phải không tính
     expect(weekPassed(7, st.get())).toBe(false);
-    for (let i = 0; i < 9; i++) st.addAppAssessment(s7.id, 'E3', 'E3');
+    for (let i = 0; i < 5; i++) st.addAppAssessment(s7.id, 'E3', 'E3');
     st.addAppAssessment(s7.id, 'E3', 'D3');
     expect(weekPassed(7, st.get())).toBe(false); // v5.1: mới 1 ngày
     day(1);
     const s7b = st.startSession('w7-l2');
-    for (let i = 0; i < 10; i++) st.addAppAssessment(s7b.id, 'D3', 'D3');
+    for (let i = 0; i < 6; i++) st.addAppAssessment(s7b.id, 'D3', 'D3');
     expect(weekPassed(7, st.get())).toBe(true);
     const s10 = st.startSession('w10-stage');
     expect(weekPassed(10, st.get())).toBe(false);
@@ -323,13 +345,13 @@ describe('Cấp 2–3 & luyện tập mỗi ngày', () => {
     runIn(st, 'w20-l2', run({ songId: 'scale_c_lh' }));
     expect(weekPassed(20, st.get())).toBe(true);
 
-    // Tuần 23 (Cầu Vạch Phụ): đọc nốt có dòng kẻ phụ 8/10 ở 2 ngày + một lượt đọc nhạc qua vạch phụ
+    // Tuần 23 (Cầu Vạch Phụ): đọc nốt có dòng kẻ phụ ≥ 5/6 ở 2 ngày + một lượt đọc nhạc qua vạch phụ
     const ledger = (k: number) => {
       day(k);
       const s23 = st.startSession('w23-l1');
       for (let i = 0; i < 10; i++) st.addAppAssessment(s23.id, 'E4', 'E4'); // nốt không có vạch phụ: không tính
-      for (let i = 0; i < 8; i++) st.addAppAssessment(s23.id, 'A3', 'A3');
-      for (let i = 0; i < 2; i++) st.addAppAssessment(s23.id, 'A5', 'G5');
+      for (let i = 0; i < 5; i++) st.addAppAssessment(s23.id, 'A3', 'A3');
+      st.addAppAssessment(s23.id, 'A5', 'G5');
     };
     ledger(0);
     expect(weekPassed(23, st.get())).toBe(false);
@@ -340,22 +362,22 @@ describe('Cấp 2–3 & luyện tập mỗi ngày', () => {
     runIn(st, 'w23-l3', run({ songId: 'sight:Am:RH', mode: 'wait' }));
     expect(weekPassed(23, st.get())).toBe(true);
 
-    // Tuần 25: vui/buồn 8/10 ở 2 ngày
+    // Tuần 25: vui/buồn ≥ 5/6 ở 2 ngày
     for (const k of [0, 1]) {
       day(k);
       const s25 = st.startSession('w25-l1');
-      for (let i = 0; i < 8; i++) st.addAppAssessment(s25.id, 'major', 'major');
-      for (let i = 0; i < 2; i++) st.addAppAssessment(s25.id, 'minor', 'major');
+      for (let i = 0; i < 5; i++) st.addAppAssessment(s25.id, 'major', 'major');
+      st.addAppAssessment(s25.id, 'minor', 'major');
       expect(weekPassed(25, st.get())).toBe(k === 1);
     }
 
-    // Tuần 26: đọc nốt cao Đô5–Sol5 đúng 8/10 (nốt thấp hơn không tính) ở 2 ngày + đọc nhạc thế Đô cao
+    // Tuần 26: đọc nốt cao Đô5–Sol5 đúng ≥ 5/6 (nốt thấp hơn không tính) ở 2 ngày + đọc nhạc thế Đô cao
     for (const k of [0, 1]) {
       day(k);
       const s26 = st.startSession('w26-l1');
       for (let i = 0; i < 10; i++) st.addAppAssessment(s26.id, 'E4', 'E4');
-      for (let i = 0; i < 8; i++) st.addAppAssessment(s26.id, 'F5', 'F5');
-      for (let i = 0; i < 2; i++) st.addAppAssessment(s26.id, 'G5', 'E5');
+      for (let i = 0; i < 5; i++) st.addAppAssessment(s26.id, 'F5', 'F5');
+      st.addAppAssessment(s26.id, 'G5', 'E5');
     }
     expect(weekPassed(26, st.get())).toBe(false);
     runIn(st, 'w26-l3', run({ songId: 'sight:C5:RH', mode: 'wait' }));
@@ -423,13 +445,24 @@ describe('Cấp 2–3 & luyện tập mỗi ngày', () => {
 });
 
 describe('tự phản biện: buổi gọn, mục tiêu tuần, mẹo bố mẹ', () => {
-  it('khởi động tối đa 6 lượt, trừ tuần có tiêu chí tai nghe (giữ 10)', () => {
+  it('chơi thử 2026-10-06: MỌI trò tai nghe / đọc nốt ≤ 6 lượt (khởi động & quiz trong bài, cả tuần có tiêu chí APP); tuần 1 khởi động 3 lượt', () => {
+    expect(MAX_QUIZ_ROUNDS).toBe(6);
     for (const w of WEEKS) {
-      const l = w.lessons.find((x) => !x.activities.some((a) => a.kind === 'stage'));
-      if (!l || !w.warmup) continue;
-      const q = buildSessionPlan(l).find((s) => s.kind === 'quiz');
-      if (!q || q.kind !== 'quiz') continue;
-      expect(q.quiz.rounds, `tuần ${w.week}`).toBe(w.criterion.who === 'APP' ? 10 : Math.min(w.warmup.rounds, 6));
+      if (w.warmup) expect(w.warmup.rounds, `khởi động tuần ${w.week}`).toBeLessThanOrEqual(MAX_QUIZ_ROUNDS);
+      for (const l of w.lessons) {
+        for (const a of l.activities) if (a.kind === 'quiz') expect(a.quiz.rounds, l.id).toBeLessThanOrEqual(MAX_QUIZ_ROUNDS);
+        if (l.activities.some((a) => a.kind === 'stage')) continue;
+        for (const s of buildSessionPlan(l)) {
+          if (s.kind === 'quiz') expect(s.quiz.rounds, `${l.id} khởi động`).toBe(w.week === 1 ? 3 : Math.min(w.warmup!.rounds, MAX_QUIZ_ROUNDS));
+          if (s.kind === 'activity' && s.activity.kind === 'quiz') expect(s.activity.quiz.rounds, l.id).toBeLessThanOrEqual(MAX_QUIZ_ROUNDS);
+        }
+      }
+    }
+    // Tuần chấm bằng khởi động: tiêu chí ≥ 5/6 → khởi động đủ 6 lượt
+    for (const w of WEEKS.filter((x) => x.criterion.who === 'APP')) {
+      expect(w.warmup?.rounds, `tuần ${w.week}`).toBe(MAX_QUIZ_ROUNDS);
+      expect(w.criterion.text, `tuần ${w.week}`).toContain('5/6');
+      expect(w.kidGoal, `tuần ${w.week}`).toMatch(/5 (nốt|lần)( trầm)? trong 6/);
     }
   });
 
@@ -502,11 +535,11 @@ describe('sắc thái & kiểu đàn trong giáo trình (OWNER duyệt 2026-10-0
     for (const { l } of dyn) expect(l.activities.length, l.id).toBeLessThanOrEqual(3);
   });
 
-  it('tuần 26 "Đọc nốt cao": khởi động 10 lượt Đô5–Sol5, có bài thế Đô cao và đọc nhạc; Minuet tuần 29, Für Elise tuần 30', () => {
+  it('tuần 26 "Đọc nốt cao": khởi động 6 lượt Đô5–Sol5, có bài thế Đô cao và đọc nhạc; Minuet tuần 29, Für Elise tuần 30', () => {
     const w = WEEKS[25];
     expect(w.week).toBe(26);
     expect(w.warmup?.pool).toEqual(['C5', 'D5', 'E5', 'F5', 'G5']);
-    expect(w.warmup?.rounds).toBe(10);
+    expect(w.warmup?.rounds).toBe(6);
     const acts = w.lessons.flatMap((l) => l.activities);
     expect(acts.some((a) => a.kind === 'song' && findTune(a.songId)?.position === 'C5')).toBe(true);
     expect(acts.some((a) => a.kind === 'sight' && a.position === 'C5')).toBe(true);

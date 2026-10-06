@@ -17,6 +17,7 @@ import { songScreen } from './song';
 import { stageScreen } from './stage';
 import { techniqueScreen } from './technique';
 import { improvScreen } from './improv';
+import { weekHeld } from './tonight';
 
 /**
  * Chạy một buổi (v5.1 — ≤ 7 màn): Tư thế + khởi động tay 30" → Ôn nhanh → Khởi động tai/đọc nốt → Bài mới → (Ôn bài cũ)
@@ -43,7 +44,9 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
     const week = store.get().progress.currentWeek;
     // Sang tuần mới khi ĐẠT TIÊU CHÍ và đã HỌC HẾT các bài của tuần (không bỏ sót bài dạy điều mới)
     if (lesson.week === week && weekComplete(week, store.get())) {
-      if (week < MAX_WEEK) {
+      if (weekHeld(store.settings, week)) {
+        // 👪 Bố mẹ chọn "Ở lại tuần này thêm" (màn Phụ huynh) → không tự sang tuần mới
+      } else if (week < MAX_WEEK) {
         store.setCurrentWeek(week + 1);
         const next = weekPlan(week + 1);
         banner =
@@ -96,8 +99,8 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
         return songScreen(
           app,
           tune,
-          // v5.1 — tách tay sẵn trong bài (hand: 'RH' | 'LH'); lượt một tay không tính tiêu chí tuần
-          { mode: a.mode, level: a.level, hints: a.hints, intro: a.intro, hand: a.hand },
+          // v5.1 — tách tay sẵn trong bài (hand: 'RH' | 'LH'), chỉ trên một câu khó (phrase); lượt một tay / một câu không tính tiêu chí tuần
+          { mode: a.mode, level: a.level, hints: a.hints, intro: a.intro, hand: a.hand, ...(a.phrase ? { phrase: a.phrase } : {}) },
           { onRun: (run) => store.addSongRun(session.id, run), onDone: onComplete, onBack: onExit },
         );
       }

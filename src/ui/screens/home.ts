@@ -20,7 +20,8 @@ import { parentButton } from '../components/longPress';
 import { freePlayScreen } from './freePlay';
 import { libraryScreen } from './library';
 import { stickersScreen } from './stickers';
-import { BUSY_WEEK_DAYS, earnedStickerIds } from '../../lessons/stickers';
+import { BUSY_WEEK_DAYS, earnedStickerIds, islandPassed } from '../../lessons/stickers';
+import { storageStatus } from '../../progress/ProgressStore';
 import { cancelSpeech, speak } from '../../audio/voice';
 import { speakChip } from '../components/speakChip';
 import { parentGateScreen } from './parentGate';
@@ -28,6 +29,7 @@ import { startSession } from './session';
 import { markSafePoint } from '../../pwa/updater';
 import type { AppData } from '../../progress/schema';
 import '../../styles/pedagogy.css';
+import '../../styles/kidux.css';
 
 /**
  * Tranh đảo (do src/ui/components/art/islandArt.ts vẽ). Nạp "mềm" qua import.meta.glob: nếu file tranh
@@ -38,6 +40,15 @@ const islandArtMod = import.meta.glob<{ islandIcon?: IslandIconFn }>('../compone
 const islandIcon: IslandIconFn | undefined = Object.values(islandArtMod)[0]?.islandIcon;
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
+
+/** Tên đảo mà hai chữ đầu là một loại địa danh (giữ cả cụm khi làm tên bí ẩn). */
+const PLACE_2 = ['Thung lũng', 'Vũ hội', 'Sa mạc', 'Nhà hát', 'Thư viện', 'Cung điện', 'Lâu đài', 'Cầu thang', 'Sân khấu', 'Bến Đò', 'Đại hòa'];
+
+/** Đảo chưa mở: chỉ hé lộ loại địa danh — "Rừng ?", "Thung lũng ?" — bé tò mò đoán (thay cho "Tuần 13"). */
+export function teaserName(island: string): string {
+  const two = PLACE_2.find((p) => island.startsWith(p));
+  return `${two ?? island.split(/\s+/)[0]} ?`;
+}
 
 /**
  * v5.1 — Tiến độ tiêu chí theo NGÀY cho bé: ●○ + "hôm nay ✓" / "còn N hôm". null = tiêu chí không tính theo ngày.
@@ -93,14 +104,22 @@ function islandMap(app: App): HTMLElement {
     { class: 'map', role: 'list', 'aria-label': `Bản đồ ${lv.name}` },
     svg,
     ...weeks.map((w, i) => {
-      // Qua đảo = đạt tiêu chí VÀ học xong các bài thường của tuần (weekComplete)
-      const passed = w.week < cur || weekComplete(w.week, data);
+      // Qua đảo: cùng quy tắc với sticker đảo (islandPassed — giữ nguyên sau khi gộp lịch sử / lùi tuần)
+      const passed = islandPassed(w.week, data);
       const here = w.week === cur;
       const later = w.week > cur;
       const state = here ? 'current' : later ? 'locked' : 'done';
-      const art = islandIcon
-        ? h('div', { class: 'island-art-wrap', 'aria-hidden': 'true' }, islandIcon(w.week, state))
-        : h('div', { class: 'island-emoji', 'aria-hidden': 'true' }, w.islandEmoji);
+      // Đảo chưa mở: bóng bí ẩn + dấu "?" (không lộ tranh) — bé tò mò muốn đi tiếp
+      const art = later
+        ? h(
+            'div',
+            { class: 'island-art-wrap mystery', 'aria-hidden': 'true' },
+            islandIcon ? islandIcon(w.week, 'done') : w.islandEmoji,
+            h('span', { class: 'mystery-q' }, '?'),
+          )
+        : islandIcon
+          ? h('div', { class: 'island-art-wrap', 'aria-hidden': 'true' }, islandIcon(w.week, state))
+          : h('div', { class: 'island-emoji', 'aria-hidden': 'true' }, w.islandEmoji);
       return h(
         'div',
         {
@@ -114,9 +133,8 @@ function islandMap(app: App): HTMLElement {
         art,
         // Không có tranh: tự thêm huy hiệu ✓ / 🔒 (tranh đã có sẵn ngôi sao / ổ khóa)
         !islandIcon && passed ? h('div', { class: 'island-badge' }, '★') : null,
-        !islandIcon && later ? h('div', { class: 'island-badge lock' }, '🔒') : null,
         here ? h('div', { class: 'island-pin', 'aria-hidden': 'true' }, mascot('happy', 34)) : null,
-        h('div', { class: 'island-name' }, later ? `Tuần ${w.week}` : w.island),
+        h('div', { class: 'island-name' }, later ? teaserName(w.island) : w.island),
       );
     }),
   );
@@ -136,6 +154,17 @@ export function homeScreen(app: App, banner?: string) {
     const limit = data.settings.dailyLimit;
     const overLimit = limit !== 'none' && minutesToday(data, today) >= limit;
 
+    /** Hết chỗ lưu / dữ liệu của bản app mới hơn → băng CHẶN nổi bật: tiến độ mới sẽ không được lưu — nhờ bố mẹ */
+    const storageBanner = (): HTMLElement | null => {
+      const st = storageStatus();
+      if (!st.full && !st.futureVersion) return null;
+      return h(
+        'div',
+        { class: 'banner storage-alert', role: 'alert' },
+        h('div', { class: 'storage-alert-text' }, `⚠️ ${st.text}`),
+        button({ icon: '👪', label: 'Nhờ bố mẹ sao lưu', kind: 'retry', onTap: () => app.show(parentGateScreen(app)) }),
+      );
+    };
     const restToast = () => toast('🌙 Hôm nay con học đủ rồi — mai mình học tiếp nhé!');
 
     const lessonRow = (l: Lesson) =>
@@ -220,6 +249,7 @@ export function homeScreen(app: App, banner?: string) {
         h(
           'div',
           { class: 'home-main scrollable' },
+          storageBanner(),
           banner ? h('div', { class: 'banner home-banner' }, banner) : null,
           h(
             'section',
@@ -293,7 +323,13 @@ export function homeScreen(app: App, banner?: string) {
     // Đọc to câu chuyện của tuần — mỗi ngày một lần (không phải mỗi lần về màn chính)
     // (hẹn giờ được gỡ khi rời màn — trước đây rời màn trong 0,6 s thì câu chuyện vẫn đọc đè lên màn kế tiếp)
     const storyTimer = shouldTellStory(today, plan.week) ? window.setTimeout(() => void speak(app, plan.story), 600) : 0;
+    // Ghi hỏng khi đang ở màn chính → hiện băng chặn ngay (vẽ lại màn)
+    const unStore = app.store.subscribe(() => {
+      const st = storageStatus();
+      if ((st.full || st.futureVersion) && !root.querySelector('.storage-alert')) app.show(homeScreen(app, banner));
+    });
     return () => {
+      unStore();
       window.clearTimeout(storyTimer);
       cancelSpeech();
     };

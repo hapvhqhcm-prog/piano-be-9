@@ -494,3 +494,38 @@ Chuyên gia chấm lại bản 0.9.1: sư phạm **B** (trước C+/B−), trả
   - bỏ 6 export thừa;
   - sửa 2 lỗi: lời kể chuyện ở màn chính có thể đọc đè sang màn sau; huy chương cấp 3 ghi sai "30 tuần".
 - 1242 test; robot e2e qua 5 kịch bản.
+
+## 25. Rà soát 3 góc nhìn (bé · bố mẹ · độ bền) — 2026-10-06
+
+**Độ bền dữ liệu (nghiêm trọng, đã sửa).** Giả lập 1–2 năm dùng cho thấy dữ liệu vượt giới hạn ~5 MB của Safari sau khoảng 1,3–1,5 năm; app lỗi im lặng nên mất tiến độ.
+- **Gộp gọn:** buổi cũ hơn 56 ngày được gộp vào bản tóm tắt `history`. 2 năm: 1,05 triệu → ~170 nghìn ký tự. Kiểm thử thuộc tính trên 2 năm ngẫu nhiên: sticker, báo cáo, bài thuộc, lịch ôn, tiêu chí không đổi.
+- **Khi đầy:** tự gộp rồi thử lại; vẫn đầy thì báo chặn ở màn chính "Nhờ bố mẹ sao lưu".
+- **Bản dự phòng:** chỉ giữ 1, đã gộp gọn. Xóa hoặc nhập khi không cất được dự phòng thì phải xác nhận lần nữa.
+- **Ghi dữ liệu:** gom lại (~400 ms), nhanh hơn ~10 lần. Sticker đã nhận không mất khi hạ tuần.
+- **Dữ liệu từ bản mới hơn:** báo rõ thay vì xóa.
+- **Sau tuần 31:** bài "phai" sau 45 ngày.
+
+**Bố mẹ:**
+- Cài micro 3 bước, có nút "✅ Dùng micro cho các buổi học" (trước đây "Bật micro" không bật cho buổi học).
+- "Việc cần làm tối nay" lên đầu, có "▶ Làm ngay"; sau ≥ 5 ngày nghỉ hiện "Mừng con quay lại".
+- Trạng thái 🟢/🟡/🔴, nút "⏸ Ở lại tuần này thêm", cảnh báo 14 ngày; đổi tuần phải xác nhận.
+- Phiếu chấm có hướng dẫn từng ý.
+- Bảng dùng tên nốt tiếng Việt, ngày dd/mm.
+- Nút 💾 Sao lưu ở đầu màn.
+- Cách gõ bài dễ dãi hơn: "Đô-Rê-Mi"; chặn dấu phẩy ngăn cách; thêm dấu nối "~".
+- Câu gợi ý bố mẹ nói với con; thẻ nhắc nhanh 5 bước; câu hỏi vào màn Phụ huynh khó hơn.
+
+**Bé:**
+- Tuần 1 được đàn thật ở khoảng màn 4 (trước ~27).
+- Đàn đúng tự sang nốt.
+- Trò tai nghe tối đa 6 lượt (tiêu chí ≥ 5/6, ở 2 ngày).
+- Tách tay chỉ trên câu khó nhất.
+- Lời mở đầu và lời khen đa dạng; linh vật phản ứng; "robot nạp năng lượng" khi 5 nốt đúng liên tiếp.
+- Sao cuối buổi theo độ chính xác.
+- Sticker "Chào mừng" và tóm tắt buổi; quả trứng bí ẩn.
+- Cảnh chèo thuyền tới đảo mới; đảo chưa mở hiện "?".
+- Thư viện có hình từng bài, chia "đang tập / đã thuộc / sắp mở"; sân khấu gọn.
+- Màn bài hát bớt rối.
+- Đàn tự do có trò "Đàn theo thầy".
+
+**Kiểm tra:** 1293 test; robot e2e qua 5 kịch bản.

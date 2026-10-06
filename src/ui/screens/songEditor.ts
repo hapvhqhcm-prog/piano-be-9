@@ -1,4 +1,4 @@
-import { notesToSolfege, parseSolfege, restsFor, type SolfegeIssue, type SolfegeNote } from '../../music/solfege';
+import { notesToSolfege, parseSolfege, restsFor, stripSeparatorCommas, type SolfegeIssue, type SolfegeNote } from '../../music/solfege';
 import { measureCount, timeline, type Tune } from '../../music/tune';
 import { PianoKeyboard } from '../../piano/PianoKeyboard';
 import { midiToFreq, pitchToMidi, viName, type Pitch } from '../../piano/pitchTable';
@@ -17,6 +17,7 @@ import type { App } from '../App';
 import { backButton, button, confirmDialog, h, toast } from '../components/dom';
 import { StaffView } from '../components/staffView';
 import '../../styles/parentSongs.css';
+import '../../styles/parentux.css';
 
 /**
  * "📝 Bố mẹ thêm bài" (OWNER 2026-10-06) — màn soạn bài của BỐ MẸ (vào từ màn Phụ huynh, đã qua cổng phụ huynh).
@@ -62,7 +63,7 @@ const DURS: Array<{ beats: number; label: string; sub: string }> = [
 ];
 
 /** Nút chèn nhanh vào ô chữ (bàn phím iPad gõ ' và | hơi khó) */
-const QUICK = ['Đô', 'Rê', 'Mi', 'Fa', 'Sol', 'La', 'Si', '_', '-', '/', '.', "'", ',', '#', 'b', '|'];
+const QUICK = ['Đô', 'Rê', 'Mi', 'Fa', 'Sol', 'La', 'Si', '_', '-', '/', '.', '~', "'", ',', '#', 'b', '|'];
 
 export function songEditorScreen(app: App, existing: ParentSong | null, hooks: SongEditorHooks) {
   return (root: HTMLElement) => {
@@ -131,9 +132,9 @@ export function songEditorScreen(app: App, existing: ParentSong | null, hooks: S
     });
 
     // ---------------- Kết quả hiện tại (cả hai chế độ) ----------------
-    function current(): { notes: SolfegeNote[]; errors: SolfegeIssue[]; warnings: SolfegeIssue[]; phrases: number[]; pickupRest: number } {
+    function current(): { notes: SolfegeNote[]; errors: SolfegeIssue[]; warnings: SolfegeIssue[]; notices: SolfegeIssue[]; phrases: number[]; pickupRest: number } {
       if (mode === 'text') return parseSolfege(text, beatsOf(ts));
-      return { notes: tapNotes, errors: [], warnings: [], phrases: [], pickupRest: 0 };
+      return { notes: tapNotes, errors: [], warnings: [], notices: [], phrases: [], pickupRest: 0 };
     }
 
     function build(id = existing?.id ?? 'preview'): ParentSong | null {
@@ -232,12 +233,37 @@ export function songEditorScreen(app: App, existing: ParentSong | null, hooks: S
       caretNote = caretIndex();
       staffSlot.replaceChildren(staffBox(tune, caretNote));
       const items: HTMLElement[] = [];
-      for (const e of r.errors.slice(0, 4)) items.push(h('li', { class: 'se-err' }, `❌ Dòng ${e.line}, chữ ${e.word}: ${e.message}`));
-      if (r.errors.length > 4) items.push(h('li', { class: 'se-err' }, `… và ${r.errors.length - 4} lỗi nữa`));
-      for (const w of r.warnings.slice(0, 3)) items.push(h('li', { class: 'se-warn' }, `⚠️ Dòng ${w.line}: ${w.message}`));
-      if (!items.length && tune) {
-        const notes = r.notes.filter((n) => !n.rest).length;
+      // Lỗi có sửa một chạm (vd "Đô, Rê, Mi" → bỏ dấu phẩy) hiện TRƯỚC, kèm nút sửa
+      const fixable = r.errors.filter((e) => e.fix === 'commas');
+      for (const e of fixable) {
         items.push(
+          h(
+            'li',
+            { class: 'se-err se-fix' },
+            `❌ ${e.message} `,
+            button({
+              icon: '🧹',
+              label: 'Bỏ dấu phẩy',
+              kind: 'primary',
+              onTap: () => {
+                text = stripSeparatorCommas(text);
+                area.value = text;
+                dirty = true;
+                refreshText();
+              },
+            }),
+          ),
+        );
+      }
+      const plain = r.errors.filter((e) => !e.fix);
+      for (const e of plain.slice(0, 4)) items.push(h('li', { class: 'se-err' }, `❌ Dòng ${e.line}, chữ ${e.word}: ${e.message}`));
+      if (plain.length > 4) items.push(h('li', { class: 'se-err' }, `… và ${plain.length - 4} lỗi nữa`));
+      for (const w of r.warnings.slice(0, 3)) items.push(h('li', { class: 'se-warn' }, `⚠️ Dòng ${w.line}: ${w.message}`));
+      // ℹ️ App đã tự hiểu cách gõ quen tay / gợi ý kiểm tra — không chặn lưu
+      for (const n of r.notices.slice(0, 3)) items.push(h('li', { class: 'se-info' }, `ℹ️ ${n.token ? `Dòng ${n.line}: ` : ''}${n.message}`));
+      if (!r.errors.length && !r.warnings.length && tune) {
+        const notes = r.notes.filter((n) => !n.rest).length;
+        items.unshift(
           h(
             'li',
             { class: 'se-ok' },
@@ -303,6 +329,7 @@ export function songEditorScreen(app: App, existing: ParentSong | null, hooks: S
           h('li', {}, h('b', {}, 'Fa#'), ' thăng · ', h('b', {}, 'Sib'), ' giáng'),
           h('li', {}, 'Mặc định 1 phách · ', h('b', {}, 'Mi-'), ' 2 · ', h('b', {}, 'Mi--'), ' 3 · ', h('b', {}, 'Rê/'), ' ½ · ', h('b', {}, 'Rê//'), ' ¼ · ', h('b', {}, 'Mi.'), ' chấm dôi'),
           h('li', {}, h('b', {}, '_'), ' dấu lặng (', h('b', {}, '_-'), ' lặng 2 phách) · ', h('b', {}, '|'), ' vạch nhịp (không bắt buộc) · xuống dòng = câu mới'),
+          h('li', {}, h('b', {}, 'Mi-~Mi'), ' dây nối (giữ tiếng, không đàn lại) · giữa các nốt chỉ cần ', h('b', {}, 'dấu cách'), ' (không cần phẩy)'),
         ),
         h(
           'div',

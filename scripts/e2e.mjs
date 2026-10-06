@@ -652,9 +652,11 @@ async function openParent() {
   await sleep(300);
   assert((await kindNow()) === 'parent-gate', 'Trả lời sai mà vẫn vào được màn phụ huynh');
   const q = await evaluate(inPage(`return txt(document.querySelector('.gate-q'));`));
-  const m = /(\d+)\s*\+\s*(\d+)/.exec(q);
+  // Câu hỏi cổng: "a + b" (cũ) hoặc "a × b" / "a × b + c" (mới)
+  const mm = /(\d+)\s*×\s*(\d+)(?:\s*\+\s*(\d+))?/.exec(q);
+  const m = mm ?? /(\d+)\s*\+\s*(\d+)/.exec(q);
   assert(m, `Không đọc được câu hỏi cổng: "${q}" (trước: "${q1}")`);
-  const ans = String(Number(m[1]) + Number(m[2]));
+  const ans = String(mm ? Number(mm[1]) * Number(mm[2]) + Number(mm[3] ?? 0) : Number(m[1]) + Number(m[2]));
   for (const ch of ans) await tapBy(`[...document.querySelectorAll('.key-btn')].find((b) => txt(b) === ${JSON.stringify(ch)})`, `phím ${ch}`);
   await tapBy(`document.querySelector('.key-ok')`, 'OK');
   await waitFor(`screenKind() === 'parent'`, 'màn Phụ huynh');
@@ -674,6 +676,11 @@ async function setWeek(week) {
   );
   assert(ok, 'Không thấy ô chọn tuần');
   await sleep(300);
+  // Đổi tuần giờ phải xác nhận (hộp "Chuyển bé sang tuần N?")
+  if (await evaluate(`!!document.querySelector('.dialog-backdrop')`)) {
+    await tapText(`Sang tuần ${week}`);
+    await waitFor(`!document.querySelector('.dialog-backdrop')`, 'đóng hộp xác nhận đổi tuần');
+  }
   await shot(`parent-week-${week}`);
   await tapText('Về màn của bé');
   await waitFor(`screenKind() === 'home'`, 'về màn chính');
@@ -733,20 +740,23 @@ async function main() {
     await tapText('Bắt đầu');
     await waitFor(`screenKind() === 'onboarding'`, 'Hướng dẫn nhanh (lần đầu)');
     let cards = 0;
+    let onbTotal = 4;
     for (let i = 0; i < 8; i++) {
       const step = await evaluate(inPage(`return txt(document.querySelector('.onb-step'));`));
       cards++;
       await shot(`onboarding-${step.replace('/', 'of')}`);
       const last = await evaluate(inPage(`return !!btn('Bắt đầu học');`));
       if (last) {
-        assert(step === '4/4', `Thẻ cuối phải là 4/4, đang là ${step}`);
+        const [k, n] = step.split('/').map(Number);
+        assert(k === n && n >= 4, `Thẻ cuối phải là n/n, đang là ${step}`);
+        onbTotal = n;
         await tapText('Bắt đầu học');
         break;
       }
       await tapText('Tiếp');
       await waitFor(`txt(document.querySelector('.onb-step')) !== ${JSON.stringify(step)}`, 'sang thẻ kế');
     }
-    assert(cards === 4, `Hướng dẫn có ${cards} thẻ (mong đợi 4)`);
+    assert(cards === onbTotal, `Hướng dẫn có ${cards} thẻ (mong đợi ${onbTotal})`);
     await waitFor(`screenKind() === 'home'`, 'màn chính sau Hướng dẫn');
     const d0 = await appData();
     assert(d0?.settings?.onboardedAt, 'Chưa ghi settings.onboardedAt sau Hướng dẫn');

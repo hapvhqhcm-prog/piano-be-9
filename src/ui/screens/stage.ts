@@ -1,9 +1,14 @@
-import { LEVELS, WEEKS } from '../../lessons/lessonEngine';
+import { LEVELS, WEEKS, songEverPlayed, songMastered } from '../../lessons/lessonEngine';
 import { songsUpToWeek, type Tune } from '../../music/tune';
 import type { SongRun } from '../../progress/schema';
 import type { App } from '../App';
 import { backButton, button, h } from '../components/dom';
 import { songScreen } from './song';
+import { shortTitle, songEmoji } from '../components/songArt';
+import '../../styles/kidux.css';
+
+/** Số bài gợi ý trên màn chọn (thẻ to) */
+const SUGGEST = 6;
 
 export interface StageHooks {
   /** Cấp của buổi hòa nhạc (tuần cuối mỗi cấp, xem LEVELS): 1 = bài tay phải, 2 = thêm bài hai tay, 3 = mọi bài */
@@ -28,8 +33,14 @@ export function stageScreen(app: App, hooks: StageHooks) {
       .filter((s) => level > 1 || s.hand === 'RH')
       .sort((a, b) => (b.week ?? 0) - (a.week ?? 0));
     const picked: Tune[] = [];
+    // Playtest 2026-10: ít thẻ, thẻ TO — gợi ý 6 bài con đã thuộc / đã chơi (bài mới nhất trước); bài khác sau nút "Bài khác"
+    const data = app.store.get();
+    const known = (s: Tune) => (songMastered(data, s.id) ? 2 : songEverPlayed(data, s.id) ? 1 : 0);
+    const suggested = [...choices].sort((a, b) => known(b) - known(a)).slice(0, SUGGEST);
+    let showAll = false;
 
     const pick = () => {
+      const list = showAll ? choices : [...suggested, ...picked.filter((p) => !suggested.includes(p))];
       root.replaceChildren(
         h(
           'div',
@@ -41,25 +52,35 @@ export function stageScreen(app: App, hooks: StageHooks) {
             h('h1', { class: 'title' }, `Con chọn ${picked.length ? `thêm (đã chọn ${picked.length}/3)` : '2–3 bài'} để biểu diễn`),
             h(
               'div',
-              { class: 'chips' },
-              ...choices.map((s) => {
+              { class: 'stage-picks' },
+              ...list.map((s) => {
                 const i = picked.indexOf(s);
                 return h(
                   'button',
                   {
-                    class: `chip${i >= 0 ? ' chip-next' : ''}`,
+                    class: `stage-pick${i >= 0 ? ' on' : ''}`,
                     type: 'button',
+                    'aria-pressed': String(i >= 0),
                     onClick: () => {
                       if (i >= 0) picked.splice(i, 1);
                       else if (picked.length < 3) picked.push(s);
                       pick();
                     },
                   },
-                  i >= 0 ? h('span', { class: 'chip-done' }, String(i + 1)) : null,
-                  h('span', {}, s.titleVi),
+                  i >= 0 ? h('span', { class: 'stage-pick-n' }, String(i + 1)) : null,
+                  h('span', { class: 'stage-pick-emoji', 'aria-hidden': 'true' }, songEmoji(s)),
+                  h('span', { class: 'stage-pick-title' }, shortTitle(s)),
+                  songMastered(data, s.id) ? h('span', { class: 'stage-pick-star' }, '⭐ đã thuộc') : null,
                 );
               }),
             ),
+            !showAll && choices.length > suggested.length
+              ? h(
+                  'button',
+                  { class: 'seg-btn small stage-more', type: 'button', onClick: () => ((showAll = true), pick()) },
+                  `➕ Bài khác (${choices.length - suggested.length})`,
+                )
+              : null,
           ),
           h(
             'div',

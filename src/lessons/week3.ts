@@ -4,7 +4,7 @@ import type { WeekPlan } from './types';
 /**
  * TUẦN 3 — Cầu thang Sol: ngón 4-5, Leo cầu thang, "Bước hay nhảy?", Nhại lại 3 nốt,
  * bài "Chú cừu nhỏ" & "Dưới ánh trăng". Tai nghe: đoán nốt có mốc Đô.
- * Tiêu chí: tai nghe đúng 8/10 (APP).
+ * Tiêu chí: tai nghe đúng ≥ 5/6 trong một buổi, ở 2 ngày (APP; v5.1 2026-10-06 — trò tai nghe tối đa 6 lượt, trước là 8/10).
  * v5: khởi động kỹ thuật (xoay cổ tay, tay tròn) đầu tuần; trò SÁNG TẠO đầu tiên — ứng tấu trên phím đen (ngũ cung).
  */
 export const WEEK3: WeekPlan = {
@@ -13,11 +13,11 @@ export const WEEK3: WeekPlan = {
   islandEmoji: '🪜',
   title: 'Fa Sol — thế 5 ngón',
   story: 'Qua khỏi làng là Cầu thang Sol có 5 bậc: Đô Rê Mi Fa Sol. Mỗi ngón tay đứng trên một bậc!',
-  warmup: { variant: 'identify', pool: ['C4', 'D4', 'E4', 'F4', 'G4'], rounds: 10, reference: 'C4' },
+  warmup: { variant: 'identify', pool: ['C4', 'D4', 'E4', 'F4', 'G4'], rounds: 6, reference: 'C4' },
   teach: { emoji: '👨‍🏫', text: 'Con đặt 5 ngón lên Đô Rê Mi Fa Sol, rồi dạy bố/mẹ "Leo cầu thang".' },
   drills: ['wrist-circle', 'hand-shape'],
-  criterion: { text: 'Tai nghe (có mốc Đô) đúng 8/10 — ở 2 ngày khác nhau', who: 'APP' },
-  kidGoal: 'Đôi tai thám tử: đoán đúng 8 nốt trong 10 — 2 hôm nhé! 👂',
+  criterion: { text: 'Tai nghe (có mốc Đô) đúng ít nhất 5/6 trong một buổi — ở 2 ngày khác nhau', who: 'APP' },
+  kidGoal: 'Đôi tai thám tử: đoán đúng 5 nốt trong 6 — 2 hôm nhé! 👂',
   lessons: [
     {
       id: 'w3-l1',
@@ -47,7 +47,7 @@ export const WEEK3: WeekPlan = {
       title: 'Bước hay nhảy?',
       emoji: '🐸',
       activities: [
-        { kind: 'quiz', title: 'Bước hay nhảy? 🐸', intro: 'Hai nốt cạnh nhau là BƯỚC. Cách một phím là NHẢY. Con nghe rồi chọn nhé!', quiz: { variant: 'stepskip', pool: ['C4', 'D4', 'E4', 'F4', 'G4'], rounds: 8 } },
+        { kind: 'quiz', title: 'Bước hay nhảy? 🐸', intro: 'Hai nốt cạnh nhau là BƯỚC. Cách một phím là NHẢY. Con nghe rồi chọn nhé!', quiz: { variant: 'stepskip', pool: ['C4', 'D4', 'E4', 'F4', 'G4'], rounds: 6 } },
         notes({
           id: 'w3-skips',
           step: 'Bài mới',

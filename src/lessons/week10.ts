@@ -10,7 +10,7 @@ export const WEEK10: WeekPlan = {
   islandEmoji: '🏰',
   title: 'Biểu diễn',
   story: 'Con đã tới Lâu đài Âm nhạc! Hôm nay con là nghệ sĩ — cả nhà là khán giả.',
-  warmup: { variant: 'identify', pool: ['C4', 'D4', 'E4', 'F4', 'G4', 'A4'], rounds: 8, reference: 'C4' },
+  warmup: { variant: 'identify', pool: ['C4', 'D4', 'E4', 'F4', 'G4', 'A4'], rounds: 6, reference: 'C4' },
   teach: { emoji: '🎤', text: 'Con giới thiệu với khán giả: "Bài tiếp theo tên là…, của nhạc sĩ…".' },
   drills: ['five-finger', 'hand-shape'],
   criterion: { text: 'Biểu diễn trọn vẹn — phụ huynh tặng huy chương', who: 'PARENT' },

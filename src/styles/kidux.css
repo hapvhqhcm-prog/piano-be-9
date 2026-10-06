@@ -1,0 +1,634 @@
+/* =========================================================
+   KID UX (playtest 2026-10): phản ứng của Bé Nốt, trò hỏi đáp "đang nghe", kết quả bài hát,
+   cảnh cập bến đảo mới, sticker bất ngờ / quả trứng, thư viện & sân khấu thẻ to, đàn theo thầy.
+   Nạp sau theme.css (import từ các màn) — chỉ dùng lớp MỚI hoặc bộ chọn cụ thể hơn.
+   ========================================================= */
+
+/* ---------- Bé Nốt phản ứng ---------- */
+.hero-mascot.react-bounce,
+.react-bounce {
+  animation: kid-bounce 0.7s cubic-bezier(0.3, 1.6, 0.5, 1) 1, bob 2.4s ease-in-out 0.7s infinite;
+}
+@keyframes kid-bounce {
+  0% { transform: translateY(0) scale(1, 1); }
+  25% { transform: translateY(6px) scale(1.12, 0.86); }
+  55% { transform: translateY(-26px) scale(0.94, 1.08); }
+  80% { transform: translateY(0) scale(1.06, 0.95); }
+  100% { transform: translateY(0) scale(1, 1); }
+}
+.hero-mascot.react-scratch,
+.react-scratch {
+  animation: kid-tilt 1.6s ease-in-out infinite;
+  transform-origin: 50% 90%;
+}
+.react-scratch .mascot g:last-of-type {
+  transform-origin: 66px 113px;
+  animation: kid-scratch 0.35s ease-in-out 4 alternate;
+}
+@keyframes kid-tilt {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-6deg); }
+}
+@keyframes kid-scratch {
+  from { transform: translate(0, 0); }
+  to { transform: translate(-3px, -4px); }
+}
+.hero-mascot.powered .mascot {
+  filter: drop-shadow(0 0 10px rgba(255, 203, 61, 0.95)) drop-shadow(0 0 22px rgba(138, 108, 255, 0.6));
+}
+.lead.power-up {
+  font-weight: 800;
+  color: var(--violet-600);
+  background: var(--sun-100);
+  border-radius: var(--r-pill, 999px);
+  padding: 4px 16px;
+  animation: kid-pop 0.45s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+@keyframes kid-pop {
+  from { transform: scale(0.6); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* ---------- Mở đầu mỗi phần: Bé Nốt + lời chào đổi mỗi lần ---------- */
+.intro-kicker-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.intro-mascot {
+  line-height: 0;
+  animation: bob 2.4s ease-in-out infinite;
+}
+.intro-kicker {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--violet-600);
+}
+
+/* ---------- Trò hỏi đáp: đang phát câu hỏi ---------- */
+.listen-hint {
+  display: none;
+  font-weight: 800;
+  font-size: 20px;
+  color: var(--violet-600);
+}
+.quiz-listening .listen-hint {
+  display: block;
+  animation: kid-blink 1s ease-in-out infinite;
+}
+.quiz-listening .listen-ear {
+  animation: kid-blink 1s ease-in-out infinite;
+}
+.quiz-listening .choice-row .btn:not(.is-queued),
+.quiz-listening .iv-answers .btn:not(.is-queued) {
+  opacity: 0.6;
+  filter: saturate(0.6);
+}
+@keyframes kid-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+.btn.is-queued {
+  box-shadow: 0 0 0 4px #fff, 0 0 0 8px var(--sun-400);
+}
+
+/* ---------- Kết quả bài hát ---------- */
+.song-result {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  max-width: 100%;
+}
+.song-result-mascot {
+  line-height: 0;
+  flex: 0 0 auto;
+}
+.song-result-head {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--ink);
+}
+.song-result.is-retry .song-result-head {
+  color: var(--coral-700);
+}
+.song-result-sub {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.song-result-next {
+  font-size: 21px;
+  font-weight: 800;
+  color: var(--violet-600);
+}
+.song-result .song-lines {
+  align-items: flex-start;
+  text-align: left;
+}
+.hand-tag.hand-now {
+  background: var(--violet-100);
+  color: var(--violet-700);
+}
+/* Bố mẹ bấm "tiếp" (app không xác nhận) → dấu "đã qua" trung tính, KHÔNG xanh */
+.staff-note.parent .staff-head {
+  fill: var(--violet-200);
+  stroke: var(--violet-400);
+}
+.staff-note.parent .staff-head.hollow {
+  fill: var(--violet-50);
+}
+
+/* ---------- Màn chính: mục tiêu tối đa 2 dòng; đảo bí ẩn ---------- */
+.goal-panel .goal-target .goal-text {
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  font-size: 19px;
+  line-height: 1.25;
+}
+.island-art-wrap.mystery {
+  position: relative;
+}
+.island-art-wrap.mystery > svg,
+.island-art-wrap.mystery > :not(.mystery-q) {
+  filter: brightness(0) invert(1) opacity(0.55) drop-shadow(0 2px 0 rgba(74, 163, 220, 0.5));
+}
+.mystery-q {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  transform: translate(-50%, -50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--violet-400);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 0 0 3px #fff;
+}
+.island.later .island-name {
+  font-style: italic;
+}
+
+/* ---------- Kết buổi: tóm tắt + phần thưởng ---------- */
+.recap-line {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--violet-600);
+  background: var(--violet-50);
+  border-radius: 999px;
+  padding: 6px 20px;
+}
+.end-rewards {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: stretch;
+  gap: 14px;
+  max-width: 100%;
+}
+.bonus-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 18px 10px 12px;
+  border-radius: 24px;
+  border: 3px solid var(--sun-300);
+  background: linear-gradient(160deg, #fffdf3, var(--sun-50));
+  box-shadow: var(--e2);
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  min-height: 0;
+}
+button.bonus-card {
+  cursor: pointer;
+}
+.bonus-pic {
+  line-height: 0;
+  flex: 0 0 auto;
+}
+.bonus-pic svg {
+  width: 92px;
+  height: 92px;
+}
+.bonus-card.opened .bonus-pic {
+  animation: kid-pop 0.6s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.bonus-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--sun-800);
+}
+.bonus-sub {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.egg-wobble {
+  transform-origin: 50% 90%;
+  animation: egg-wobble 1.4s ease-in-out infinite;
+}
+.egg-wobble.egg-shake {
+  animation: egg-shake 0.4s ease-in-out, egg-wobble 1.4s ease-in-out 0.4s infinite;
+}
+@keyframes egg-wobble {
+  0%, 60%, 100% { transform: rotate(0deg); }
+  70% { transform: rotate(-9deg); }
+  80% { transform: rotate(8deg); }
+  90% { transform: rotate(-4deg); }
+}
+@keyframes egg-shake {
+  0%, 100% { transform: translateX(0) rotate(0); }
+  20% { transform: translateX(-6px) rotate(-12deg); }
+  50% { transform: translateX(6px) rotate(12deg); }
+  80% { transform: translateX(-3px) rotate(-6deg); }
+}
+.screen.center.has-stickers .sticker-reveal {
+  max-width: 640px;
+}
+
+/* ---------- Cập bến đảo mới (~3 giây) ---------- */
+.arrival {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  overflow: hidden;
+  background: linear-gradient(180deg, #bfe6ff 0%, #dff3ff 45%, #8fd3f5 62%, #4aa3dc 100%);
+  cursor: pointer;
+  animation: arrival-in 0.3s ease-out;
+}
+.arrival.leaving {
+  opacity: 0;
+  transition: opacity 0.25s ease-in;
+}
+@keyframes arrival-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.arrival-path {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.arrival-path .route {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 7;
+  stroke-linecap: round;
+  stroke-dasharray: 2 18;
+  vector-effect: non-scaling-stroke;
+}
+.arrival-island {
+  position: absolute;
+  top: 67.5%;
+  transform: translate(-50%, -50%);
+  line-height: 0;
+}
+.arrival-island svg {
+  width: 210px;
+  height: 175px;
+  overflow: visible;
+}
+.arrival-island svg {
+  position: relative;
+}
+.arrival-island.from {
+  left: 18%;
+  opacity: 0.85;
+}
+.arrival-island.to {
+  left: 82%;
+}
+.arrival-glow {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  width: 260px;
+  height: 200px;
+  margin: -100px 0 0 -130px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255, 216, 90, 0.85), rgba(255, 216, 90, 0));
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+.arrival.landed .arrival-glow {
+  opacity: 1;
+}
+.arrival-boat {
+  position: absolute;
+  top: 58%;
+  left: 18%;
+  transform: translate(-50%, -50%);
+  animation: arrival-x 2.3s cubic-bezier(0.45, 0, 0.4, 1) forwards;
+}
+.arrival-bob {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: arrival-y 2.3s ease-in-out forwards;
+}
+.arrival-bob .mascot {
+  margin-bottom: -26px;
+  position: relative;
+  z-index: 1;
+}
+.arrival-hull {
+  width: 120px;
+  height: 50px;
+}
+@keyframes arrival-x {
+  from { left: 18%; }
+  to { left: 69%; }
+}
+@keyframes arrival-y {
+  0% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-17vh) rotate(-4deg); }
+  50% { transform: translateY(-24vh) rotate(3deg); }
+  75% { transform: translateY(-17vh) rotate(-3deg); }
+  100% { transform: translateY(5vh) rotate(0deg); }
+}
+.arrival-title {
+  position: absolute;
+  left: 50%;
+  top: 9%;
+  transform: translate(-50%, 0) scale(0.6);
+  opacity: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 34px;
+  border-radius: 28px;
+  background: #fff;
+  box-shadow: var(--e3);
+  font-family: var(--font-display);
+  text-align: center;
+  white-space: nowrap;
+  transition: transform 0.45s cubic-bezier(0.3, 1.6, 0.5, 1), opacity 0.3s;
+}
+.arrival-title span {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--violet-600);
+}
+.arrival-title b {
+  font-size: 40px;
+  color: var(--ink);
+}
+.arrival.landed .arrival-title {
+  opacity: 1;
+  transform: translate(-50%, 0) scale(1);
+}
+.arrival-skip {
+  position: absolute;
+  right: 20px;
+  bottom: 16px;
+  font-weight: 800;
+  font-size: 18px;
+  color: #fff;
+  opacity: 0.9;
+}
+@media (prefers-reduced-motion: reduce) {
+  .arrival-boat,
+  .arrival-bob {
+    animation-duration: 0.01s;
+  }
+}
+
+/* ---------- Thư viện: thẻ có emoji + sao; bài chưa mở = bóng ---------- */
+.song-card {
+  position: relative;
+}
+.song-card .song-card-emoji {
+  position: absolute;
+  right: 12px;
+  top: 10px;
+  font-size: 34px;
+  line-height: 1;
+}
+.song-card:not(.locked) .song-card-title {
+  padding-right: 42px;
+}
+.song-card-stars {
+  font-size: 20px;
+  letter-spacing: 1px;
+  color: var(--sun-400);
+  line-height: 1;
+  -webkit-text-stroke: 0.6px var(--sun-600);
+}
+.song-card-stars .stars-off {
+  color: var(--line-strong);
+  -webkit-text-stroke: 0;
+}
+.song-card-stars.star-faded {
+  opacity: 0.5;
+}
+.song-card.is-star {
+  border-color: var(--sun-300);
+  background: linear-gradient(170deg, #fff, var(--sun-50));
+}
+.song-card.locked {
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 2px var(--line);
+}
+.song-card.locked .song-card-emoji {
+  filter: brightness(0) opacity(0.18);
+}
+.song-card.locked .song-card-title {
+  color: var(--ink-3);
+  letter-spacing: 4px;
+}
+.vn-flag {
+  font-size: 0.85em;
+}
+.lib-soon > summary {
+  cursor: pointer;
+  list-style: none;
+}
+.lib-soon > summary::-webkit-details-marker {
+  display: none;
+}
+.lib-soon > summary::after {
+  content: ' ▾';
+  color: var(--ink-3);
+}
+.lib-soon[open] > summary::after {
+  content: ' ▴';
+}
+
+/* ---------- Sân khấu: ít thẻ, thẻ to ---------- */
+.stage-picks {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  width: 100%;
+  max-width: 900px;
+}
+.stage-pick {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 140px;
+  padding: 14px 10px;
+  border-radius: 24px;
+  border: 3px solid var(--line);
+  background: #fff;
+  box-shadow: var(--e2);
+  font: inherit;
+  color: var(--ink);
+  cursor: pointer;
+}
+.stage-pick.on {
+  border-color: var(--violet-500);
+  background: var(--violet-50);
+  box-shadow: 0 0 0 4px var(--violet-200), var(--e2);
+}
+.stage-pick-emoji {
+  font-size: 46px;
+  line-height: 1;
+}
+.stage-pick-title {
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 800;
+  line-height: 1.15;
+  text-align: center;
+}
+.stage-pick-star {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--sun-800);
+}
+.stage-pick-n {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--violet-500);
+  color: #fff;
+  font-weight: 800;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.stage-more {
+  margin-top: 4px;
+}
+
+/* ---------- Sổ sticker: bất ngờ ---------- */
+.bonus-cell {
+  position: relative;
+}
+.bonus-cell.locked .egg-art {
+  opacity: 0.45;
+  filter: grayscale(0.7);
+}
+.bonus-count {
+  position: absolute;
+  right: 6px;
+  top: 4px;
+  min-width: 30px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: var(--coral-500);
+  color: #fff;
+  font-weight: 800;
+  font-size: 15px;
+}
+
+/* ---------- Đàn tự do: Đàn theo thầy ---------- */
+.echo-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 64px;
+}
+.echo-mascot {
+  line-height: 0;
+  display: none;
+}
+.echo-box.on .echo-mascot {
+  display: block;
+}
+.echo-msg {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--violet-600);
+}
+.echo-msg:empty {
+  display: none;
+}
+
+/* Màn thấp (iPad mini ngang) */
+@media (max-height: 760px) {
+  .recap-line {
+    font-size: 21px;
+    padding: 4px 16px;
+  }
+  .bonus-pic svg {
+    width: 76px;
+    height: 76px;
+  }
+  .stage-pick {
+    min-height: 124px;
+  }
+  .arrival-island svg {
+    width: 180px;
+    height: 150px;
+  }
+}
+.sticker-pic .egg-art {
+  width: 84px;
+  height: 84px;
+  display: block;
+  margin: 0 auto;
+}
+.bonus-card .egg-art {
+  width: 92px;
+  height: 92px;
+}
+
+/* Băng chặn: hết chỗ lưu / dữ liệu bản mới hơn */
+.banner.storage-alert {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  background: var(--coral-50);
+  border: 3px solid var(--coral-500);
+  color: var(--coral-700);
+  font-weight: 800;
+}
+.storage-alert-text {
+  flex: 1 1 260px;
+  font-size: 19px;
+  line-height: 1.3;
+}

@@ -31,7 +31,12 @@ import { cancelSpeech, speak } from '../../audio/voice';
 import { SongHead, type SongChoices } from './songHead';
 import { LOOP_TARGET, MIC_LATENCY, TEMPOS, fingerMap, hardestPhrase, idxOf, midisOf, onsetLabel, shortIntro, type HandSel, type SongOptions } from './songShared';
 import { TakeReplay } from './songTake';
+import { songEverPlayed } from '../../lessons/lessonEngine';
+import { mascot } from '../components/mascot';
 import '../../styles/pedagogy.css';
+import '../../styles/kidux.css';
+
+const pick = <T,>(a: T[]): T => a[Math.floor(Math.random() * a.length)];
 
 // Giữ nguyên API cũ (tests/ui-v51.test.ts, library/session/stage import từ './song')
 export { hardestPhrase, shortIntro, type SongOptions } from './songShared';
@@ -83,8 +88,11 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
     };
     /** Bài MỚI (chưa chơi lượt nào): nhắc hát tên nốt theo thầy khi xem mẫu */
     const firstTime =
-      !full.id.startsWith('sight') && !app.store.get().sessions.some((s) => s.songRuns.some((r) => r.songId === full.id));
+      !full.id.startsWith('sight') && !songEverPlayed(app.store.get(), full.id);
     let tune = full;
+    /** Lời dẫn của bài học: cả bài, bước ôn, hoặc ĐÚNG câu bài học mở sẵn (opts.phrase — tập tách tay một câu khó) */
+    const showIntroFor = (p: [number, number] | null): boolean =>
+      !p || !!opts.review || (!!opts.phrase && p[0] === opts.phrase[0] && p[1] === opts.phrase[1]);
     let state: State = 'idle';
     let token = 0;
     let raf = 0;
@@ -194,6 +202,7 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
     }
 
     function reset(): void {
+      if (state === 'result') cancelSpeech(); // thôi đọc lời nhắn kết quả cũ
       halt();
       loop3 = false;
       streak = 0;
@@ -214,7 +223,7 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
       lightOnset(g0);
       const sh = solo();
       // v5.1: lời dẫn chỉ MỘT dòng ngắn trên màn; câu dài → app đọc to (🔊 nghe lại)
-      const intro = opts.intro && (!phrase || opts.review) && !hardBack ? opts.intro.trim() : '';
+      const intro = opts.intro && showIntroFor(phrase) && !hardBack ? opts.intro.trim() : '';
       const introShort = intro ? shortIntro(intro) : '';
       status.replaceChildren(
         h(
@@ -228,7 +237,9 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
             'span',
             {},
             sh ? `${sh === 'RH' ? '🫱 Tập tay PHẢI' : '🫲 Tập tay TRÁI'} — ${micOn() ? 'tay kia để nghỉ' : 'app đàn khẽ tay kia'}. ` : '',
-            mode === 'wait'
+            hardBack
+              ? '' // Lặp câu khó: dòng "🔁 Câu N — đàn đúng 3 lần liền" ở trên đã đủ (không có nút Bắt đầu)
+              : mode === 'wait'
               ? // Bài mới: nghe – hát – rồi mới đàn (gộp một dòng cho gọn)
                 firstTime
                 ? '🎬 Xem mẫu và hát tên nốt theo thầy — rồi Bắt đầu đàn từng nốt.'
@@ -399,7 +410,8 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
       if (match !== 'none') {
         // Bố mẹ bấm "tiếp" khi micro đang bật: không tính là micro nghe đúng
         if (wWrongThis === 0 && !(from === 'parent' && micOn())) wHits++;
-        for (const i of idxOf(g)) staff.mark(i, 'hit');
+        // Chỉ tô XANH khi app thật sự nghe / thấy bé đàn đúng; bố mẹ bấm "tiếp" → dấu "đã qua" trung tính
+        for (const i of idxOf(g)) staff.mark(i, from === 'parent' ? 'parent' : 'hit');
         if (match === 'exact') kb.setResult(midiToPitch(midi), 'good');
         wIdx++;
         wWrongThis = 0;
@@ -612,40 +624,59 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
     function showResult(s: number, text: string): void {
       state = 'result';
       const stars = starsFor(s);
-      if (s >= PASS_SCORE) {
+      const passedNow = s >= PASS_SCORE;
+      if (passedNow) {
         void app.audio.chime();
         confetti();
       }
       if (opts.stage) app.audio.applause();
+      // Thang tốc độ: đạt ở tốc độ chậm → gợi ý lên nấc tiếp (40 → 50 → 60 → 72)
+      const nextTempo = TEMPOS.find((t) => t > bpm);
+      const faster = !opts.stage && mode === 'tempo' && passedNow ? nextTempo : undefined;
+      // Lặp câu khó: chỉ khi vừa chơi CẢ bài có lỗi (thanh nút tối đa 4 nút → nhường chỗ cho "Nhanh hơn")
+      const hard = !opts.stage && !opts.review && !phrase && !faster ? hardestPhrase(phraseRanges(full), missByMeasure) : null;
+      // Chưa đạt (không phải sân khấu): Bé Nốt suy nghĩ + MỘT lời nhắn to, rõ + MỘT nút chính (Lặp câu khó / Chơi lại)
+      const retryCard = !passedNow && !opts.stage;
+      const headline = retryCard ? 'Gần được rồi! 💪' : passedNow ? pick(['Tuyệt vời! 🎉', 'Siêu quá! 🦸', 'Đỉnh của chóp! 🚀']) : 'Con đàn xong rồi! 👏';
+      const nextStep = retryCard
+        ? hard
+          ? `Mình luyện câu ${hard.index + 1} — câu khó nhất — nhé!`
+          : hardBack
+            ? 'Mình lặp lại câu này nhé!'
+            : 'Mình chơi lại thật chậm nhé!'
+        : '';
       // 🎧 Nghe lại: ô trống, có bản ghi (tới sau, bất đồng bộ) thì take.render() điền nút + một câu hỏi nhẹ
       status.replaceChildren(
         h(
           'div',
-          { class: 'song-lines' },
+          { class: `song-result${retryCard ? ' is-retry' : ' is-pass'}` },
+          h('div', { class: `song-result-mascot ${retryCard ? 'react-scratch' : 'react-bounce'}` }, mascot(retryCard ? 'think' : 'cheer', 64)),
           h(
             'div',
-            {},
-            h('span', { class: 'stars small' }, '★'.repeat(stars), h('span', { class: 'stars-off' }, '★'.repeat(3 - stars))),
-            ' ',
-            h('b', {}, text),
+            { class: 'song-lines' },
+            h('div', { class: 'song-result-head' }, headline, ' ', h('span', { class: 'stars small' }, '★'.repeat(stars), h('span', { class: 'stars-off' }, '★'.repeat(3 - stars)))),
+            h('div', { class: 'song-result-sub' }, text),
+            nextStep ? h('div', { class: 'song-result-next' }, `👉 ${nextStep}`) : null,
+            take.makeSlot(),
           ),
-          take.makeSlot(),
         ),
       );
       take.render();
-      // Thang tốc độ: đạt ở tốc độ chậm → gợi ý lên nấc tiếp (40 → 50 → 60 → 72)
-      const nextTempo = TEMPOS.find((t) => t > bpm);
-      const passedNow = s >= PASS_SCORE;
-      const faster = !opts.stage && mode === 'tempo' && passedNow ? nextTempo : undefined;
-      // Lặp câu khó: chỉ khi vừa chơi CẢ bài có lỗi (thanh nút tối đa 4 nút → nhường chỗ cho "Nhanh hơn")
-      const hard = !opts.stage && !opts.review && !phrase && !faster ? hardestPhrase(phraseRanges(full), missByMeasure) : null;
+      if (retryCard) void speak(app, `Gần được rồi! ${nextStep}`);
+      const again = button({
+        icon: '↻',
+        label: hardBack ? 'Lặp lại' : 'Chơi lại',
+        kind: retryCard && !hard ? 'primary' : undefined,
+        onTap: reset,
+      });
       setBar(
         opts.stage ? null : backButton(() => hooks.onBack()),
-        opts.stage ? null : button({ icon: '↻', label: hardBack ? 'Lặp lại' : 'Chơi lại', onTap: reset }),
+        opts.stage ? null : again,
         faster ? button({ icon: '🐇', label: `Nhanh hơn (${faster})`, onTap: () => ((bpm = faster), reset()) }) : null,
-        hard ? button({ icon: '🔁', label: 'Lặp câu khó', kind: 'sun', onTap: () => openHard(hard.range) }) : null,
+        hard ? button({ icon: '🔁', label: 'Lặp câu khó', kind: 'primary', onTap: () => openHard(hard.range) }) : null,
         hardBack ? button({ icon: '↩', label: 'Cả bài', onTap: () => ((phrase = hardBack?.phrase ?? null), reset()) }) : null,
-        hardBack ? null : button({ icon: '▶', label: 'Tiếp', kind: 'primary', onTap: hooks.onDone }),
+        // Chưa đạt: "Tiếp" vẫn có (không khóa bé) nhưng là nút phụ — nút chính là luyện lại
+        hardBack ? null : button({ icon: '▶', label: 'Tiếp', kind: retryCard ? undefined : 'primary', onTap: hooks.onDone }),
       );
     }
 
@@ -678,15 +709,21 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
       });
     }
 
+    // opts.loop + opts.phrase ("▶ Làm ngay" của bố mẹ): mở thẳng chế độ "🔁 Lặp 3 lần đúng" của câu đó
+    // (giống "Lặp câu khó": nút chính = Lặp, nút phụ = "↩ Cả bài"; bé chạm Lặp = thao tác bật micro)
+    if (opts.loop && opts.phrase && !opts.stage) {
+      mode = 'wait';
+      hardBack = { mode: 'wait', phrase: null, range: opts.phrase };
+    }
     reset();
     // v5.1: lời dẫn dài chỉ hiện một dòng → đọc to cả câu một lần khi mở màn
     const introFull = opts.intro?.trim() ?? '';
-    const introSpoken = !!introFull && (!phrase || !!opts.review) && shortIntro(introFull) !== introFull;
+    const introSpoken = !!introFull && showIntroFor(phrase) && shortIntro(introFull) !== introFull;
     const introTimer = introSpoken ? window.setTimeout(() => !disposed && state === 'idle' && void speak(app, introFull), 400) : 0;
     return () => {
       disposed = true;
       window.clearTimeout(introTimer);
-      if (introSpoken) cancelSpeech();
+      cancelSpeech();
       take.drop();
       halt();
       unWaitNote();

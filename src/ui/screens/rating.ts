@@ -1,4 +1,4 @@
-import { RATING_STARS } from '../../progress/ProgressStore';
+import { sessionRecap } from '../../lessons/bonusStickers';
 import { mascot } from '../components/mascot';
 import { confetti } from '../components/celebrate';
 import type { SelfRating } from '../../progress/schema';
@@ -9,7 +9,7 @@ import { speakChip } from '../components/speakChip';
 import { TEACH_TITLE, teachCard } from './teach';
 
 /**
- * Câu nào cũng là câu trả lời tốt — sao như nhau (thưởng cho việc học xong buổi, RATING_STARS).
+ * Câu nào cũng là câu trả lời tốt — số sao KHÔNG phụ thuộc câu trả lời (sao = đúng ngay lần đầu trong buổi, ≥ 1).
  * Bé nói thật "khó quá" = thông tin quý cho bố mẹ, không bao giờ bị ít sao hơn.
  */
 const OPTIONS: Array<{ rating: SelfRating; emoji: string; label: string; praise: string }> = [
@@ -19,6 +19,19 @@ const OPTIONS: Array<{ rating: SelfRating; emoji: string; label: string; praise:
 ];
 
 const QUESTION = 'Hôm nay con thấy thế nào?';
+
+/** Lời giải thích số sao (sao = đúng ngay lần đầu trong buổi; luôn ≥ 1). */
+const STAR_LINE: Record<1 | 2 | 3, string> = {
+  3: 'Gần như nốt nào cũng đúng ngay lần đầu — siêu quá!',
+  2: 'Nhiều nốt đúng ngay lần đầu — mai thêm sao nữa nhé!',
+  1: 'Sao cố gắng — con đã tập cả buổi, mai sẽ thêm sao!',
+};
+
+/** Sao của buổi ĐANG học (buổi chưa đóng gần nhất); không tìm thấy → 3. */
+function sessionStars(app: App): 1 | 2 | 3 {
+  const open = [...app.store.get().sessions].reverse().find((s) => !s.completed);
+  return open ? sessionRecap(open).stars : 3;
+}
 
 export interface ClosingHooks {
   /** Thẻ "Con làm thầy" ở đầu màn; null = chỉ tự chấm (chơi lại / sân khấu) */
@@ -69,14 +82,16 @@ export function closingScreen(app: App, hooks: ClosingHooks) {
 
     const stars = (o: (typeof OPTIONS)[number]) => {
       cancelSpeech();
-      const n = Math.min(3, RATING_STARS[o.rating]);
+      // Playtest 2026-10: sao có ý nghĩa — theo tỉ lệ đúng NGAY LẦN ĐẦU của buổi (≥ 1 sao, không có dữ liệu = 3 sao).
+      // KHÔNG phụ thuộc câu bé chọn (Dễ / Vừa / Khó) → nói thật không bao giờ bị ít sao hơn.
+      const n = sessionStars(app);
       void app.audio.chime();
       confetti(); // mừng vì HỌC XONG BUỔI — như nhau cho mọi câu trả lời
       stage.replaceChildren(
         h('div', { class: 'hero-mascot' }, mascot('love', 100)),
         h('div', { class: 'stars' }, '★'.repeat(n), h('span', { class: 'stars-off' }, '★'.repeat(3 - n))),
         h('h1', { class: 'title' }, o.praise),
-        h('p', { class: 'lead' }, 'Sao này là vì con đã học xong buổi hôm nay!'),
+        h('p', { class: 'lead' }, STAR_LINE[n]),
       );
       bar.replaceChildren(
         backButton(ask),

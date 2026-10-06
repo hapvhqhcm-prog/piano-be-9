@@ -23,9 +23,57 @@ import { HandOverlay, eventsFromTargets, playDemo } from '../components/demo';
  * Lời khen ĐÚNG MỨC (khoa học học tập): nốt đúng bình thường → chuông + câu khen NÓI RÕ kỹ năng
  * ("Đúng Đô — ngón 1!"), không pháo giấy. Pháo giấy dành cho: xong cả phần, 3 nốt liền đúng ngay lần đầu.
  */
-const PRAISE = ['Giỏi lắm!', 'Đúng rồi!', 'Con làm được rồi!'];
-const PRAISE_SUB = ['Con tìm đúng rồi', 'Cứ thế tiếp nhé!'];
-const RETRY_SUB = ['Mình thử lần nữa nhé', 'Nhìn kỹ phím đang sáng nhé', 'Từ từ thôi, con làm được mà', 'Sai là đang học — thử lại nào!'];
+const PRAISE = ['Giỏi lắm!', 'Đúng rồi!', 'Con làm được rồi!', 'Chuẩn luôn!', 'Siêu quá!', 'Tuyệt cú mèo!'];
+const PRAISE_SUB = [
+  'Con tìm đúng rồi',
+  'Cứ thế tiếp nhé!',
+  '🤖 Rô-bốt cũng phải khen con!',
+  '🦸 Siêu nhân piano là con đó!',
+  '⚡ Nhanh như tia chớp!',
+  '🎯 Trúng phóc!',
+];
+/** Khen ĐÚNG KỸ NĂNG khi nốt có số ngón (thay cho một câu cố định). */
+const FINGER_SUB = (f: number) => [
+  'Đúng phím, đúng ngón — cứ thế nhé!',
+  `Ngón ${f} làm việc giỏi quá!`,
+  'Tay tròn như ôm quả bóng — đẹp lắm!',
+  `🦾 Ngón ${f} khỏe như tay rô-bốt!`,
+  'Mắt tìm phím nhanh ghê!',
+];
+const RETRY_SUB = [
+  'Mình thử lần nữa nhé',
+  'Nhìn kỹ phím đang sáng nhé',
+  'Từ từ thôi, con làm được mà',
+  'Sai là đang học — thử lại nào!',
+  '🤖 Rô-bốt cũng phải thử nhiều lần mới đúng!',
+  '🦸 Siêu nhân nào cũng tập lại — mình thử nhé!',
+];
+/** Cứ 5 nốt đúng LIỀN NHAU → một câu "nạp năng lượng" (hiện + đọc to). */
+const POWER_UPS = [
+  '🤖 Rô-bốt nạp đầy năng lượng — bíp bíp!',
+  '⚡ Siêu sức mạnh ngón tay được kích hoạt!',
+  '🦸 Siêu nhân piano bay lên nào!',
+  '🚀 Tên lửa âm nhạc rời bệ phóng!',
+  '🦖 Khủng long cũng phải nhảy theo!',
+  '🛡️ Lá chắn âm nhạc mạnh thêm một cấp!',
+];
+const POWER_EVERY = 5;
+/** Lời chào đầu mỗi phần (trên tiêu đề) — đổi mỗi lần cho đỡ chán. */
+const KICKERS = ['🤖 Nhiệm vụ mới!', '🦸 Siêu nhân piano xuất kích!', '🚀 Sẵn sàng cất cánh!', '⚡ Nạp năng lượng nào!', '🎯 Thử thách mới!', '🦖 Khám phá tiếp nào!'];
+/** "Ôn nhanh": 6 lời dẫn xoay vòng (lời trong bài học luôn giống nhau). */
+const REVIEW_INTROS = [
+  'Mình ôn lại vài nốt cũ thật nhanh nhé!',
+  'Khởi động ngón tay: vài nốt quen thuộc nào!',
+  'Rô-bốt kiểm tra trí nhớ: con còn nhớ các nốt này không?',
+  'Siêu nhân ôn bài — nhanh như chớp nhé!',
+  'Gặp lại mấy người bạn nốt cũ nào!',
+  'Bốn nốt cũ đang chờ con — xuất phát!',
+];
+const INTRO_MOODS = ['wave', 'happy', 'cheer', 'love'] as const;
+/** Đúng → tự sang nốt sau sau ~1,5 giây (khi bố mẹ bật "Tự chuyển"); sai thì luôn chờ bấm "Thử lại". */
+const CORRECT_ADVANCE_SEC = 1.5;
+/** Buổi đã qua màn "Con sẵn sàng chưa?" — từ phần thứ 2 của cùng buổi thì bỏ qua màn này. */
+let readySessionId: string | null = null;
 /** Số lần "Thử lại" (bố mẹ) / nốt sai (micro) trên cùng một nốt thì mới cho "Bỏ qua — mai ôn lại". */
 const SKIP_AFTER_RETRIES = 3;
 const SKIP_AFTER_MIC_WRONG = 5;
@@ -111,6 +159,15 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
     let lastHintSpokenAt = 0;
     /** Số nốt liên tiếp đúng ngay lần đầu (để mừng mốc 3, 6, 9…) */
     let firstTryRun = 0;
+    /** Số nốt đúng liền nhau (kể cả sau khi thử lại) — mốc 5, 10… = câu "nạp năng lượng" */
+    let correctRun = 0;
+    /** Câu "nạp năng lượng" đang đọc — tự chuyển nốt chờ đọc xong */
+    let powerSpeech: Promise<void> | null = null;
+    // Buổi học đang mở (chưa xong) — để biết đây có phải phần đầu tiên của buổi không
+    const openSession = [...app.store.get().sessions].reverse().find((s) => !s.completed) ?? null;
+    const skipReady = !!openSession && readySessionId === openSession.id;
+    const reviewIntro = seg.step === 'Ôn nhanh' ? pick(REVIEW_INTROS) : null;
+    const segIntro = reviewIntro ?? seg.intro;
     const resetMicTurn = (index: number) => {
       if (micForIndex === index) return;
       micForIndex = index;
@@ -197,10 +254,22 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
     const celebrateCorrect = (firstTry: boolean) => {
       void app.audio.chime();
       firstTryRun = firstTry ? firstTryRun + 1 : 0;
+      correctRun++;
       if (firstTryRun > 0 && firstTryRun % 3 === 0) {
         confetti(30);
         const title = stage.querySelector('.title');
         if (title) title.textContent = `${firstTryRun} nốt đúng liền! 🎉`;
+      }
+      // Mỗi 5 nốt đúng liền nhau: Bé Nốt "nạp năng lượng" — một câu vui (hiện + đọc to)
+      if (correctRun % POWER_EVERY === 0) {
+        const line = pick(POWER_UPS);
+        const lead = stage.querySelector('.lead');
+        if (lead) {
+          lead.textContent = line;
+          lead.classList.add('power-up');
+        }
+        stage.querySelector('.hero-mascot')?.classList.add('powered');
+        powerSpeech = say(line.replace(/^\P{L}+/u, ''));
       }
     };
     let demo: { cancel: () => void; done: Promise<void> } | null = null;
@@ -305,11 +374,17 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
           kb.clear();
           const events = eventsFromTargets(seg.targets);
           const caption = h('div', { class: 'demo-caption' }, events.length ? '🎬 Xem thầy đàn mẫu…' : '');
-          const introText = `${seg.title}. ${seg.intro}`;
+          const introText = `${seg.title}. ${segIntro}`;
           stage.append(
-            h('div', { class: 'step-tag' }, seg.step),
+            h(
+              'div',
+              { class: 'intro-kicker-row' },
+              h('div', { class: 'intro-mascot' }, mascot(pick([...INTRO_MOODS]), 64)),
+              h('div', { class: 'intro-kicker' }, pick(KICKERS)),
+              h('div', { class: 'step-tag' }, seg.step),
+            ),
             h('h1', { class: 'title' }, seg.title),
-            h('p', { class: 'lead' }, seg.intro, speakChip(app, introText)),
+            h('p', { class: 'lead' }, segIntro, speakChip(app, introText)),
             caption,
           );
           // "Video minh họa": bàn tay hoạt hình đàn mẫu cả phần bài này, tự phát khi mở
@@ -338,11 +413,27 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
           } else later(startDemo, 500);
           bar.append(back);
           if (events.length) bar.append(button({ icon: '🎬', label: 'Xem lại', onTap: playIntro }));
-          bar.append(button({ icon: '▶', label: 'Tiếp', kind: 'primary', onTap: () => send('NEXT') }));
+          bar.append(
+            button({
+              icon: '▶',
+              label: skipReady ? 'Bắt đầu' : 'Tiếp',
+              kind: 'primary',
+              // Phần thứ 2 trở đi của buổi: bỏ màn "Con sẵn sàng chưa?" — chạm này cũng là thao tác bật micro
+              onTap: skipReady
+                ? async () => {
+                    await app.ensureMic();
+                    if (sm.snapshot.state !== 'INTRO') return;
+                    send('NEXT');
+                    send('NEXT');
+                  }
+                : () => send('NEXT'),
+            }),
+          );
           break;
         }
 
         case 'READY':
+          if (openSession) readySessionId = openSession.id;
           kb.clear();
           stage.append(
             h('div', { class: 'hero-emoji' }, '🙌'),
@@ -410,17 +501,17 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
           const needHelp = !ok && tries >= 2;
           const t0 = target();
           stage.append(
-            // Thử lại: Bé Nốt vẫn vui vẻ động viên (không buồn, không nhíu mày) — sai là một phần của học
-            h('div', { class: 'hero-mascot' }, mascot(ok ? 'cheer' : 'happy', 110)),
+            // Đúng: Bé Nốt nhảy cẫng lên. Thử lại: Bé Nốt gãi đầu suy nghĩ (không buồn, không nhíu mày) — sai là một phần của học
+            h('div', { class: `hero-mascot ${ok ? 'react-bounce' : 'react-scratch'}` }, mascot(ok ? 'cheer' : 'think', 110)),
             h('h1', { class: 'title' }, ok ? praiseTitle(t0) : needHelp ? 'Mình xem thầy làm nhé!' : 'Thử lại nhé'),
             h(
               'p',
               { class: 'lead' },
               ok
                 ? byMic
-                  ? '🎤 App nghe con đàn đúng rồi!'
+                  ? pick(['🎤 App nghe con đàn đúng rồi!', '🎤 Tai rô-bốt nghe rõ: đúng rồi!'])
                   : t0.finger && t0.keys.length === 1
-                    ? 'Đúng phím, đúng ngón — cứ thế nhé!'
+                    ? pick(FINGER_SUB(t0.finger))
                     : pick(PRAISE_SUB)
                 : needHelp
                   ? 'Nhìn ngón tay của thầy, rồi con làm theo'
@@ -489,6 +580,7 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
           if (ef.result === 'retry') {
             retries.set(ef.index, (retries.get(ef.index) ?? 0) + 1);
             firstTryRun = 0;
+            correctRun = 0;
           }
           if (ef.result === 'correct') celebrateCorrect(!retries.get(ef.index) && wrongCount === 0);
           break;
@@ -503,11 +595,19 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
           // Chỉ đếm sau khi âm mẫu kết thúc (§5).
           const tk = token;
           await app.audio.whenIdle();
-          let left = ef.delaySec;
+          // Câu "nạp năng lượng" đang đọc → đọc xong mới sang nốt
+          if (powerSpeech) {
+            const p = powerSpeech;
+            powerSpeech = null;
+            await p;
+          }
+          // Đúng → ~1,5 giây là sang nốt (bé không phải chờ / bấm "Tiếp" sau mỗi nốt đúng)
+          const total = sm.snapshot.lastResult === 'correct' ? Math.min(ef.delaySec, CORRECT_ADVANCE_SEC) : ef.delaySec;
+          let left = total;
           while (left > 0) {
             if (tk !== token) return;
             const el = stage.querySelector('.countdown');
-            if (el) el.textContent = ef.delaySec < 2 ? 'Sang nốt tiếp…' : `Tự chuyển sau ${Math.ceil(left)} giây…`;
+            if (el) el.textContent = total < 2 ? 'Sang nốt tiếp…' : `Tự chuyển sau ${Math.ceil(left)} giây…`;
             const step = Math.min(1, left);
             await new Promise((r) => setTimeout(r, step * 1000));
             left -= step;

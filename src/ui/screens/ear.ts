@@ -84,6 +84,26 @@ export function quizScreen(app: App, hooks: QuizHooks) {
     let accepting = false;
     let answered = false;
     let token = 0;
+    /** Bé chạm đáp án khi câu hỏi còn đang phát → nhớ lại, nghe xong tự chấm (không "nuốt" mất cú chạm) */
+    let queued: string | null = null;
+    const tapAnswer = (value: string, btn?: HTMLElement) => {
+      if (answered || !q) return;
+      if (accepting) return void answer(value);
+      queued = value;
+      stage.querySelectorAll('.is-queued').forEach((b) => b.classList.remove('is-queued'));
+      btn?.classList.add('is-queued');
+    };
+    /** Trạng thái "đang nghe": nút đáp án mờ nhẹ + tai nhấp nháy (vẫn chạm được — cú chạm được xếp hàng) */
+    const setListening = (on: boolean) => stage.classList.toggle('quiz-listening', on);
+    const openAnswers = () => {
+      accepting = true;
+      setListening(false);
+      if (queued !== null) {
+        const v = queued;
+        queued = null;
+        void answer(v);
+      }
+    };
 
     // Trò Vui/buồn: dải phím phải chứa cả quãng 5 của hợp âm (vd Sol4 → Rê5)
     const rangeNotes = spec.variant === 'majorminor' ? spec.pool.flatMap((p) => [p, midiToPitch(pitchToMidi(p) + 7)]) : spec.pool;
@@ -156,6 +176,8 @@ export function quizScreen(app: App, hooks: QuizHooks) {
       round++;
       answered = false;
       accepting = false;
+      queued = null;
+      setListening(false);
       q = makeQuestion(spec, Math.random, q ?? undefined);
       kb.clear();
       if (spec.variant === 'identify') kb.setGuides(spec.pool);
@@ -174,24 +196,27 @@ export function quizScreen(app: App, hooks: QuizHooks) {
         ? h(
             'div',
             { class: 'choice-row' },
-            ...q.choices.map((c) =>
-              button({ icon: c.emoji, label: c.label, big: true, kind: 'primary', onTap: () => accepting && answer(c.value) }),
-            ),
+            ...q.choices.map((c) => {
+              const b: HTMLButtonElement = button({ icon: c.emoji, label: c.label, big: true, kind: 'primary', onTap: () => tapAnswer(c.value, b) });
+              return b;
+            }),
           )
         : null;
       stage.replaceChildren(
         prog,
-        h('div', { class: 'hero-emoji' }, '🎵'),
+        h('div', { class: 'hero-emoji listen-ear' }, '🎵'),
         h('h1', { class: 'title' }, q.choices ? QUESTION[spec.variant] : 'Nốt nào đây?'),
+        h('div', { class: 'listen-hint', 'aria-hidden': 'true' }, '👂 Nghe đã nhé…'),
         choices ?? h('p', { class: 'lead' }, 'Nghe nốt Đô mốc, rồi nốt bí ẩn — chạm phím'),
       );
       setBar(back(), button({ icon: '🔊', label: 'Nghe lại', onTap: () => void playQuestion() }));
+      setListening(true);
       await wait(350);
       if (tk !== token) return;
       void playQuestion();
       // Cho trả lời khi nốt cuối đã vang một chút
       await wait(q.play.length > 1 ? 1300 : 500);
-      if (tk === token) accepting = true;
+      if (tk === token) openAnswers();
     }
 
     /** Nút trả lời quãng: ≤ 5 lựa chọn → một màn (cột = loại quãng, hàng = lên/xuống); 4–5 loại → hỏi 2 bước. */
@@ -204,14 +229,14 @@ export function quizScreen(app: App, hooks: QuizHooks) {
         box.classList.add('iv-grid');
         for (const k of kinds) {
           if (k === 'same') {
-            const b = kindBtn(k, () => accepting && void answer('same'));
+            const b: HTMLButtonElement = kindBtn(k, () => tapAnswer('same', b));
             b.classList.add('iv-same');
             box.append(b);
             continue;
           }
           const col = h('div', { class: 'iv-col' });
           for (const dir of ['up', 'down'] as const) {
-            const b = kindBtn(k, () => accepting && void answer(`${k}-${dir}`), dir === 'up' ? ' lên ⬆️' : ' xuống ⬇️');
+            const b: HTMLButtonElement = kindBtn(k, () => tapAnswer(`${k}-${dir}`, b), dir === 'up' ? ' lên ⬆️' : ' xuống ⬇️');
             b.classList.add(`iv-${dir}`);
             col.append(b);
           }
@@ -223,16 +248,16 @@ export function quizScreen(app: App, hooks: QuizHooks) {
       const step1 = () => {
         box.className = 'iv-answers iv-kinds';
         box.replaceChildren(
-          ...kinds.map((k) => kindBtn(k, () => (k === 'same' ? accepting && void answer('same') : step2(k)))),
+          ...kinds.map((k) => kindBtn(k, () => (k === 'same' ? tapAnswer('same') : step2(k)))),
         );
       };
       const step2 = (k: IntervalKind) => {
-        if (!accepting) return;
+        if (answered) return;
         box.className = 'iv-answers iv-dirs';
         box.replaceChildren(
           h('div', { class: 'iv-picked' }, `${INTERVAL_INFO[k].emoji} ${INTERVAL_INFO[k].label} — lên hay xuống?`),
-          button({ icon: '⬆️', label: 'Lên', big: true, kind: 'primary', onTap: () => accepting && void answer(`${k}-up`) }),
-          button({ icon: '⬇️', label: 'Xuống', big: true, kind: 'primary', onTap: () => accepting && void answer(`${k}-down`) }),
+          button({ icon: '⬆️', label: 'Lên', big: true, kind: 'primary', onTap: () => tapAnswer(`${k}-up`) }),
+          button({ icon: '⬇️', label: 'Xuống', big: true, kind: 'primary', onTap: () => tapAnswer(`${k}-down`) }),
           button({ icon: '↩', label: 'Chọn lại', onTap: step1 }),
         );
       };
@@ -258,9 +283,7 @@ export function quizScreen(app: App, hooks: QuizHooks) {
           h(
             'div',
             { class: 'choice-row lm-choices' },
-            ...(cur.choices ?? []).map((c) =>
-              button({ icon: c.emoji, label: c.label, big: true, kind: 'primary', onTap: () => accepting && void answer(c.value) }),
-            ),
+            ...(cur.choices ?? []).map((c) => button({ icon: c.emoji, label: c.label, big: true, kind: 'primary', onTap: () => tapAnswer(c.value) })),
           ),
           h('p', { class: 'lead lm-hint' }, '…hoặc chạm đúng phím trên iPad'),
         );

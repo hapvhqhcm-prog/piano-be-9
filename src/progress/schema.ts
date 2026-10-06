@@ -130,6 +130,17 @@ export interface Settings {
   lastBackupAt: number; // (+) lần xuất/sao chép JSON gần nhất (ms) — để nhắc sao lưu
   onboardedAt: number; // (+) lúc bố mẹ xem xong/bỏ qua hướng dẫn lần đầu (ms); 0 = chưa xem
   voice: boolean; // (+) giọng đọc hướng dẫn tiếng Việt (bé đọc chậm) — mặc định BẬT
+  /**
+   * (+ 2026-10-06) Cờ "đã chuyển autoAdvance sang mặc định BẬT" — migrations.ts bật autoAdvance MỘT lần cho dữ liệu cũ
+   * (thiếu cờ này), sau đó tôn trọng lựa chọn của phụ huynh. Không có = dữ liệu cũ.
+   */
+  autoAdvanceMigrated?: boolean;
+  /** (+ 2026-10-06, màn phụ huynh) Giữ bé ở tuần này (không tự sang tuần mới); null/không có = không giữ */
+  holdWeek?: number | null;
+  /** (+ 2026-10-06) Bố mẹ đã ẩn thẻ "Thiết lập micro" */
+  micSetupHidden?: boolean;
+  /** (+ 2026-10-06) Lần gần nhất app hỏi "sao lưu nhé?" (ms) */
+  backupAskedAt?: number;
 }
 
 export interface Progress {
@@ -153,6 +164,80 @@ export interface AppData {
    * dùng riêng trong gia đình, không bao giờ đưa lên app công khai. Không có = [].
    */
   parentSongs?: ParentSong[];
+  /**
+   * (+ 2026-10-06) TỔNG HỢP lịch sử đã gộp (progress/compaction.ts): buổi cũ hơn ~8 tuần được gộp vào đây để
+   * localStorage không đầy (Safari ~5 MB). Chỉ THÊM — không có = chưa gộp buổi nào. Mọi hàm đọc lịch sử dùng
+   * "tổng hợp + buổi còn giữ" (progress/history.ts). Không đổi schemaVersion.
+   */
+  history?: History;
+}
+
+/** [a, b] — vd [số lần đúng, tổng] */
+export type CountPair = [number, number];
+
+/** (+) Tổng hợp một bài hát / mã lượt chơi từ các buổi đã gộp. */
+export interface SongAgg {
+  /** Lúc THUỘC bài (lượt sớm nhất chơi trọn theo nhịp ≥ 60 và đạt) — có = đã thuộc */
+  m?: number;
+  /** Lần gần nhất chơi CẢ bài (không tính tập một câu) — ms */
+  w?: number;
+  /** Lượt gần nhất (mọi kiểu): [ts, đạt 1/0] — có = đã từng chơi */
+  r?: CountPair;
+  /** Đã từng chơi trọn, đủ tay, đạt (bài hai tay → "hai tay cùng lúc") */
+  h?: 1;
+  /** Tốc độ nhanh nhất chơi trọn theo nhịp, đủ tay, đạt (không tính đọc nhạc ngẫu nhiên) */
+  b?: number;
+}
+
+/** (+) Tổng hợp lịch sử đã gộp — xem progress/compaction.ts. */
+export interface History {
+  v: 1;
+  /** Sticker bất ngờ (🎁) của các buổi đã gộp — giữ sổ sticker không đổi sau khi gộp (src/lessons/bonusStickers.ts) */
+  bonus?: import('../lessons/bonusStickers').BonusState;
+  /** Ngày (YYYY-MM-DD): các buổi TRƯỚC ngày này đã được xét gộp ở lần gộp gần nhất */
+  compactedThrough: string;
+  /** Số buổi đã gộp / trong đó đã hoàn thành / có phút hoặc hoàn thành (báo cáo) */
+  sessions: number;
+  completed: number;
+  counted: number;
+  /** Ngày sớm nhất của các buổi đã gộp */
+  firstDate: string | null;
+  /** Ngày muộn nhất của các buổi đã gộp CÓ nội dung (không phải buổi mở rồi thoát) */
+  lastDate?: string | null;
+  /** Tuần giáo trình → ngày SỚM NHẤT có buổi (có nội dung) của tuần đó trong các buổi đã gộp (đèn "đã ở tuần này bao lâu") */
+  weekFirst?: Record<string, string>;
+  /** Phần ngày tập của các buổi đã gộp: ngày → [phút, sao] (cùng quy tắc recomputePracticeDays) */
+  practiceDays: Record<string, CountPair>;
+  /** Tuần lịch (thứ 2) → [bitmask ngày có buổi HOÀN THÀNH (bit 0 = thứ 2), số buổi hoàn thành trước EFFORT_BY_DAYS_FROM] */
+  weeks: Record<string, CountPair>;
+  songs: Record<string, SongAgg>;
+  /** Mã nốt / việc → tối đa 5 lần gần nhất [ts, đúng 1/0], cũ → mới (trí nhớ Leitner) */
+  targets: Record<string, CountPair[]>;
+  micPerfect: boolean;
+  /** Trò sắc thái đã chơi xong ('loud-soft' / 'stac-leg') */
+  dynamicsDone: string[];
+  /** Số lượt sắc thái được chấm đúng */
+  dynamicsRounds: number;
+  /** Tuần ĐÃ ĐẠT tiêu chí chỉ với các buổi đã gộp (weekPassed giữ nguyên sau khi gộp) */
+  passedWeeks: number[];
+  /** Sticker đảo / huy chương đã nhận — không mất khi bố mẹ lùi tuần */
+  stickers: string[];
+  /** Báo cáo: số câu đúng / tổng theo kỹ năng (từ đầu) */
+  skills: { reading: CountPair; ear: CountPair; rhythm: CountPair };
+  /** Màn phụ huynh: bảng tổng hợp theo nốt (xem history.parentStats) */
+  parent: {
+    /** PARENT: nốt → [đúng, thử lại] */
+    p: Record<string, CountPair>;
+    /** APP: nốt → [đúng, tổng] */
+    a: Record<string, CountPair>;
+    /** MIC: nốt → [hoàn thành, đúng ngay, bố mẹ sửa] */
+    m: Record<string, [number, number, number]>;
+    /** Kỹ năng của con: tìm nốt / nghe & đọc / giữ nhịp / đọc nhạc → [đạt, tổng] */
+    find: CountPair;
+    ear: CountPair;
+    tempo: CountPair;
+    sight: CountPair;
+  };
 }
 
 /** (+) Một nốt bài bố mẹ nhập — cùng định dạng nốt bài hát (Tune). */
@@ -204,7 +289,8 @@ export function localDateStr(d: Date): string {
 export function defaultSettings(): Settings {
   return {
     sessionMinutes: 15,
-    autoAdvance: false,
+    // (2026-10-06) mặc định BẬT: đúng nốt → tự sang nốt sau (dữ liệu cũ: migrations.ts bật một lần)
+    autoAdvance: true,
     autoAdvanceDelaySec: 4,
     leftHandEnabled: false,
     dailyLimit: 'none',
@@ -218,6 +304,7 @@ export function defaultSettings(): Settings {
     lastBackupAt: 0,
     onboardedAt: 0,
     voice: true,
+    autoAdvanceMigrated: true,
   };
 }
 
@@ -268,6 +355,11 @@ export function validateAppData(x: unknown): string[] {
     if (typeof st.lastBackupAt !== 'number') errs.push('settings.lastBackupAt');
     if (typeof st.onboardedAt !== 'number') errs.push('settings.onboardedAt');
     if (typeof st.voice !== 'boolean') errs.push('settings.voice');
+    if (st.autoAdvanceMigrated !== undefined && typeof st.autoAdvanceMigrated !== 'boolean') errs.push('settings.autoAdvanceMigrated');
+    // (+ 2026-10-06) trường tùy chọn của màn phụ huynh — không có thì thôi, có thì đúng kiểu
+    if (st.holdWeek !== undefined && st.holdWeek !== null && !(Number.isInteger(st.holdWeek) && (st.holdWeek as number) >= 1 && (st.holdWeek as number) <= MAX_WEEK_LIMIT)) errs.push('settings.holdWeek');
+    if (st.micSetupHidden !== undefined && typeof st.micSetupHidden !== 'boolean') errs.push('settings.micSetupHidden');
+    if (st.backupAskedAt !== undefined && !(typeof st.backupAskedAt === 'number' && Number.isFinite(st.backupAskedAt))) errs.push('settings.backupAskedAt');
   }
   const p = x.progress;
   if (!isObj(p)) errs.push('Thiếu progress');
@@ -372,6 +464,21 @@ export function validateAppData(x: unknown): string[] {
           errs.push(`parentSongs[${i}]`);
         }
       });
+  }
+  // (+ 2026-10-06) Tổng hợp lịch sử đã gộp — không có = chưa gộp
+  if (x.history !== undefined) {
+    const hs = x.history;
+    if (
+      !isObj(hs) ||
+      typeof hs.compactedThrough !== 'string' ||
+      ![hs.sessions, hs.completed, hs.counted, hs.dynamicsRounds].every((n) => Number.isInteger(n) && (n as number) >= 0) ||
+      !(hs.firstDate === null || typeof hs.firstDate === 'string') ||
+      ![hs.practiceDays, hs.weeks, hs.songs, hs.targets, hs.skills, hs.parent].every(isObj) ||
+      typeof hs.micPerfect !== 'boolean' ||
+      ![hs.dynamicsDone, hs.passedWeeks, hs.stickers].every(Array.isArray)
+    ) {
+      errs.push('history');
+    }
   }
   return errs;
 }
