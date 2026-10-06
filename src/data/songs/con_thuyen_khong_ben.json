@@ -1,0 +1,442 @@
+{
+ "id": "con_thuyen_khong_ben",
+ "title": "Con Thuyen Khong Ben (Boat Without a Wharf)",
+ "titleVi": "Con thuyền không bến (nhạc Đặng Thế Phong)",
+ "vn": "composed",
+ "composer": "Đặng Thế Phong",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Bản giản lược cho trẻ học đàn — chỉ giai điệu (không có lời), chơi một lượt",
+ "attributionRequired": false,
+ "hand": "BOTH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 26,
+ "position": "free",
+ "phrases": [
+  0,
+  5,
+  9,
+  13
+ ],
+ "notes": [
+  {
+   "rest": true,
+   "beats": 0.5
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 1,
+   "dyn": "p"
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "rest": true,
+   "beats": 0.5
+  },
+  {
+   "rest": true,
+   "beats": 1
+  },
+  {
+   "pitch": "E4",
+   "beats": 4,
+   "finger": 1
+  },
+  {
+   "rest": true,
+   "beats": 0.5
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "A4",
+   "beats": 4,
+   "finger": 3
+  },
+  {
+   "rest": true,
+   "beats": 0.5
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 3,
+   "slur": "start"
+  },
+  {
+   "pitch": "B4",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "C5",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "B4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 3,
+   "slur": "end"
+  },
+  {
+   "pitch": "E4",
+   "beats": 4,
+   "finger": 1
+  },
+  {
+   "rest": true,
+   "beats": 0.5
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "F4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "rest": true,
+   "beats": 2
+  },
+  {
+   "rest": true,
+   "beats": 4
+  },
+  {
+   "rest": true,
+   "beats": 0.5
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "rest": true,
+   "beats": 0.5
+  },
+  {
+   "rest": true,
+   "beats": 1
+  },
+  {
+   "pitch": "E4",
+   "beats": 4,
+   "finger": 1,
+   "dyn": "mf"
+  },
+  {
+   "rest": true,
+   "beats": 0.5
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "A4",
+   "beats": 4,
+   "finger": 3
+  },
+  {
+   "rest": true,
+   "beats": 0.5
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 3,
+   "slur": "start"
+  },
+  {
+   "pitch": "B4",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "C5",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "B4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 3,
+   "slur": "end"
+  },
+  {
+   "pitch": "E4",
+   "beats": 4,
+   "finger": 1,
+   "dyn": "p"
+  },
+  {
+   "rest": true,
+   "beats": 0.5
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "F4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "rest": true,
+   "beats": 2
+  },
+  {
+   "rest": true,
+   "beats": 4
+  }
+ ],
+ "lh": [
+  {
+   "rest": true,
+   "beats": 2
+  },
+  {
+   "rest": true,
+   "beats": 0.5
+  },
+  {
+   "pitch": "A3",
+   "beats": 1,
+   "finger": 4,
+   "dyn": "p"
+  },
+  {
+   "pitch": "D4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "rest": true,
+   "beats": 4
+  },
+  {
+   "rest": true,
+   "beats": 4
+  },
+  {
+   "rest": true,
+   "beats": 4
+  },
+  {
+   "rest": true,
+   "beats": 4
+  },
+  {
+   "rest": true,
+   "beats": 4
+  },
+  {
+   "rest": true,
+   "beats": 2
+  },
+  {
+   "pitch": "D4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "A3",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "C4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "A3",
+   "beats": 4,
+   "finger": 4
+  },
+  {
+   "rest": true,
+   "beats": 2
+  },
+  {
+   "rest": true,
+   "beats": 0.5
+  },
+  {
+   "pitch": "A3",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "D4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "rest": true,
+   "beats": 4
+  },
+  {
+   "rest": true,
+   "beats": 4
+  },
+  {
+   "rest": true,
+   "beats": 4
+  },
+  {
+   "rest": true,
+   "beats": 4
+  },
+  {
+   "rest": true,
+   "beats": 4
+  },
+  {
+   "rest": true,
+   "beats": 2
+  },
+  {
+   "pitch": "D4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "G3",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "C4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "A3",
+   "beats": 4,
+   "finger": 4
+  }
+ ],
+ "lhPosition": "free"
+}

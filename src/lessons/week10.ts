@@ -34,6 +34,8 @@ export const WEEK10: WeekPlan = {
       activities: [
         { kind: 'song', songId: 'old_macdonald', mode: 'wait', hints: 'names', intro: 'Bài này bắt đầu ở Fa — ngón 4 nhé!' },
         { kind: 'song', songId: 'oh_susanna', mode: 'wait', hints: 'names' },
+        // (2026-10-06) Dân ca Cống — bàn tay ngũ cung như "Xòe hoa", nhích lên: thêm một bài Việt Nam cho buổi biểu diễn
+        { kind: 'song', songId: 'ga_gay', mode: 'wait', hints: 'names', intro: 'Gà gáy — dân ca Cống (Lai Châu), nhịp 2/4! Bàn tay ngũ cung: Rê 1, Mi 2, Sol 3, La 4, Si 5 — mỗi ngón một phím. Đàn TO như tiếng gà gáy sáng!' },
       ],
     },
     {

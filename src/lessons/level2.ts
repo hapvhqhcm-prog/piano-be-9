@@ -200,7 +200,17 @@ export const WEEK13: WeekPlan = {
         ),
       ],
     },
-    pair('w13-l2', 13, 'Đôi bạn', '👫', 'two_friends', 'full', 'Tay trái đi nốt trắng (2 phách), tay phải đi nốt đen — hai bạn đi cùng nhau mà không vội!'),
+    {
+      id: 'w13-l2',
+      week: 13,
+      title: 'Đôi bạn & Lý cây xanh',
+      emoji: '👫',
+      activities: [
+        ...pair('w13-l2', 13, 'Đôi bạn', '👫', 'two_friends', 'full', 'Tay trái đi nốt trắng (2 phách), tay phải đi nốt đen — hai bạn đi cùng nhau mà không vội!').activities,
+        // (2026-10-06) Dân ca Nam Bộ, 2/4 — hai tay LUÂN PHIÊN như tuần 11 (không đánh cùng lúc)
+        song('ly_cay_xanh', 'wait', 2, 'names', 'Dân ca Nam Bộ, nhịp 2/4! Tay phải "thế Mi": Mi 1, Sol 2, La 3, Đô cao 5. Tay trái chỉ có Rê (ngón cái) và Đô (ngón 2) ở câu giữa — hai tay thay nhau, không đàn cùng lúc.'),
+      ],
+    },
     pair('w13-l3', 13, 'Thung lũng tiếng vọng', '⛰️', 'echo_valley', 'full', 'Câu LIỀN (dấu luyến) rồi câu NGẮT (dấu chấm); TO (f) rồi NHỎ (p) như tiếng vọng.'),
     {
       id: 'w13-l4',
@@ -617,6 +627,8 @@ export const WEEK20: WeekPlan = {
       activities: [
         song('scale_c_rh', 'wait', 2, 'full', 'Đô Rê Mi (1-2-3) rồi LUỒN ngón cái xuống Fa!'),
         song('scale_c_rh', 'tempo'),
+        // (2026-10-06) Dân ca Bắc Bộ đầy "Tập-tễnh" (tuần 18) — dịch xuống Đô trưởng: tay phải thế Đô, tay trái chỉ Sol (ngón cái)
+        song('co_la', 'wait', 2, 'names', 'Cò lả — dân ca đồng bằng Bắc Bộ! Rất nhiều nhịp "Tập-tễnh" đã học ở tuần 18. Tay phải thế Đô (Đô 1, Rê 2, Mi 3, Sol 5); hai nốt Sol trầm là của tay trái (ngón cái). Bài bắt đầu bằng một nốt lấy đà.'),
       ],
     },
     pair('w20-l2', 20, 'Gam tay trái', '🌊', 'scale_c_lh', 'full', 'Tay trái đi lên: 5-4-3-2-1 rồi ngón 3 VẮT qua La.'),

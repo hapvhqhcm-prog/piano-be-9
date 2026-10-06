@@ -1,0 +1,247 @@
+{
+ "id": "ga_gay",
+ "title": "Ga Gay (Vietnamese folk song)",
+ "titleVi": "Gà gáy (dân ca Cống)",
+ "vn": "folk",
+ "composer": "Dân ca Cống",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Ký âm đơn giản cho app từ các bản ký âm dân ca phổ biến (nhịp 2/4, trường độ như bản gốc)",
+ "attributionRequired": false,
+ "hand": "RH",
+ "bpm": 60,
+ "timeSignature": "2/4",
+ "week": 10,
+ "position": "free",
+ "phrases": [
+  0,
+  4,
+  8,
+  13
+ ],
+ "notes": [
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 4,
+   "dyn": "f"
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "B4",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "B4",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "rest": true,
+   "beats": 1
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "B4",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "B4",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "B4",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "D4",
+   "beats": 2,
+   "finger": 1
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "rest": true,
+   "beats": 1
+  },
+  {
+   "pitch": "B4",
+   "beats": 1,
+   "finger": 5,
+   "dyn": "mf"
+  },
+  {
+   "pitch": "B4",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "A4",
+   "beats": 2,
+   "finger": 4
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "rest": true,
+   "beats": 1
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 1,
+   "dyn": "f"
+  },
+  {
+   "pitch": "D4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "rest": true,
+   "beats": 1
+  }
+ ]
+}

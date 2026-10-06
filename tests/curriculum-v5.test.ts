@@ -96,7 +96,8 @@ describe('cấu trúc 30 tuần', () => {
       expect(t!.arrangementBy).toContain('tự sáng tác');
       expect(songUses(id).length, id).toBeGreaterThan(0);
     }
-    expect(SONGS.length).toBe(56 + NEW.length);
+    // + 12 bài Việt Nam (2026-10-06): 9 dân ca + 3 ca khúc public domain (Lý ngựa ô thay bản đầy đủ — cùng id)
+    expect(SONGS.length).toBe(56 + NEW.length + 12);
   });
 
   it('mục tiêu cuối nói thật: ≈ Faber cấp 1 / đầu cấp 2', () => {

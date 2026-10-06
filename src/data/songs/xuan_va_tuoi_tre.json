@@ -1,0 +1,600 @@
+{
+ "id": "xuan_va_tuoi_tre",
+ "title": "Xuan va tuoi tre (Spring and Youth)",
+ "titleVi": "Xuân và tuổi trẻ (nhạc La Hối)",
+ "vn": "composed",
+ "composer": "La Hối",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Bản giản lược cho trẻ học đàn — chỉ giai điệu (không có lời), chơi một lượt",
+ "attributionRequired": false,
+ "hand": "BOTH",
+ "bpm": 60,
+ "timeSignature": "3/4",
+ "week": 17,
+ "position": "free",
+ "phrases": [
+  0,
+  5,
+  9,
+  13,
+  17,
+  21,
+  25,
+  29
+ ],
+ "notes": [
+  {
+   "rest": true,
+   "beats": 3
+  },
+  {
+   "pitch": "E5",
+   "beats": 2,
+   "finger": 5,
+   "dyn": "mf"
+  },
+  {
+   "pitch": "D5",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "C5",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "rest": true,
+   "beats": 2
+  },
+  {
+   "pitch": "B4",
+   "beats": 3,
+   "finger": 2
+  },
+  {
+   "pitch": "B4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "rest": true,
+   "beats": 1
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "C5",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "B4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "rest": true,
+   "beats": 2
+  },
+  {
+   "rest": true,
+   "beats": 3
+  },
+  {
+   "rest": true,
+   "beats": 3
+  },
+  {
+   "rest": true,
+   "beats": 3
+  },
+  {
+   "rest": true,
+   "beats": 3
+  },
+  {
+   "pitch": "A4",
+   "beats": 3,
+   "finger": 1
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "rest": true,
+   "beats": 1
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "C5",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "B4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "rest": true,
+   "beats": 1
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "C5",
+   "beats": 3,
+   "finger": 3
+  },
+  {
+   "pitch": "C5",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "rest": true,
+   "beats": 1
+  },
+  {
+   "pitch": "C5",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "D5",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "C5",
+   "beats": 2,
+   "finger": 3,
+   "dyn": "f"
+  },
+  {
+   "pitch": "B4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "C5",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "B4",
+   "beats": 1.5,
+   "finger": 2
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "B4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "rest": true,
+   "beats": 3
+  },
+  {
+   "rest": true,
+   "beats": 2
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "B4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "A4",
+   "beats": 2,
+   "finger": 1
+  },
+  {
+   "rest": true,
+   "beats": 0.5
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "rest": true,
+   "beats": 3
+  },
+  {
+   "rest": true,
+   "beats": 3
+  },
+  {
+   "rest": true,
+   "beats": 3
+  },
+  {
+   "rest": true,
+   "beats": 3
+  },
+  {
+   "rest": true,
+   "beats": 3
+  },
+  {
+   "pitch": "A4",
+   "beats": 3,
+   "finger": 1,
+   "dyn": "mf"
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "rest": true,
+   "beats": 1
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "C5",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "B4",
+   "beats": 2,
+   "finger": 2
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "B4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "A4",
+   "beats": 1.5,
+   "finger": 1
+  },
+  {
+   "rest": true,
+   "beats": 0.5
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "C5",
+   "beats": 3,
+   "finger": 3
+  },
+  {
+   "pitch": "C5",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "rest": true,
+   "beats": 1
+  }
+ ],
+ "lh": [
+  {
+   "rest": true,
+   "beats": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 1,
+   "dyn": "mf"
+  },
+  {
+   "rest": true,
+   "beats": 3
+  },
+  {
+   "rest": true,
+   "beats": 1
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "rest": true,
+   "beats": 3
+  },
+  {
+   "rest": true,
+   "beats": 3
+  },
+  {
+   "rest": true,
+   "beats": 3
+  },
+  {
+   "rest": true,
+   "beats": 1
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 3,
+   "finger": 1
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "rest": true,
+   "beats": 1
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 2,
+   "finger": 4
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "rest": true,
+   "beats": 3
+  },
+  {
+   "rest": true,
+   "beats": 3
+  },
+  {
+   "rest": true,
+   "beats": 3
+  },
+  {
+   "rest": true,
+   "beats": 1
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "rest": true,
+   "beats": 1
+  },
+  {
+   "rest": true,
+   "beats": 3
+  },
+  {
+   "rest": true,
+   "beats": 3
+  },
+  {
+   "rest": true,
+   "beats": 3
+  },
+  {
+   "rest": true,
+   "beats": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 3,
+   "finger": 3,
+   "dyn": "f"
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "rest": true,
+   "beats": 2
+  },
+  {
+   "rest": true,
+   "beats": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "rest": true,
+   "beats": 0.5
+  },
+  {
+   "pitch": "G4",
+   "beats": 1.5,
+   "finger": 1
+  },
+  {
+   "pitch": "C4",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "E4",
+   "beats": 3,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "rest": true,
+   "beats": 1
+  },
+  {
+   "pitch": "D4",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "C4",
+   "beats": 2,
+   "finger": 5,
+   "dyn": "mf"
+  },
+  {
+   "pitch": "D4",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 1.5,
+   "finger": 1
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "rest": true,
+   "beats": 3
+  },
+  {
+   "rest": true,
+   "beats": 3
+  },
+  {
+   "rest": true,
+   "beats": 3
+  },
+  {
+   "rest": true,
+   "beats": 1
+  },
+  {
+   "rest": true,
+   "beats": 0.5
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "rest": true,
+   "beats": 1
+  },
+  {
+   "rest": true,
+   "beats": 3
+  },
+  {
+   "rest": true,
+   "beats": 3
+  }
+ ],
+ "lhPosition": "free"
+}

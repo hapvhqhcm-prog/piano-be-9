@@ -104,6 +104,8 @@ export function libraryScreen(app: App) {
       list.length ? h('section', {}, h('h2', { class: 'lib-level' }, title), h('div', { class: 'library' }, ...list.map(card))) : null;
     const vnSections = [
       grid('🇻🇳 Dân ca Việt Nam', SONGS.filter((x) => x.vn === 'folk')),
+      // Ca khúc nhạc sĩ Việt Nam đã thuộc về công chúng (Luật SHTT Điều 43): ghi tên nhạc sĩ trên thẻ, chỉ giai điệu
+      grid('🎼 Nhạc sĩ Việt Nam xưa', SONGS.filter((x) => x.vn === 'composed')),
       grid('🎶 Bài quen hát lời Việt', SONGS.filter((x) => x.vn === 'lyrics')),
       parentSection,
       parents.length ? null : h('p', { class: 'muted lib-note' }, '📝 Bố mẹ có thể thêm bài con thích ở màn Phụ huynh → "📝 Thêm bài hát".'),

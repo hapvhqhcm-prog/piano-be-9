@@ -21,20 +21,31 @@ const ALLOWED = [
   'hand', 'bpm', 'timeSignature', 'week', 'extension', 'position', 'lh', 'lhPosition', 'phrases', 'notes',
 ];
 
-it('có 70 bài hát (56 cũ + 14 bài tự sáng tác v5), id không trùng, đủ tuần 2–30 (trừ 21 — hòa nhạc Cấp 2; v5.1: 31 tuần)', () => {
+it('có 82 bài hát (56 cũ + 14 bài tự sáng tác v5 + 12 bài Việt Nam 2026-10-06), id không trùng, đủ tuần 2–30 (trừ 21 — hòa nhạc Cấp 2; v5.1: 31 tuần)', () => {
   // 51 bài + 6 bài dân ca Việt Nam − "Cầu London — chấm dôi" (bài lặp, thay bằng "Bắc kim thang") — OWNER yêu cầu 2026-10-05
   // v5 (OWNER duyệt 2026-10-05): + 14 bài tự sáng tác cho tuần củng cố / tuần nhịp mới (giữ đủ 56 bài cũ)
-  expect(SONGS).toHaveLength(70);
-  expect(new Set(SONGS.map((s) => s.id)).size).toBe(70);
+  // 2026-10-06: + 9 dân ca + 3 ca khúc nhạc sĩ Việt Nam đã thuộc về công chúng (Lý ngựa ô thay bằng bản đầy đủ — cùng id)
+  expect(SONGS).toHaveLength(82);
+  expect(new Set(SONGS.map((s) => s.id)).size).toBe(82);
   const weeks = new Set(SONGS.map((s) => s.week));
   for (let w = 2; w <= 30; w++) if (w !== 21) expect(weeks.has(w), `tuần ${w}`).toBe(true);
 });
 
-it('bài Việt Nam (2026-10-06): 6 dân ca vn=folk; bài quen hát lời Việt vn=lyrics, tên gọi khác chỉ là tên', () => {
+it('bài Việt Nam (2026-10-06): 15 dân ca vn=folk; 3 ca khúc PD vn=composed; bài quen hát lời Việt vn=lyrics, tên gọi khác chỉ là tên', () => {
   const folk = SONGS.filter((s) => s.vn === 'folk').map((s) => s.id).sort();
-  expect(folk).toEqual(['bac_kim_thang', 'inh_la_oi', 'ly_cay_bong', 'ly_cay_da', 'ly_ngua_o', 'xoe_hoa']);
-  // mọi bài "Dân ca <vùng miền Việt Nam>" đều được đánh dấu
-  for (const s of SONGS) if (/^Dân ca (Nam Bộ|quan họ|Thái)/.test(s.composer ?? '')) expect(s.vn, s.id).toBe('folk');
+  expect(folk).toEqual([
+    'bac_kim_thang', 'beo_dat_may_troi', 'co_la', 'ga_gay', 'inh_la_oi', 'ly_cay_bong', 'ly_cay_da', 'ly_cay_xanh', 'ly_con_sao',
+    'ly_ngua_o', 'mua_roi', 'ngay_mua_vui', 'nguoi_oi_nguoi_o_dung_ve', 'trong_com', 'xoe_hoa',
+  ]);
+  // mọi bài "Dân ca <vùng miền / dân tộc Việt Nam>" đều được đánh dấu
+  for (const s of SONGS) if (/^Dân ca (Nam Bộ|Bắc Bộ|quan họ|Thái|Xá|Cống)/.test(s.composer ?? '')) expect(s.vn, s.id).toBe('folk');
+  // Ca khúc nhạc sĩ Việt Nam đã thuộc về công chúng: ghi tên nhạc sĩ, "bản giản lược", chỉ giai điệu
+  const composed = SONGS.filter((s) => s.vn === 'composed');
+  expect(composed.map((s) => s.id).sort()).toEqual(['con_thuyen_khong_ben', 'dem_thu', 'xuan_va_tuoi_tre']);
+  for (const s of composed) {
+    expect(['La Hối', 'Đặng Thế Phong']).toContain(s.composer);
+    expect(s.arrangementBy).toContain('Bản giản lược cho trẻ học đàn');
+  }
   const lyrics = SONGS.filter((s) => s.vn === 'lyrics').map((s) => s.id);
   for (const id of ['frere_jacques_easy', 'twinkle_easy', 'birthday_both', 'jingle_bells']) expect(lyrics).toContain(id);
   expect(SONGS.find((s) => s.id === 'twinkle_easy')!.aka).toBe('Sao nhỏ lấp lánh');

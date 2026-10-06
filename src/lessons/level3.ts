@@ -199,13 +199,16 @@ export const WEEK24: WeekPlan = {
   criterion: { text: 'Chơi trọn "Đêm thánh vô cùng" THEO NHỊP (tốc độ ≥ 50) — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
   kidGoal: 'Đêm thánh vô cùng theo nhịp — 2 hôm nhé! 🌟',
   lessons: [
-    { id: 'w24-l1', week: 24, title: 'Đọc nhạc nhiều thế · Lý ngựa ô', emoji: '📖', activities: [
+    { id: 'w24-l1', week: 24, title: 'Đọc nhạc nhiều thế', emoji: '📖', activities: [
       { kind: 'sight', title: 'Đọc nhạc thế Đô', position: 'C', hand: 'RH', count: 2, rhythm: 2, hints: 'staff' },
       { kind: 'sight', title: 'Đọc nhạc thế Sol', position: 'G', hand: 'RH', count: 2, rhythm: 2, hints: 'staff' },
-      // Dân ca Việt Nam (OWNER yêu cầu 2026-10-05): hai tay luân phiên (bàn tay mở rộng Rê–Đô cao quá rộng cho bé)
-      song('ly_ngua_o', 'wait', 2, 'names', 'Dân ca Nam Bộ, nhịp 2/4! Hai tay thay nhau: tay trái "Rê Fa Rê Fa" (ngón 3 và ngón cái), tay phải thế Sol: Sol 1, La 2, Đô cao 4. Bài bắt đầu bằng hai nốt lấy đà.'),
     ] },
     pair('w24-l2', 24, 'Đêm thánh vô cùng', '🌟', 'silent_night', 'Nhịp 3, có chấm dôi và dời tay ở câu 3.'),
+    // Dân ca Việt Nam (OWNER yêu cầu 2026-10-05; 2026-10-06: BẢN ĐẦY ĐỦ SGK Âm nhạc 9 — dài gấp 3 bản cũ nên tách khỏi w24-l1
+    // để buổi học vẫn ≤ 12 phút): hai tay luân phiên theo âm vực
+    { id: 'w24-ngua', week: 24, title: 'Lý ngựa ô', emoji: '🐎', activities: [
+      song('ly_ngua_o', 'wait', 2, 'names', 'Dân ca Nam Bộ, nhịp 2/4 — bản đầy đủ! Hai tay thay nhau: tay phải thế Sol (Sol 1, La 2, Si 3, Rê cao 5), tay trái Mi 1, Rê 2, Đô 3, La trầm 5. Bài bắt đầu bằng hai nốt lấy đà; đoạn cuối nhắc lại một lần.'),
+    ] },
   ],
 };
 

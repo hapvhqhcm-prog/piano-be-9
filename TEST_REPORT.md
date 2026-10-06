@@ -447,3 +447,38 @@ Chuyên gia chấm lại bản 0.9.1: sư phạm **B** (trước C+/B−), trả
   - thích nghi phòng nhanh hơn lúc micro khởi động.
   - Bench 99%, kể cả kịch bản AGC/khởi động.
 - 934 test qua; robot e2e qua kịch bản A, B, C.
+
+## 23. Thêm bài Việt Nam + "Bố mẹ thêm bài" (2026-10-06)
+
+**Nguyên tắc bản quyền:** app công khai trên mạng nên chỉ đưa vào giai điệu không còn bản quyền (luật SHTT Việt Nam: đời tác giả + 50 năm). Bài phải có ≥ 2 nguồn ký âm độc lập khớp nhau; máy đối chiếu từng nốt; chỉ dùng giai điệu, không dùng lời.
+
+**13 bài mới (tổng 82):**
+- **Dân ca:**
+  - Gà gáy (Cống) — tuần 10
+  - Lý cây xanh — tuần 11
+  - Ngày mùa vui (giai điệu Thái) — tuần 13
+  - Lý con sáo Gò Công — tuần 17
+  - Cò lả — tuần 18
+  - Mưa rơi (Xá) — tuần 18
+  - Trống cơm — tuần 20
+  - Bèo dạt mây trôi — tuần 24
+  - Người ơi người ở đừng về (đoạn có nhịp) — tuần 27
+  - Lý ngựa ô bản đầy đủ (39 ô, bài học riêng w24-ngua)
+- **Nhạc sĩ Việt Nam xưa** (đã hết bảo hộ; ghi tên tác giả, giữ tên bài, ghi rõ "bản giản lược"):
+  - Xuân và tuổi trẻ (La Hối, mất 1945) — tuần 17
+  - Đêm thu, Con thuyền không bến (Đặng Thế Phong, mất 1942) — tuần 25–26
+- **Không đưa vào:**
+  - Đi cấy, Qua cầu gió bay, Cây trúc xinh, Ru con, Lý kéo chài, Ru em (thiếu nguồn độc lập);
+  - Giọt mưa thu, các bài của Hoàng Việt (có thể còn bảo hộ ở nước ngoài);
+  - Quốc ca (chưa có văn bản chính thức cho dùng tự do).
+
+**"📝 Bố mẹ thêm bài"** (Phụ huynh): bố mẹ tự nhập bất kỳ bài nào, chỉ lưu trên iPad (dùng riêng trong gia đình).
+- Gõ "Đô Rê Mi" (`-` kéo dài, `/` móc đơn, `'` `,` lên/xuống quãng 8, `|` vạch nhịp) hoặc chạm phím.
+- Khuông hiện ngay, máy tự đánh ngón; học đủ mọi chế độ.
+
+**Thư viện:**
+- bộ lọc "🇻🇳 Bài Việt Nam" (dân ca, nhạc sĩ xưa, bài quen hát lời Việt, bài bố mẹ thêm);
+- tên Việt "Sao nhỏ lấp lánh", "Leng keng";
+- sửa nhãn dân ca nước ngoài.
+
+**Kiểm tra:** 1156 test; robot e2e qua cả 5 kịch bản.

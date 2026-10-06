@@ -144,6 +144,19 @@ def song(id, title, titleVi, composer, week, hand, seq, phrases=None, ext=None, 
     # Nhịp (v5): móc kép (< nửa phách) chỉ từ tuần 18, nhịp 2/4 chỉ từ tuần 9
     if any(n["beats"] < 0.5 for n in allv): assert week >= 18, (id, "móc kép chỉ từ tuần 18")
     if ts == "2/4": assert week >= 9, (id, "nhịp 2/4 chỉ từ tuần 9")
+    # (2026-10-06) Các nhịp / phím khác — đúng tuần dạy (tests/curriculum-v5.test.ts): 3/4 tuần 15, phím đen tuần 16,
+    # đen chấm dôi tuần 17, "Tập-tễnh" (móc đơn chấm) tuần 18, nghịch phách tuần 19
+    if ts == "3/4": assert week >= 15, (id, "nhịp 3/4 chỉ từ tuần 15")
+    if any(p[1:-1] for n in allv if not n.get("rest") for p in [n["pitch"]] + [a["pitch"] for a in n.get("also", [])]):
+        assert week >= 16, (id, "phím đen chỉ từ tuần 16")
+    for v in [notes] + ([d["lh"]] if lh else []):
+        s = 0
+        for n in v:
+            if not n.get("rest"):
+                if n["beats"] == 1.5: assert week >= 17, (id, "đen chấm dôi chỉ từ tuần 17")
+                if n["beats"] == 0.75: assert week >= 18, (id, "móc đơn chấm chỉ từ tuần 18")
+                if s % 1 > 1e-9 and s + n["beats"] > -(-s // 1) + 1e-9: assert week >= 19, (id, "nghịch phách chỉ từ tuần 19")
+            s += n["beats"]
     return d
 
 ORIG = "Bài tự sáng tác cho app (piano-be-9)"
@@ -361,14 +374,7 @@ S += [
   "p (G4:1.5/2 A4:0.5/3 G4/2)  E4:3/1  (G4:1.5/2 A4:0.5/3 G4/2)  E4:3/1  D5:2/5 D5/5  B4:3/3  C5:2/4 C5/4  G4:3/1  "
   "mf A4:2/3 A4/3  C5:1.5/5 B4:0.5/4 A4/3  G4:1.5/2 A4:0.5/3 G4/2  E4:3/1  A4:2/3 A4/3  C5:1.5/5 B4:0.5/4 A4/3  G4:1.5/2 A4:0.5/3 G4/2  E4:3/1  "
   "p D5:2/3 D5/3  F5:1.5/5 D5:0.5/3 B4/1  C5:3/2  E5:3/4  C5:1.5/4 G4:0.5/1 E4/3  G4:1.5/5 F4:0.5/4 D4/2  C4:3/1",[0,4,8,12,16,20],pos="free",ts="3/4"),
- # Tuần 24 — dân ca: Lý ngựa ô (12 ô đầu, Đô trưởng ngũ cung Rê Fa Sol La Đô — tầm quãng 7: quá rộng cho MỘT bàn tay bé).
- # Chia theo âm vực, hai tay LUÂN PHIÊN (như "Lý cây bông"): tay phải thế Sol (Sol1 La2 Đô4), tay trái giữ Rê–Fa
- # (Fa ngón cái, Rê ngón 3 — "Rê Fa Rê Fa" trọn trong tay trái). Mỗi ngón một phím, không bàn tay nào rộng quá quãng 4.
- song("ly_ngua_o","Ly Ngua O (Vietnamese folk song)","Lý ngựa ô (dân ca Nam Bộ)","Dân ca Nam Bộ",24,"BOTH",
-  "mf R C5:0.5 A4:0.5  R:2  G4:2  R:2  R C5:0.5 A4:0.5  R:2  G4:1.5 R:0.5  G4 G4  "
-  "C5:1.5 G4:0.5  C5:0.5 A4:0.5 R  G4:2  A4:0.5 G4:0.5 R:0.5 A4:0.5  G4:2",[0,4,9],pos="G",
-  lh="R:2  D4:0.5/3 F4:0.5/1 D4:0.5/3 F4:0.5/1  R:2  R:2  R:2  D4:0.5/3 F4:0.5/1 D4:0.5/3 F4:0.5/1  R:1.5 F4:0.5/1  R:2  "
-  "R:2  R D4:0.5/3 F4:0.5/1  R:2  R F4:0.5/1 R:0.5  R:2",lhpos="free",ts="2/4",arr=FOLK),
+ # Tuần 24 — dân ca: Lý ngựa ô — 2026-10-06: thay bản 12 ô cũ bằng BẢN ĐẦY ĐỦ của SGK (xem phần "Bài Việt Nam bổ sung" bên dưới).
  # Tuần 25 — trưởng & thứ: bài tự sáng tác giọng La thứ (thay "Bài ca niềm vui — La thứ"): NHỎ, NGẮT, ô cuối TO
  song("ninja_tiptoe","Tiptoe Ninja","Ninja rón rén",ORIG,25,"RH",
   "p A3' A3' C4' A3'  B3' B3' D4' B3'  A3' C4' E4' C4'  B3:2 R:2  A3' A3' C4' A3'  B3' D4' C4' B3'  "
@@ -412,11 +418,220 @@ S += [
   lh=f"{I}:4  {I}:4  {I}:4  {V}:4  {I}:4  {I}:4  {I}:4  {V}:2 {I}:2"),
 ]
 
+# ---------------------------------------------------------------- BÀI VIỆT NAM BỔ SUNG (OWNER 2026-10-06)
+# 10 dân ca + 3 ca khúc PUBLIC DOMAIN (nhạc sĩ mất trước 1946 — Luật SHTT Điều 27, 43). Giai điệu chép ĐÚNG TỪNG NỐT từ
+# tư liệu nghiên cứu (mỗi bài ≥ 2 bản ký âm độc lập; SGK Âm nhạc là một nguồn): "|" = vạch nhịp, ô 0 = nhịp lấy đà (có thể
+# rỗng), dấu "~" = dây nối. Chỉ được: dịch giọng (transpose), đổi quãng tám một nốt đã ghi trong tư liệu (octave), mở dấu
+# nhắc lại (order). Dây nối qua vạch nhịp → đàn lại nốt (app chưa có dây nối; như "Lý cây đa").
+# Đối chiếu tự động: tests/folk-songs.test.ts ("đúng từng nốt").
+# Cách chia tay: theo âm vực — mỗi bàn tay một thế 5 ngón cố định (mỗi ngón MỘT phím, tầm ≤ quãng 6); hai tay LUÂN PHIÊN,
+# không bao giờ đánh cùng lúc (như "Lý cây bông"). Thế tay chỉ đổi ở ĐẦU CÂU (ô trong `phrases`), khi tay đó đang nghỉ / nốt dài.
+# hands: [(ô bắt đầu, {nốt: "R1" | "L2" …}), …] — bảng áp dụng từ ô đó tới bảng kế tiếp.
+VN_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+FOLK_T = FOLK + "; dịch giọng cho dễ đàn"
+PD_ARR = "Bản giản lược cho trẻ học đàn — chỉ giai điệu (không có lời), chơi một lượt"
+
+def _fmt(b):
+    return f"{b:g}"
+
+def _rest_pieces(s, e, per):
+    """Dấu lặng từ phách s tới e: tách ở vạch nhịp, gọn theo phách (lẻ ¼ → ¼, lẻ ½ → ½, nguyên phách gộp)."""
+    out = []
+    while s < e - 1e-9:
+        seg_e = min(e, (int(s // per + 1e-9) + 1) * per)
+        while s < seg_e - 1e-9 and abs(s - round(s)) > 1e-9:
+            q = round((s % 1) * 4)
+            step = min(0.25 if q % 2 else 0.5, seg_e - s)
+            out.append(step); s += step
+        whole = int(seg_e - s + 1e-9)
+        if whole: out.append(whole); s += whole
+        while s < seg_e - 1e-9:
+            step = 0.5 if seg_e - s >= 0.5 - 1e-9 else 0.25
+            out.append(step); s += step
+    return out
+
+def vn_song(id, title, titleVi, composer, week, src, ts, hands, phrases, *, order=None, transpose=0, octave=None,
+            dyn=None, slurs=(), arr=FOLK):
+    per = int(ts.split("/")[0])
+    raw = [[t for t in bar.split()] for bar in src.split("|")]
+    if order is None: order = list(range(0 if raw[0] else 1, len(raw)))
+    events = []   # (ô, phách bắt đầu, cao độ | "R", trường độ)
+    t = 0
+    for k, i in enumerate(order):
+        bar = []
+        for j, tok in enumerate(raw[i]):
+            p, _, b = tok.rstrip("~").partition(":")
+            b = num(b)
+            if p != "R":
+                q = midi(p) + transpose + (octave or {}).get(i, {}).get(j, 0)
+                name = f"{VN_NAMES[q % 12]}{q // 12 - 1}"
+                assert ("#" in name) == ("#" in p), (id, "dịch giọng sinh phím đen", p, name)
+                p = name
+            bar.append((p, b))
+        L = sum(b for _, b in bar)
+        if k == 0 and L < per: bar = [("R", per - L)] + bar           # nhịp lấy đà
+        elif k == len(order) - 1 and L < per: bar += [("R", per - L)]  # ô cuối bù phần lấy đà
+        assert sum(b for _, b in bar) == per, (id, "ô", i, bar)
+        for p, b in bar:
+            events.append((k, t, p, b)); t += b
+    def finger_of(k, p):
+        tab = [h for s, h in hands if s <= k][-1]
+        return tab[p]
+    # Luyến: (ô, nốt thứ i, ô, nốt thứ j) — đếm nốt có cao độ trong ô (sau khi thêm lặng lấy đà)
+    nth = {}
+    for idx, (k, _, p, _) in enumerate(events):
+        if p != "R": nth[(k, sum(1 for e in events[:idx] if e[0] == k and e[2] != "R"))] = idx
+    slur_at = {}
+    for ka, ia, kb, ib in slurs:
+        a, b = nth[(ka, ia)], nth[(kb, ib)]
+        hs = {finger_of(events[x][0], events[x][2])[0] for x in range(a, b + 1) if events[x][2] != "R"}
+        assert len(hs) == 1 and all(events[x][2] != "R" for x in range(a, b + 1)), (id, "luyến phải trọn một tay, không lặng", ka)
+        slur_at[a] = "("; slur_at[b] = ")"
+    dyn = dyn or {}
+    voices = {"R": [], "L": []}
+    last_dyn = {"R": None, "L": None}
+    for idx, (k, s, p, b) in enumerate(events):
+        if p == "R":
+            for v in voices.values(): v.append(("R", s, b))
+            continue
+        hf = finger_of(k, p)
+        h, f = hf[0], int(hf[1:])
+        cur = [d for kk, d in sorted(dyn.items()) if kk <= k]
+        cur = cur[-1] if cur else None
+        tok = f"{p}:{_fmt(b)}/{f}"
+        if idx in slur_at: tok = "(" + tok if slur_at[idx] == "(" else tok + ")"
+        if cur and cur != last_dyn[h]:
+            voices[h].append(("D", s, cur)); last_dyn[h] = cur
+        voices[h].append(("N", s, tok))
+        voices["L" if h == "R" else "R"].append(("R", s, b))
+    def render(v):
+        out, i = [], 0
+        while i < len(v):
+            if v[i][0] != "R":
+                out.append(v[i][2]); i += 1; continue
+            s0 = v[i][1]; e = s0
+            while i < len(v) and v[i][0] == "R": e = v[i][1] + v[i][2]; i += 1
+            out += [f"R:{_fmt(x)}" for x in _rest_pieces(s0, e, per)]
+        return "  ".join(out)
+    has_lh = any(x[0] == "N" for x in voices["L"])
+    hand = "BOTH" if has_lh else "RH"
+    return song(id, title, titleVi, composer, week, hand, render(voices["R"]), phrases, pos="free",
+                lh=render(voices["L"]) if has_lh else None, lhpos="free", ts=ts, arr=arr)
+
+S += [
+ # Tuần 10 — Gà gáy (dân ca Cống, SGK Âm nhạc 1 KNTT + bản Lê Trần Thanh): Rê Mi Sol La Si — bàn tay NGŨ CUNG như "Xòe hoa",
+ # nhích lên một cung: Rê1 Mi2 Sol3 La4 Si5 (Mi–Sol cách một phím bằng ngón 2-3). Một tay, không dời tay.
+ vn_song("ga_gay", "Ga Gay (Vietnamese folk song)", "Gà gáy (dân ca Cống)", "Dân ca Cống", 10,
+  " | A4:0.5 G4:0.5 B4:0.5 A4:0.5 | B4:0.5 A4:0.5 G4:0.5 E4:0.5 | G4:2 | G4:1 R:1 | G4:0.5 B4:0.5 B4:0.5 A4:0.5 | B4:0.5 A4:0.5 G4:0.5 E4:0.5 | D4:2 | D4:1 R:1 | B4:1 B4:0.5 A4:0.5 | G4:1 D4:0.5 E4:0.5 | G4:0.5 A4:0.5 G4:0.5 E4:0.5 | A4:2 | A4:1 R:1 | D4:1 D4:0.5 E4:0.5 | G4:0.5 A4:0.5 G4:0.5 E4:0.5 | G4:2 | G4:1 R:1",
+  "2/4", [(0, {"D4": "R1", "E4": "R2", "G4": "R3", "A4": "R4", "B4": "R5"})], [0, 4, 8, 13],
+  dyn={0: "f", 8: "mf", 13: "f"}),
+ # Tuần 11 — Lý cây xanh (dân ca Nam Bộ, Trần Kiết Tường ký âm; 3 nguồn): Đô–Đô cao (quãng 8) → hai tay luân phiên:
+ # tay phải "thế Mi" Mi1 Sol2 La3 Đô cao5 (như "Lý cây bông"), tay trái chỉ Rê (ngón cái) – Đô (ngón 2) ở ô 5–6.
+ vn_song("ly_cay_xanh", "Ly Cay Xanh (Vietnamese folk song)", "Lý cây xanh (dân ca Nam Bộ)", "Dân ca Nam Bộ", 11,
+  "A4:0.5 | G4:1 G4:1 | G4:1 R:0.5 E4:0.5 | C5:1 A4:1 | G4:1 R:0.5 G4:0.5 | E4:0.5 G4:0.5 E4:0.5 D4:0.5 | C4:1 R:0.5 G4:0.5 | C5:1 A4:1 | G4:1 R:0.5 A4:0.5 | G4:0.5 E4:0.5 G4:0.5 A4:0.5 | G4:1 R:0.5 A4:0.5 | G4:0.5 E4:0.5 G4:0.5 A4:0.5 | G4:2",
+  "2/4", [(0, {"E4": "R1", "G4": "R2", "A4": "R3", "C5": "R5", "D4": "L1", "C4": "L2"})], [0, 5, 9],
+  dyn={0: "mf", 11: "p"}),
+ # Tuần 13 — Ngày mùa vui (giai điệu dân ca Thái; lời mới Hoàng Lân KHÔNG dùng; SGK Âm nhạc 2 CTST + Cánh Diều):
+ # tay phải ngũ cung Sol1 La2 Si3 Rê cao4 Mi cao5, tay trái Mi (ngón cái) – Rê (ngón 2).
+ vn_song("ngay_mua_vui", "Ngay Mua Vui (Vietnamese folk melody)", "Ngày mùa vui (giai điệu dân ca Thái)", "Dân ca Thái", 13,
+  "A4:0.5 | A4:1 E5:0.5 E5:0.5 | D5:1 R:0.5 D5:0.5 | D5:1 E5:0.5 D5:0.5 | B4:1 R:0.5 A4:0.5 | B4:0.5 A4:0.5 G4:0.5 A4:0.5 | A4:1 B4:0.5 D5:0.5 | B4:0.5 A4:0.5 G4:0.5 A4:0.5 | E4:1 R:0.5 D4:0.5 | E4:0.5 D4:0.5 E4:0.5 G4:0.5 | A4:1 B4:0.5 D5:0.5 | B4:0.5 A4:0.5 G4:0.5 A4:0.5 | A4:1 R:0.5 D4:0.5 | E4:0.5 D4:0.5 E4:0.5 G4:0.5 | A4:1 B4:0.5 D5:0.5 | B4:0.5 A4:0.5 G4:0.5 A4:0.5 | A4:1 R:0.5",
+  "2/4", [(0, {"G4": "R1", "A4": "R2", "B4": "R3", "D5": "R4", "E5": "R5", "E4": "L1", "D4": "L2"})], [0, 5, 9, 13],
+  dyn={0: "f", 9: "mf", 13: "f"}),
+ # Tuần 17 — Lý con sáo Gò Công (dân ca Nam Bộ, Văn Lưu sưu tầm – Trần Kiết Tường ký âm; vnguitar + SGK Cánh Diều + nốt chữ).
+ # Câu 1–3 (ô 0–12): tay phải "thế Sol nhích lên" Sol1 Si2 Đô3 Rê4 Mi5 (ngón cái duỗi xuống Sol). Nghỉ một phách ở ô 12 →
+ # câu 4–5: thế Sol Sol1 La2 Đô4; tay trái chỉ Rê (ngón cái).
+ vn_song("ly_con_sao", "Ly Con Sao (Vietnamese folk song)", "Lý con sáo Gò Công (dân ca Nam Bộ)", "Dân ca Nam Bộ", 17,
+  "G4:1 | G4:1 G4:1 | G4:0.5 C5:0.5 B4:0.5 D5:0.5 | C5:2 | D5:1.5 E5:0.5 | D5:1 C5:0.5 B4:0.5 | G4:1 G4:1 | G4:0.5 C5:0.5 C5:0.5 B4:0.5 | C5:2 | D5:1.5 E5:0.5 | D5:1 B4:1 | C5:1 D5:1 | G4:1 R:1 | G4:1 D4:1 | G4:1 D4:1 | D4:1 A4:0.5 C5:0.5 | G4:1 R:1 | G4:1 D4:1 | G4:1 D4:1 | D4:1 A4:0.5 C5:0.5 | G4:2",
+  "2/4", [(0, {"G4": "R1", "B4": "R2", "C5": "R3", "D5": "R4", "E5": "R5"}),
+          (13, {"G4": "R1", "A4": "R2", "C5": "R4", "D4": "L1"})], [0, 4, 9, 13, 17],
+  dyn={0: "mf", 17: "p"}),
+ # Tuần 17 — Xuân và tuổi trẻ: NHẠC La Hối (1920–1945; PD ở VN từ 1996, ở Mỹ không được phục hồi). Lời Thế Lữ còn bảo hộ → CHỈ giai điệu.
+ # Hai bản ký âm (Đón Gió 1954 Rê trưởng hạ một cung = bản in hiện đại Đô trưởng). Valse 3/4, lấy đà 1 phách.
+ # Bản giản lược: chơi MỘT LƯỢT không nhắc lại — đoạn A ô 1–12 rồi kết 2 (ô 17–20), điệp khúc ô 21–34 rồi kết 2 (ô 37–38).
+ # Tay phải La1 Si2 Đô3 Rê4 Mi5 (La–Mi cao), tay trái Đô4–Sol4: Đô5 Rê4 Mi3 Sol1 (thế Đô tay trái, cao một quãng tám).
+ vn_song("xuan_va_tuoi_tre", "Xuan va tuoi tre (Spring and Youth)", "Xuân và tuổi trẻ (nhạc La Hối)", "La Hối", 17,
+  "G4:1 | E5:2 D5:1 | C5:1 E4:1 G4:1 | B4:3 | B4:1 R:1 A4:1 | C5:2 B4:1 | A4:1 C4:1 E4:1 | G4:3 | G4:1 R:1 E4:1 | D4:2 E4:1 | C4:1 E4:1 G4:1 | A4:3 | A4:1 R:1 A4:1 | C5:2 C5:1 | B4:1 G4:1 A4:1 | E4:3 | E4:1 R:1 G4:1 | C5:2 B4:1 | A4:1 G4:1 A4:1 | C5:3 | C5:1 R:1 C5:0.5 D5:0.5 | C5:2 B4:0.5 C5:0.5 | B4:1.5 A4:0.5 B4:1 | E4:3 | E4:1 R:1 A4:0.5 B4:0.5 | A4:2 G4:0.5 A4:0.5 | G4:1.5 C4:0.5 D4:1 | E4:3 | E4:1 R:1 D4:0.5 E4:0.5 | C4:2 D4:0.5 E4:0.5 | G4:1.5 E4:0.5 G4:1 | A4:3 | A4:1 R:1 A4:0.5 C5:0.5 | B4:2 A4:0.5 B4:0.5 | A4:1.5 G4:0.5 A4:1 | E5:3 | D5:1 R:1 C5:0.5 D5:0.5 | C5:3 | C5:2 R:1",
+  "3/4", [(0, {"A4": "R1", "B4": "R2", "C5": "R3", "D5": "R4", "E5": "R5", "C4": "L5", "D4": "L4", "E4": "L3", "G4": "L1"})],
+  [0, 5, 9, 13, 17, 21, 25, 29], order=list(range(0, 13)) + list(range(17, 35)) + [37, 38],
+  dyn={0: "mf", 17: "f", 25: "mf"}, arr=PD_ARR),
+ # Tuần 18 — Cò lả (dân ca đồng bằng Bắc Bộ; SGK Âm nhạc 4 Cánh Diều = SGK Âm nhạc 4 cũ, khớp từng nốt). Nhiều "Tập-tễnh".
+ # Gốc Fa trưởng (Đô Fa Sol La Đô cao) → dịch xuống Đô trưởng (−5): Sol3 Đô Rê Mi Sol — tay phải THẾ ĐÔ (Đô1 Rê2 Mi3 Sol5),
+ # tay trái chỉ Sol3 (ngón cái, thế Đô tay trái) ở ô 11 và 13.
+ vn_song("co_la", "Co La (Vietnamese folk song)", "Cò lả (dân ca đồng bằng Bắc Bộ)", "Dân ca Bắc Bộ", 18,
+  "C5:0.5 | G4:1 G4:0.5 C5:0.5 | G4:0.5 C5:0.5 G4:0.25 C5:0.25 A4:0.25 G4:0.25 | A4:1.5 A4:0.25 G4:0.25 | F4:1 F4:0.5 F4:0.25 G4:0.25 | C5:1.5 A4:0.25 G4:0.25 | A4:0.75 G4:0.25 A4:0.25 G4:0.25 A4:0.25 C5:0.25 | F4:1 F4:0.5 G4:0.25 C5:0.25 | A4:0.75 G4:0.25 A4:0.25 G4:0.25 A4:0.25 C5:0.25 | F4:1 G4:0.5 F4:0.5 | F4:1 G4:0.5 F4:0.5 | G4:0.75 A4:0.25 C4:0.5 F4:0.25 G4:0.25 | A4:0.75 G4:0.25 A4:0.25 C5:0.25 A4:0.25 G4:0.25 | F4:1 C4:0.5 F4:0.25 G4:0.25 | A4:0.75 G4:0.25 A4:0.25 C5:0.25 A4:0.25 G4:0.25 | F4:1 R:0.5",
+  "2/4", [(0, {"C4": "R1", "D4": "R2", "E4": "R3", "G4": "R5", "G3": "L1"})], [0, 5, 9, 13], transpose=-5,
+  dyn={0: "mf", 9: "p", 11: "mf"}, arr=FOLK_T),
+ # Tuần 18 — Mưa rơi (dân ca Xá; Tô Ngọc Thanh ký âm — chỉ giai điệu; SGK Âm nhạc 6 KNTT + nốt chữ từ bản cũ). Tư liệu đã hạ
+ # một cung (Rê → Đô). Tay phải Mi1 Fa2 Sol3 La4 Đô cao5, tay trái Đô giữa (ngón cái) – Sol3 (ngón 4) như thế Đô giữa tuần 11.
+ # Hai dây nối qua vạch nhịp (ô 6→7, 17→18): đàn lại nốt.
+ vn_song("mua_roi", "Mua Roi (Vietnamese folk song)", "Mưa rơi (dân ca Xá)", "Dân ca Xá", 18,
+  "G4:0.5 | G4:0.5 G4:0.5 A4:0.5 C5:0.5 | A4:1 G4:0.5 E4:0.5 | G4:0.5 E4:0.25 G4:0.25 C4:0.5 R:0.5 | R:1.5 G3:0.5 | G3:0.5 C4:0.5 C4:0.5 E4:0.5 | E4:0.5 G4:0.5 F4:0.5 A4:0.5~ | A4:1 G4:0.5 E4:0.5 | G4:0.5 E4:0.25 G4:0.25 C4:0.5 R:0.5 | R:1.5 G4:0.5 | G4:0.5 G4:0.5 A4:0.5 C5:0.5 | E4:1 G4:0.25 A4:0.25 E4:0.25 G4:0.25 | A4:1 G4:0.25 A4:0.25 E4:0.25 G4:0.25 | C4:0.5 R:1 G3:0.5 | G3:0.5 C4:0.5 C4:0.5 E4:0.5 | E4:0.5 G4:0.5 G4:0.5 F4:0.5 | A4:1 G4:0.5 E4:0.5 | G4:0.5 G3:0.5 E4:0.5 C4:0.5~ | C4:1 R:1",
+  "2/4", [(0, {"E4": "R1", "F4": "R2", "G4": "R3", "A4": "R4", "C5": "R5", "C4": "L1", "G3": "L4"})], [0, 4, 9, 13],
+  dyn={0: "mf", 13: "p"}),
+ # Tuần 20 — Trống cơm (dân ca quan họ Bắc Ninh; SGK Âm nhạc 5 CTST — Minh Châu sưu tầm & ký âm + SGK Âm nhạc 4 cũ).
+ # Tầm Sol3–Mi cao (quãng 13) → 2 đoạn: ô 0–18 tay phải ngũ cung Rê1 Mi2 Sol3 La4 Si5, tay trái chỉ Đô giữa (ngón cái);
+ # ô 19 (tay trái đàn Rê, tay phải có 1 phách để lên cao) – hết: tay phải ngũ cung Sol1 La2 Si3 Rê cao4 Mi cao5,
+ # tay trái Sol3 5 · La3 4 · Si3 3 · Rê 2 · Mi 1.
+ vn_song("trong_com", "Trong Com (Vietnamese folk song)", "Trống cơm (dân ca quan họ Bắc Ninh)", "Dân ca quan họ Bắc Ninh", 20,
+  "D4:0.5 | D4:0.5 G4:0.5 G4:0.5 A4:0.25 G4:0.25 | D4:0.5 D4:0.5 D4:0.5 G4:0.5 | G4:0.5 G4:0.25 G4:0.25 D4:0.5 D4:0.25 C4:0.25 | D4:0.5 G4:0.25 G4:0.25 D4:0.5 D4:0.25 C4:0.25 | D4:1 R:0.5 G4:0.5 | G4:0.75 A4:0.25 G4:0.5 A4:0.5 | B4:1 R:0.5 G4:0.5 | G4:0.75 A4:0.25 G4:0.5 A4:0.5 | B4:0.5 B4:0.25 B4:0.25 D4:0.75 E4:0.25 | D4:0.75 E4:0.25 D4:0.25 E4:0.25 D4:0.25 E4:0.25 | G4:0.5 G4:0.25 G4:0.25 E4:0.25 D4:0.25 E4:0.25 G4:0.25 | D4:0.5 E4:0.5 G4:0.5 E4:0.5 | D4:1.5 D4:0.25 D4:0.25 | G4:0.5 G4:0.25 G4:0.25 D4:0.25 E4:0.25 D4:0.25 E4:0.25 | G4:1.5 D4:0.25 D4:0.25 | G4:0.5 G4:0.25 G4:0.25 D4:0.25 E4:0.25 D4:0.25 E4:0.25 | G4:1.5 G4:0.5 | G4:0.75 A4:0.25 G4:0.5 A4:0.5 | D4:1 D5:0.75 E5:0.25 | D5:0.75 D5:0.25 E5:0.5 B4:0.25 A4:0.25 | B4:1.5 B4:0.25 A4:0.25 | B4:0.75 D5:0.25 D5:0.5 B4:0.25 A4:0.25 | G4:0.5 E4:0.5 G4:0.5 E4:0.5 | D4:1.5 E4:0.25 D4:0.25 | B3:0.5 D4:0.5 B3:0.25 D4:0.25 B3:0.25 A3:0.25 | G3:1.5 E4:0.25 D4:0.25 | B3:0.5 D4:0.5 B3:0.25 D4:0.25 B3:0.25 A3:0.25 | G3:1.5",
+  "2/4", [(0, {"D4": "R1", "E4": "R2", "G4": "R3", "A4": "R4", "B4": "R5", "C4": "L1"}),
+          (19, {"G4": "R1", "A4": "R2", "B4": "R3", "D5": "R4", "E5": "R5", "G3": "L5", "A3": "L4", "B3": "L3", "D4": "L2", "E4": "L1"})],
+  [0, 5, 9, 13, 19, 23], dyn={0: "mf", 19: "f", 23: "mf"}),
+ # Tuần 24 — Bèo dạt mây trôi (dân ca Bắc Bộ; 3 bản ký âm, theo 2/3 nguồn ở chỗ khác nhau). Sol trưởng (không có Fa♯).
+ # Tay trái Rê4 Mi3 Sol1 (thế Đô tay trái, cao một quãng tám); tay phải La1 Si2 Đô3 Rê4 Mi5 — riêng ô 7–8 (lên Sol cao,
+ # tay trái đang giữ Rê 2 phách) đổi thế Si1 Đô2 Rê3 Sol5, rồi về lại ở nốt Si dài ô 8→9 (tuần 24: đổi thế tay).
+ vn_song("beo_dat_may_troi", "Beo Dat May Troi (Vietnamese folk song)", "Bèo dạt mây trôi (dân ca Bắc Bộ)", "Dân ca Bắc Bộ", 24,
+  "R:1 G4:1 | G4:1 D5:0.5 B4:0.25 C5:0.25 | D5:1 E5:0.5 D5:0.5 | D5:1 B4:1 | B4:1 B4:0.25 A4:0.25 B4:0.25 D5:0.25 | G4:1 G4:0.25 B4:0.25 A4:0.25 G4:0.25 | D4:2 | D5:0.5 G5:0.5 B4:0.5 C5:0.5 | D5:1 B4:1 | B4:1 B4:0.25 A4:0.25 B4:0.25 D5:0.25 | G4:1 G4:0.25 B4:0.25 A4:0.25 G4:0.25 | D4:2 | E4:0.5 G4:0.5 G4:0.5 A4:0.25 B4:0.25 | B4:1.5 A4:0.5 | B4:1 B4:0.5 A4:0.5 | G4:0.75 A4:0.25 B4:0.25 A4:0.25 B4:0.25 D5:0.25 | G4:0.5 D4:1 G4:0.5 | D4:0.5 G4:0.5 A4:0.5 B4:0.25 A4:0.25 | G4:2",
+  "2/4", [(0, {"A4": "R1", "B4": "R2", "C5": "R3", "D5": "R4", "E5": "R5", "D4": "L4", "E4": "L3", "G4": "L1"}),
+          (7, {"B4": "R1", "C5": "R2", "D5": "R3", "G5": "R5", "D4": "L4", "E4": "L3", "G4": "L1"}),
+          (9, {"A4": "R1", "B4": "R2", "C5": "R3", "D5": "R4", "E5": "R5", "D4": "L4", "E4": "L3", "G4": "L1"})],
+  [0, 7, 9, 12], dyn={0: "p", 7: "mf", 12: "p"}, slurs=[(2, 0, 2, 2), (13, 0, 13, 1)]),
+ # Tuần 24 — Lý ngựa ô BẢN ĐẦY ĐỦ (dân ca Nam Bộ, Trần Kiết Tường ký âm; SGK Âm nhạc 9 KNTT = SGK Âm nhạc 9 CTST, khớp từng nốt).
+ # Thay bản 12 ô cũ (một dị bản khác). Nhắc lại ô 24–31 như bản in: lượt 2 bỏ kết 1 (ô 30–31), vào kết 2 (ô 32).
+ # Nốt Sol3 ở ô 29 lên một quãng tám (tư liệu cho phép). Tay phải THẾ SOL (Sol1 La2 Si3 Rê cao5); tay trái La3 5 · Đô 3 · Rê 2 · Mi 1.
+ vn_song("ly_ngua_o", "Ly Ngua O (Vietnamese folk song)", "Lý ngựa ô (dân ca Nam Bộ)", "Dân ca Nam Bộ", 24,
+  "B4:0.5 A4:0.5 | G4:0.5 B4:0.5 E4:0.5 G4:0.5 | A4:1 R:0.5 B4:0.25 A4:0.25 | G4:0.5 B4:0.5 E4:0.5 G4:0.5 | A4:0.5 R:0.5 B4:0.5 A4:0.5 | G4:0.5 B4:0.5 E4:0.5 G4:0.5 | A4:1 R:0.5 E4:0.25 G4:0.25 | A4:1 A4:0.5 B4:0.5 | R:0.5 D5:1 B4:0.5 | D5:1 E4:0.5 G4:0.5 | A4:1 R:0.5 B4:0.25 A4:0.25 | G4:0.5 B4:0.5 A4:0.5 R:0.5 | R:1.5 A4:0.5 | A4:1 D5:1 | E4:0.5 G4:0.5 R:0.5 E4:0.5 | E4:0.5 G4:0.5 D4:1 | A4:1 B4:1 | R:0.5 A4:1 D5:0.5 | E4:0.5 G4:0.5 R:0.5 G4:0.5 | G4:1 D4:1 | B4:1 B4:0.5 A4:0.5 | R:0.5 G4:0.5 E4:0.5 D4:0.5 | D4:1.5 E4:0.5 | D4:1 A3:1 | E4:1 A4:0.5 R:0.5 | R:0.5 E4:1 D4:0.5 | A3:1 E4:0.5 R:0.5 | R:0.5 D4:0.5 A3:1 | R:1 E4:0.5 D4:0.5 | C4:1 G3:1 | D4:1.5 E4:0.5 | D4:1 A3:1 | D4:1 R:1",
+  "2/4", [(0, {"G4": "R1", "A4": "R2", "B4": "R3", "D5": "R5", "A3": "L5", "C4": "L3", "D4": "L2", "E4": "L1"})],
+  [0, 5, 9, 13, 17, 21, 24, 28, 32, 36], order=list(range(0, 32)) + list(range(24, 30)) + [32], octave={29: {1: 12}},
+  dyn={0: "mf", 13: "f", 17: "mf", 24: "p"}),
+ # Tuần 25 — Đêm thu (1940): NHẠC Đặng Thế Phong (1918–1942; PD ở VN từ 1993). CHỈ giai điệu. Hai bản in khớp ô 1–14.
+ # Tư liệu đã dịch Sol thứ → La thứ (+1 cung); GIỮ nốt cảm âm Sol♯, Rê♯ (không bỏ dấu hóa — tôn trọng tác phẩm).
+ # Tay phải Si1 Đô2 Rê3 Mi4 Fa5 (Rê♯ ngón 3 ở câu 2), tay trái Mi 5 · Sol♯ 2 · La 1.
+ vn_song("dem_thu", "Dem Thu (Autumn Night)", "Đêm thu (nhạc Đặng Thế Phong)", "Đặng Thế Phong", 25,
+  " | E4:1 A4:1 C5:1 | E5:2 C5:0.5 E5:0.5 | B4:2 B4:0.5 C5:0.5 | A4:3 | E4:1 A4:1 C5:1 | E5:2 F5:1 | E5:2 D#5:1 | E5:3 | F5:1 E5:0.5 D5:0.5 A4:0.5 B4:0.5 | C5:3 | E5:1 D5:0.5 C5:0.5 E4:0.5 G#4:0.5 | B4:2 C5:1 | A4:3 | A4:3",
+  "3/4", [(0, {"B4": "R1", "C5": "R2", "D5": "R3", "E5": "R4", "F5": "R5", "E4": "L5", "G#4": "L2", "A4": "L1"}),
+          (4, {"B4": "R1", "C5": "R2", "D#5": "R3", "E5": "R4", "F5": "R5", "E4": "L5", "G#4": "L2", "A4": "L1"}),
+          (8, {"B4": "R1", "C5": "R2", "D5": "R3", "E5": "R4", "F5": "R5", "E4": "L5", "G#4": "L2", "A4": "L1"})],
+  [0, 4, 8], dyn={0: "p", 4: "mf", 12: "p"}, slurs=[(8, 0, 8, 2), (10, 0, 10, 2)], arr=PD_ARR),
+ # Tuần 26 — Con thuyền không bến (1941): NHẠC Đặng Thế Phong. CHỈ giai điệu. Tư liệu đã dịch Rê thứ → La thứ (4/4, lấy đà 3,5 phách).
+ # Giữ nốt Sol3 ở ô 14. Tay trái "thế Sol giữa" Sol3 5 · La3 4 · Đô 2 · Rê 1 (như "Lý cây bông"); tay phải ngón cái luôn ở Mi:
+ # câu có La–Si–Đô: Mi1 Sol2 La3 Si4 Đô5, câu có Fa: Mi1 Fa2.
+ vn_song("con_thuyen_khong_ben", "Con Thuyen Khong Ben (Boat Without a Wharf)", "Con thuyền không bến (nhạc Đặng Thế Phong)", "Đặng Thế Phong", 26,
+  "E4:0.5 E4:0.5 E4:0.5 E4:0.5 A3:1 D4:0.5 | E4:4 | R:0.5 A4:0.5 A4:0.5 A4:0.5 A4:0.5 E4:1 G4:0.5 | A4:4 | R:0.5 A4:0.5 B4:0.5 A4:0.5 C5:0.5 B4:1 A4:0.5 | E4:4 | R:0.5 E4:0.5 F4:0.5 E4:0.5 D4:0.5 A3:1 C4:0.5 | A3:4 | R:0.5 E4:0.5 E4:0.5 E4:0.5 E4:0.5 A3:1 D4:0.5 | E4:4 | R:0.5 A4:0.5 A4:0.5 A4:0.5 A4:0.5 E4:1 G4:0.5 | A4:4 | R:0.5 A4:0.5 B4:0.5 A4:0.5 C5:0.5 B4:1 A4:0.5 | E4:4 | R:0.5 E4:0.5 F4:0.5 E4:0.5 D4:0.5 G3:1 C4:0.5 | A3:4",
+  "4/4", [(0, {"E4": "R1", "G4": "R2", "A4": "R3", "B4": "R4", "C5": "R5", "G3": "L5", "A3": "L4", "C4": "L2", "D4": "L1"}),
+          (5, {"E4": "R1", "F4": "R2", "G3": "L5", "A3": "L4", "C4": "L2", "D4": "L1"}),
+          (9, {"E4": "R1", "G4": "R2", "A4": "R3", "B4": "R4", "C5": "R5", "G3": "L5", "A3": "L4", "C4": "L2", "D4": "L1"}),
+          (13, {"E4": "R1", "F4": "R2", "G3": "L5", "A3": "L4", "C4": "L2", "D4": "L1"})],
+  [0, 5, 9, 13], dyn={0: "p", 9: "mf", 13: "p"}, slurs=[(4, 0, 4, 5), (12, 0, 12, 5)], arr=PD_ARR),
+ # Tuần 27 — Người ơi người ở đừng về (quan họ Bắc Ninh): CHỈ đoạn có nhịp (phần mở đầu hát tự do bỏ). Hai bản ký âm
+ # (vnguitar + truongca); ô 2 dùng Si (bản A ghi Si♭ — tư liệu chọn Si để toàn phím trắng). Fa trưởng như bản gốc.
+ # Chia theo âm vực: tay phải La1 Si2 Đô3 Rê4 Fa5, tay trái Đô5 Rê4 Fa2 Sol1 (thế Đô tay trái, cao một quãng tám).
+ vn_song("nguoi_oi_nguoi_o_dung_ve", "Nguoi Oi Nguoi O Dung Ve (Vietnamese folk song)", "Người ơi người ở đừng về (dân ca quan họ Bắc Ninh)",
+  "Dân ca quan họ Bắc Ninh", 27,
+  "G4:0.5 | G4:1 C5:1 | G4:0.5 C5:0.5 D5:0.25 C5:0.25 B4:0.25 D5:0.25 | C5:0.75 D5:0.25 C5:1 | D5:0.25 C5:0.25 D5:0.25 F5:0.25 D5:0.5 C5:0.5 | A4:1 G4:0.25 C5:0.25 A4:0.25 G4:0.25 | F4:2 | A4:0.5 G4:0.25 C5:0.25 A4:1 | G4:0.5 F4:0.5 D4:0.5 F4:0.5 | G4:0.5 A4:0.5 A4:0.25 G4:0.25 F4:0.25 G4:0.25 | A4:1 C4:0.5 C4:0.5 | D4:0.5 A4:0.5 G4:0.5 F4:0.5 | C4:1.5 F4:0.5 | C4:0.5 F4:0.5 A4:0.25 C5:0.25 A4:0.25 G4:0.25 | F4:1.5 F4:0.25 G4:0.25 | A4:0.5 A4:0.5 G4:0.25 C5:0.25 A4:0.25 G4:0.25 | F4:2",
+  "2/4", [(0, {"A4": "R1", "B4": "R2", "C5": "R3", "D5": "R4", "F5": "R5", "C4": "L5", "D4": "L4", "F4": "L2", "G4": "L1"})],
+  [0, 7, 13], dyn={0: "p", 7: "mf", 13: "p"}, slurs=[(3, 0, 3, 2)]),
+]
+
 # Bài Việt Nam (OWNER 2026-10-06) — mục "🇻🇳 Bài Việt Nam" của Thư viện:
 #   vn = "folk"   : dân ca Việt Nam
 #   vn = "lyrics" : giai điệu nước ngoài (public domain) mà trẻ em Việt Nam quen hát lời Việt
+#   vn = "composed": ca khúc nhạc sĩ Việt Nam đã thuộc về công chúng (ghi tên nhạc sĩ, giữ tên bài, chỉ giai điệu)
 #   aka           : tên Việt quen gọi khác (CHỈ tên — không có lời bài hát)
-VN_FOLK = {"bac_kim_thang", "inh_la_oi", "ly_cay_bong", "ly_cay_da", "ly_ngua_o", "xoe_hoa"}
+VN_FOLK = {"bac_kim_thang", "inh_la_oi", "ly_cay_bong", "ly_cay_da", "ly_ngua_o", "xoe_hoa",
+           "co_la", "trong_com", "beo_dat_may_troi", "nguoi_oi_nguoi_o_dung_ve", "ly_cay_xanh", "ly_con_sao",
+           "mua_roi", "ngay_mua_vui", "ga_gay"}
+VN_COMPOSED = {"xuan_va_tuoi_tre", "dem_thu", "con_thuyen_khong_ben"}
 VN_LYRICS = {
  "frere_jacques_easy": None, "frere_jacques_minor": None,          # "Kìa con bướm vàng" (đã là tên chính)
  "twinkle_easy": "Sao nhỏ lấp lánh", "twinkle_run": "Sao nhỏ lấp lánh", "twinkle_both": "Sao nhỏ lấp lánh",
@@ -426,6 +641,7 @@ VN_LYRICS = {
 for d in S:
     meta = {}
     if d["id"] in VN_FOLK: meta["vn"] = "folk"
+    elif d["id"] in VN_COMPOSED: meta["vn"] = "composed"
     elif d["id"] in VN_LYRICS:
         meta["vn"] = "lyrics"
         if VN_LYRICS[d["id"]]: meta["aka"] = VN_LYRICS[d["id"]]
@@ -434,7 +650,7 @@ for d in S:
         for k, v in items:
             d[k] = v
             if k == "titleVi": d.update(meta)
-assert all(any(d["id"] == i for d in S) for i in VN_FOLK | set(VN_LYRICS)), "id bài Việt Nam sai"
+assert all(any(d["id"] == i for d in S) for i in VN_FOLK | VN_COMPOSED | set(VN_LYRICS)), "id bài Việt Nam sai"
 
 for f in glob.glob("src/data/songs/*.json"): os.remove(f)
 for d in S:

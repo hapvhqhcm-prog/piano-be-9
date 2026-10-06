@@ -84,9 +84,13 @@ describe('lessonEngine', () => {
         for (const a of l.activities) if (a.kind === 'song') expect(findTune(a.songId), a.songId).toBeDefined();
       }
     }
-    // Mọi bài hát đều có trong ít nhất một bài học
+    // Mọi bài hát đều có trong ít nhất một bài học — trừ các bài Việt Nam bổ sung chỉ để trong Thư viện (OWNER 2026-10-06:
+    // "phần lớn vào Thư viện, mở theo tuần"; Luyện tập mỗi ngày vẫn tự chọn chúng theo tuần)
+    const LIBRARY_ONLY = new Set(['ngay_mua_vui', 'ly_con_sao', 'xuan_va_tuoi_tre', 'mua_roi', 'trong_com', 'beo_dat_may_troi',
+      'dem_thu', 'con_thuyen_khong_ben', 'nguoi_oi_nguoi_o_dung_ve']);
     const used = new Set(WEEKS.flatMap((w) => w.lessons.flatMap((l) => l.activities.flatMap((a) => (a.kind === 'song' ? [a.songId] : [])))));
-    for (const s of SONGS) expect(used.has(s.id), s.id).toBe(true);
+    for (const s of SONGS) expect(used.has(s.id) || LIBRARY_ONLY.has(s.id), s.id).toBe(true);
+    for (const id of LIBRARY_ONLY) expect(used.has(id), id).toBe(false);
   });
 
   it('Học tiếp: bài chưa xong → bài kiểm tra → ôn', () => {
