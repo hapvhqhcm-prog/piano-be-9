@@ -43,7 +43,9 @@ const INTRO_MAX = 60;
 export function shortIntro(text: string): string {
   const t = text.trim();
   if (t.length <= INTRO_MAX) return t;
-  const first = t.split(/(?<=[.!?])\s+/)[0];
+  // Không dùng lookbehind (?<=…): Safari < 16.4 (iPad cũ) không hỗ trợ → lỗi cú pháp.
+  const m = /^[\s\S]*?[.!?](?=\s)/.exec(t);
+  const first = m ? m[0] : t;
   if (first.length <= INTRO_MAX) return first;
   const cut = t.slice(0, INTRO_MAX);
   const sp = cut.lastIndexOf(' ');

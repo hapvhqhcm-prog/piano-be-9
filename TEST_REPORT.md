@@ -529,3 +529,22 @@ Chuyên gia chấm lại bản 0.9.1: sư phạm **B** (trước C+/B−), trả
 - Đàn tự do có trò "Đàn theo thầy".
 
 **Kiểm tra:** 1293 test; robot e2e qua 5 kịch bản.
+
+## 26. Safari (WebKit) + iPad đời cũ + soát lỗi sau đợt ghép lớn (2026-10-06)
+
+- **Tương thích iPadOS 15.0+:**
+  - **Lỗi thật đã sửa:** trên iPadOS < 16.4, màn bài hát hỏng khi lời giới thiệu > 60 ký tự (regex lookbehind trong `shortIntro`).
+  - `build.target` = Safari 14.
+  - `npm run compat`: kiểm tra cú pháp bản build (phải giống khi hạ xuống Safari 15), API không hạ được, API cần kiểm tra trước khi dùng, CSS rủi ro.
+- **Chạy trên nhân WebKit thật** (`npm run webkit`, Playwright WebKit trên Windows):
+  - 5 kịch bản qua, 0 lỗi; phông tiếng Việt hiển thị đúng; service worker chạy offline được.
+  - Sửa: ô chọn tuần dùng phông có chân; bong bóng "Con làm thầy" rớt chữ.
+  - **Chưa kiểm được trên bản WebKit này:** âm thanh, giọng đọc, micro, bảng Chia sẻ — cần iPad thật.
+- **Soát lỗi sau đợt ghép:**
+  - sticker bất ngờ thay đổi sau khi gộp dữ liệu không theo thứ tự ngày → nay tính lại theo thời gian từ bản tóm tắt nhỏ của mỗi buổi;
+  - "Làm ngay" không tiêu trứng và lặp đúng tay bé vấp;
+  - sao ở Thư viện còn sau khi gộp;
+  - đổi tuần thì bỏ "Ở lại tuần";
+  - trạng thái "sẵn sàng" không còn mâu thuẫn khi đang giữ tuần.
+- **Màn bắt đầu:** không kẹt nếu âm thanh không mở được.
+- 1294 test; e2e A, C, D, E qua.

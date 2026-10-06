@@ -256,7 +256,7 @@ export function parentScreen(app: App) {
       if (p.kind === 'notes') {
         const seg = tonightSegment(p.noteIds);
         if (!seg.targets.length) return toast('Chưa tìm được bài tập cho chỗ này');
-        const session = store.startSession(`w${week}-daily`);
+        const session = store.startSession(`w${week}-parent-now`); // không tính trứng bất ngờ (buổi phụ của bố mẹ)
         app.show(
           practiceScreen(app, seg, {
             record: (t, result) => store.addParentAssessment(session.id, t.noteId, result),
@@ -275,19 +275,21 @@ export function parentScreen(app: App) {
       const tune: Tune | undefined = findTune(p.songId) ?? (ps ? parentSongToTune(ps) : comp ? compositionToTune(comp) : undefined);
       if (!tune) return toast('Không tìm thấy bài này');
       // Câu khó: câu của lượt CHƯA ĐẠT gần nhất mà bé tập riêng một câu → mở thẳng "🔁 Lặp 3 lần đúng" câu đó
-      const hardPhrase =
-        store
-          .get()
-          .sessions.flatMap((s) => s.songRuns)
-          .filter((r) => r.songId === tune.id && r.phrase && !r.passed)
-          .pop()?.phrase ?? null;
+      const hardRun = store
+        .get()
+        .sessions.flatMap((s) => s.songRuns)
+        .filter((r) => r.songId === tune.id && r.phrase && !r.passed)
+        .pop();
+      const hardPhrase = hardRun?.phrase ?? null;
+      // Lượt vấp là lượt TÁCH TAY → lặp đúng tay đó (hai tay sẽ khó hơn cái bé đang vấp)
+      const hardHand = hardRun?.hand;
       const session = store.startSession(`w${week}-song-${tune.id}`);
       app.show(
         songScreen(
           app,
           tune,
           hardPhrase
-            ? { mode: 'wait', hints: 'full', free: true, phrase: hardPhrase, loop: true }
+            ? { mode: 'wait', hints: 'full', free: true, phrase: hardPhrase, loop: true, ...(hardHand ? { hand: hardHand } : {}) }
             : { mode: 'wait', hints: 'full', free: true, intro: 'Tập chậm từng nốt. Chỗ hay vấp: chọn câu đó, bấm “Lặp câu” cho tới khi đúng 3 lần liền.' },
           { onRun: (run) => store.addSongRun(session.id, run), onDone: () => finish(session.id, true), onBack: () => finish(session.id, false) },
         ),
@@ -785,6 +787,8 @@ export function parentScreen(app: App) {
                 okLabel: `Sang tuần ${to}`,
                 onOk: () => {
                   store.setCurrentWeek(to);
+                  // "Ở lại tuần" gắn với tuần cũ — bỏ đi để sau này bé không bị giữ im lặng khi tới lại tuần đó
+                  if (store.settings.holdWeek != null) store.updateSettings({ holdWeek: null });
                   say(`Đã chuyển sang tuần ${to}.`);
                 },
               });

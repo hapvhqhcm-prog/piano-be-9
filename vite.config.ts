@@ -76,7 +76,9 @@ export default defineConfig({
   // Đường dẫn tương đối: chạy được ở https://<user>.github.io/<repo>/ lẫn LAN.
   base: './',
   build: {
-    target: 'safari14',
+    // iPad cũ (A9/A10 kẹt ở iPadOS 15/16): esbuild hạ cấp CÚ PHÁP (JS + CSS) xuống Safari 14.
+    // API mới (at(), findLast, structuredClone, regex lookbehind…) KHÔNG hạ cấp được → `npm run compat` canh.
+    target: ['safari14', 'es2020'],
     assetsInlineLimit: 0,
   },
   plugins: [serviceWorkerPlugin()],

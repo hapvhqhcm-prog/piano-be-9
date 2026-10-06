@@ -54,8 +54,11 @@ export function hashStr(s: string): number {
   return h >>> 0;
 }
 
-/** Buổi BÀI HỌC (không phải lượt chơi bài hát tự do ở Thư viện `w{n}-song-…`). */
-export const isLessonSession = (s: Session): boolean => !/-song-/.test(s.lessonId);
+/**
+ * Buổi BÀI HỌC — không tính lượt chơi tự do ở Thư viện (`w{n}-song-…`) và buổi "▶ Làm ngay" của bố mẹ (`w{n}-parent-…`,
+ * không qua màn kết thúc nên bé không thấy trứng).
+ */
+export const isLessonSession = (s: Pick<Session, 'lessonId'>): boolean => !/-song-|-parent-/.test(s.lessonId);
 
 export interface BonusEvent {
   sessionId: string;
@@ -114,7 +117,16 @@ function foldedState(data: Readonly<AppData>): BonusState {
 function bonusState(data: Readonly<AppData>): { state: BonusState; events: BonusEvent[] } {
   const state = foldedState(data);
   const events: BonusEvent[] = [];
-  for (const s of data.sessions) {
+  // Buổi đã gộp (tóm tắt) + buổi còn giữ, xếp theo THỜI GIAN — kết quả không phụ thuộc buổi nào đã bị gộp
+  const stubs = (data as { history?: { bonusStubs?: Array<{ id: string; date: string; lessonId: string; t: number }> } }).history
+    ?.bonusStubs;
+  const all: Session[] = stubs?.length
+    ? [
+        ...stubs.map((b) => ({ id: b.id, date: b.date, lessonId: b.lessonId, startedAt: b.t, completed: true }) as Session),
+        ...data.sessions,
+      ].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.startedAt - b.startedAt))
+    : [...data.sessions].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.startedAt - b.startedAt));
+  for (const s of all) {
     const e = stepBonus(state, s);
     if (e) events.push(e);
   }
@@ -123,7 +135,8 @@ function bonusState(data: Readonly<AppData>): { state: BonusState; events: Bonus
 
 /** Dòng thời gian sticker bất ngờ của các buổi CÒN trong `sessions` (theo thứ tự). */
 export function bonusTimeline(data: Readonly<AppData>): BonusEvent[] {
-  return bonusState(data).events;
+  const kept = new Set(data.sessions.map((s) => s.id));
+  return bonusState(data).events.filter((e) => kept.has(e.sessionId));
 }
 
 /** Sticker bất ngờ của một buổi (null = buổi này không có). */

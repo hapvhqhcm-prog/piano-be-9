@@ -16,7 +16,7 @@
  */
 import { forEachTargetOutcome, foldSongRun, weekPassed } from '../lessons/lessonEngine';
 import { DYNAMICS_ROUNDS, EFFORT_BY_DAYS_FROM, monotonicStickerIds } from '../lessons/stickers';
-import { initialBonusState, stepBonus } from '../lessons/bonusStickers';
+import { isLessonSession } from '../lessons/bonusStickers';
 import { RATING_STARS, bumpDataRev, emptyHistory, foldParentStats, mondayKey, weekOfLessonId, weekdayIndex, type ParentStats } from './history';
 import { sessionAnswers } from './report';
 import { localDateStr, type AppData, type CountPair, type History, type Session } from './schema';
@@ -104,9 +104,8 @@ const inc = (p: CountPair, ok: boolean) => {
 
 /** Cộng MỘT buổi vào tổng hợp. */
 export function foldSession(h: History, s: Session): void {
-  // Sticker bất ngờ: bước trạng thái theo đúng thứ tự buổi — sổ sticker không đổi sau khi gộp
-  h.bonus = h.bonus ?? initialBonusState();
-  stepBonus(h.bonus, s);
+  // Sticker bất ngờ: giữ tóm tắt tối thiểu của buổi bài học đã hoàn thành — sổ sticker tính lại theo thứ tự thời gian
+  if (s.completed && isLessonSession(s)) (h.bonusStubs ??= []).push({ id: s.id, date: s.date, lessonId: s.lessonId, t: s.startedAt });
   h.sessions++;
   if (s.completed) h.completed++;
   if (s.minutes > 0 || s.completed) h.counted++;

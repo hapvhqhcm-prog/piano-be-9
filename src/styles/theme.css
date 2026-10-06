@@ -1911,7 +1911,8 @@ h3,
   background: var(--surface);
   border-radius: var(--r-xl);
   box-shadow: var(--e2);
-  padding: 18px 32px;
+  /* +2px: Safari làm tròn độ rộng chữ khác Chrome → câu ngắn bị rớt 1 chữ xuống dòng */
+  padding: 18px 34px;
   position: relative;
 }
 .teach-card::before {

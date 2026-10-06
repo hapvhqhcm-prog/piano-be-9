@@ -314,7 +314,14 @@ export function readiness(data: Readonly<AppData>, now: Date): Readiness {
     reasons.push('Tập chậm hơn, mỗi buổi ngắn hơn; có thể bấm “Ở lại tuần này thêm”.');
   } else if (passed) {
     level = 'ready';
-    reasons.push(lessonsLeft > 0 ? `Đã đạt mục tiêu tuần — học nốt ${lessonsLeft} bài là app tự sang tuần mới.` : 'Đã đạt mục tiêu tuần.');
+    const heldNow = weekHeld(data.settings, week);
+    reasons.push(
+      heldNow
+        ? 'Đã đạt mục tiêu tuần — đang “Ở lại tuần này thêm” nên app CHƯA sang tuần mới (tắt nút đó khi muốn đi tiếp).'
+        : lessonsLeft > 0
+          ? `Đã đạt mục tiêu tuần — học nốt ${lessonsLeft} bài là app tự sang tuần mới.`
+          : 'Đã đạt mục tiêu tuần.',
+    );
   } else {
     level = 'more';
     if (cp && cp.needDays > 0) reasons.push(`Mục tiêu tuần: đạt ${Math.min(cp.days, cp.needDays)}/${cp.needDays} ngày.`);

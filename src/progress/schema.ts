@@ -187,6 +187,8 @@ export interface SongAgg {
   h?: 1;
   /** Tốc độ nhanh nhất chơi trọn theo nhịp, đủ tay, đạt (không tính đọc nhạc ngẫu nhiên) */
   b?: number;
+  /** Số sao tốt nhất (1–3) của một lượt đủ tay — hiện ở Thư viện, giữ được sau khi gộp */
+  s?: number;
 }
 
 /** (+) Tổng hợp lịch sử đã gộp — xem progress/compaction.ts. */
@@ -194,6 +196,11 @@ export interface History {
   v: 1;
   /** Sticker bất ngờ (🎁) của các buổi đã gộp — giữ sổ sticker không đổi sau khi gộp (src/lessons/bonusStickers.ts) */
   bonus?: import('../lessons/bonusStickers').BonusState;
+  /**
+   * Tóm tắt TỐI THIỂU các buổi bài học đã hoàn thành đã gộp (mã, ngày, bài, giờ bắt đầu) — để sổ sticker bất ngờ được tính lại
+   * theo ĐÚNG thứ tự thời gian cùng các buổi còn giữ (gộp không theo thứ tự ngày khi bé ở lâu một tuần).
+   */
+  bonusStubs?: Array<{ id: string; date: string; lessonId: string; t: number }>;
   /** Ngày (YYYY-MM-DD): các buổi TRƯỚC ngày này đã được xét gộp ở lần gộp gần nhất */
   compactedThrough: string;
   /** Số buổi đã gộp / trong đó đã hoàn thành / có phút hoặc hoàn thành (báo cáo) */

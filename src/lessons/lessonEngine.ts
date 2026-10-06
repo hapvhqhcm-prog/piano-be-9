@@ -1,4 +1,5 @@
 import { findTune } from '../music/exercises';
+import { starsFor } from '../music/timing';
 import { beatsPerMeasure, measureCount, phraseRanges, slice } from '../music/tune';
 import { makeQuestion, type QuizSpec } from '../practice/quiz';
 import type { AppAssessment, AppData, Session, SongAgg } from '../progress/schema';
@@ -111,6 +112,10 @@ export function foldSongRun(stats: Record<string, SongAgg>, r: Run): void {
   if (!a.r || r.ts >= a.r[0]) a.r = [r.ts, r.passed ? 1 : 0];
   if (!r.phrase && r.ts > (a.w ?? 0)) a.w = r.ts;
   if (passedWhole(r, r.songId, true, 60) && (a.m === undefined || r.ts < a.m)) a.m = r.ts;
+  if (!r.hand && r.total > 0) {
+    const st = starsFor(r.hits / r.total);
+    if (st > (a.s ?? 0)) a.s = st;
+  }
   if (r.passed && !r.phrase && !r.hand) {
     a.h = 1;
     if (r.mode === 'tempo' && !r.songId.startsWith('sight') && r.bpm > (a.b ?? 0)) a.b = r.bpm;

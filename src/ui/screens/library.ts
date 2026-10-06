@@ -1,5 +1,4 @@
-import { songEverPlayed, songFresh, songMastered } from '../../lessons/lessonEngine';
-import { starsFor } from '../../music/timing';
+import { songEverPlayed, songFresh, songMastered, songStats } from '../../lessons/lessonEngine';
 import { SONGS, type Tune } from '../../music/tune';
 import { compositionToTune } from '../../practice/compose';
 import { PRIVACY_NOTE, parentSongToTune } from '../../practice/parentSongs';
@@ -24,13 +23,9 @@ export function libraryScreen(app: App) {
     const data = app.store.get();
     const week = data.progress.currentWeek;
     // Số sao tốt nhất của từng bài (lượt chơi cả bài — không tính lượt tách tay)
-    const best = new Map<string, number>();
-    for (const ses of data.sessions)
-      for (const r of ses.songRuns) {
-        if (r.hand || r.total <= 0) continue;
-        const st = starsFor(r.hits / r.total);
-        if (st > (best.get(r.songId) ?? 0)) best.set(r.songId, st);
-      }
+    // (gồm cả lượt đã gộp lịch sử — songStats)
+    const stats = songStats(data);
+    const best = new Map<string, number>(Object.entries(stats).flatMap(([id, a]) => (a.s ? [[id, a.s] as [string, number]] : [])));
     const card = (s: Tune) => {
       const open = (s.week ?? 1) <= week;
       const star = open && songMastered(data, s.id);

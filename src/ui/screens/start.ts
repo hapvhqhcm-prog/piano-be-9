@@ -1,6 +1,6 @@
 import type { App } from '../App';
 import { heroArt } from '../components/art/heroArt';
-import { button, h } from '../components/dom';
+import { button, h, toast } from '../components/dom';
 import { homeScreen } from './home';
 import { onboardingScreen } from './onboarding';
 import { markSafePoint } from '../../pwa/updater';
@@ -27,7 +27,13 @@ export function startScreen(app: App) {
           kind: 'primary',
           big: true,
           onTap: async () => {
-            await app.audio.unlock();
+            // Không mở được âm thanh (máy lạ / lỗi Web Audio) → vẫn vào app, chỉ không có tiếng — không kẹt ở nút Bắt đầu
+            try {
+              await app.audio.unlock();
+            } catch (e) {
+              console.warn('audio unlock', e);
+              toast('Chưa bật được âm thanh — app vẫn dùng được, thử mở lại sau nhé.');
+            }
             app.started = true;
             // Lần đầu dùng app (chưa có buổi học nào, chưa xem hướng dẫn) → hướng dẫn nhanh cho bố mẹ
             const d = app.store.get();

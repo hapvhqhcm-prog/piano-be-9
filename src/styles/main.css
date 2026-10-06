@@ -63,6 +63,11 @@ textarea {
   user-select: text;
   font: inherit;
 }
+/* WebKit/Safari không cho <select> thừa hưởng font trang (hiện chữ hệ thống/serif thay vì Nunito) */
+select {
+  font: inherit;
+  color: inherit;
+}
 
 h1,
 h2,
