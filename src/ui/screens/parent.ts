@@ -33,12 +33,15 @@ import { lazy, lazyScreen, prefetchLater } from '../lazy';
 const micTestMod = lazy(() => import('./micTest'));
 const songEditorMod = lazy(() => import('./songEditor'));
 const reportMod = lazy(() => import('./report'));
+const diagnosticsMod = lazy(() => import('./diagnostics'));
 type SongEditorArgs = Parameters<typeof import('./songEditor').songEditorScreen>;
 type ReportOpts = Parameters<typeof import('./report').reportScreen>[1];
 const micTestScreen = (app: App): Screen => lazyScreen(micTestMod, (m) => m.micTestScreen(app));
 const songEditorScreen = (app: App, existing: SongEditorArgs[1], hooks: SongEditorArgs[2]): Screen =>
   lazyScreen(songEditorMod, (m) => m.songEditorScreen(app, existing, hooks));
 const reportScreen = (app: App, opts: ReportOpts): Screen => lazyScreen(reportMod, (m) => m.reportScreen(app, opts));
+/** 🩺 Kiểm tra iPad (âm thanh, giọng đọc, micro, lưu trữ…) → gửi kết quả cho người hỗ trợ */
+const diagnosticsScreen = (app: App): Screen => lazyScreen(diagnosticsMod, (m) => m.diagnosticsScreen(app));
 
 /** Settings thêm (cộng dồn, không cần migration) của màn Phụ huynh. */
 type ParentUxSettings = Settings &
@@ -437,6 +440,7 @@ export function parentScreen(app: App) {
             { class: 'row' },
             button({ icon: '🎤', label: 'Bắt đầu cài micro', kind: 'primary', onTap: () => app.show(micTestScreen(app)) }),
             button({ label: 'Để sau', onTap: () => set({ micSetupHidden: true }) }),
+            button({ icon: '🩺', label: 'Kiểm tra iPad', onTap: () => app.show(diagnosticsScreen(app)) }),
           ),
         );
       };
@@ -723,6 +727,7 @@ export function parentScreen(app: App) {
               );
             },
           }),
+          button({ icon: '🩺', label: 'Kiểm tra iPad (gửi người hỗ trợ)', onTap: () => app.show(diagnosticsScreen(app)) }),
         ),
         h(
           'section',

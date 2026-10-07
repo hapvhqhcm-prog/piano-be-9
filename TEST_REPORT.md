@@ -564,3 +564,18 @@ Chuyên gia chấm lại bản 0.9.1: sư phạm **B** (trước C+/B−), trả
   - phông chữ màn bắt đầu được tải trước;
   - offline vẫn mở được mọi màn.
 - **Kiểm tra:** 1295 test; compat iPadOS 15+; e2e A, C, D, E; WebKit P, A, C, B, D.
+
+## 28. "🩺 Kiểm tra iPad" — gửi thông tin máy thật cho người hỗ trợ (2026-10-07)
+
+Phụ huynh → Nâng cao (hoặc thẻ Cài micro) → 🩺 Kiểm tra iPad. Bảy mục ✅/⚠️/❌, mỗi mục có cách khắc phục:
+- **Thiết bị:** phiên bản iPadOS (đọc được cả UA "giả Mac" của iPadOS), mở từ Màn hình chính chưa, phiên bản app, màn hình.
+- **Âm thanh:** 🔊 Phát thử, bố mẹ trả lời "Nghe rõ / Không".
+- **Giọng đọc:** có giọng tiếng Việt không; 🗣️ Nghe thử; hướng dẫn cài giọng "Linh" 5 bước.
+- **Micro:** quyền, cài đặt, kết quả "Kiểm tra 5 nốt" gần nhất.
+- **Lưu trữ:** dung lượng, lưu bền, ngày sao lưu.
+- **Offline:** service worker, bộ nhớ đệm.
+- **Hiệu năng:** đo nhanh.
+
+Ô "Góp ý của bố mẹ" và nút **📤 Gửi kết quả** (Chia sẻ, sao chép hoặc ô chữ để chọn) gom báo cáo tiếng Việt kèm phụ lục kỹ thuật và nhật ký micro gần nhất. Không kèm tên bé, trừ khi bố mẹ đánh dấu.
+
+1322 test; build; compat iPadOS 15+; e2e C.

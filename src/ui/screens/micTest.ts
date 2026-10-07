@@ -7,6 +7,10 @@ import { midiToPitch, noteLabel, pitchFreq, pitchToMidi, type Pitch } from '../.
 import type { App } from '../App';
 import { actionBar, backButton, button, h, toast } from '../components/dom';
 import { parentScreen } from './parent';
+import { loadMicLog, saveMicLog } from '../../audio/micLogStore';
+import { lazy, lazyScreen } from '../lazy';
+
+const diagnosticsMod = lazy(() => import('./diagnostics'));
 import '../../styles/parentux.css';
 
 /** Kiểm tra 5 nốt "tốt" (đủ để dùng micro cho buổi học): nghe đúng ít nhất bấy nhiêu nốt */
@@ -75,6 +79,75 @@ interface StepLog {
   candidates: Candidate[];
   /** Gõ phím → app báo nốt (ms), từng lần nghe được */
   latencyMs: number[];
+}
+
+/** Trạng thái của màn Cài micro cần cho nhật ký. */
+export interface MicLogState {
+  steps: StepLog[];
+  freeLog: FreeNote[];
+  lastFrame: MicFrame | null;
+  autoTune: ReturnType<typeof chooseSensitivity> | null;
+}
+
+/**
+ * Nhật ký micro (gửi người hỗ trợ): "📋 Sao chép nhật ký" ở màn này, và lưu lại (micLogStore) để màn
+ * "🩺 Kiểm tra iPad" đính kèm vào bản kết quả.
+ */
+export function buildMicLog(app: App, { steps, freeLog, lastFrame, autoTune }: MicLogState): Record<string, unknown> {
+  const store = app.store;
+  const ctx = app.audio.context as (AudioContext & { baseLatency?: number }) | null;
+  const judged = freeLog.filter((x) => x.verdict);
+  const lat = freeLog.map((x) => x.latencyMs).filter((x): x is number => x !== null);
+  return {
+    app: 'piano-be-9 mic log v2',
+    at: new Date().toISOString(),
+    ua: navigator.userAgent,
+    sampleRate: ctx?.sampleRate ?? null,
+    baseLatency: ctx?.baseLatency ?? null,
+    ctxState: ctx?.state ?? null,
+    audioSession: (navigator as unknown as { audioSession?: { type?: string } }).audioSession?.type ?? null,
+    tuningCents: store.settings.micTuningCents,
+    sensitivity: store.settings.micSensitivity,
+    latencyMs: store.settings.micLatencyMs,
+    outputLatency: app.audio.outputLatency,
+    micState: app.mic.state,
+    // Bộ lọc iOS THẬT SỰ áp dụng (getSettings) — forced = bị ép bật dù app xin tắt
+    track: app.mic.trackInfo(),
+    stats: app.mic.stats,
+    warmingUp: app.mic.warmingUp,
+    lastFrame: lastFrame && {
+      rms: +lastFrame.rms.toFixed(5),
+      floor: +lastFrame.floor.toFixed(5),
+      gate: +lastFrame.gate.toFixed(5),
+      app: lastFrame.app,
+    },
+    autoTune: autoTune && {
+      sensitivity: autoTune.sensitivity,
+      changed: autoTune.changed,
+      reason: autoTune.reason,
+      tips: autoTune.tips,
+      margin: {
+        low: +autoTune.margin.low.toFixed(2),
+        normal: +autoTune.margin.normal.toFixed(2),
+        high: +autoTune.margin.high.toFixed(2),
+      },
+    },
+    steps: steps.map((s) => ({
+      ...s,
+      maxRms: +s.maxRms.toFixed(5),
+      gate: +s.gate.toFixed(5),
+      floor: +s.floor.toFixed(5),
+      bestClarity: +s.bestClarity.toFixed(2),
+      candidates: s.candidates.map((c) => ({ ...c, note: midiToPitch(c.midi) })),
+    })),
+    free: {
+      heard: freeLog.length,
+      judged: judged.length,
+      correct: judged.filter((x) => x.verdict === 'ok').length,
+      medianLatencyMs: lat.length ? [...lat].sort((a, b) => a - b)[Math.floor(lat.length / 2)] : null,
+      notes: freeLog,
+    },
+  };
 }
 
 /**
@@ -287,6 +360,7 @@ export function micTestScreen(app: App) {
         h('div', { class: 'row' }, button({ icon: '🔁', label: 'Kiểm tra lại', onTap: () => void runCheck() })),
       );
       lastOk = ok;
+      saveMicLog(buildMicLog(app, { steps, freeLog, lastFrame, autoTune })); // cho "🩺 Kiểm tra iPad"
       calib.textContent =
         ok >= MIC_GOOD
           ? 'Xong bài kiểm tra — micro nghe tốt! Bước 3: bấm nút xanh bên dưới.'
@@ -490,59 +564,8 @@ export function micTestScreen(app: App) {
     };
 
     const copyLog = async () => {
-      const ctx = app.audio.context as (AudioContext & { baseLatency?: number }) | null;
-      const judged = freeLog.filter((x) => x.verdict);
-      const lat = freeLog.map((x) => x.latencyMs).filter((x): x is number => x !== null);
-      const log = {
-        app: 'piano-be-9 mic log v2',
-        at: new Date().toISOString(),
-        ua: navigator.userAgent,
-        sampleRate: ctx?.sampleRate ?? null,
-        baseLatency: ctx?.baseLatency ?? null,
-        ctxState: ctx?.state ?? null,
-        audioSession: (navigator as unknown as { audioSession?: { type?: string } }).audioSession?.type ?? null,
-        tuningCents: store.settings.micTuningCents,
-        sensitivity: store.settings.micSensitivity,
-        latencyMs: store.settings.micLatencyMs,
-        outputLatency: app.audio.outputLatency,
-        micState: app.mic.state,
-        // Bộ lọc iOS THẬT SỰ áp dụng (getSettings) — forced = bị ép bật dù app xin tắt
-        track: app.mic.trackInfo(),
-        stats: app.mic.stats,
-        warmingUp: app.mic.warmingUp,
-        lastFrame: lastFrame && {
-          rms: +lastFrame.rms.toFixed(5),
-          floor: +lastFrame.floor.toFixed(5),
-          gate: +lastFrame.gate.toFixed(5),
-          app: lastFrame.app,
-        },
-        autoTune: autoTune && {
-          sensitivity: autoTune.sensitivity,
-          changed: autoTune.changed,
-          reason: autoTune.reason,
-          tips: autoTune.tips,
-          margin: {
-            low: +autoTune.margin.low.toFixed(2),
-            normal: +autoTune.margin.normal.toFixed(2),
-            high: +autoTune.margin.high.toFixed(2),
-          },
-        },
-        steps: steps.map((s) => ({
-          ...s,
-          maxRms: +s.maxRms.toFixed(5),
-          gate: +s.gate.toFixed(5),
-          floor: +s.floor.toFixed(5),
-          bestClarity: +s.bestClarity.toFixed(2),
-          candidates: s.candidates.map((c) => ({ ...c, note: midiToPitch(c.midi) })),
-        })),
-        free: {
-          heard: freeLog.length,
-          judged: judged.length,
-          correct: judged.filter((x) => x.verdict === 'ok').length,
-          medianLatencyMs: lat.length ? [...lat].sort((a, b) => a - b)[Math.floor(lat.length / 2)] : null,
-          notes: freeLog,
-        },
-      };
+      const log = buildMicLog(app, { steps, freeLog, lastFrame, autoTune });
+      saveMicLog(log);
       const text = JSON.stringify(log, null, 1);
       try {
         await navigator.clipboard.writeText(text);
@@ -603,6 +626,12 @@ export function micTestScreen(app: App) {
         button({ icon: '❌', label: 'Sai', onTap: () => judge('wrong') }),
         button({ icon: '📋', label: 'Sao chép nhật ký', onTap: () => void copyLog() }),
       ),
+      h('h3', {}, 'Kiểm tra cả iPad (âm thanh, giọng đọc, lưu trữ…)'),
+      h(
+        'div',
+        { class: 'row mic-tools' },
+        button({ icon: '🩺', label: 'Kiểm tra iPad', onTap: () => app.show(lazyScreen(diagnosticsMod, (m) => m.diagnosticsScreen(app))) }),
+      ),
     );
 
     root.append(
@@ -657,6 +686,16 @@ export function micTestScreen(app: App) {
 
     return () => {
       disposed = true;
+      // Rời màn: lưu nhật ký mới nhất (đàn tự do chưa sao chép); không có bài 5 nốt lần này → giữ kết quả 5 nốt lần trước
+      if (steps.length || freeLog.length) {
+        const log = buildMicLog(app, { steps, freeLog, lastFrame, autoTune });
+        const prev = steps.length ? null : loadMicLog();
+        if (prev && Array.isArray(prev.steps) && prev.steps.length) {
+          log.steps = prev.steps;
+          log.checkAt = prev.checkAt ?? prev.at;
+        }
+        saveMicLog(log);
+      }
       window.clearTimeout(stepTimer);
       unState();
       unFrame();
