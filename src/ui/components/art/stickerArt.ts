@@ -19,6 +19,7 @@ const DISC: Record<Sticker['kind'], [string, string, string]> = {
   folk: [P.mintLight, P.mint, '#2fae84'],
   mic: [P.lavender, P.violetLight, P.violet],
   dynamics: [P.sunLight, P.sun, P.orange],
+  challenge: [P.violetLight, P.indigo, P.indigoDark],
 };
 
 /** Huy hiệu số nhỏ (mốc 5 bài, 7 ngày…) ở góc dưới phải. */
@@ -75,6 +76,54 @@ function trophy(): string {
     <rect x="44" y="80" width="32" height="12" rx="3" fill="${P.woodDark}" stroke="${P.ink}" stroke-opacity=".3" stroke-width="1.4"/>
     <path d="${starPath(60, 46, 10)}" fill="#fff" opacity=".9"/>
     <path d="M44 34 q0 14 6 22" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".55"/>`;
+}
+
+/** (+ 2026-10-07) Màu cúp tuần theo thử thách: [thân cúp, viền]. */
+const CUP: Record<string, [string, string]> = {
+  faster: [P.sun, P.orange],
+  perfect: ['#cfeaff', P.waterDark],
+  days4: [P.mintLight, '#2fae84'],
+  review3: ['#e6ddff', P.violet],
+  vn: [P.coralLight, '#e85a4a'],
+  ear: ['#ffd3e2', '#e0668f'],
+  record: [P.sunLight, P.orange],
+};
+
+/** Hình nhỏ trên thân cúp — mỗi thử thách một hình (tâm cx, cy). */
+function cupGlyph(id: string, cx: number, cy: number, ink: string): string {
+  switch (id) {
+    case 'faster': // mũi tên tốc độ + vệt gió
+      return `<path d="M${cx - 9} ${cy - 7} L${cx + 1} ${cy} L${cx - 9} ${cy + 7} M${cx - 1} ${cy - 7} L${cx + 9} ${cy} L${cx - 1} ${cy + 7}" fill="none" stroke="${ink}" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>`;
+    case 'perfect': // hồng tâm
+      return `<circle cx="${cx}" cy="${cy}" r="9" fill="#fff" stroke="${ink}" stroke-width="2.4"/><circle cx="${cx}" cy="${cy}" r="4.5" fill="${P.coral}"/>`;
+    case 'days4': // 4 ô lịch đã tích
+      return [0, 1, 2, 3].map((i) => `<rect x="${cx - 9 + (i % 2) * 10}" y="${cy - 9 + Math.floor(i / 2) * 10}" width="8" height="8" rx="2" fill="${P.mint}" stroke="${ink}" stroke-width="1.2"/>`).join('');
+    case 'review3': // mũi tên vòng
+      return `<path d="M${cx + 8} ${cy - 2} A8 8 0 1 1 ${cx + 2} ${cy - 8}" fill="none" stroke="${ink}" stroke-width="3" stroke-linecap="round"/><path d="M${cx - 1} ${cy - 12} L${cx + 5} ${cy - 8} L${cx} ${cy - 3}" fill="none" stroke="${ink}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`;
+    case 'vn': // ngôi sao vàng trên nền đỏ
+      return `<circle cx="${cx}" cy="${cy}" r="10" fill="#e8443a" stroke="#fff" stroke-width="1.6"/><path d="${starPath(cx, cy + 0.5, 7)}" fill="${P.sun}"/>`;
+    case 'ear': // sóng âm
+      return `<circle cx="${cx - 6}" cy="${cy}" r="3" fill="${ink}"/><path d="M${cx - 1} ${cy - 6} q5 6 0 12 M${cx + 4} ${cy - 10} q8 10 0 20" fill="none" stroke="${ink}" stroke-width="2.6" stroke-linecap="round"/>`;
+    case 'record': // tia chớp
+      return `<path d="M${cx + 2} ${cy - 11} L${cx - 6} ${cy + 1} L${cx} ${cy + 1} L${cx - 3} ${cy + 11} L${cx + 7} ${cy - 2} L${cx + 1} ${cy - 2} Z" fill="#fff" stroke="${ink}" stroke-width="1.8" stroke-linejoin="round"/>`;
+    default:
+      return `<path d="${starPath(cx, cy, 9)}" fill="#fff" opacity=".9"/>`;
+  }
+}
+
+/** Cúp tuần: chiếc cúp màu theo thử thách + hình thử thách trên thân cúp + lấp lánh. */
+function weekCup(id: string): string {
+  const [body, edge] = CUP[id] ?? CUP.faster;
+  return `
+    <path d="M40 30 q-15 0 -13 15 q2 13 19 15" fill="none" stroke="${edge}" stroke-width="5" stroke-linecap="round"/>
+    <path d="M80 30 q15 0 13 15 q-2 13 -19 15" fill="none" stroke="${edge}" stroke-width="5" stroke-linecap="round"/>
+    <path d="M37 24 H83 V42 C83 59 73 70 60 70 C47 70 37 59 37 42 Z" fill="${body}" stroke="${edge}" stroke-width="2.4" stroke-linejoin="round"/>
+    <rect x="55" y="68" width="10" height="11" fill="${body}" stroke="${edge}" stroke-width="2"/>
+    <rect x="42" y="79" width="36" height="13" rx="3.5" fill="${P.woodDark}" stroke="${P.ink}" stroke-opacity=".3" stroke-width="1.4"/>
+    <rect x="50" y="83" width="20" height="5" rx="2" fill="${P.sunLight}" opacity=".85"/>
+    ${cupGlyph(id, 60, 44, P.ink)}
+    <path d="M42 30 q0 14 5 21" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".55"/>
+    ${sparkle(96, 26, 7, P.sun)}${sparkle(24, 70, 5, '#fff')}`;
 }
 
 /** Nón lá + nốt nhạc (dân ca). */
@@ -134,6 +183,9 @@ function emblem(s: Sticker, earned: boolean): string {
       return mic();
     case 'dynamics':
       return s.mode === 'stac-leg' ? stacLeg() : loudSoft();
+    case 'challenge':
+      // phóng to cúp cho đầy huy hiệu (tâm 60 60)
+      return `<g transform="translate(60 62) scale(1.16) translate(-60 -58)">${weekCup(s.challenge ?? 'faster')}</g>`;
   }
 }
 

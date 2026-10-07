@@ -22,6 +22,17 @@ export const SYMBOL: Record<RhythmSymbol, { label: string; emoji: string; beats:
   sync: { label: 'Chạy-Đi-chạy', emoji: '💃', beats: 2, hits: [0, 0.5, 1.5] },
 };
 
+/** Một ô thẻ nhịp (emoji + chữ) — dùng chung cho màn Nhịp và trò "Đố nhịp" (games/rhythmQuiz.ts). */
+export function rhythmCell(sym: RhythmSymbol, text: string = SYMBOL[sym].label, counting = false): HTMLElement {
+  const s = SYMBOL[sym];
+  return h(
+    'div',
+    { class: `rh-cell rh-${sym}`, style: { flexGrow: String(s.beats) } },
+    h('div', { class: 'rh-emoji' }, s.emoji),
+    h('div', { class: `rh-label${counting ? ' rh-count' : ''}` }, text),
+  );
+}
+
 export interface RhythmHooks {
   title: string;
   intro: string;
@@ -81,17 +92,7 @@ export function rhythmScreen(app: App, hooks: RhythmHooks) {
             meterOf(p),
           )
         : null;
-      seq.forEach((sym, k) => {
-        const s = SYMBOL[sym];
-        els.push(
-          h(
-            'div',
-            { class: `rh-cell rh-${sym}`, style: { flexGrow: String(s.beats) } },
-            h('div', { class: 'rh-emoji' }, s.emoji),
-            h('div', { class: `rh-label${words ? ' rh-count' : ''}` }, words ? words[k] : s.label),
-          ),
-        );
-      });
+      seq.forEach((sym, k) => els.push(words ? rhythmCell(sym, words[k], true) : rhythmCell(sym)));
       return { row: h('div', { class: 'rh-row' }, ...els), els, starts };
     }
 

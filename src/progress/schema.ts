@@ -147,6 +147,27 @@ export interface Progress {
   currentWeek: number;
   lessonsCompleted: string[];
   practiceDays: Record<string, { minutes: number; stars: number }>;
+  /**
+   * (+ 2026-10-07) 🏆 Thử thách tuần ĐÃ HOÀN THÀNH: thứ 2 của tuần lịch → thử thách + lúc lưu (ms). Chỉ THÊM, không bao giờ
+   * xóa (lessons/challenges.ts) — cúp tuần không mất khi gộp lịch sử. Không có = chưa hoàn thành tuần nào.
+   */
+  challenges?: Record<string, ChallengeRecord>;
+  /** (+ 2026-10-07) Mốc kỷ lục trò chơi đầu tuần lịch (thử thách "Phá kỷ lục") — chụp một lần mỗi tuần. */
+  gameBase?: GameBase;
+}
+
+/** (+ 2026-10-07) Một tuần đã hoàn thành thử thách (progress.challenges). */
+export interface ChallengeRecord {
+  /** Mã thử thách (lessons/challenges.ts — ChallengeId) */
+  id: string;
+  /** Lúc lưu (ms); 0 = không rõ */
+  doneAt: number;
+}
+
+/** (+ 2026-10-07) Kỷ lục các trò chơi lúc bắt đầu tuần lịch `monday`. */
+export interface GameBase {
+  monday: string;
+  bests: Record<string, number>;
 }
 
 export interface AppData {
@@ -170,6 +191,38 @@ export interface AppData {
    * "tổng hợp + buổi còn giữ" (progress/history.ts). Không đổi schemaVersion.
    */
   history?: History;
+  /**
+   * (+ 2026-10-07) "🎮 Trò chơi": kỷ lục từng trò (khóa = mã trò, vd 'noteRush'). Chỉ THÊM — không có = chưa chơi.
+   * Tách khỏi sessions → không ảnh hưởng gộp lịch sử (compaction) hay tiêu chí tuần.
+   */
+  games?: Record<string, GameScore>;
+}
+
+/** (+ 2026-10-07) Kỷ lục một trò chơi. */
+export interface GameScore {
+  /** Điểm cao nhất */
+  best: number;
+  /** Số lần chơi xong */
+  plays: number;
+  /** Lần chơi gần nhất (ms) */
+  lastAt: number;
+}
+
+const validGameScore = (g: unknown): g is GameScore =>
+  isObj(g) &&
+  [g.best, g.plays, g.lastAt].every((n) => typeof n === 'number' && Number.isFinite(n) && n >= 0);
+
+/**
+ * (+ 2026-10-07) Lọc kỷ lục trò chơi một cách DỄ TÍNH: mục hỏng bị bỏ (không làm hỏng cả bản sao lưu).
+ * Không phải object / rỗng → undefined.
+ */
+export function sanitizeGames(x: unknown): Record<string, GameScore> | undefined {
+  if (!isObj(x)) return undefined;
+  const out: Record<string, GameScore> = {};
+  for (const [k, v] of Object.entries(x)) {
+    if (k && validGameScore(v)) out[k] = { best: v.best, plays: Math.floor(v.plays), lastAt: v.lastAt };
+  }
+  return Object.keys(out).length ? out : undefined;
 }
 
 /** [a, b] — vd [số lần đúng, tổng] */
@@ -374,6 +427,9 @@ export function validateAppData(x: unknown): string[] {
     if (!Number.isInteger(p.currentWeek) || (p.currentWeek as number) < 1 || (p.currentWeek as number) > MAX_WEEK_LIMIT) errs.push('progress.currentWeek');
     if (!Array.isArray(p.lessonsCompleted)) errs.push('progress.lessonsCompleted');
     if (!isObj(p.practiceDays)) errs.push('progress.practiceDays');
+    // (+ 2026-10-07) Thử thách tuần — chỉ cần đúng kiểu object; bản ghi hỏng bên trong bị bỏ qua khi đọc (challenges.ts)
+    if (p.challenges !== undefined && !isObj(p.challenges)) errs.push('progress.challenges');
+    if (p.gameBase !== undefined && !isObj(p.gameBase)) errs.push('progress.gameBase');
   }
   if (!Array.isArray(x.sessions)) errs.push('Thiếu sessions');
   else {
@@ -472,6 +528,8 @@ export function validateAppData(x: unknown): string[] {
         }
       });
   }
+  // (+ 2026-10-07) Kỷ lục trò chơi — migrate() đã lọc mục hỏng (sanitizeGames); ở đây chỉ chặn kiểu sai hẳn
+  if (x.games !== undefined && (!isObj(x.games) || !Object.values(x.games).every(validGameScore))) errs.push('games');
   // (+ 2026-10-06) Tổng hợp lịch sử đã gộp — không có = chưa gộp
   if (x.history !== undefined) {
     const hs = x.history;

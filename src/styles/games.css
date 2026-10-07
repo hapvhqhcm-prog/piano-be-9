@@ -1,0 +1,519 @@
+/* =========================================================
+   🎮 TRÒ CHƠI (src/ui/screens/games.ts + games/*.ts)
+   ========================================================= */
+
+/* ---------- Màn chọn trò ---------- */
+.games-top {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 18px 20px 0;
+}
+.game-cards {
+  display: flex;
+  gap: 22px;
+  justify-content: center;
+  width: min(1040px, 100%);
+  padding: 8px 20px;
+}
+.game-card {
+  flex: 1 1 0;
+  max-width: 320px;
+  min-height: 330px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 26px 16px 20px;
+  border: 0;
+  border-radius: var(--r-xl);
+  background: var(--surface);
+  box-shadow: var(--e2), inset 0 -6px 0 var(--line);
+  font: inherit;
+  color: var(--ink);
+  cursor: pointer;
+  transition: transform 0.12s var(--ease-out);
+}
+.game-card:active {
+  transform: translateY(3px) scale(0.98);
+}
+.gc-noteRush {
+  background: linear-gradient(180deg, var(--sun-50), var(--surface) 70%);
+  box-shadow: var(--e2), inset 0 -6px 0 var(--sun-300);
+}
+.gc-rhythmQuiz {
+  background: linear-gradient(180deg, var(--coral-50), var(--surface) 70%);
+  box-shadow: var(--e2), inset 0 -6px 0 var(--coral-100);
+}
+.gc-songGuess {
+  background: linear-gradient(180deg, var(--violet-50), var(--surface) 70%);
+  box-shadow: var(--e2), inset 0 -6px 0 var(--violet-200);
+}
+.gc-emoji {
+  font-size: 84px;
+  line-height: 1.05;
+}
+.gc-title {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1.1;
+  text-align: center;
+}
+.gc-hint {
+  font-size: 21px;
+  line-height: 1.3;
+  color: var(--ink-2);
+  text-align: center;
+}
+.gc-best {
+  margin-top: auto;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--sun-800);
+  background: var(--sun-50);
+  box-shadow: inset 0 0 0 2px var(--sun-100);
+  border-radius: var(--r-pill);
+  padding: 8px 18px 5px;
+}
+.gc-best.none {
+  color: var(--violet-600);
+  background: var(--violet-50);
+  box-shadow: inset 0 0 0 2px var(--violet-100);
+}
+.game-card.locked {
+  background: var(--surface-2);
+  box-shadow: var(--e1), inset 0 -6px 0 var(--line);
+}
+.game-card.locked .gc-emoji {
+  opacity: 0.7;
+}
+.game-card.locked .gc-title {
+  color: var(--ink-2);
+}
+.game-card.locked .gc-hint {
+  margin-top: auto;
+  color: var(--violet-600);
+  font-weight: 700;
+}
+
+/* ---------- Khung chung ---------- */
+.game-stage {
+  position: relative;
+}
+.game-intro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+.game-hero {
+  font-size: 100px;
+  line-height: 1;
+}
+.game-sub {
+  font-size: 22px;
+  color: var(--mint-700);
+  font-weight: 700;
+}
+.game-best-chip {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--sun-800);
+  background: var(--sun-50);
+  box-shadow: inset 0 0 0 2px var(--sun-100);
+  border-radius: var(--r-pill);
+  padding: 8px 18px 5px;
+}
+.game-mascot.react {
+  animation: game-bounce 0.5s var(--ease-pop);
+}
+@keyframes game-bounce {
+  30% {
+    transform: translateY(-14px) scale(1.06);
+  }
+}
+
+/* Màn kết */
+.game-end {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+.game-end-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+.game-record {
+  font-family: var(--font-display);
+  font-size: 34px;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(180deg, var(--sun-400), var(--sun-600));
+  border-radius: var(--r-pill);
+  padding: 6px 22px 2px;
+  box-shadow: var(--glow-sun);
+  animation: game-bounce 0.7s var(--ease-pop) 2;
+}
+.game-score {
+  font-size: 48px;
+}
+.game-stars {
+  display: flex;
+  gap: 8px;
+}
+.game-stars .gs {
+  font-size: 56px;
+  line-height: 1;
+  color: var(--line-strong);
+}
+.game-stars .gs.on {
+  color: var(--sun-400);
+  text-shadow: 0 3px 0 var(--sun-600);
+}
+
+/* Rung khi sai · bật khi cộng điểm */
+.shake {
+  animation: game-shake 0.42s;
+}
+@keyframes game-shake {
+  20%,
+  60% {
+    transform: translateX(-12px);
+  }
+  40%,
+  80% {
+    transform: translateX(12px);
+  }
+}
+.pop {
+  animation: game-pop 0.3s var(--ease-pop);
+}
+@keyframes game-pop {
+  50% {
+    transform: scale(1.35);
+  }
+}
+
+/* ---------- ⚡ Đọc nốt nhanh ---------- */
+.keyboard-wrap.rush-kb {
+  flex-basis: 30vh;
+}
+.keyboard-wrap.rush-kb[hidden] {
+  display: none;
+}
+.rush-hud {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  width: min(1000px, 100%);
+  padding: 0 16px;
+}
+.rush-time,
+.rush-combo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 28px;
+}
+.rush-time {
+  flex: 1 1 auto;
+}
+.rush-time-bar,
+.rush-combo-bar {
+  flex: 1 1 auto;
+  height: 18px;
+  border-radius: var(--r-pill);
+  background: var(--line);
+  overflow: hidden;
+}
+.rush-combo-bar {
+  flex: 0 0 120px;
+}
+.rush-time-fill,
+.rush-combo-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--mint-400);
+  transform-origin: left center;
+  transition: transform 0.12s linear;
+}
+.rush-combo-fill {
+  background: var(--coral-400);
+  transform: scaleX(0);
+}
+.rush-time.hurry .rush-time-fill {
+  background: var(--coral-500);
+}
+.rush-time-text {
+  min-width: 46px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 30px;
+  text-align: right;
+}
+.rush-combo-text {
+  min-width: 56px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  color: var(--coral-700);
+}
+.rush-combo.hot .rush-combo-text {
+  animation: game-pop 0.3s var(--ease-pop);
+}
+.rush-score-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 30px;
+  background: var(--sun-50);
+  box-shadow: inset 0 0 0 2px var(--sun-100);
+  border-radius: var(--r-pill);
+  padding: 4px 18px 0;
+}
+.rush-score {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 38px;
+  color: var(--sun-800);
+  min-width: 1.2em;
+  text-align: center;
+}
+.rush-main {
+  display: grid;
+  grid-template-columns: 140px auto 140px;
+  align-items: center;
+  justify-items: center;
+  gap: 10px;
+  width: min(1000px, 100%);
+}
+.staff-mini.staff-quiz.rush-staff {
+  width: min(600px, 54vw);
+  height: min(320px, 38vh);
+  max-height: min(320px, 38vh);
+}
+.rush-name {
+  font-family: var(--font-display);
+  font-size: 120px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--violet-600);
+  background: var(--surface);
+  border-radius: var(--r-xl);
+  box-shadow: var(--e2);
+  padding: 34px 60px 18px;
+  min-width: 300px;
+  text-align: center;
+}
+.rush-count {
+  font-family: var(--font-display);
+  font-size: 150px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--violet-500);
+  animation: game-pop 0.5s var(--ease-pop);
+}
+.rush-mic {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--mint-700);
+  text-align: center;
+}
+
+/* ---------- 🥁 Đố nhịp & 🎵 Nghe đoán bài ---------- */
+.rq-head {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  width: min(1040px, 100%);
+  padding: 0 12px;
+}
+.rq-head .progress {
+  position: static;
+  justify-self: start;
+  white-space: nowrap;
+}
+.rq-head .game-mascot {
+  justify-self: end;
+}
+.rq-title,
+.sg-q {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 36px;
+  text-align: center;
+}
+.rq-ear,
+.sg-notes {
+  display: inline-block;
+}
+.rq-listening .rq-ear,
+.sg-listening .sg-notes {
+  animation: game-bounce 0.8s ease-in-out infinite;
+}
+.rq-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 16px;
+  font-size: 21px;
+  font-weight: 700;
+  color: var(--ink-2);
+  max-width: 900px;
+}
+.rq-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(1000px, 100%);
+  padding: 0 12px;
+}
+.rq-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 3px solid transparent;
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+  box-shadow: var(--e1);
+  font: inherit;
+  color: var(--ink);
+  cursor: pointer;
+  transition: transform 0.12s var(--ease-out);
+}
+.rq-card:active {
+  transform: scale(0.985);
+}
+.rq-num {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--violet-500);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 800;
+  padding-top: 3px;
+}
+.rq-row {
+  flex: 1 1 auto;
+  width: auto;
+  align-items: stretch;
+}
+.rq-row .rh-cell {
+  padding: 6px 2px;
+}
+.rq-row .rh-emoji {
+  font-size: 34px;
+}
+.rq-row .rh-label {
+  font-size: 17px;
+  text-align: center;
+  line-height: 1.15;
+}
+.two-bars .rq-row .rh-emoji {
+  font-size: 26px;
+}
+.two-bars .rq-row .rh-label {
+  font-size: 13px;
+}
+.two-bars .rq-row {
+  gap: 4px;
+}
+.rq-barline {
+  flex: 0 0 4px;
+  border-radius: 2px;
+  background: var(--ink-3);
+}
+.rq-card.good,
+.sg-card.good {
+  border-color: var(--mint-500);
+  background: var(--mint-50);
+}
+.rq-card.miss,
+.sg-card.miss {
+  border-color: var(--coral-400);
+  background: var(--coral-50);
+  animation: game-shake 0.42s;
+}
+.rq-card.dim,
+.sg-card.dim {
+  opacity: 0.45;
+}
+.rq-card:disabled,
+.sg-card:disabled {
+  cursor: default;
+}
+
+.sg-cards {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  width: min(1000px, 100%);
+  padding: 8px 12px;
+}
+.sg-card {
+  flex: 1 1 0;
+  max-width: 310px;
+  min-height: 250px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 18px 12px;
+  border: 4px solid transparent;
+  border-radius: var(--r-xl);
+  background: var(--surface);
+  box-shadow: var(--e2), inset 0 -6px 0 var(--line);
+  font: inherit;
+  color: var(--ink);
+  cursor: pointer;
+}
+.sg-card:active {
+  transform: scale(0.98);
+}
+.sg-emoji {
+  font-size: 92px;
+  line-height: 1;
+}
+.sg-title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.15;
+  text-align: center;
+}
+
+/* iPad mini ngang (thấp hơn): thu gọn chút */
+@media (max-height: 760px) {
+  .game-card {
+    min-height: 300px;
+  }
+  .gc-emoji {
+    font-size: 72px;
+  }
+  .rq-row .rh-emoji {
+    font-size: 30px;
+  }
+  .sg-card {
+    min-height: 220px;
+  }
+  .rush-name {
+    font-size: 104px;
+  }
+}

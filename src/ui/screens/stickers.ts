@@ -7,6 +7,8 @@ import { stickerArt } from '../components/art/stickerArt';
 import { actionBar, backButton, h, toast } from '../components/dom';
 import { mascot } from '../components/mascot';
 import { homeScreen } from './home';
+import { CHALLENGE_INFO, challengeStreak, weeklyChallenge } from '../../lessons/challenges';
+import '../../styles/challenges.css';
 
 /** Một ô sticker: đã nhận = tranh màu + tên; chưa nhận = bóng xám + gợi ý cách nhận. */
 export function stickerCell(s: Sticker, opts: { fresh?: boolean } = {}): HTMLElement {
@@ -61,7 +63,42 @@ export function stickersScreen(app: App) {
     const all = allStickers(app.store.get());
     const got = all.filter((s) => s.earned).length;
     const islands = all.filter((s) => s.kind === 'island');
-    const others = all.filter((s) => s.kind !== 'island');
+    const others = all.filter((s) => s.kind !== 'island' && s.kind !== 'challenge');
+    // (+ 2026-10-07) 🏆 Cúp tuần: mỗi tuần hoàn thành thử thách một cúp (mới nhất trước) + ô khóa của tuần này nếu chưa xong
+    const cups = all.filter((s) => s.kind === 'challenge').reverse();
+    const today = app.store.today();
+    const wc = weeklyChallenge(app.store.get(), today);
+    const streak = challengeStreak(app.store.get(), today);
+    const cupCells = cups.map((s) => {
+      const c = stickerCell(s);
+      const info = s.challenge ? CHALLENGE_INFO[s.challenge as keyof typeof CHALLENGE_INFO] : undefined;
+      if (info) c.setAttribute('title', `${info.icon} ${info.title}`);
+      return c;
+    });
+    if (!wc.done) {
+      cupCells.unshift(
+        stickerCell({
+          id: 'challenge-now',
+          kind: 'challenge',
+          title: 'Cúp tuần này',
+          hint: `Tuần này: ${wc.icon} ${wc.title}`,
+          earned: false,
+          challenge: wc.id,
+        }),
+      );
+    }
+    const challengeSection = h(
+      'section',
+      { class: 'sticker-section' },
+      h(
+        'h2',
+        { class: 'sticker-kicker' },
+        '🏆 Thử thách',
+        h('span', { class: 'sticker-count' }, `${cups.length} cúp`),
+        streak >= 2 ? h('span', { class: 'chal-streak' }, `🔥 ${streak} tuần liền`) : null,
+      ),
+      h('div', { class: 'sticker-grid' }, ...cupCells),
+    );
     // 🎁 Bất ngờ: Chào mừng + bộ sưu tập trứng (tính lại từ lịch sử buổi — không lưu thêm)
     const bonus = new Map(bonusCollection(app.store.get()).map((c) => [c.sticker.key, c.count]));
     const bonusDefs = [WELCOME_STICKER, ...BONUS_POOL];
@@ -110,6 +147,7 @@ export function stickersScreen(app: App) {
             ),
           ),
           section('🏆 Thành tích', others),
+          challengeSection,
           bonusSection,
           section('🏝️ Các đảo', islands),
         ),

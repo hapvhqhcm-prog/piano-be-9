@@ -6,7 +6,7 @@ import type { Composition, ParentSong } from '../../progress/schema';
 import type { App } from '../App';
 import { actionBar, backButton, h, toast } from '../components/dom';
 import { homeScreen } from './home';
-import { songScreen } from './song';
+import { songScreen, type SongOptions } from './song';
 import { shortTitle, songEmoji } from '../components/songArt';
 import '../../styles/parentSongs.css';
 import '../../styles/kidux.css';
@@ -18,7 +18,9 @@ let libFilter: 'all' | 'vn' = 'all';
  * Thư viện bài hát — bé TỰ CHỌN bài (động lực nội tại: quyền lựa chọn).
  * Bài của các tuần sau hiện khóa 🔒 kèm số tuần; không mở khóa bằng sao.
  */
-export function libraryScreen(app: App) {
+export function libraryScreen(app: App, filter?: 'all' | 'vn') {
+  // (+ 2026-10-07) Mở sẵn một bộ lọc (vd thử thách tuần "🇻🇳 Bài quê hương")
+  if (filter) libFilter = filter;
   return (root: HTMLElement) => {
     const data = app.store.get();
     const week = data.progress.currentWeek;
@@ -185,7 +187,7 @@ export function libraryScreen(app: App) {
 }
 
 /** Chơi một bài ngoài buổi học: vẫn lưu lượt chơi vào một buổi "tự do" của tuần hiện tại. */
-export function playSong(app: App, s: Tune): void {
+export function playSong(app: App, s: Tune, opts?: Partial<SongOptions>): void {
   const store = app.store;
   const week = store.get().progress.currentWeek;
   const session = store.startSession(`w${week}-song-${s.id}`);
@@ -202,7 +204,8 @@ export function playSong(app: App, s: Tune): void {
       s,
       // Bài mới (của tuần này/tuần trước) có gợi ý đầy đủ; bài cũ thì chỉ tên nốt (đổi được trong màn bài hát)
       // Bài con tự sáng tác (không có tuần) → luôn gợi ý đầy đủ
-      { mode: 'wait', hints: week >= 8 && (s.week ?? week) < week - 1 ? 'names' : 'full', free: true },
+      // (+ 2026-10-07) opts: mở sẵn chế độ / tốc độ (vd thử thách tuần "🐇 Nhanh hơn" → Theo nhịp ở tốc độ thử thách)
+      { mode: 'wait', hints: week >= 8 && (s.week ?? week) < week - 1 ? 'names' : 'full', free: true, ...opts },
       { onRun: (run) => store.addSongRun(session.id, run), onDone: leave, onBack: leave },
     ),
   );

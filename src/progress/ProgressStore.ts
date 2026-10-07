@@ -2,6 +2,7 @@ import { isFutureData, migrate } from './migrations';
 import { isValidPitch, samePitch } from '../piano/pitchTable';
 import { COMPACT_WINDOW_DAYS, EMERGENCY_WINDOW_DAYS, compactData, recordMonotonicStickers } from './compaction';
 import { RATING_STARS, bumpDataRev, hist, sessionCount } from './history';
+import { recordChallenges } from '../lessons/challenges';
 import {
   defaultData,
   localDateStr,
@@ -9,6 +10,7 @@ import {
   type AppData,
   type ChecklistKey,
   type Composition,
+  type GameScore,
   type ParentSong,
   type ParentResult,
   type Session,
@@ -645,6 +647,9 @@ export class ProgressStore {
     s.completed = true;
     s.endedAt = this.now().getTime();
     this.touch(s);
+    // (+ 2026-10-07) 🏆 Lưu tuần vừa hoàn thành thử thách (đánh dấu dữ liệu mới trước — bỏ ghi nhớ cũ)
+    bumpDataRev(this.data);
+    recordChallenges(this.data, this.today(), s.endedAt);
     // Gộp lịch sử cũ (nếu có) rồi ghi ngay
     this.compact();
     this.save();
@@ -726,6 +731,41 @@ export class ProgressStore {
 
   findParentSong(id: string): ParentSong | undefined {
     return this.data.parentSongs?.find((c) => c.id === id);
+  }
+
+  // ---------------- (+ 2026-10-07) 🎮 Trò chơi — kỷ lục riêng, không đụng tới sessions ----------------
+
+  /** Kỷ lục của một trò (undefined = chưa chơi). */
+  gameScore(id: string): Readonly<GameScore> | undefined {
+    return this.data.games?.[id];
+  }
+
+  /**
+   * Ghi một lượt chơi xong: +1 lượt, cập nhật kỷ lục. `record` = điểm > kỷ lục cũ (và > 0) → "Kỷ lục mới!".
+   * Ghi ngay (flush) — trò chơi ngắn, bé có thể tắt app ngay sau đó.
+   */
+  recordGame(id: string, score: number): { best: number; prevBest: number; record: boolean } {
+    const s = Number.isFinite(score) ? Math.max(0, score) : 0;
+    const games = (this.data.games ??= {});
+    const prev = games[id];
+    const prevBest = prev?.best ?? 0;
+    const best = Math.max(prevBest, s);
+    games[id] = { best, plays: (prev?.plays ?? 0) + 1, lastAt: this.now().getTime() };
+    this.save();
+    this.flush();
+    return { best, prevBest, record: s > prevBest && s > 0 };
+  }
+
+  /**
+   * (+ 2026-10-07) 🏆 Lưu thử thách tuần đã xong / chụp mốc kỷ lục trò chơi khi sang tuần mới (màn chính gọi).
+   * Chỉ ghi khi có đổi.
+   */
+  recordChallenges(): void {
+    if (this.futureVersion) return;
+    if (recordChallenges(this.data, this.today(), this.now().getTime())) {
+      this.save();
+      this.flush();
+    }
   }
 
   /** Đánh dấu xong bài / xong một hoạt động ("<bài>#<i>") — cuối hoạt động → ghi ngay. */

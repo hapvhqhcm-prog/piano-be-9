@@ -2,6 +2,7 @@ import { SONGS } from '../music/tune';
 import type { AppData } from '../progress/schema';
 import { completedDates, dayKey, hist, memo, mondayKey, weekdayIndex } from '../progress/history';
 import { LEVELS, WEEKS, masteredSongs, weekComplete, weekPassed } from './lessonEngine';
+import { completedChallengeWeeks } from './challenges';
 
 /**
  * SỔ STICKER — động lực cho bé: mỗi sticker được TÍNH LẠI hoàn toàn từ dữ liệu sẵn có
@@ -19,7 +20,7 @@ import { LEVELS, WEEKS, masteredSongs, weekComplete, weekPassed } from './lesson
  * EFFORT_BY_DAYS_FROM vẫn được tính theo quy tắc cũ (≥ 4 buổi/tuần).
  * Sticker chuỗi ngày CŨ mà bé đã nhận trước ngày đổi vẫn được giữ (tính trên các buổi trước STREAK_RETIRED_AFTER).
  */
-export type StickerKind = 'island' | 'songs' | 'streak' | 'week' | 'mic' | 'folk' | 'dynamics' | 'medal';
+export type StickerKind = 'island' | 'songs' | 'streak' | 'week' | 'mic' | 'folk' | 'dynamics' | 'medal' | 'challenge';
 
 export interface Sticker {
   id: string;
@@ -34,6 +35,9 @@ export interface Sticker {
   n?: number;
   level?: number;
   mode?: 'loud-soft' | 'stac-leg';
+  /** (+ 2026-10-07) challenge: mã thử thách (ChallengeId) + thứ 2 của tuần lịch */
+  challenge?: string;
+  monday?: string;
 }
 
 export const SONG_MILESTONES = [1, 5, 10, 20, 40] as const;
@@ -228,6 +232,19 @@ function computeStickers(data: Readonly<AppData>): Sticker[] {
     earned: dynamicsDone(data, 'stac-leg'),
     mode: 'stac-leg',
   });
+  // (+ 2026-10-07) 🏆 Cúp tuần: một sticker cho MỖI tuần lịch hoàn thành thử thách (đã lưu ∪ suy ra — chỉ tăng)
+  for (const [monday, r] of completedChallengeWeeks(data)) {
+    const [, m, d] = monday.split('-').map(Number);
+    out.push({
+      id: `challenge-${monday}`,
+      kind: 'challenge',
+      title: `Cúp tuần ${d}/${m}`,
+      hint: 'Hoàn thành thử thách tuần',
+      earned: true,
+      challenge: r.id,
+      monday,
+    });
+  }
   return out;
 }
 

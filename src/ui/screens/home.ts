@@ -23,6 +23,8 @@ import { BUSY_WEEK_DAYS, earnedStickerIds, islandPassed } from '../../lessons/st
 import { storageStatus } from '../../progress/ProgressStore';
 import { cancelSpeech, speak } from '../../audio/voice';
 import { speakChip } from '../components/speakChip';
+import { challengeLine } from '../components/challengeSheet';
+import { weeklyChallenge } from '../../lessons/challenges';
 import { markSafePoint } from '../../pwa/updater';
 import type { AppData } from '../../progress/schema';
 import '../../styles/pedagogy.css';
@@ -34,10 +36,12 @@ const sessionMod = lazy(() => import('./session'));
 const libraryMod = lazy(() => import('./library'));
 const freePlayMod = lazy(() => import('./freePlay'));
 const stickersMod = lazy(() => import('./stickers'));
+const gamesMod = lazy(() => import('./games'));
 const startSession = (app: App, l: Lesson): void => withLazy(sessionMod, (m) => m.startSession(app, l));
 const libraryScreen = (app: App): Screen => lazyScreen(libraryMod, (m) => m.libraryScreen(app));
 const freePlayScreen = (app: App): Screen => lazyScreen(freePlayMod, (m) => m.freePlayScreen(app));
 const stickersScreen = (app: App): Screen => lazyScreen(stickersMod, (m) => m.stickersScreen(app));
+const gamesScreen = (app: App): Screen => lazyScreen(gamesMod, (m) => m.gamesScreen(app));
 
 /**
  * Tranh đảo (do src/ui/components/art/islandArt.ts vẽ). Nạp "mềm" qua import.meta.glob: nếu file tranh
@@ -232,6 +236,9 @@ export function homeScreen(app: App, banner?: string) {
       weekDone >= BUSY_WEEK_DAYS ? h('div', { class: 'streak week-star' }, '🌟 Tuần chăm chỉ!') : null,
       daysEl,
     );
+    // (+ 2026-10-07) 🏆 Thử thách tuần: lưu tuần đã xong / chụp mốc kỷ lục trò chơi (chỉ ghi khi có đổi) rồi hiện một dòng gọn
+    app.store.recordChallenges();
+    const chalLine = challengeLine(app, weeklyChallenge(app.store.get(), today), today, { blocked: () => overLimit, onBlocked: restToast });
 
     root.append(
       h(
@@ -270,7 +277,7 @@ export function homeScreen(app: App, banner?: string) {
             ),
             h(
               'div',
-              { class: 'goal-panel' },
+              { class: 'goal-panel has-chal' },
               goalMetNotDone
                 ? h('div', { class: 'goal-target met' }, `🎯 Đạt mục tiêu rồi! Còn ${leftLessons} bài nữa là qua đảo`)
                 : h(
@@ -280,6 +287,7 @@ export function homeScreen(app: App, banner?: string) {
                     h('span', { class: 'goal-text' }, goalText),
                   ),
               goalRow,
+              chalLine,
             ),
             overLimit
               ? h('div', { class: 'banner rest' }, '🌙 Hôm nay con học đủ rồi. Mai mình học tiếp nhé!')
@@ -324,11 +332,13 @@ export function homeScreen(app: App, banner?: string) {
           { class: 'home-dock' },
           button({ icon: '🎵', label: 'Bài hát', kind: 'sun', onTap: () => app.show(libraryScreen(app)) }),
           button({ icon: '🎹', label: 'Đàn tự do', kind: 'mint', onTap: () => app.show(freePlayScreen(app)) }),
+          gamesDockButton(app),
           stickerDockButton(app),
         ),
       ),
     );
-    prefetchLater([sessionMod]);
+    // Buổi học là việc bé bấm NGAY → tải sẵn sớm (300 ms, sau khi màn chính đã vẽ)
+    prefetchLater([sessionMod], 300);
     // Đọc to câu chuyện của tuần — mỗi ngày một lần (không phải mỗi lần về màn chính)
     // (hẹn giờ được gỡ khi rời màn — trước đây rời màn trong 0,6 s thì câu chuyện vẫn đọc đè lên màn kế tiếp)
     const storyTimer = shouldTellStory(today, plan.week) ? window.setTimeout(() => void speak(app, plan.story), 600) : 0;
@@ -357,6 +367,13 @@ function shouldTellStory(today: string, week: number): boolean {
     /* không có bộ nhớ → vẫn đọc */
   }
   return true;
+}
+
+/** (+ 2026-10-07) Nút "🎮 Trò chơi" ở thanh dưới (họ nút xanh trời riêng). */
+function gamesDockButton(app: App): HTMLButtonElement {
+  const b = button({ icon: '🎮', label: 'Trò chơi', onTap: () => app.show(gamesScreen(app)) });
+  b.classList.add('btn-games');
+  return b;
 }
 
 /** Nút "Sổ sticker" ở thanh dưới (họ nút hồng riêng) — kèm số sticker đã có. */

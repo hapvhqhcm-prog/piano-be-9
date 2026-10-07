@@ -601,6 +601,12 @@ async function runSession(label, start, o = {}) {
   if (start === 'next') await tapTextStarts('Học tiếp:');
   else await tapSel(`[data-lesson="${start}"]`);
   log(`  ▶ buổi ${label} (${start})`);
+  // Màn buổi học tải lười: chờ rời màn chính (tối đa 10 s) trước khi lái tự động — tránh tưởng buổi đã kết thúc
+  for (let i = 0; i < 100; i++) {
+    const onHome = await evaluate('!!document.querySelector(".home-stage")').catch(() => true);
+    if (!onHome) break;
+    await sleep(100);
+  }
   const kinds = new Set();
   const seq = [];
   let lastSig = '';

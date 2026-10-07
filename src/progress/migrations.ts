@@ -1,4 +1,4 @@
-import { CURRICULUM_REV, SCHEMA_VERSION, defaultData, defaultSettings, type AppData, type Session } from './schema';
+import { CURRICULUM_REV, SCHEMA_VERSION, defaultData, defaultSettings, sanitizeGames, type AppData, type Session } from './schema';
 
 /**
  * Migration theo schemaVersion. Hiện chỉ có v1 → chưa có bước nào.
@@ -218,5 +218,9 @@ function fillDefaults(d: Record<string, unknown>): AppData {
 
       )
     : [];
+  // (+ 2026-10-07) Kỷ lục trò chơi: dễ tính — mục hỏng bị bỏ, không làm hỏng cả dữ liệu
+  const games = sanitizeGames(d.games);
+  if (games) out.games = games;
+  else delete out.games;
   return out;
 }

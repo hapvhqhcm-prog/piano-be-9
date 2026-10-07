@@ -19,6 +19,7 @@ import { DYNAMICS_ROUNDS, EFFORT_BY_DAYS_FROM, monotonicStickerIds } from '../le
 import { isLessonSession } from '../lessons/bonusStickers';
 import { RATING_STARS, bumpDataRev, emptyHistory, foldParentStats, mondayKey, weekOfLessonId, weekdayIndex, type ParentStats } from './history';
 import { sessionAnswers } from './answers';
+import { recordChallenges } from '../lessons/challenges';
 import { localDateStr, type AppData, type CountPair, type History, type Session } from './schema';
 
 /** Giữ nguyên các buổi trong ngần này ngày gần nhất (8 tuần). */
@@ -74,6 +75,8 @@ export function compactData(data: AppData, now: Date, windowDays: number = COMPA
     }
   }
   if (!fold.size) return { folded: 0, keptOld: old.length };
+  // (+ 2026-10-07) 🏆 Lưu các tuần đã xong thử thách TRƯỚC khi gộp buổi của chúng (cúp tuần không mất)
+  recordChallenges(data, localDateStr(now), now.getTime());
   const h = data.history ?? emptyHistory();
   for (const s of data.sessions) if (fold.has(s)) foldSession(h, s);
   for (const w of newlyPassed) if (!h.passedWeeks.includes(w)) h.passedWeeks.push(w);

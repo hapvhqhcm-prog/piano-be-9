@@ -579,3 +579,16 @@ Phụ huynh → Nâng cao (hoặc thẻ Cài micro) → 🩺 Kiểm tra iPad. B�
 Ô "Góp ý của bố mẹ" và nút **📤 Gửi kết quả** (Chia sẻ, sao chép hoặc ô chữ để chọn) gom báo cáo tiếng Việt kèm phụ lục kỹ thuật và nhật ký micro gần nhất. Không kèm tên bé, trừ khi bố mẹ đánh dấu.
 
 1322 test; build; compat iPadOS 15+; e2e C.
+
+## 29. Thêm nội dung học: 🎮 Trò chơi + 🏆 Thử thách tuần (OWNER chọn 2026-10-07)
+
+- **🎮 Trò chơi** (nút ở thanh dưới màn chính), độ khó theo tuần giáo trình, lưu kỷ lục (`AppData.games`):
+  - **⚡ Đọc nốt nhanh:** 60 giây; khóa Fa từ tuần 11, dòng kẻ phụ / nốt cao từ tuần 23; trước tuần 8 đọc tên nốt; micro bật thì đàn trên đàn thật.
+  - **🥁 Đố nhịp:** 8 lượt, chỉ dùng hình nhịp đã học, 3 thẻ luôn nghe khác nhau, lượt cuối 2 ô nhịp.
+  - **🎵 Nghe đoán bài:** 6 lượt, câu đầu của bài đã mở hoặc đã chơi, 3 tên bài khác hẳn nhau.
+- **🏆 Thử thách tuần:** mỗi tuần (thứ Hai – Chủ nhật) một thử thách theo tuần giáo trình.
+  - Các thử thách: 📅 Bốn ngày chăm · 🐇 Nhanh hơn (+ 1 nấc tốc độ) · 🎯 Không sai nốt · 🔁 Ôn 3 bài cũ · 🇻🇳 Bài quê hương · 👂 Tai thính · 🎮 Phá kỷ lục.
+  - Màn chính hiện dòng tiến độ; bảng chi tiết có "▶ Làm ngay"; cuối buổi ăn mừng khi xong.
+  - Sổ sticker có mục "🏆 Thử thách": cúp từng tuần và chuỗi tuần liền. Vẫn giữ nguyên sau khi gộp dữ liệu.
+- Buổi học được tải sẵn sớm hơn (300 ms sau khi màn chính hiện).
+- 1359 test; compat iPadOS 15+; e2e A–E qua.

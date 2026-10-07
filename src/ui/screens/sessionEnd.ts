@@ -11,8 +11,41 @@ import { button, h } from '../components/dom';
 import { cancelSpeech, speak } from '../../audio/voice';
 import { stickersScreen } from './stickers';
 import '../../styles/kidux.css';
+import '../../styles/challenges.css';
+import { weeklyChallenge, type WeeklyChallenge } from '../../lessons/challenges';
 
-const KIND_ORDER: Sticker['kind'][] = ['medal', 'songs', 'week', 'streak', 'folk', 'mic', 'dynamics', 'island'];
+const KIND_ORDER: Sticker['kind'][] = ['challenge', 'medal', 'songs', 'week', 'streak', 'folk', 'mic', 'dynamics', 'island'];
+/** (+ 2026-10-07) Tuần (thứ 2) đã mừng "hoàn thành thử thách tuần" — chỉ là tiện ích trong máy (mất thì mừng thêm tối đa một lần). */
+const CHEERED_KEY = 'piano-be-9:challenge-cheered';
+function cheeredFor(monday: string): boolean {
+  try {
+    return localStorage.getItem(CHEERED_KEY) === monday;
+  } catch {
+    return true; // không có bộ nhớ → chỉ mừng khi vừa nhận cúp (sticker mới)
+  }
+}
+function markCheered(monday: string): void {
+  try {
+    localStorage.setItem(CHEERED_KEY, monday);
+  } catch {
+    /* bỏ qua */
+  }
+}
+
+/** Thẻ "🏆 Con hoàn thành thử thách tuần!" (cúp của thử thách + tên thử thách). */
+function challengeWin(app: App, c: WeeklyChallenge): HTMLElement {
+  return h(
+    'button',
+    { class: 'chal-win', type: 'button', onClick: () => app.show(stickersScreen(app)), 'aria-label': 'Con hoàn thành thử thách tuần — xem sổ sticker' },
+    h('div', { class: 'chal-win-cup', 'aria-hidden': 'true' }, stickerArt({ id: 'challenge-win', kind: 'challenge', title: '', hint: '', earned: true, challenge: c.id }, true)),
+    h(
+      'div',
+      { class: 'sticker-reveal-text' },
+      h('div', { class: 'chal-win-title' }, '🏆 Con hoàn thành thử thách tuần!'),
+      h('div', { class: 'chal-win-sub' }, `${c.icon} ${c.title} · Cúp tuần đã vào sổ sticker 📒`),
+    ),
+  );
+}
 /** Số lần chạm để nở trứng */
 const EGG_TAPS = 3;
 
@@ -111,7 +144,13 @@ export function sessionEndScreen(
 ) {
   return (root: HTMLElement) => {
     const data = app.store.get();
-    const fresh = o.stickersBefore ? newStickers(o.stickersBefore, data) : [];
+    const fresh0 = o.stickersBefore ? newStickers(o.stickersBefore, data) : [];
+    // (+ 2026-10-07) 🏆 Mừng hoàn thành thử thách tuần MỘT lần: vừa nhận cúp ở buổi này, hoặc xong ở chỗ khác (Thư viện,
+    // trò chơi…) mà chưa được mừng. Thẻ mừng thay cho ô "Cúp tuần" trong dải sticker mới (không lặp hai lần).
+    const wc = weeklyChallenge(data, app.store.today());
+    const cheer = wc.done && (fresh0.some((s) => s.kind === 'challenge' && s.monday === wc.monday) || !cheeredFor(wc.monday));
+    if (cheer) markCheered(wc.monday);
+    const fresh = cheer ? fresh0.filter((s) => !(s.kind === 'challenge' && s.monday === wc.monday)) : fresh0;
     const sess = o.sessionId ? (data.sessions.find((s) => s.id === o.sessionId) ?? null) : lastFinishedSession(data);
     const recap = sess ? recapLine(sessionRecap(sess)) : null;
     const bonus = sess && isLessonSession(sess) ? bonusForSession(data, sess.id) : null;
@@ -119,11 +158,11 @@ export function sessionEndScreen(
     const week = data.progress.currentWeek;
     const from = o.weekBefore ?? (o.banner && /^(🏅|🎉)/u.test(o.banner) ? week - 1 : week);
     const advanced = from >= 1 && from < week;
-    const rewards = fresh.length > 0 || !!bonus;
+    const rewards = fresh.length > 0 || !!bonus || cheer;
     let timer = 0;
 
     const content = () => {
-      confetti(o.banner || rewards ? 60 : 36);
+      confetti(cheer ? 90 : o.banner || rewards ? 60 : 36);
       root.append(
         h(
           'div',
@@ -136,7 +175,8 @@ export function sessionEndScreen(
             ? h(
                 'div',
                 { class: 'end-rewards' },
-                fresh.length ? stickerReveal(app, fresh, bonus ? 2 : 3) : null,
+                cheer ? challengeWin(app, wc) : null,
+                fresh.length ? stickerReveal(app, fresh, bonus || cheer ? 2 : 3) : null,
                 bonus ? bonusCard(app, bonus) : null,
               )
             : null,
@@ -149,7 +189,8 @@ export function sessionEndScreen(
         ),
       );
       // Bé đọc chậm → đọc to dòng tóm tắt
-      if (recap) timer = window.setTimeout(() => void speak(app, `Con đã hoàn thành buổi hôm nay! ${recap}`), 500);
+      const cheerText = cheer ? ' Con hoàn thành thử thách tuần rồi! Giỏi quá!' : '';
+      if (recap || cheer) timer = window.setTimeout(() => void speak(app, `Con đã hoàn thành buổi hôm nay!${recap ? ` ${recap}` : ''}${cheerText}`), 500);
     };
 
     if (advanced) {

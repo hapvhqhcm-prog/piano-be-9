@@ -1407,11 +1407,16 @@ h3,
   flex: 0 0 auto;
   display: flex;
   justify-content: center;
-  gap: 18px;
+  gap: 14px;
   padding: 8px 20px calc(14px + env(safe-area-inset-bottom));
 }
+/* 4 nút (Bài hát · Đàn tự do · Trò chơi · Sticker) — vừa một hàng ở 1080 và 1133 px */
 .home-dock .btn {
-  min-width: 240px;
+  flex: 0 1 236px;
+  min-width: 0;
+  padding-left: 14px;
+  padding-right: 14px;
+  white-space: nowrap;
 }
 .today-stars {
   font-family: var(--font-display);
@@ -2587,7 +2592,15 @@ h3,
   --btn-glow: rgba(255, 143, 177, 0.22);
 }
 .home-dock .btn-pink {
-  min-width: 200px;
+  flex-basis: 200px;
+}
+/* (+ 2026-10-07) Nút "🎮 Trò chơi" ở thanh dưới — họ nút xanh trời riêng (không lẫn với nút chính tím) */
+.btn-games {
+  --btn-bg: #f2faff;
+  --btn-bg2: var(--sky-100);
+  --btn-edge: var(--sea-300);
+  --btn-ink: #1d5f8c;
+  --btn-glow: rgba(74, 163, 220, 0.22);
 }
 .dock-count {
   position: absolute;
