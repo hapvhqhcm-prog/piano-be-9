@@ -8,7 +8,7 @@
  * Cần dev server đang chạy (npm run dev → http://localhost:5173/piano-be-9/).
  * Danh sách cảnh: scripts/shots.scenes.mjs (mỗi cảnh = tên + đoạn JS async chạy trong trang).
  */
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { mkdirSync, writeFileSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -36,6 +36,40 @@ const edge = spawn(EDGE, [
   '--autoplay-policy=no-user-gesture-required',
   'about:blank',
 ]);
+
+/**
+ * Tắt CẢ CÂY tiến trình: trên Windows proc.kill() chỉ tắt tiến trình gốc, các tiến trình con của Edge chạy ngầm
+ * còn sót lại (2026-10-07 dồn tới 58 Edge ngầm ngốn CPU). Cũng chạy khi script bị dừng giữa chừng.
+ */
+function killTree(p) {
+  if (p && p.exitCode === null && p.pid) {
+    try {
+      if (process.platform === 'win32') spawnSync('taskkill', ['/PID', String(p.pid), '/T', '/F'], { stdio: 'ignore' });
+      else p.kill('SIGKILL');
+    } catch {
+      /* bỏ qua */
+    }
+  }
+  // Edge trên Windows chạy qua tiến trình trung gian rồi tách ra → tắt mọi Edge đang dùng ĐÚNG thư mục hồ sơ tạm này
+  if (process.platform === 'win32' && p === edge && typeof profile === 'string') killEdgeProfile(profile);
+}
+let profileKilled = false;
+function killEdgeProfile(dir) {
+  if (profileKilled) return;
+  profileKilled = true;
+  const needle = dir.replace(/'/g, "''");
+  try {
+    spawnSync(
+      'powershell',
+      ['-NoProfile', '-Command', `Get-CimInstance Win32_Process -Filter "Name='msedge.exe'" | Where-Object { $_.CommandLine -like '*${needle}*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }`],
+      { stdio: 'ignore' },
+    );
+  } catch {
+    /* bỏ qua */
+  }
+}
+for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => (killTree(edge), process.exit(130)));
+process.on('exit', () => killTree(edge));
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -108,7 +142,7 @@ for (const size of SIZES) {
 }
 console.log(results.join('\n'));
 ws.close();
-edge.kill();
+killTree(edge);
 await sleep(300);
 try {
   rmSync(profile, { recursive: true, force: true });

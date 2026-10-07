@@ -138,7 +138,9 @@ async function startPreview(outDir, port) {
     url,
     stop: async () => {
       if (proc.exitCode === null) {
-        proc.kill();
+        // Windows: tắt cả cây tiến trình (npx → vite), không để tiến trình con sót lại
+        if (process.platform === 'win32' && proc.pid) spawnSync('taskkill', ['/PID', String(proc.pid), '/T', '/F'], { stdio: 'ignore' });
+        else proc.kill();
         for (let i = 0; i < 40 && proc.exitCode === null; i++) await sleep(50);
       }
     },

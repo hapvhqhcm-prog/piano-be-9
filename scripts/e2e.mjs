@@ -135,7 +135,7 @@ async function startPreview(outDir, port) {
     url,
     stop: async () => {
       if (proc.exitCode === null) {
-        proc.kill();
+        killTree(proc);
         for (let i = 0; i < 40 && proc.exitCode === null; i++) await sleep(50);
       }
       // chờ cổng được nhả
@@ -212,6 +212,40 @@ let cdp = null;
 let preview = null;
 let appPort = 0;
 let APP_URL = '';
+
+/**
+ * Tắt CẢ CÂY tiến trình: trên Windows proc.kill() chỉ tắt tiến trình gốc, các tiến trình con (Edge chạy ngầm, vite)
+ * còn sót lại (2026-10-07 dồn tới 58 Edge ngầm ngốn CPU). Cũng chạy khi script bị dừng giữa chừng.
+ */
+function killTree(p) {
+  if (p && p.exitCode === null && p.pid) {
+    try {
+      if (process.platform === 'win32') spawnSync('taskkill', ['/PID', String(p.pid), '/T', '/F'], { stdio: 'ignore' });
+      else p.kill('SIGKILL');
+    } catch {
+      /* bỏ qua */
+    }
+  }
+  // Edge trên Windows chạy qua tiến trình trung gian rồi tách ra → tắt mọi Edge đang dùng ĐÚNG thư mục hồ sơ tạm này
+  if (process.platform === 'win32' && p === edge && typeof profile === 'string') killEdgeProfile(profile);
+}
+let profileKilled = false;
+function killEdgeProfile(dir) {
+  if (profileKilled) return;
+  profileKilled = true;
+  const needle = dir.replace(/'/g, "''");
+  try {
+    spawnSync(
+      'powershell',
+      ['-NoProfile', '-Command', `Get-CimInstance Win32_Process -Filter "Name='msedge.exe'" | Where-Object { $_.CommandLine -like '*${needle}*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }`],
+      { stdio: 'ignore' },
+    );
+  } catch {
+    /* bỏ qua */
+  }
+}
+for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => (killTree(edge), killTree(preview?.proc), process.exit(130)));
+process.on('exit', () => (killTree(edge), killTree(preview?.proc)));
 
 async function launchEdge() {
   edge = spawn(EDGE, [
@@ -1086,7 +1120,7 @@ try {
 } catch {
   /* bỏ qua */
 }
-edge?.kill();
+killTree(edge);
 await preview?.stop().catch(() => undefined);
 await sleep(500);
 if (!KEEP_PROFILE) {
