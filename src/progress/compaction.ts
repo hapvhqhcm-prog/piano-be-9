@@ -18,7 +18,7 @@ import { forEachTargetOutcome, foldSongRun, weekPassed } from '../lessons/lesson
 import { DYNAMICS_ROUNDS, EFFORT_BY_DAYS_FROM, monotonicStickerIds } from '../lessons/stickers';
 import { isLessonSession } from '../lessons/bonusStickers';
 import { RATING_STARS, bumpDataRev, emptyHistory, foldParentStats, mondayKey, weekOfLessonId, weekdayIndex, type ParentStats } from './history';
-import { sessionAnswers } from './report';
+import { sessionAnswers } from './answers';
 import { localDateStr, type AppData, type CountPair, type History, type Session } from './schema';
 
 /** Giữ nguyên các buổi trong ngần này ngày gần nhất (8 tuần). */

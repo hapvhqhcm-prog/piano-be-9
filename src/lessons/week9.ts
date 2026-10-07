@@ -14,7 +14,7 @@ export const WEEK9: WeekPlan = {
   title: 'Nhịp 2/4',
   story: 'Ở Bến Đò, bác lái đò khua mái chèo "MỘT-hai, MỘT-hai". Mỗi ô nhịp chỉ có HAI phách — phách MỘT mạnh, phách hai nhẹ.',
   warmup: { variant: 'interval', pool: ['C4', 'D4', 'E4', 'F4', 'G4', 'A4'], rounds: 6, maxInterval: 3 },
-  teach: { emoji: '👨‍🏫', text: 'Con vỗ tay cho bố/mẹ nhịp 2: MẠNH-nhẹ, MẠNH-nhẹ — rồi bắt bố/mẹ vỗ lại.' },
+  teach: { emoji: '👨‍🏫', text: 'Con vỗ tay cho bố mẹ nhịp 2: MẠNH-nhẹ, MẠNH-nhẹ — rồi bắt bố mẹ vỗ lại.' },
   drills: ['arm-drop', 'five-finger'],
   criterion: { text: 'Chơi trọn "Inh lả ơi" theo nhịp — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
   kidGoal: 'Inh lả ơi "MỘT-hai" thật đều — 2 hôm nhé! 💃',
@@ -49,7 +49,7 @@ export const WEEK9: WeekPlan = {
       activities: [
         { kind: 'song', songId: 'school_drum', mode: 'tempo', level: 2, hints: 'names' },
         // Dân ca Việt Nam (OWNER yêu cầu 2026-10-05): chỉ Rê Mi Sol La — tay ở "thế nhích lên", Sol–La = 4-5. v5: dời từ tuần 7 cũ (sau bài nhịp 2/4)
-        { kind: 'song', songId: 'inh_la_oi', mode: 'wait', hints: 'full', intro: 'Dân ca Thái Tây Bắc, nhịp 2/4! Bàn tay nhích sang phải: ngón 1 ở Rê, Sol–La là ngón 4-5. Câu cuối đàn NHỎ (p) như tiếng vọng núi rừng.' },
+        { kind: 'song', songId: 'inh_la_oi', mode: 'wait', hints: 'full', intro: 'Dân ca Thái Tây Bắc, nhịp 2/4! Bàn tay nhích sang phải: ngón 1 ở Rê, Sol – La là ngón 4 – 5. Câu cuối đàn NHỎ (p) như tiếng vọng núi rừng.' },
       ],
     },
     {
@@ -59,7 +59,7 @@ export const WEEK9: WeekPlan = {
       emoji: '⛴️',
       activities: [
         { kind: 'song', songId: 'inh_la_oi', mode: 'tempo', level: 2, hints: 'names' },
-        { kind: 'song', songId: 'ferry_song', mode: 'wait', hints: 'full', intro: 'Con đò lắc lư "MỘT-hai". Sol–La đi cùng nhau: ngón 4-5 như tuần trước.' },
+        { kind: 'song', songId: 'ferry_song', mode: 'wait', hints: 'full', intro: 'Con đò lắc lư "MỘT-hai". Sol – La đi cùng nhau: ngón 4 – 5 như tuần trước.' },
       ],
     },
     {

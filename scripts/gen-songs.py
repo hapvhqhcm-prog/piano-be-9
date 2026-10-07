@@ -201,7 +201,7 @@ S += [
   "mf E4 E4 F4 G4  G4 F4 E4 D4  C4 C4 D4 E4  E4 D4 D4:2  E4 E4 F4 G4  G4 F4 E4 D4  C4 C4 D4 E4  D4 C4 C4:2",[0,4]),
  song("jingle_bells","Jingle Bells (chorus)","Chuông ngân vang","James Lord Pierpont (1857)",6,"RH",
   "f E4 E4 E4:2  E4 E4 E4:2  E4 G4 C4 D4  E4:4  mf F4 F4 F4 F4  F4 E4 E4 E4  E4 D4 D4 E4  D4:2 G4:2  f E4 E4 E4:2  E4 E4 E4:2  E4 G4 C4 D4  E4:4  F4 F4 F4 F4  F4 E4 E4 E4  G4 G4 F4 D4  C4:4",[0,4,8,12]),
- song("saints","When the Saints Go Marching In","Các thánh tiến bước","Spiritual (traditional)",6,"RH",
+ song("saints","When the Saints Go Marching In","Các thánh tiến bước","Thánh ca Mỹ (spiritual, traditional)",6,"RH",
   "mf R C4 E4 F4  G4:4  R C4 E4 F4  G4:4  R C4 E4 F4  G4:2 E4:2  C4:2 E4:2  D4:4  f R E4 E4 D4  C4:3 C4  E4:2 G4 G4  F4:4  E4 F4 G4:2  E4:2 C4:2  D4:4  C4:4",[0,4,8,12]),
  song("largo_new_world","Largo — New World Symphony","Khúc Largo (Thế giới mới)","Antonín Dvořák (1893)",7,"RH",
   "p E4 G4 G4:2  E4 D4 C4:2  D4 E4 G4 E4  D4:4  E4 G4 G4:2  E4 D4 C4:2  D4 E4 D4 C4  C4:4",[0,4]),
@@ -410,7 +410,7 @@ S += [
   "R R:0.25 D4:0.25/1 C4:0.5/2  A3:2/4  C4:0.5/2 G3:0.5/5 A3:0.25/4 C4:0.25/2 D4:0.25/1 R:0.25  D4:1.5/1 D4:0.5/1  R R:0.5 D4:0.25/1 C4:0.25/2  A3:2/4  "
   "C4:0.5/2 G3:0.5/5 A3:0.25/4 C4:0.25/2 D4:0.25/1 R:0.25  D4:2/1",lhpos="free",ts="2/4",arr=FOLK),
  # Tuần 28 — bài hai tay
- song("saints_both","When the Saints (hands together)","Các thánh tiến bước — hai tay","Spiritual (traditional)",28,"BOTH",
+ song("saints_both","When the Saints (hands together)","Các thánh tiến bước — hai tay","Thánh ca Mỹ (spiritual, traditional)",28,"BOTH",
   "f R C4 E4 F4  G4:4  R C4 E4 F4  G4:4  R C4 E4 F4  G4:2 E4:2  C4:2 E4:2  D4:4  R E4 E4 D4  C4:3 C4  E4:2 G4 G4  F4:4  E4 F4 G4:2  E4:2 C4:2  D4:4  C4:4",[0,4,8,12],
   lh=f"{I}:4  {I}:4  {I}:4  {I}:4  {I}:4  {I}:4  {I}:4  {V}:4  {I}:4  {I}:4  {IV}:4  {IV}:4  {I}:4  {I}:4  {V}:4  {I}:4"),
  song("oh_susanna_both","Oh! Susanna (hands together)","Ô Susanna — hai tay","Stephen Foster (1848)",28,"BOTH",
@@ -651,7 +651,7 @@ S += [
  song("mid_autumn_night","Mid-Autumn Night","Đêm Trung thu",ORIG,16,"RH",
   "mf A4 F#4 D4 F#4  E4:0.5 F#4:0.5 G4 A4:2  G4 E4 G4 F#4  E4:4  p A4 F#4 D4 F#4  E4:0.5 F#4:0.5 G4 A4:2  mf (G4 F#4 E4 F#4)  D4:4",[0,4],pos="D",arr=ORIG),
  # Tuần 19 — nghịch phách "Chạy-Đi-chạy" + NGẮT: rô-bốt giật cục, đứng hình ở ô 4.
- song("robot_dance","Robot Dance","Robot nhảy",ORIG,19,"RH",
+ song("robot_dance","Robot Dance","Rô-bốt nhảy",ORIG,19,"RH",
   "f C4:0.5' E4' C4:0.5' G4' G4'  F4:0.5' D4' F4:0.5' E4:2  E4:0.5' G4' E4:0.5' F4' D4'  E4:2 R:2  "
   "p C4:0.5' E4' C4:0.5' G4' G4'  F4:0.5' D4' F4:0.5' E4' C4'  f D4:0.5' E4' F4:0.5' G4' G4'  G4' R C4' R",[0,4],arr=ORIG),
  # Tuần 22 — NGŨ CUNG (Đô Rê Mi Sol La, không có Fa — âm hưởng Việt Nam) tay phải + hợp âm I – IV – V tay trái.

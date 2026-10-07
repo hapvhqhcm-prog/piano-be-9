@@ -37,7 +37,7 @@ export const DRILL_INFO: Record<TechniqueDrill, { emoji: string; name: string; h
   'finger-tap': {
     emoji: '🚪',
     name: 'Ngón gõ cửa',
-    how: 'Đặt tay lên nắp đàn, gõ lần lượt ngón 1-2-3-4-5 — đầu ngón cong.',
+    how: 'Đặt tay lên nắp đàn, gõ lần lượt ngón 1 – 2 – 3 – 4 – 5, đầu ngón cong.',
     secs: 15,
     times: 3,
   },
@@ -225,7 +225,7 @@ export function techniqueScreen(app: App, hooks: TechniqueHooks) {
       const d = hooks.drills[i];
       const id = `tech:${d}`;
       stage.querySelector('.tq-timer')?.classList.add('done');
-      const q = h('p', { class: 'lead tq-ask' }, '👪 Bố mẹ: con làm đúng chưa?');
+      const q = h('p', { class: 'lead tq-ask' }, '👪 Bố mẹ: bé làm đúng chưa?');
       stage.querySelector('.tq-ask')?.remove();
       stage.append(q);
       q.scrollIntoView?.({ block: 'nearest' });

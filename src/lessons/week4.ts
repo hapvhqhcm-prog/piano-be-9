@@ -14,7 +14,7 @@ export const WEEK4: WeekPlan = {
   title: 'Nhịp — 3 mức',
   story: 'Trong Rừng Nhịp, mọi con vật đều đi theo tiếng "tích – tích" của bác Gõ Kiến. Đi đều thì không ai lạc!',
   warmup: { variant: 'stepskip', pool: ['C4', 'D4', 'E4', 'F4', 'G4'], rounds: 6 },
-  teach: { emoji: '👨‍🏫', text: 'Con vỗ một mẫu nhịp "Đi – Chạy-chạy – Đi-i" rồi bắt bố/mẹ vỗ lại.' },
+  teach: { emoji: '👨‍🏫', text: 'Con vỗ một mẫu nhịp "Đi – Chạy-chạy – Đi-i" rồi bắt bố mẹ vỗ lại.' },
   drills: ['finger-tap', 'arm-drop'],
   criterion: { text: 'Giữ nhịp đều 8 ô nhịp ở Mức 2 — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
   kidGoal: 'Đàn đều như đồng hồ tích-tắc 8 ô nhịp — 2 hôm nhé! ⏰',

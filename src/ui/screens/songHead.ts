@@ -133,9 +133,9 @@ export class SongHead {
       const toggle = h(
         'button',
         { class: `seg-btn small opts-toggle${this.optsOpen ? ' on' : ''}`, type: 'button', 'aria-haspopup': 'true' },
-        '⚙️ Tuỳ chọn',
+        '⚙️ Tùy chọn',
       );
-      const p = h('div', { class: 'opts-pop', role: 'dialog', 'aria-label': 'Tuỳ chọn' }, ...sections);
+      const p = h('div', { class: 'opts-pop', role: 'dialog', 'aria-label': 'Tùy chọn' }, ...sections);
       pop = p;
       if (!this.optsOpen) p.setAttribute('hidden', '');
       toggle.addEventListener('click', () => {

@@ -18,7 +18,7 @@ export const SYMBOL: Record<RhythmSymbol, { label: string; emoji: string; beats:
   run4: { label: 'Chạy-chạy-chạy-chạy', emoji: '🐇', beats: 1, hits: [0, 0.25, 0.5, 0.75] },
   run3: { label: 'Chạy chạy-chạy', emoji: '🐎', beats: 1, hits: [0, 0.5, 0.75] },
   dotted8: { label: 'Tập-tễnh', emoji: '🦘', beats: 1, hits: [0, 0.75] },
-  tie: { label: 'Đi‿đi (dây nối)', emoji: '🔗', beats: 2, hits: [0] },
+  tie: { label: 'Đi‿đi (dấu nối)', emoji: '🔗', beats: 2, hits: [0] },
   sync: { label: 'Chạy-Đi-chạy', emoji: '💃', beats: 2, hits: [0, 0.5, 1.5] },
 };
 
@@ -251,7 +251,7 @@ export function rhythmScreen(app: App, hooks: RhythmHooks) {
         if (i >= hooks.patterns.length) done();
         else show();
       });
-      stage.replaceChildren(h('h1', { class: 'title' }, '👪 Bố mẹ: con vỗ thế nào?'), cells(p).row, h('p', { class: 'lead' }, 'Chạm các ý con làm được:'), row);
+      stage.replaceChildren(h('h1', { class: 'title' }, '👪 Bố mẹ: bé vỗ thế nào?'), cells(p).row, h('p', { class: 'lead' }, 'Chạm các ý bé làm được:'), row);
       setBar(backButton(show), doneBtn);
     }
 

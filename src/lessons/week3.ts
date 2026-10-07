@@ -14,7 +14,7 @@ export const WEEK3: WeekPlan = {
   title: 'Fa Sol — thế 5 ngón',
   story: 'Qua khỏi làng là Cầu thang Sol có 5 bậc: Đô Rê Mi Fa Sol. Mỗi ngón tay đứng trên một bậc!',
   warmup: { variant: 'identify', pool: ['C4', 'D4', 'E4', 'F4', 'G4'], rounds: 6, reference: 'C4' },
-  teach: { emoji: '👨‍🏫', text: 'Con đặt 5 ngón lên Đô Rê Mi Fa Sol, rồi dạy bố/mẹ "Leo cầu thang".' },
+  teach: { emoji: '👨‍🏫', text: 'Con đặt 5 ngón lên Đô Rê Mi Fa Sol, rồi dạy bố mẹ "Leo cầu thang".' },
   drills: ['wrist-circle', 'hand-shape'],
   criterion: { text: 'Tai nghe (có mốc Đô) đúng ít nhất 5/6 trong một buổi — ở 2 ngày khác nhau', who: 'APP' },
   kidGoal: 'Đôi tai thám tử: đoán đúng 5 nốt trong 6 — 2 hôm nhé! 👂',

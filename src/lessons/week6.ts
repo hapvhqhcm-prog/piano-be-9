@@ -13,7 +13,7 @@ export const WEEK6: WeekPlan = {
   title: 'Bài hát đầu tiên',
   story: 'Ở Sân khấu nhỏ, cả làng chờ nghe con đàn "Bài ca niềm vui". Bố mẹ sẽ đàn cùng con!',
   warmup: { variant: 'identify', pool: ['C4', 'D4', 'E4', 'F4', 'G4'], rounds: 6, reference: 'C4' },
-  teach: { emoji: '👨‍🏫', text: 'Con dạy bố/mẹ câu đầu "Bài ca niềm vui": Mi Mi Fa Sol – Sol Fa Mi Rê. Đàn một lần TO (f), một lần NHỎ (p)!' },
+  teach: { emoji: '👨‍🏫', text: 'Con dạy bố mẹ câu đầu "Bài ca niềm vui": Mi Mi Fa Sol – Sol Fa Mi Rê. Đàn một lần TO (f), một lần NHỎ (p)!' },
   drills: ['five-finger', 'finger-tap'],
   criterion: { text: 'Chơi trọn "Bài ca niềm vui" ở tốc độ 60 — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
   kidGoal: 'Bài ca niềm vui ở tốc độ 60 — 2 hôm nhé! 🎶',
@@ -27,7 +27,7 @@ export const WEEK6: WeekPlan = {
         {
           kind: 'dynamics',
           title: 'To hay nhỏ? 🦁🐭',
-          intro: 'Đàn TO như sư tử (f — "forte"): ngón chắc, ấn sâu hơn. Đàn NHỎ như chú chuột (p — "piano"): chạm phím thật nhẹ. Thầy đàn mẫu, con đàn lại!',
+          intro: 'Đàn TO như sư tử (f): ngón chắc, ấn sâu hơn. Đàn NHỎ như chú chuột (p): chạm phím thật nhẹ. Thầy đàn mẫu, con đàn lại!',
           mode: 'loud-soft',
           rounds: [
             { pitches: ['C4'], want: 'f', fingers: [1], hand: 'RH' },

@@ -21,3 +21,12 @@ describe('giọng đọc hướng dẫn', () => {
     expect(speechBusy()).toBe(false);
   });
 });
+
+import { speakable as sp2 } from '../src/audio/voice';
+describe('speakable — số chỉ nhịp & phân số', () => {
+  it('đọc nhịp như nhạc sĩ, phân số thành "trên"', () => {
+    expect(sp2('Hôm nay học nhịp 2/4 nhé!')).toBe('Hôm nay học nhịp hai bốn nhé!');
+    expect(sp2('Điệu valse 3/4')).toBe('Điệu valse ba bốn');
+    expect(sp2('Đúng 5/6 câu')).toBe('Đúng 5 trên 6 câu');
+  });
+});

@@ -445,7 +445,7 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
         showResult(s, `Con đàn đúng ngay ${wHits}/${total} nốt`);
       } else {
         take.drop();
-        askParent('Con đã đàn hết bài chưa?', total);
+        askParent('Bé đã đàn hết bài chưa?', total);
       }
     }
 
@@ -482,7 +482,7 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
         return verdict(false);
       }
       state = 'rate';
-      status.replaceChildren(streakDots(), ' ', h('b', {}, '👪 Bố mẹ: con đàn đúng hết, không sai nốt nào chứ?'));
+      status.replaceChildren(streakDots(), ' ', h('b', {}, '👪 Bố mẹ: bé đàn đúng hết, không sai nốt nào chứ?'));
       setBar(
         backButton(reset),
         button({
@@ -590,7 +590,7 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
         showResult(s, `Đúng nhịp ${hits}/${v.length} nốt${tune.lh ? ' (micro nghe một nốt mỗi lúc)' : ''}`);
       } else {
         take.drop();
-        askParent('Con giữ nhịp đều và đàn trọn bài chưa?', gradeInput.length);
+        askParent('Bé giữ nhịp đều và đàn trọn bài chưa?', gradeInput.length);
       }
     }
 
@@ -617,7 +617,7 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
         const miss = items.filter((c) => !v[c.key]).map((c) => c.label.toLowerCase());
         showResult(0.5, `Lần sau mình chú ý thêm: ${miss.join(', ')} nhé!`);
       });
-      status.replaceChildren(h('div', { class: 'pcheck-ask' }, h('b', {}, `👪 Bố mẹ: ${question} Chạm các ý con làm được:`), row));
+      status.replaceChildren(h('div', { class: 'pcheck-ask' }, h('b', {}, `👪 Bố mẹ: ${question} Chạm các ý bé làm được:`), row));
       setBar(backButton(reset), done);
     }
 

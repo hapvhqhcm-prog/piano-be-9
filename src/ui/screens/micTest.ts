@@ -172,7 +172,7 @@ export function micTestScreen(app: App) {
 
     const showTuning = () => {
       const c = store.settings.micTuningCents;
-      tuning.textContent = `Đang bù cho đàn nhà: ${c > 0 ? '+' : ''}${c} cents`;
+      tuning.textContent = `Đang bù cho đàn nhà: ${c > 0 ? '+' : ''}${c} cent (100 cent = nửa cung)`;
     };
 
     const sensBox = h('div', { class: 'seg' });
@@ -390,7 +390,7 @@ export function micTestScreen(app: App) {
       const p = midiToPitch(n.midi);
       big.textContent = noteLabel(p);
       const cents = Math.round(n.cents);
-      detail.textContent = `${p} · ${n.freq.toFixed(1)} Hz · lệch ${cents > 0 ? '+' : ''}${cents} cents`;
+      detail.textContent = `${p} · ${n.freq.toFixed(1)} Hz · lệch ${cents > 0 ? '+' : ''}${cents} cent`;
       kb.setResult(p, 'good');
       const ctxNow = app.audio.context?.currentTime;
       const latencyMs = n.at !== undefined && ctxNow !== undefined ? Math.round((ctxNow - n.at) * 1000) : null;
@@ -415,7 +415,7 @@ export function micTestScreen(app: App) {
         // sẽ bị nhận thành Si/Đô thăng nếu chỉ nhìn tên nốt.
         const raw = 1200 * Math.log2(n.freq / pitchFreq('C4'));
         if (Math.abs(raw) > 100) {
-          calib.textContent = `Mình nghe thấy ${noteLabel(p)} — hãy đàn Đô giữa (C4) nhé.`;
+          calib.textContent = `App nghe thấy ${noteLabel(p)} — hãy đàn Đô giữa (C4) nhé.`;
           return;
         }
         samples.push(raw);
@@ -431,8 +431,8 @@ export function micTestScreen(app: App) {
         showKb();
         calib.textContent =
           Math.abs(clamped) >= 40
-            ? `Đã chỉnh: đàn nhà lệch ${clamped} cents. Lệch khá nhiều — nên gọi thợ lên dây khi có dịp.`
-            : `Đã chỉnh xong: đàn nhà lệch ${clamped} cents. ✅`;
+            ? `Đã chỉnh: đàn nhà lệch ${clamped} cent (100 cent = nửa cung). Lệch khá nhiều — nên gọi thợ lên dây khi có dịp.`
+            : `Đã chỉnh xong: đàn nhà lệch ${clamped} cent (100 cent = nửa cung). ✅`;
         showTuning();
         return;
       }
@@ -625,7 +625,7 @@ export function micTestScreen(app: App) {
           h(
             'p',
             { class: 'muted small' },
-            'Mẹo: đặt iPad trên giá nhạc, mic hướng về đàn; tắt TV/quạt; bé đàn rõ từng nốt. Micro chỉ phân tích ngay trên iPad, không gửi đi đâu; màn này không ghi âm.',
+            'Mẹo: đặt iPad trên giá nhạc, micro hướng về đàn; tắt TV/quạt; bé đàn rõ từng nốt. Micro chỉ phân tích ngay trên iPad, không gửi đi đâu; màn này không ghi âm.',
           ),
           helper,
         ),

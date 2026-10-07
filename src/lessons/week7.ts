@@ -13,7 +13,7 @@ export const WEEK7: WeekPlan = {
   story: 'Ở Hồ Tấm Gương, tay trái là cái bóng của tay phải: ngón út (5) đứng ở Đô, ngón cái (1) đứng ở Sol.',
   leftHand: true,
   warmup: { variant: 'identify', pool: ['C3', 'D3', 'E3', 'F3', 'G3'], rounds: 6, reference: 'C3' },
-  teach: { emoji: '👨‍🏫', text: 'Con giơ hai tay lên và chỉ cho bố/mẹ: ngón số 1 của tay trái và tay phải ở đâu?' },
+  teach: { emoji: '👨‍🏫', text: 'Con giơ hai tay lên và chỉ cho bố mẹ: ngón số 1 của tay trái và tay phải ở đâu?' },
   drills: ['hand-shape', 'five-finger'],
   criterion: { text: 'Tai nghe tay trái (có mốc Đô) đúng ít nhất 5/6 trong một buổi — ở 2 ngày khác nhau', who: 'APP' },
   kidGoal: 'Tai giỏi tay trái: đoán đúng 5 nốt trầm trong 6 — 2 hôm nhé! 🫲',
@@ -35,7 +35,7 @@ export const WEEK7: WeekPlan = {
           id: 'w7-stairs',
           step: 'Bài mới',
           title: 'Leo cầu thang tay trái',
-          intro: 'Leo lên Đô → Sol bằng ngón 5-4-3-2-1, rồi leo xuống.',
+          intro: 'Leo lên Đô → Sol bằng ngón 5 – 4 – 3 – 2 – 1, rồi leo xuống.',
           targets: lhNotes(['C3', 'D3', 'E3', 'F3', 'G3', 'F3', 'E3', 'D3', 'C3']),
         }),
         notes({

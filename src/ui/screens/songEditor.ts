@@ -104,7 +104,7 @@ export function songEditorScreen(app: App, existing: ParentSong | null, hooks: S
       autocomplete: 'off',
       spellcheck: 'false',
       'aria-label': 'Nốt nhạc (gõ Đô Rê Mi)',
-      placeholder: 'Gõ nốt, cách nhau bằng dấu cách — vd:\nĐô Đô Sol Sol | La La Sol- | Fa Fa Mi Mi | Rê Rê Đô-',
+      placeholder: 'Gõ nốt, cách nhau bằng dấu cách — ví dụ:\nĐô Đô Sol Sol | La La Sol- | Fa Fa Mi Mi | Rê Rê Đô-',
     });
     area.value = text;
     area.setSelectionRange(0, 0); // khuông xem trước mở từ đầu bài
@@ -329,7 +329,7 @@ export function songEditorScreen(app: App, existing: ParentSong | null, hooks: S
           h('li', {}, h('b', {}, 'Fa#'), ' thăng · ', h('b', {}, 'Sib'), ' giáng'),
           h('li', {}, 'Mặc định 1 phách · ', h('b', {}, 'Mi-'), ' 2 · ', h('b', {}, 'Mi--'), ' 3 · ', h('b', {}, 'Rê/'), ' ½ · ', h('b', {}, 'Rê//'), ' ¼ · ', h('b', {}, 'Mi.'), ' chấm dôi'),
           h('li', {}, h('b', {}, '_'), ' dấu lặng (', h('b', {}, '_-'), ' lặng 2 phách) · ', h('b', {}, '|'), ' vạch nhịp (không bắt buộc) · xuống dòng = câu mới'),
-          h('li', {}, h('b', {}, 'Mi-~Mi'), ' dây nối (giữ tiếng, không đàn lại) · giữa các nốt chỉ cần ', h('b', {}, 'dấu cách'), ' (không cần phẩy)'),
+          h('li', {}, h('b', {}, 'Mi-~Mi'), ' dấu nối (giữ tiếng, không đàn lại) · giữa các nốt chỉ cần ', h('b', {}, 'dấu cách'), ' (không cần phẩy)'),
         ),
         h(
           'div',

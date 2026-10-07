@@ -9,11 +9,11 @@ import '../../styles/parentux.css';
 
 /** THẺ NHẮC NHANH CHO BỐ MẸ (5 ý) — hiện ở Hướng dẫn (thẻ 3) và màn Phụ huynh. [chữ đậm, phần còn lại] */
 export const QUICK_TIPS: ReadonlyArray<[string, string]> = [
-  ['Ngồi cạnh con 10–15 phút', ', bấm “Học tiếp” — app tự chọn bài, không cần soạn gì.'],
-  ['Bấm “Đúng rồi”', ' khi con đàn đúng phím sáng, đúng số ngón; sai thì “Thử lại” — không chê.'],
-  ['Con vấp?', ' Nói “Con thử chậm hơn nhé” · “Ngón số mấy nhỉ?” — chậm mà đúng hơn nhanh mà sai.'],
+  ['Ngồi cạnh bé 10–15 phút', ', bấm “Học tiếp” — app tự chọn bài, không cần soạn gì.'],
+  ['Bấm “Đúng rồi”', ' khi bé đàn đúng phím sáng, đúng số ngón; sai thì “Thử lại” — không chê.'],
+  ['Bé vấp?', ' Nói “Con thử chậm hơn nhé” · “Ngón số mấy nhỉ?” — chậm mà đúng hơn nhanh mà sai.'],
   ['Khen cụ thể', ' (“ngón con cong đẹp quá”), không so sánh với bạn khác.'],
-  ['Con mệt hay cáu:', ' “Nghỉ 1 phút rồi làm lại” — hoặc dừng buổi, mai học tiếp.'],
+  ['Bé mệt hay cáu:', ' “Nghỉ 1 phút rồi làm lại” — hoặc dừng buổi, mai học tiếp.'],
 ];
 
 export function quickTipsCard(tag: 'section' | 'div' = 'section'): HTMLElement {
@@ -134,13 +134,13 @@ const CARDS: Card[] = [
   },
   {
     art: () => mascot('wave', 150),
-    title: 'Ngồi cạnh con thế nào?',
+    title: 'Ngồi cạnh bé thế nào?',
     lines: [],
     extra: () => quickTipsCard('div'),
   },
   {
     art: artMic,
-    title: 'Micro nghe đàn (tuỳ chọn)',
+    title: 'Micro nghe đàn (tùy chọn)',
     lines: [['🎤', 'App tự nghe và chấm nốt bé đàn']],
     chain: ['Phụ huynh', '🎤 Cài micro (3 bước)', 'Kiểm tra 5 nốt', '✅ Dùng micro cho các buổi học'],
   },

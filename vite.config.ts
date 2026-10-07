@@ -58,6 +58,37 @@ function serviceWorkerPlugin(): Plugin {
   };
 }
 
+/**
+ * <link rel="preload"> cho phông chữ của màn Bắt đầu (tên file có mã băm → chỉ biết lúc build).
+ * Phông được CSS nạp muộn (sau khi tải + phân tích CSS và vẽ chữ lần đầu) → iPad cũ hiện chữ hệ thống rồi "nhảy" chữ.
+ */
+function preloadStartFonts(patterns: RegExp[]): Plugin {
+  return {
+    name: 'piano-be-9-font-preload',
+    apply: 'build',
+    transformIndexHtml: {
+      order: 'post',
+      handler(_html, ctx) {
+        const files = Object.keys(ctx.bundle ?? {});
+        return patterns.flatMap((re) => {
+          const file = files.find((n) => re.test(n));
+          if (!file) throw new Error(`preloadStartFonts: không thấy phông ${re}`);
+          return [
+            {
+              tag: 'link',
+              // KHÔNG có `crossorigin`: WebKit (Safari/iPad) nạp phông cùng origin không qua CORS → preload có
+              // crossorigin bị bỏ phí và tải phông LẦN 2 (đo bằng Playwright WebKit). Chromium thì ngược lại (chỉ
+              // tải trùng 2 file trên Edge/Chrome — không phải máy đích).
+              attrs: { rel: 'preload', as: 'font', type: 'font/woff2', href: `./${file}` },
+              injectTo: 'head' as const,
+            },
+          ];
+        });
+      },
+    },
+  };
+}
+
 /** "2026-10-04 · b6662bb" — để phụ huynh biết iPad đang chạy bản nào. */
 function appVersion(): string {
   const d = new Date();
@@ -81,7 +112,14 @@ export default defineConfig({
     target: ['safari14', 'es2020'],
     assetsInlineLimit: 0,
   },
-  plugins: [serviceWorkerPlugin()],
+  // ~95 bài hát JSON nằm trong chunk chính (tune.ts glob eager): JSON.parse("…") phân tích nhanh hơn nhiều so với
+  // object literal JS trên iPad cũ (đo: compile+evaluate giảm ~30%). import mặc định vẫn y nguyên.
+  json: { stringify: true, namedExports: false },
+  // Màn Bắt đầu: tiêu đề Baloo 2 800 + chữ thường Nunito 600 (bộ Latin — lớn nhất; bộ tiếng Việt nhỏ, nạp theo CSS)
+  plugins: [
+    preloadStartFonts([/baloo-2-latin-800-normal-[\w-]+\.woff2$/, /nunito-latin-600-normal-[\w-]+\.woff2$/]),
+    serviceWorkerPlugin(),
+  ],
   test: {
     environment: 'node',
     include: ['tests/**/*.test.ts'],

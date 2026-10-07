@@ -21,7 +21,7 @@ export const PARENT_TIPS: Record<number, string> = {
   16: 'Phím đen: bé hay quên dấu ♯ ở giữa bài. Trước khi đàn, hỏi bé "Bài này có phím đen nào?".',
   17: 'Nốt chấm dôi: cho bé nói "Đi-chấm chạy" trước khi đàn. Nghe mẫu nhiều lần là cách tốt nhất. Khởi động "cá lặn" (luồn ngón cái) là chuẩn bị cho gam ở tuần 20.',
   18: 'Móc kép rất nhanh: bài bắt đầu ở tốc độ 40 là đúng. Cho bé đọc to "Chạy-chạy-chạy-chạy" rồi mới đàn. "Tập-tễnh" (móc đơn chấm + móc kép): như đi cà nhắc — dài rồi ngắn.',
-  19: 'Nghịch phách "Chạy-Đi-chạy": cùng bé vỗ tay và nói to trước khi đàn — nốt "Đi" vang ở chữ "và", lệch phách mới đúng. Dây nối: chỉ vỗ MỘT lần cho cả hai nốt. Nghe mẫu nhiều lần.',
+  19: 'Nghịch phách "Chạy-Đi-chạy": cùng bé vỗ tay và nói to trước khi đàn — nốt "Đi" vang ở chữ "và", lệch phách mới đúng. Dấu nối: chỉ vỗ MỘT lần cho cả hai nốt. Nghe mẫu nhiều lần.',
   20: 'Luồn ngón cái phải nhẹ, không xoay cả cổ tay. Tập chậm, mỗi tay riêng.',
   21: 'Hòa nhạc Cấp 2: có thể quay video bằng điện thoại của bố mẹ để bé xem lại và tự hào.',
   22: 'Hợp âm: 3 ngón xuống CÙNG LÚC. Bé hay bấm lệch — cho bé đếm "1-2-3 bấm!".',

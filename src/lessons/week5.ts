@@ -14,7 +14,7 @@ export const WEEK5: WeekPlan = {
   title: 'Củng cố thế Đô',
   story: 'Trên Đồi Năm Ngón có ếch con, giọt mưa và chiếc thuyền giấy. Năm ngón tay của con sẽ kể chuyện về các bạn ấy!',
   warmup: { variant: 'stepskip', pool: ['C4', 'D4', 'E4', 'F4', 'G4'], rounds: 6 },
-  teach: { emoji: '👨‍🏫', text: 'Con dạy bố/mẹ "Ếch con nhảy": Đô – Mi – Sol là ngón 1 – 3 – 5, nhảy qua một phím!' },
+  teach: { emoji: '👨‍🏫', text: 'Con dạy bố mẹ "Ếch con nhảy": Đô – Mi – Sol là ngón 1 – 3 – 5, nhảy qua một phím!' },
   drills: ['five-finger', 'wrist-circle'],
   criterion: { text: 'Chơi trọn "Ếch con nhảy" theo nhịp — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
   kidGoal: 'Đàn Ếch con nhảy thật đều — 2 hôm nhé! 🐸',

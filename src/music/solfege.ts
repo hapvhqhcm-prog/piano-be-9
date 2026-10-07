@@ -163,8 +163,8 @@ export function parseToken(raw: string): Parsed | string {
     else if (c === '—') dashes += 2;
     else if (c === '/') slashes++;
     else if (c === '.') dots++;
-    else if (/\d/.test(c)) return `“${raw}”: số quãng tám phải viết ngay sau tên nốt (vd Sol3-)`;
-    else if (UP.test(c) || DOWN.test(c)) return `“${raw}”: dấu ' hoặc , phải viết ngay sau tên nốt (vd Đô'-)`;
+    else if (/\d/.test(c)) return `“${raw}”: số quãng tám phải viết ngay sau tên nốt (ví dụ: Sol3-)`;
+    else if (UP.test(c) || DOWN.test(c)) return `“${raw}”: dấu ' hoặc , phải viết ngay sau tên nốt (ví dụ: Đô'-)`;
     else return `“${raw}”: không hiểu ký tự “${c}”`;
   }
   if (dashes && slashes) return `“${raw}”: không dùng cả "-" và "/" trong một nốt`;
@@ -376,7 +376,7 @@ export function parseSolfege(text: string, beatsPerBar: number): SolfegeResult {
       if (e.tieFrom) {
         const prev = notes[notes.length - 1];
         if (!prev || prev.rest || p.rest || prev.pitch !== p.pitch) {
-          errors.push({ ...e.pos, message: `“${e.pos.token}”: dây nối "~" chỉ nối hai nốt CÙNG cao độ (vd Mi-~Mi)` });
+          errors.push({ ...e.pos, message: `“${e.pos.token}”: dấu nối "~" chỉ nối hai nốt CÙNG cao độ (ví dụ: Mi-~Mi)` });
         } else prev.tieNext = true;
       }
       notes.push({ ...(p.rest ? { rest: true } : { pitch: p.pitch }), beats: p.beats, ...e.pos });
@@ -408,7 +408,7 @@ export function parseSolfege(text: string, beatsPerBar: number): SolfegeResult {
   if (periods) {
     notices.push({
       ...periods.pos,
-      message: `“${periods.pos.token}”: dấu chấm hết câu được bỏ qua${periods.n > 1 ? ` (${periods.n} chỗ)` : ''}. Dấu "." sau nốt là chấm dôi (×1,5) — vd Sol. La/`,
+      message: `“${periods.pos.token}”: dấu chấm hết câu được bỏ qua${periods.n > 1 ? ` (${periods.n} chỗ)` : ''}. Dấu "." sau nốt là chấm dôi (×1,5) — ví dụ: Sol. La/`,
     });
   }
 
@@ -476,7 +476,7 @@ export function parseSolfege(text: string, beatsPerBar: number): SolfegeResult {
       line: kept.line,
       word: kept.word,
       token: kept.token,
-      message: `Dây nối ở “${kept.token}”: nốt nối vắt qua vạch nhịp hoặc quá dài để ghi thành một nốt — app ghi thành hai nốt ${noteNameVi(kept.pitch ?? 'C')} liền nhau (bé đàn lại nốt sau).`,
+      message: `Dấu nối ở “${kept.token}”: nốt nối vắt qua vạch nhịp hoặc quá dài để ghi thành một nốt — app ghi thành hai nốt ${noteNameVi(kept.pitch ?? 'C')} liền nhau (bé đàn lại nốt sau).`,
     });
   }
 

@@ -2,14 +2,18 @@ import type { App } from '../App';
 import { heroArt } from '../components/art/heroArt';
 import { button, h, toast } from '../components/dom';
 import { homeScreen } from './home';
-import { onboardingScreen } from './onboarding';
+import { lazy, lazyScreen, prefetchLater } from '../lazy';
 import { markSafePoint } from '../../pwa/updater';
 import { sessionCount } from '../../progress/history';
+
+// Hướng dẫn nhanh chỉ dùng lần đầu → chunk riêng (nạp ngầm trên màn Bắt đầu nếu sắp cần)
+const onboardingMod = lazy(() => import('./onboarding'));
 
 /** Màn đầu tiên: AudioContext CHỈ được tạo sau khi chạm "Bắt đầu" (§3). */
 export function startScreen(app: App) {
   return (root: HTMLElement) => {
     markSafePoint(true);
+    if (!app.store.get().settings.onboardedAt && sessionCount(app.store.get()) === 0) prefetchLater([onboardingMod], 400);
     const name = app.store.get().learner.name;
     const art = heroArt();
     // Kích thước tranh: co theo cả chiều ngang lẫn chiều cao màn hình (tỉ lệ 400×240)
@@ -38,7 +42,7 @@ export function startScreen(app: App) {
             // Lần đầu dùng app (chưa có buổi học nào, chưa xem hướng dẫn) → hướng dẫn nhanh cho bố mẹ
             const d = app.store.get();
             if (!d.settings.onboardedAt && sessionCount(d) === 0) {
-              app.show(onboardingScreen(app, { onDone: () => app.show(homeScreen(app)) }));
+              app.show(lazyScreen(onboardingMod, (m) => m.onboardingScreen(app, { onDone: () => app.show(homeScreen(app)) })));
             } else app.show(homeScreen(app));
           },
         }),

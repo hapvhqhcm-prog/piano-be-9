@@ -75,7 +75,7 @@ export const WEEK22: WeekPlan = {
   leftHand: true,
   // Đọc các nốt hợp âm tay trái (khóa Fa) — "vui/buồn" (trưởng/thứ) để dành tới tuần 25 mới dạy
   warmup: { variant: 'read', clef: 'bass', pool: ['C3', 'E3', 'G3', 'F3', 'A3', 'B2', 'D3'], rounds: 6 },
-  teach: { emoji: '👨‍🏫', text: 'Con chỉ bố/mẹ hợp âm Đô: ngón 5-3-1 tay trái trên Đô-Mi-Sol.' },
+  teach: { emoji: '👨‍🏫', text: 'Con chỉ bố mẹ hợp âm Đô: ngón 5 – 3 – 1 tay trái trên Đô – Mi – Sol.' },
   drills: ['arm-drop', 'hand-shape'],
   criterion: { text: 'Chơi trọn "Bài ca niềm vui — hai tay hợp âm" theo nhịp — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
   kidGoal: 'Ba cây hợp âm: Bài ca niềm vui hai tay theo nhịp — 2 hôm nhé! 🌲',
@@ -129,7 +129,7 @@ export const WEEK23: WeekPlan = {
   leftHand: true,
   // Tiêu chí là đọc nốt (APP) → khởi động là bài chấm: 6 lượt, mọi nốt đều có dòng kẻ phụ (v5.1: ≥ 5/6)
   warmup: { variant: 'read', pool: ['A3', 'B3', 'C4', 'G5', 'A5'], rounds: 6 },
-  teach: { emoji: '👨‍🏫', text: 'Con chỉ trên khuông cho bố/mẹ: Đô giữa có 1 vạch phụ, La dưới có 2 vạch phụ, La cao "đội" 1 vạch phụ ở trên.' },
+  teach: { emoji: '👨‍🏫', text: 'Con chỉ trên khuông cho bố mẹ: Đô giữa có 1 vạch phụ, La dưới có 2 vạch phụ, La cao "đội" 1 vạch phụ ở trên.' },
   drills: ['five-finger', 'thumb-under'],
   criterion: { text: 'Đọc nốt có dòng kẻ phụ đúng ít nhất 5/6 trong một buổi, ở 2 ngày khác nhau + một lượt đọc nhạc qua vạch phụ đạt', who: 'APP' },
   kidGoal: 'Qua Cầu Vạch Phụ: đọc đúng 5 nốt trong 6 — 2 hôm, thêm một bài đọc nhạc nhé! 🌁',
@@ -208,9 +208,9 @@ export const WEEK24: WeekPlan = {
   story: 'Trên Biển Đổi Thế, bàn tay như con thuyền: dời sang chỗ mới mà vẫn chèo êm.',
   // Ôn dòng kẻ phụ (tuần 23) La3, Si3 — dùng ở La thứ tuần 25 — và đọc trước Mi5–Sol5 (tuần 26 nốt cao, Minuet tuần 29)
   warmup: { variant: 'read', pool: ['A3', 'B3', 'C4', 'E4', 'G4', 'A4', 'B4', 'C5', 'D5', 'E5', 'F5', 'G5'], rounds: 6 },
-  teach: { emoji: '👨‍🏫', text: 'Con chỉ bố/mẹ chỗ trong bài phải dời tay, và dời bằng ngón nào.' },
+  teach: { emoji: '👨‍🏫', text: 'Con chỉ bố mẹ chỗ trong bài phải dời tay, và dời bằng ngón nào.' },
   drills: ['thumb-under', 'wrist-circle'],
-  criterion: { text: 'Chơi trọn "Đêm thánh vô cùng" THEO NHỊP (tốc độ ≥ 50) — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
+  criterion: { text: 'Chơi trọn "Đêm thánh vô cùng" THEO NHỊP (tốc độ từ 50 trở lên) — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
   kidGoal: 'Đêm thánh vô cùng theo nhịp — 2 hôm nhé! 🌟',
   lessons: [
     { id: 'w24-l1', week: 24, title: 'Đọc nhạc nhiều thế', emoji: '📖', activities: [
@@ -233,7 +233,7 @@ export const WEEK25: WeekPlan = {
   title: 'Trưởng & thứ',
   story: 'Ở Thung lũng Vui Buồn, cùng một bài hát có thể nghe VUI (giọng trưởng) hoặc BUỒN (giọng thứ).',
   warmup: { variant: 'majorminor', pool: ['C4', 'D4', 'F4', 'G4'], rounds: 6 },
-  teach: { emoji: '👨‍🏫', text: 'Con đàn cho bố/mẹ nghe Đô-Mi-Sol (vui) rồi Đô-Mi♭-Sol (buồn).' },
+  teach: { emoji: '👨‍🏫', text: 'Con đàn cho bố mẹ nghe Đô – Mi – Sol (vui) rồi Đô – Mi giáng – Sol (buồn).' },
   drills: ['five-finger', 'finger-tap'],
   criterion: { text: 'Trò "Vui hay buồn?" đúng ít nhất 5/6 trong một buổi — ở 2 ngày khác nhau', who: 'APP' },
   kidGoal: 'Nghe vui hay buồn đúng 5 lần trong 6 — 2 hôm nhé! 🌗',
@@ -248,7 +248,7 @@ export const WEEK25: WeekPlan = {
         {
           kind: 'quiz',
           title: 'Đọc nốt thấp & cao 📖',
-          intro: 'La, Si nằm DƯỚI Đô giữa (dòng kẻ phụ — con đã học ở Cầu Vạch Phụ) — dùng trong bài La thứ. Mi, Fa, Sol cao ở trên khuông — tuần sau mình leo Tháp Nốt Cao!',
+          intro: 'La, Si nằm DƯỚI Đô giữa, trên dòng kẻ phụ. Mi, Fa, Sol cao nằm trên khuông — tuần sau mình leo Tháp Nốt Cao!',
           quiz: { variant: 'read', pool: ['A3', 'B3', 'C4', 'D5', 'E5', 'F5', 'G5'], rounds: 6 },
         },
         song('frere_jacques_minor', 'tempo', 2, 'names'),
@@ -263,13 +263,13 @@ export const WEEK26: WeekPlan = {
   week: 26,
   island: 'Tháp Nốt Cao',
   islandEmoji: '🗼',
-  title: 'Đọc nốt cao Đô5–Sol5',
+  title: 'Đọc nốt cao: Đô cao đến Sol cao',
   story: 'Leo lên Tháp Nốt Cao! Ở trên đỉnh khuông nhạc có năm bạn nốt cao: Đô, Rê, Mi, Fa, Sol. Mai kia các bạn ấy sẽ nhảy Minuet cùng con ở Cung điện!',
   // Tiêu chí là đọc nốt (APP) → khởi động là bài chấm: 6 lượt, chỉ các nốt cao (v5.1: ≥ 5/6)
   warmup: { variant: 'read', pool: ['C5', 'D5', 'E5', 'F5', 'G5'], rounds: 6 },
-  teach: { emoji: '👨‍🏫', text: 'Con chỉ trên khuông cho bố/mẹ: Đô cao ở khe 3, Mi cao ở khe trên cùng, Fa cao trên vạch trên cùng, Sol cao ngồi trên đỉnh khuông.' },
+  teach: { emoji: '👨‍🏫', text: 'Con chỉ trên khuông cho bố mẹ: Đô cao ở khe 3, Mi cao ở khe trên cùng, Fa cao trên vạch trên cùng, Sol cao ngồi trên đỉnh khuông.' },
   drills: ['hand-shape', 'five-finger'],
-  criterion: { text: 'Đọc nốt cao Đô5–Sol5 đúng ít nhất 5/6 trong một buổi, ở 2 ngày khác nhau + một lượt đọc nhạc thế Đô cao đạt', who: 'APP' },
+  criterion: { text: 'Đọc nốt cao (Đô cao đến Sol cao) đúng ít nhất 5/6 trong một buổi, ở 2 ngày khác nhau + một lượt đọc nhạc thế Đô cao đạt', who: 'APP' },
   kidGoal: 'Leo Tháp Nốt Cao: đọc đúng 5 nốt trong 6 — 2 hôm, thêm một bài đọc nhạc nhé! 🗼',
   lessons: [
     {
@@ -282,7 +282,7 @@ export const WEEK26: WeekPlan = {
           id: 'w26-c5',
           step: 'Bài mới',
           title: 'Thế Đô cao — tay phải',
-          intro: 'Dời cả bàn tay phải lên: ngón cái ở Đô cao (Đô5), ngón 5 ở Sol cao. Trên khuông: Đô cao ở khe 3, Sol cao ngồi trên đỉnh.',
+          intro: 'Dời cả bàn tay phải lên: ngón cái ở Đô cao, ngón 5 ở Sol cao. Trên khuông: Đô cao ở khe 3, Sol cao ngồi trên đỉnh.',
           targets: [
             posNote('C5', 'RH', 'C5', 'Ngón 1 — Đô cao, khe 3'),
             posNote('D5', 'RH', 'C5', 'Trên vạch 4'),
@@ -324,7 +324,7 @@ export const WEEK27: WeekPlan = {
   story: 'Thư viện Lớn có hàng nghìn bản nhạc. Ai đọc được cả khóa Sol và khóa Fa thì mở được mọi cuốn sách!',
   leftHand: true,
   warmup: { variant: 'read', pool: ['C3', 'E3', 'G3', 'A3', 'C4'], rounds: 6, clef: 'bass' },
-  teach: { emoji: '👨‍🏫', text: 'Con đọc to tên 5 nốt bất kỳ trên khuông cho bố/mẹ kiểm tra.' },
+  teach: { emoji: '👨‍🏫', text: 'Con đọc to tên 5 nốt bất kỳ trên khuông cho bố mẹ kiểm tra.' },
   drills: ['thumb-under', 'five-finger'],
   criterion: { text: 'Đọc nhạc ngẫu nhiên: 5 đoạn đạt, trong ít nhất 2 ngày', who: 'PARENT/MIC' },
   kidGoal: 'Đọc 5 đoạn nhạc mới toanh — trong 2 hôm nhé! 🏛️',
@@ -347,7 +347,7 @@ export const WEEK27: WeekPlan = {
         {
           kind: 'quiz',
           title: 'Quãng nào đây? 🐸',
-          intro: 'Khuông hiện HAI nốt: đếm vạch + khe để biết quãng 2, 3, 4 hay 5 — và đi lên hay đi xuống.',
+          intro: 'Khuông hiện HAI nốt: đếm vạch và khe để biết quãng 2, 3, 4 hay 5 — và đi lên hay đi xuống.',
           quiz: { variant: 'interval', pool: ['G4', 'A4', 'B4', 'C5', 'D5'], rounds: 6, maxInterval: 5 },
         },
         {
@@ -371,7 +371,7 @@ export const WEEK28: WeekPlan = {
   story: 'Sắp tới đỉnh rồi! Hai tay giờ đã thành đôi bạn thân: một tay hát, một tay đệm.',
   leftHand: true,
   warmup: { variant: 'majorminor', pool: ['C4', 'F4', 'G4'], rounds: 6 },
-  teach: { emoji: '👨‍🏫', text: 'Con dạy bố/mẹ đệm hợp âm Đô – Fa – Sol bằng tay trái.' },
+  teach: { emoji: '👨‍🏫', text: 'Con dạy bố mẹ đệm hợp âm Đô – Fa – Sol bằng tay trái.' },
   criterion: { text: 'Chơi trọn "Các thánh tiến bước — hai tay" theo nhịp — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
   kidGoal: 'Các thánh tiến bước — hai tay theo nhịp, 2 hôm nhé! 🎺',
   lessons: [
@@ -400,9 +400,9 @@ export const WEEK29: WeekPlan = {
   story: 'Trong Cung điện, các quý tộc nhảy điệu Minuet nhẹ nhàng. Bản nhạc này đã gần 300 tuổi!',
   // v5: Minuet có nhiều bước nhảy quãng 4–5 → khởi động đọc QUÃNG tới quãng 5 ở thế Sol
   warmup: { variant: 'interval', pool: ['G4', 'A4', 'B4', 'C5', 'D5'], rounds: 6, maxInterval: 5 },
-  teach: { emoji: '👨‍🏫', text: 'Con chỉ bố/mẹ chỗ có Fa thăng trong Minuet.' },
+  teach: { emoji: '👨‍🏫', text: 'Con chỉ bố mẹ chỗ có Fa thăng trong Minuet.' },
   drills: ['finger-tap', 'thumb-under'],
-  criterion: { text: 'Chơi trọn Minuet Sol trưởng (8 ô nhịp) THEO NHỊP (tốc độ ≥ 50) — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
+  criterion: { text: 'Chơi trọn Minuet Sol trưởng (8 ô nhịp) THEO NHỊP (tốc độ từ 50 trở lên) — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
   kidGoal: 'Nhảy Minuet theo nhịp cùng các quý tộc — 2 hôm nhé! 👑',
   lessons: [
     { id: 'w29-l1', week: 29, title: 'Minuet — từng câu', emoji: '👑', activities: [
@@ -420,14 +420,14 @@ export const WEEK30: WeekPlan = {
   title: 'Für Elise',
   story: 'Beethoven viết "Für Elise" tặng một người bạn. Giai điệu "Mi – Rê thăng – Mi" nổi tiếng khắp thế giới.',
   warmup: { variant: 'read', pool: ['A4', 'B4', 'C5', 'D5', 'E5'], rounds: 6 },
-  teach: { emoji: '👨‍🏫', text: 'Con đàn cho bố/mẹ 5 nốt đầu "Mi – Rê♯ – Mi – Rê♯ – Mi" và chỉ phím Rê thăng.' },
+  teach: { emoji: '👨‍🏫', text: 'Con đàn cho bố mẹ 5 nốt đầu "Mi – Rê thăng – Mi – Rê thăng – Mi" và chỉ phím Rê thăng.' },
   drills: ['wrist-circle', 'five-finger'],
-  criterion: { text: 'Chơi trọn đoạn mở đầu Für Elise THEO NHỊP (tốc độ ≥ 50) — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
+  criterion: { text: 'Chơi trọn đoạn mở đầu Für Elise THEO NHỊP (tốc độ từ 50 trở lên) — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
   kidGoal: 'Für Elise "Mi – Rê♯ – Mi" theo nhịp — 2 hôm nhé! 🌹',
   lessons: [
     { id: 'w30-l1', week: 30, title: 'Für Elise — từng câu', emoji: '🌹', activities: [
         // 2026-10-06: bài tự sáng tác chuẩn bị — La thứ 3/4, hợp âm rải liền và "Mi – Rê♯ – Mi" trong một thế tay
-        song('summer_shower', 'wait', 2, 'full', 'Khởi động: mưa rào La thứ — rải "La – Đô – Mi" thật liền, rồi chớp lóe "Mi – Rê♯ – Mi" (Rê♯ ngón 4).'),
+        song('summer_shower', 'wait', 2, 'full', 'Khởi động: mưa rào La thứ — rải "La – Đô – Mi" thật liền, rồi chớp lóe "Mi – Rê thăng – Mi" (Rê thăng là ngón 4).'),
         song('fur_elise', 'wait', 2, 'full')] },
     pair('w30-l2', 30, 'Für Elise — cả đoạn', '🎼', 'fur_elise'),
   ],
@@ -442,7 +442,7 @@ export const WEEK31: WeekPlan = {
   leftHand: true,
   warmup: null,
   teach: { emoji: '🎤', text: 'Con kể cho khán giả nghe hành trình 31 tuần học đàn của con.' },
-  criterion: { text: 'Đại hòa nhạc — phụ huynh trao huy chương vàng', who: 'PARENT' },
+  criterion: { text: 'Đại hòa nhạc — bố mẹ trao huy chương vàng', who: 'PARENT' },
   kidGoal: 'Đại hòa nhạc — nhận huy chương vàng! 🎆',
   lessons: [{ id: 'w31-stage', week: 31, title: 'Đại hòa nhạc', emoji: '🏆', isWeekTest: true, activities: [{ kind: 'stage', level: 3 }] }],
 };

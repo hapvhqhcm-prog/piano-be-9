@@ -174,7 +174,7 @@ export function libraryScreen(app: App) {
         h(
           'div',
           { class: 'library-wrap scrollable' },
-          h('p', { class: 'muted lib-note' }, `⭐ Đã thuộc ${SONGS.filter((x) => songMastered(data, x.id)).length}/${SONGS.length} bài — thuộc = đàn trọn bài theo nhịp từ 60 trở lên.`),
+          h('p', { class: 'muted lib-note' }, `⭐ Đã thuộc ${SONGS.filter((x) => songMastered(data, x.id)).length}/${SONGS.length} bài — thuộc = đàn trọn bài theo nhịp, tốc độ từ 60 trở lên.`),
           filterBar,
           ...(libFilter === 'vn' ? vnSections : [mineSection, parentSection, ...levelSections]),
         ),

@@ -97,6 +97,10 @@ export function speechBusy(tailMs = SPEECH_TAIL_MS): boolean {
 /** Bỏ emoji / ký hiệu để máy không đọc "mặt cười", "mũi tên"… */
 export function speakable(text: string): string {
   return text
+    // Số chỉ nhịp đọc như nhạc sĩ đọc ("nhịp 2/4" → "nhịp hai bốn"), không để máy đọc thành ngày tháng
+    .replace(/\b([234])\/4\b/g, (_m, a: string) => `${({ '2': 'hai', '3': 'ba', '4': 'bốn' } as Record<string, string>)[a]} bốn`)
+    // Phân số còn lại ("đúng 5/6") → "5 trên 6"
+    .replace(/\b(\d+)\/(\d+)\b/g, '$1 trên $2')
     .replace(/\p{Extended_Pictographic}/gu, '')
     .replace(/[\u{FE0F}\u{200D}\u{20E3}]/gu, '')
     .replace(/[←→▶↻✓★⬆⬇]/g, '')

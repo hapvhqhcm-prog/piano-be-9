@@ -14,22 +14,30 @@ import {
   weekPlan,
 } from '../../lessons/lessonEngine';
 import type { Lesson } from '../../lessons/types';
-import type { App } from '../App';
+import type { App, Screen } from '../App';
 import { button, h, toast } from '../components/dom';
 import { parentButton } from '../components/longPress';
-import { freePlayScreen } from './freePlay';
-import { libraryScreen } from './library';
-import { stickersScreen } from './stickers';
+import { lazy, lazyScreen, prefetchLater, withLazy } from '../lazy';
+import { parentGateScreen } from './parentGate';
 import { BUSY_WEEK_DAYS, earnedStickerIds, islandPassed } from '../../lessons/stickers';
 import { storageStatus } from '../../progress/ProgressStore';
 import { cancelSpeech, speak } from '../../audio/voice';
 import { speakChip } from '../components/speakChip';
-import { parentGateScreen } from './parentGate';
-import { startSession } from './session';
 import { markSafePoint } from '../../pwa/updater';
 import type { AppData } from '../../progress/schema';
 import '../../styles/pedagogy.css';
 import '../../styles/kidux.css';
+
+// Màn chính chỉ nạp phần cần để VẼ màn chính; các màn khác là chunk riêng (src/ui/lazy.ts).
+// Buổi học (đường chính) được nạp ngầm ngay sau khi màn chính vẽ xong.
+const sessionMod = lazy(() => import('./session'));
+const libraryMod = lazy(() => import('./library'));
+const freePlayMod = lazy(() => import('./freePlay'));
+const stickersMod = lazy(() => import('./stickers'));
+const startSession = (app: App, l: Lesson): void => withLazy(sessionMod, (m) => m.startSession(app, l));
+const libraryScreen = (app: App): Screen => lazyScreen(libraryMod, (m) => m.libraryScreen(app));
+const freePlayScreen = (app: App): Screen => lazyScreen(freePlayMod, (m) => m.freePlayScreen(app));
+const stickersScreen = (app: App): Screen => lazyScreen(stickersMod, (m) => m.stickersScreen(app));
 
 /**
  * Tranh đảo (do src/ui/components/art/islandArt.ts vẽ). Nạp "mềm" qua import.meta.glob: nếu file tranh
@@ -320,6 +328,7 @@ export function homeScreen(app: App, banner?: string) {
         ),
       ),
     );
+    prefetchLater([sessionMod]);
     // Đọc to câu chuyện của tuần — mỗi ngày một lần (không phải mỗi lần về màn chính)
     // (hẹn giờ được gỡ khi rời màn — trước đây rời màn trong 0,6 s thì câu chuyện vẫn đọc đè lên màn kế tiếp)
     const storyTimer = shouldTellStory(today, plan.week) ? window.setTimeout(() => void speak(app, plan.story), 600) : 0;

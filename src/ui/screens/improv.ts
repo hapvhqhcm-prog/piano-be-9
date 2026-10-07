@@ -330,7 +330,7 @@ export function improvScreen(app: App, hooks: ImprovHooks) {
     function qaParent(q: ComposeNote[]): void {
       halt();
       stage.replaceChildren(
-        h('h1', { class: 'title' }, `👪 Bố mẹ: câu trả lời của con kết thúc ở ${viName(tonic)} chưa?`),
+        h('h1', { class: 'title' }, `👪 Bố mẹ: câu trả lời của bé kết thúc ở ${viName(tonic)} chưa?`),
         h('p', { class: 'lead' }, 'Con đàn trên đàn thật — bố mẹ nghe giúp nhé'),
       );
       setBar(

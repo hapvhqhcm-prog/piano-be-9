@@ -14,10 +14,17 @@ import { closingScreen } from './rating';
 import { rhythmScreen } from './rhythm';
 import { sessionEndScreen } from './sessionEnd';
 import { songScreen } from './song';
-import { stageScreen } from './stage';
 import { techniqueScreen } from './technique';
-import { improvScreen } from './improv';
-import { weekHeld } from './tonight';
+import { weekHeld } from './weekHold';
+import { lazy, lazyScreen } from '../lazy';
+
+// Ít gặp trong buổi (sáng tạo / sân khấu) → chunk riêng, nạp trước ngay khi buổi học có bước đó.
+const improvMod = lazy(() => import('./improv'));
+const stageMod = lazy(() => import('./stage'));
+type ImprovHooks = Parameters<typeof import('./improv').improvScreen>[1];
+type StageHooks = Parameters<typeof import('./stage').stageScreen>[1];
+const improvScreen = (app: App, hooks: ImprovHooks): Screen => lazyScreen(improvMod, (m) => m.improvScreen(app, hooks));
+const stageScreen = (app: App, hooks: StageHooks): Screen => lazyScreen(stageMod, (m) => m.stageScreen(app, hooks));
 
 /**
  * Chạy một buổi (v5.1 — ≤ 7 màn): Tư thế + khởi động tay 30" → Ôn nhanh → Khởi động tai/đọc nốt → Bài mới → (Ôn bài cũ)
@@ -33,6 +40,10 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
   // songReview: thêm bước "Ôn bài cũ" (một câu của bài 2–4 tuần trước) — không tính vào hoàn thành bài
   const steps = buildSessionPlan(lesson, store.get(), { ...opts, songReview: true, now: Date.now() });
   const wrapUp = steps.findIndex((s) => s.kind === 'closing');
+  for (const s of steps) {
+    if (s.kind === 'activity' && s.activity.kind === 'improv') improvMod.prefetch();
+    if (s.kind === 'activity' && s.activity.kind === 'stage') stageMod.prefetch();
+  }
   const deadline = Date.now() + store.settings.sessionMinutes * 60_000;
   let lessonFinished = false;
 

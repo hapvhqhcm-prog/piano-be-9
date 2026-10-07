@@ -6,10 +6,9 @@ import * as progressStoreModule from '../../progress/ProgressStore';
 import { isEmptySession } from '../../progress/ProgressStore';
 import { completedSessionCount, parentStats, sessionCount } from '../../progress/history';
 import { CHECKLIST_ITEMS, localDateStr, type AppData, type Session, type Settings } from '../../progress/schema';
-import type { App } from '../App';
+import type { App, Screen } from '../App';
 import { button, confirmDialog, h, toast } from '../components/dom';
 import { homeScreen } from './home';
-import { micTestScreen } from './micTest';
 import { APP_VERSION, checkForUpdate, isUpdateReady } from '../../pwa/updater';
 import { startScreen } from './start';
 import { onboardingScreen } from './onboarding';
@@ -27,9 +26,19 @@ import { installCard } from '../components/installCard';
 import { BACKUP_MESSAGE, exportBackup } from '../../progress/backup';
 import { PRIVACY_NOTE, customTuneTitle, parentSongToTune } from '../../practice/parentSongs';
 import { measureCount } from '../../music/tune';
-import { songEditorScreen } from './songEditor';
 import { playSong } from './library';
-import { reportScreen } from './report';
+import { lazy, lazyScreen, prefetchLater } from '../lazy';
+
+// Màn con ít dùng của Phụ huynh → chunk riêng (nạp ngầm khi màn Phụ huynh đã vẽ xong).
+const micTestMod = lazy(() => import('./micTest'));
+const songEditorMod = lazy(() => import('./songEditor'));
+const reportMod = lazy(() => import('./report'));
+type SongEditorArgs = Parameters<typeof import('./songEditor').songEditorScreen>;
+type ReportOpts = Parameters<typeof import('./report').reportScreen>[1];
+const micTestScreen = (app: App): Screen => lazyScreen(micTestMod, (m) => m.micTestScreen(app));
+const songEditorScreen = (app: App, existing: SongEditorArgs[1], hooks: SongEditorArgs[2]): Screen =>
+  lazyScreen(songEditorMod, (m) => m.songEditorScreen(app, existing, hooks));
+const reportScreen = (app: App, opts: ReportOpts): Screen => lazyScreen(reportMod, (m) => m.reportScreen(app, opts));
 
 /** Settings thêm (cộng dồn, không cần migration) của màn Phụ huynh. */
 type ParentUxSettings = Settings &
@@ -159,7 +168,7 @@ function tonightCard(d: Readonly<AppData>, now: Date, onPractice: (p: TonightPra
   return h(
     'section',
     { class: `card todo-card${t.welcomeBack ? ' welcome' : ''}` },
-    h('h2', {}, t.welcomeBack ? `👋 Mừng con quay lại (nghỉ ${t.daysAway} ngày)` : '📝 Việc cần làm tối nay'),
+    h('h2', {}, t.welcomeBack ? `👋 Mừng bé quay lại (nghỉ ${t.daysAway} ngày)` : '📝 Việc cần làm tối nay'),
     h('p', { class: 'todo-action' }, t.action),
     t.practice
       ? h(
@@ -202,6 +211,7 @@ function tonightCard(d: Readonly<AppData>, now: Date, onPractice: (p: TonightPra
  */
 export function parentScreen(app: App) {
   return (root: HTMLElement) => {
+    prefetchLater([reportMod, songEditorMod, micTestMod]);
     const store = app.store;
     const scroller = h('div', { class: 'parent scrollable' });
     root.append(h('div', { class: 'screen' }, scroller));
@@ -331,7 +341,7 @@ export function parentScreen(app: App) {
                 return h(
                   'li',
                   { class: 'psong-item' },
-                  h('span', { class: 'psong-name' }, c.title, h('span', { class: 'psong-meta' }, `${measureCount(t)} ô nhịp · nhịp ${c.timeSignature} · ♩ = ${c.bpm}`)),
+                  h('span', { class: 'psong-name' }, c.title, h('span', { class: 'psong-meta' }, `${measureCount(t)} ô nhịp · nhịp ${c.timeSignature} · tốc độ ${c.bpm}`)),
                   button({ icon: '▶', label: 'Chơi thử', kind: 'mint', onTap: () => playSong(app, t) }),
                   button({ icon: '✏️', label: 'Sửa', onTap: () => openEditor(c.id) }),
                   button({
@@ -530,7 +540,7 @@ export function parentScreen(app: App) {
           return h(
             'section',
             { class: 'card' },
-            h('h2', {}, '🎯 Kỹ năng của con'),
+            h('h2', {}, '🎯 Kỹ năng của bé'),
             h('p', {}, `${levelOf(week).name} — ${levelOf(week).goal}`),
             table(
               ['Kỹ năng', 'Kết quả', 'Số lần'],
@@ -544,7 +554,7 @@ export function parentScreen(app: App) {
             h('p', {}, `⭐ Bài đã thuộc: `, h('b', {}, `${mastered.length}/${SONGS.length}`)),
             mastered.length
               ? h('p', { class: 'muted' }, mastered.map((id) => findTune(id)?.titleVi ?? id).join(' · '))
-              : h('p', { class: 'muted' }, '"Thuộc" = đàn trọn bài theo nhịp từ 60 trở lên và đạt.'),
+              : h('p', { class: 'muted' }, '"Thuộc" = đàn trọn bài theo nhịp, tốc độ từ 60 trở lên, và đạt.'),
           );
         })(),
 
@@ -638,7 +648,7 @@ export function parentScreen(app: App) {
           h(
             'section',
             { class: 'card' },
-            h('h2', {}, 'Checklist quan sát — buổi gần nhất'),
+            h('h2', {}, 'Phiếu quan sát — buổi gần nhất'),
             h('p', { class: 'muted' }, `${fmtDate(latest.date)} · ${lessonName(latest.lessonId, d)}`),
             h(
               'div',
@@ -685,7 +695,7 @@ export function parentScreen(app: App) {
                     ),
                   ),
                 )
-              : h('p', { class: 'muted' }, 'Buổi này chưa có kết quả phụ huynh.'),
+              : h('p', { class: 'muted' }, 'Buổi này bố mẹ chưa chấm kết quả nào.'),
           ),
         );
       }
@@ -709,7 +719,7 @@ export function parentScreen(app: App) {
               say(
                 isUpdateReady()
                   ? '✅ Đã tải bản mới. Bấm "Về màn của bé" — app sẽ tự khởi động lại bằng bản mới.'
-                  : 'Đang dùng bản mới nhất (nếu vừa deploy, đợi 1–2 phút rồi thử lại).',
+                  : 'Đang dùng bản mới nhất (nếu vừa có bản cập nhật, đợi 1–2 phút rồi thử lại).',
               );
             },
           }),
@@ -804,7 +814,7 @@ export function parentScreen(app: App) {
           h(
             'p',
             { class: 'muted' },
-            '🎧 "Nghe lại con đàn": khi micro bật, app giữ TẠM tiếng đàn của lượt vừa chơi để bé bấm nghe lại và tự nhận xét. Bản ghi chỉ nằm trong bộ nhớ — không lưu vào máy, không gửi đi; chơi lượt mới hoặc rời màn là xoá. Micro tắt thì không ghi gì.',
+            '🎧 "Nghe lại con đàn": khi micro bật, app giữ TẠM tiếng đàn của lượt vừa chơi để bé bấm nghe lại và tự nhận xét. Bản ghi chỉ nằm trong bộ nhớ — không lưu vào máy, không gửi đi; chơi lượt mới hoặc rời màn là xóa. Micro tắt thì không ghi gì.',
           ),
           h(
             'div',
@@ -951,7 +961,7 @@ export function parentScreen(app: App) {
               kind: 'primary',
               onTap: () => void exportBackup(store).then((r) => say(BACKUP_MESSAGE[r])),
             }),
-            button({ icon: '⬆', label: 'Nhập JSON (file)', onTap: () => fileIn.click() }),
+            button({ icon: '⬆', label: 'Nhập từ tệp JSON', onTap: () => fileIn.click() }),
             fileIn,
           ),
           paste,

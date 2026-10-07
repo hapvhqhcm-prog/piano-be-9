@@ -3,9 +3,10 @@ import { WEEKS, criterionProgress, daysThisWeek, weekComplete, weekPassed, weekP
 import { findTune } from '../../music/exercises';
 import { viName, type Pitch } from '../../piano/pitchTable';
 import { firstDateOfWeek, lastSessionDate } from '../../progress/history';
-import { localDateStr, type AppData, type Settings } from '../../progress/schema';
+import { localDateStr, type AppData } from '../../progress/schema';
 import { rhNote } from '../../lessons/targets';
 import type { CriterionWho, Segment, Target } from '../../lessons/types';
+import { weekHeld } from './weekHold';
 
 /**
  * "VIỆC CẦN LÀM TỐI NAY" (màn Phụ huynh) — hàm thuần, có test (tests/tonight.test.ts).
@@ -129,7 +130,7 @@ export function actionFor(top: Struggle | undefined, weekDays: number): string {
   if (!top) {
     return weekDays < 4
       ? 'Tối nay chỉ cần 10–15 phút: ngồi cạnh bé và bấm “Học tiếp”.'
-      : 'Bé đang làm tốt! Tối nay cho bé chơi lại một bài đã thuộc và khen thật cụ thể (vd “ngón con cong đẹp quá”).';
+      : 'Bé đang làm tốt! Tối nay cho bé chơi lại một bài đã thuộc và khen thật cụ thể (ví dụ: “ngón con cong đẹp quá”).';
   }
   if (top.kind === 'song') {
     return top.key === 'song:sight'
@@ -161,7 +162,7 @@ export function daysSinceLastPractice(data: Readonly<AppData>, now: Date): numbe
 }
 
 export const WELCOME_BACK_ACTION =
-  'Mừng con quay lại! Buổi đầu ôn nhẹ: chơi lại một bài con đã thuộc, khen con thật cụ thể, rồi bấm “Học tiếp” — không cần học bù.';
+  'Mừng bé quay lại! Buổi đầu ôn nhẹ: cho bé chơi lại một bài đã thuộc, khen thật cụ thể, rồi bấm “Học tiếp” — không cần học bù.';
 
 /** Chỗ khó đầu tiên luyện riêng được: nốt/hợp âm có phím (tối đa 3) hoặc một bài hát (không phải đọc nhạc ngẫu nhiên). */
 export function practiceFor(struggles: readonly Struggle[]): TonightPractice | null {
@@ -207,7 +208,7 @@ export function tonightSegment(noteIds: readonly string[]): Segment {
     id: 'tonight',
     step: 'Tối nay',
     title: 'Ôn chỗ hay vấp',
-    intro: 'Mỗi lần: con nói to tên nốt và số ngón, rồi mới bấm.',
+    intro: 'Mỗi lần: bé nói to tên nốt và số ngón, rồi mới bấm.',
     targets,
   };
 }
@@ -239,16 +240,8 @@ export function tonightPlan(data: Readonly<AppData>, now: Date): TonightPlan {
 
 // ---------------- Sẵn sàng sang tuần mới? (màn Phụ huynh) ----------------
 
-/** Settings thêm (cộng dồn, không cần migration): bố mẹ GIỮ bé ở lại một tuần. */
-export interface HoldSettings {
-  /** Số tuần đang giữ (app không tự sang tuần mới khi currentWeek === holdWeek); null/không có = không giữ */
-  holdWeek?: number | null;
-}
-
-/** Bố mẹ đang giữ bé ở lại tuần `week`? (session.ts kiểm tra trước khi tự sang tuần mới) */
-export function weekHeld(settings: Readonly<Settings>, week: number): boolean {
-  return (settings as Settings & HoldSettings).holdWeek === week;
-}
+// HoldSettings + weekHeld: ./weekHold.ts (nhẹ, session.ts dùng) — xuất lại ở đây cho màn Phụ huynh / test.
+export { weekHeld, type HoldSettings } from './weekHold';
 
 /** Ở một tuần từ bấy nhiêu ngày → cảnh báo "học lâu ở một tuần" */
 export const STUCK_DAYS = 14;

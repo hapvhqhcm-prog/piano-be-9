@@ -1,7 +1,11 @@
-import type { App } from '../App';
+import type { App, Screen } from '../App';
 import { actionBar, backButton, h } from '../components/dom';
 import { homeScreen } from './home';
-import { parentScreen } from './parent';
+import { lazy, lazyScreen } from '../lazy';
+
+// Màn Phụ huynh (+ báo cáo, soạn bài, kiểm tra micro…) là chunk riêng — nạp ngầm ngay khi cổng hiện (bố mẹ còn đang nhẩm).
+const parentMod = lazy(() => import('./parent'));
+const parentScreen = (app: App): Screen => lazyScreen(parentMod, (m) => m.parentScreen(app));
 
 /**
  * Câu hỏi của cổng phụ huynh (rà soát 2026-10-06: "6 + 7" bé 9 tuổi làm được → khó hơn):
@@ -23,6 +27,7 @@ export function gateQuestion(rand: () => number = Math.random): { text: string; 
 /** Cổng phụ huynh: một phép nhân (chống bé vào nhầm, không phải bảo mật). Nút "Phụ huynh" vẫn phải nhấn giữ 2 giây. */
 export function parentGateScreen(app: App) {
   return (root: HTMLElement) => {
+    parentMod.prefetch();
     let answer = 0;
     let entry = '';
     const q = h('div', { class: 'gate-q' });

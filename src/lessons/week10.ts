@@ -13,7 +13,7 @@ export const WEEK10: WeekPlan = {
   warmup: { variant: 'identify', pool: ['C4', 'D4', 'E4', 'F4', 'G4', 'A4'], rounds: 6, reference: 'C4' },
   teach: { emoji: '🎤', text: 'Con giới thiệu với khán giả: "Bài tiếp theo tên là…, của nhạc sĩ…".' },
   drills: ['five-finger', 'hand-shape'],
-  criterion: { text: 'Biểu diễn trọn vẹn — phụ huynh tặng huy chương', who: 'PARENT' },
+  criterion: { text: 'Biểu diễn trọn vẹn — bố mẹ tặng huy chương', who: 'PARENT' },
   kidGoal: 'Biểu diễn cho cả nhà nghe — nhận huy chương Cấp 1! 🏅',
   lessons: [
     {

@@ -24,7 +24,7 @@ export const WEEK1: WeekPlan = {
   // v5.1 (OWNER duyệt 2026-10-06 sau buổi bé chơi thử): tuần 1 khởi động tai chỉ 3 lượt và đặt SAU bài đàn thật
   // (lessonEngine.buildSessionPlan) — bé chạm đàn thật trong ~6 màn đầu buổi.
   warmup: { variant: 'updown', pool: ['C3', 'G3', 'C4', 'G4', 'C5'], rounds: 3 },
-  teach: { emoji: '👨‍🏫', text: 'Con chỉ cho bố/mẹ: anh em sinh đôi ở đâu? Nhà Đô ở đâu?' },
+  teach: { emoji: '👨‍🏫', text: 'Con chỉ cho bố mẹ: anh em sinh đôi ở đâu? Nhà Đô ở đâu?' },
   drills: ['arm-drop', 'hand-shape'],
   criterion: { text: 'Tìm Đô giữa (C4) đúng 10 lần (trượt tối đa 1 lần)', who: 'PARENT/MIC' },
   kidGoal: 'Thám tử tìm Đô giữa 10 lần — trượt 1 lần cũng không sao! 🕵️',
@@ -63,7 +63,7 @@ export const WEEK1: WeekPlan = {
             {
               noteId: 'twins-or-triplets',
               title: 'Sinh đôi hay sinh ba?',
-              subtitle: 'Bố/mẹ chỉ một nhóm — con nói "sinh đôi" hay "sinh ba"',
+              subtitle: 'Bố mẹ chỉ một nhóm — con nói "sinh đôi" hay "sinh ba"',
               keys: [...TWINS4, ...TRIPLETS4],
             },
           ],
@@ -106,8 +106,8 @@ export const WEEK1: WeekPlan = {
           id: 'w1-b4',
           step: 'B4',
           title: 'Đô trầm, Đô cao',
-          intro: 'Bên trái Đô giữa là Đô trầm (tiếng to, ồm). Bên phải là Đô cao (tiếng trong, nhỏ).',
-          targets: [rhNote('C3', 'Đô trầm (C3) — bên trái Đô giữa'), rhNote('C5', 'Đô cao (C5) — bên phải Đô giữa'), rhNote('C4', 'Đô giữa')],
+          intro: 'Bên trái Đô giữa là Đô trầm (tiếng ồm ồm). Bên phải là Đô cao (tiếng trong veo).',
+          targets: [rhNote('C3', 'Đô trầm — bên trái Đô giữa'), rhNote('C5', 'Đô cao — bên phải Đô giữa'), rhNote('C4', 'Đô giữa')],
         }),
         notes({
           id: 'w1-detective',
@@ -135,7 +135,7 @@ export const WEEK1: WeekPlan = {
           id: 'w1-b5a',
           step: 'B5',
           title: 'Ngồi đẹp',
-          intro: 'Người chơi đàn giỏi luôn ngồi đẹp. Bố/mẹ xem con làm nhé!',
+          intro: 'Người chơi đàn giỏi luôn ngồi đẹp. Bố mẹ xem con làm nhé!',
           targets: [
             cardTarget('posture-back', 'Ngồi thẳng lưng', '🪑'),
             cardTarget('posture-hand', 'Tay tròn như ôm quả bóng', '⚽'),
@@ -162,8 +162,8 @@ export const WEEK1: WeekPlan = {
           id: 'w1-test-c4',
           step: 'Thử thách',
           title: 'Tìm Đô giữa 10 lần',
-          intro: 'Bố/mẹ nói "Đô giữa!" — con tìm thật nhanh. 10 lần nhé!',
-          targets: Array.from({ length: 10 }, (_, i) => rhNote('C4', `Lần ${i + 1}/10`)),
+          intro: 'Bố mẹ nói "Đô giữa!" — con tìm thật nhanh. 10 lần nhé!',
+          targets: Array.from({ length: 10 }, (_, i) => rhNote('C4', `Lần ${i + 1} trên 10`)),
         }),
       ],
     },

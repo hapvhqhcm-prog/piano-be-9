@@ -34,10 +34,10 @@ export interface DynamicsHooks {
 }
 
 const WANT: Record<Want, { emoji: string; word: string; sym: string; how: string; ask: string }> = {
-  f: { emoji: '🦁', word: 'TO', sym: 'f', how: 'Đàn TO — như sư tử gầm!', ask: 'con đàn TO chưa?' },
-  p: { emoji: '🐭', word: 'NHỎ', sym: 'p', how: 'Đàn NHỎ — rón rén như chuột nhắt', ask: 'con đàn NHỎ (mà vẫn rõ tiếng) chưa?' },
-  stac: { emoji: '🐇', word: 'NGẮT', sym: '•', how: 'Chạm phím rồi nhấc ngay — thỏ nhảy!', ask: 'con đàn NGẮT (nhấc tay nhanh) chưa?' },
-  leg: { emoji: '🐢', word: 'LIỀN', sym: '⌒', how: 'Giữ phím tới khi bấm nốt sau — liền tiếng', ask: 'con đàn LIỀN (không hở) chưa?' },
+  f: { emoji: '🦁', word: 'TO', sym: 'f', how: 'Đàn TO — như sư tử gầm!', ask: 'bé đàn TO chưa?' },
+  p: { emoji: '🐭', word: 'NHỎ', sym: 'p', how: 'Đàn NHỎ — rón rén như chuột nhắt', ask: 'bé đàn NHỎ (mà vẫn rõ tiếng) chưa?' },
+  stac: { emoji: '🐇', word: 'NGẮT', sym: '•', how: 'Chạm phím rồi nhấc ngay — thỏ nhảy!', ask: 'bé đàn NGẮT (nhấc tay nhanh) chưa?' },
+  leg: { emoji: '🐢', word: 'LIỀN', sym: '⌒', how: 'Giữ phím tới khi bấm nốt sau — liền tiếng', ask: 'bé đàn LIỀN (không hở) chưa?' },
 };
 
 const PRAISE: Record<Want, string[]> = {

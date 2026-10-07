@@ -1,9 +1,9 @@
-# Piano bé — PIANO-BE-9-TUOI (3 cấp · 30 tuần · luyện tập mỗi ngày)
+# Piano bé — PIANO-BE-9-TUOI (3 cấp · 31 tuần · luyện tập mỗi ngày)
 
 **Bản đang chạy:** https://hapvhqhcm-prog.github.io/piano-be-9/
 
 App "thầy giáo hướng dẫn" chạy trên iPad (Safari), đặt trên giá nhạc của đàn piano cơ:
-chỉ phím, chỉ ngón, phát âm mẫu. Khi bật micro, app **nghe đàn cơ và tự chấm** từng nốt; khi tắt, bố/mẹ bấm "Đúng rồi / Thử lại".
+chỉ phím, chỉ ngón, phát âm mẫu. Khi bật micro, app **nghe đàn cơ và tự chấm** từng nốt; khi tắt, bố mẹ bấm "Đúng rồi / Thử lại".
 
 - Vite + TypeScript + Vanilla DOM + Web Audio (OscillatorNode) + PWA + localStorage
 - **0 thư viện runtime.** Không backend, không đăng nhập, không analytics, không CDN.
@@ -16,19 +16,20 @@ chỉ phím, chỉ ngón, phát âm mẫu. Khi bật micro, app **nghe đàn cơ
 
 ## Có gì trong app
 
-- **3 cấp × 10 tuần = 30 tuần** (giáo trình v5, OWNER duyệt 2026-10-05), sau đó **Luyện tập mỗi ngày** không có điểm dừng.
+- **3 cấp, 31 tuần** (giáo trình v5/v5.1, OWNER duyệt 2026-10-05 và 2026-10-06), sau đó **Luyện tập mỗi ngày** không có điểm dừng.
   **Mục tiêu cuối nói thật: ≈ hoàn thành Faber cấp 1 / đầu cấp 2** (không phải "thành thạo" theo nghĩa nhạc viện).
   - **Cấp 1 · Làm quen** (1–10): bàn phím, thế Đô hai tay, nhịp Đi / Chạy-chạy (tuần 4) / 2/4 (tuần 9), đọc nốt khóa Sol theo
-    NỐT MỐC & QUÃNG, to/nhỏ (p/f), nốt La (Sol–La ngón 4-5), ứng tấu phím đen, Hỏi – Đáp; tuần củng cố 5; hòa nhạc tuần 10.
-  - **Cấp 2 · Hai tay** (11–20): Đô giữa tay trái & khóa Fa (nốt mốc), hai tay luân phiên → cùng lúc, củng cố hai tay (tuần 13),
-    thế Sol, nhịp 3/4, phím đen (Fa♯, Mi♭), chấm dôi, MÓC KÉP & NGHỊCH PHÁCH & DÂY NỐI (tuần 18), gam luồn ngón (tuần 19), sáng tác 4 ô nhịp.
-  - **Cấp 3 · Vững vàng** (21–30): hợp âm I–IV–V, DÒNG KẺ PHỤ & KHUÔNG LỚN (tuần 22), đổi thế, trưởng/thứ, nốt cao Đô5–Sol5,
-    đọc nhạc hai khóa, bài hai tay, rồi Minuet (tuần 28), Für Elise (tuần 29), Đại hòa nhạc (tuần 30).
-- **Khởi động kỹ thuật 1'** đầu tuần (thả rơi cánh tay, xoay cổ tay, tay tròn, gõ ngón, 5 ngón p/f, luồn ngón cái).
+    NỐT MỐC & QUÃNG, to/nhỏ (f/p), nốt La (Sol–La ngón 4–5), ngẫu hứng phím đen, Hỏi – Đáp; tuần củng cố 5; hòa nhạc tuần 10.
+  - **Cấp 2 · Hai tay** (11–21): Đô giữa tay trái & khóa Fa (nốt mốc), hai tay luân phiên → cùng lúc, củng cố hai tay (tuần 13),
+    thế Sol, nhịp 3/4, phím đen (Fa♯, Mi♭), chấm dôi, MÓC KÉP (tuần 18), NGHỊCH PHÁCH & DẤU NỐI (tuần 19), gam luồn ngón (tuần 20),
+    sáng tác 4 ô nhịp; hòa nhạc Cấp 2 (tuần 21).
+  - **Cấp 3 · Vững vàng** (22–31): hợp âm I–IV–V, DÒNG KẺ PHỤ & KHUÔNG LỚN (tuần 23), đổi thế, trưởng/thứ, nốt cao Đô cao–Sol cao,
+    đọc nhạc hai khóa, bài hai tay, rồi Minuet (tuần 29), Für Elise (tuần 30), Đại hòa nhạc (tuần 31).
+- **Khởi động kỹ thuật 1 phút** đầu tuần (thả rơi cánh tay, xoay cổ tay, tay tròn, gõ ngón, 5 ngón to/nhỏ, luồn ngón cái).
 - **Tiêu chí qua tuần** bằng bài hát: đạt ở **2 ngày khác nhau** (micro, hoặc phiếu 3 ý của bố mẹ: đúng nốt · đều nhịp · đúng ngón).
-- **Mỗi buổi 10–15'**: Tư thế → Ôn nhanh → Khởi động tai/đọc nốt → Bài mới → Con làm thầy → Tự đánh giá.
+- **Mỗi buổi 10–15 phút**: Tư thế → Ôn nhanh → Khởi động tai/đọc nốt → Bài mới → Con làm thầy → Tự đánh giá.
 - **Trò chơi**: Lên hay xuống? · Bước hay nhảy? · Nốt nào đây? (có mốc) · Đọc nốt khóa Sol/Fa · Nốt mốc · Giống/bước/nhảy trên khuông (quãng) · Vui hay buồn? · Nhại lại · Vỗ nhịp · Sáng tạo (phím đen, hỏi – đáp, sáng tác).
-- **70 bài hát** public domain / dân ca Việt Nam / tự sáng tác + 2 bài tập nhịp; **Thư viện** (⭐ bài đã thuộc) để bé tự chọn bài.
+- **95 bài** (public domain / dân ca Việt Nam / tự sáng tác, kể cả bài tập gam); **Thư viện** (⭐ bài đã thuộc) để bé tự chọn bài.
 - **Đọc nhạc ngẫu nhiên**: app sinh đoạn nhạc mới mỗi lần (đúng thế tay, nhịp 4/4 hoặc 3/4) — luyện đọc vô hạn.
 - **Màn bài hát**: Từng nốt (chờ bé đàn đúng) · Theo nhịp (đếm vào, máy gõ nhịp, nhạc đệm; con trỏ hoặc băng chuyền) ·
   tập từng câu · tốc độ 40/50/60 · khuông nhạc với gợi ý rút dần (phím sáng → tên nốt → chỉ khuông).
@@ -139,30 +140,30 @@ scripts/          make-icons.mjs (sinh icon PNG), deploy.mjs
 ## Micro — bật & thử trên đàn thật
 
 1. Mở app từ biểu tượng trên Màn hình chính (bản GitHub Pages, **https**).
-2. Giữ nút **Phụ huynh** 2 giây → phép cộng → **Cài đặt → 🎤 Thử micro** → **Bật micro** → chọn **Cho phép**.
-3. Đàn vài phím: app phải hiện đúng tên nốt. Bấm **Chỉnh theo đàn nhà** → đàn Đô giữa 3 lần.
-4. Quay lại Cài đặt → **Nghe đàn bằng micro: Bật**.
+2. Giữ nút **Phụ huynh** 2 giây → tính nhẩm → **🎤 Cài micro (3 bước)** → **1. Cho phép micro** → chọn **Cho phép**.
+3. **2. Kiểm tra 5 nốt**: đàn lần lượt từng phím app yêu cầu. Nếu micro nghe lệch nửa cung: **Chỉnh theo đàn nhà** → đàn Đô giữa 3 lần.
+4. **3. Dùng micro cho các buổi học**.
 5. Vào bài học: sau khi âm mẫu phát xong, dòng "🎤 Đang nghe…" xuất hiện → bé đàn trên đàn cơ.
 
 Đặt iPad trên giá nhạc là đủ gần. Nếu nhận sai nhiều: tắt TV/quạt to, làm lại bước "Chỉnh theo đàn nhà".
 
 **Kiểm tra 5 nốt** giờ **tự chỉnh độ nhạy** (Thấp/Vừa/Cao) theo độ to của từng nốt so với tiếng ồn phòng
-(vd "Đã tự chỉnh độ nhạy: Cao — vì tiếng đàn tới micro khá nhỏ"), gợi ý "Chỉnh theo đàn nhà" khi nốt đủ to mà
+(ví dụ: "Đã tự chỉnh độ nhạy: Cao — vì tiếng đàn tới micro khá nhỏ"), gợi ý "Chỉnh theo đàn nhà" khi nốt đủ to mà
 bị nghe lệch nửa cung, hoặc bớt ồn; bấm **Kiểm tra lại** để thử với độ nhạy mới. Phần **Đàn tự do — bố mẹ chấm
 micro**: mỗi nốt micro nghe được, bố mẹ chạm ✅ Đúng / ❌ Sai → ra tỉ lệ nhận đúng THẬT với đàn nhà.
 **Sao chép nhật ký** (gửi người hỗ trợ) gồm: tần số lấy mẫu, độ trễ, kiểu phiên âm thanh iOS, các bộ lọc iOS
 **thật sự** áp dụng cho micro (`track.getSettings()`: lọc tiếng vọng / giảm ồn / tự chỉnh âm lượng — app xin tắt
 nhưng iOS có thể ép bật, màn hình cũng cảnh báo), thống kê khung (khung trễ), từng nốt kiểm tra (độ to, ồn nền,
-ngưỡng, 3 nốt ứng viên + độ rõ + lệch cents, độ trễ gõ phím → nhận nốt), kết quả tự chỉnh và bảng chấm của bố mẹ.
+ngưỡng, 3 nốt ứng viên + độ rõ + độ lệch (cent; 100 cent = nửa cung), độ trễ gõ phím → nhận nốt), kết quả tự chỉnh và bảng chấm của bố mẹ.
 Bản LAN (`http://192.168…`) **không** dùng được micro — iOS chỉ cho micro trên https.
 
 ## Hạn chế đã biết
 
-- Micro chỉ nhận **một nốt mỗi lần**; phòng ồn có thể nhận nhầm → bố mẹ bấm **Sửa**. Khi tắt micro, kết quả trên đàn cơ = nút bố/mẹ bấm (PARENT_ASSESSMENT).
+- Micro chỉ nhận **một nốt mỗi lần**; phòng ồn có thể nhận nhầm → bố mẹ bấm **Sửa**. Khi tắt micro, kết quả trên đàn cơ = nút bố mẹ bấm (PARENT_ASSESSMENT).
 - **Safari và app ở Màn hình chính có bộ nhớ RIÊNG trên iPad.** Tiến độ làm trong tab Safari
   không sang app đã cài. Hãy luôn mở bằng biểu tượng trên Màn hình chính.
-- Dữ liệu chỉ nằm trên iPad. Nên **Xuất JSON / Sao chép JSON** định kỳ ở màn Phụ huynh.
-  Trong app ở Màn hình chính, nút tải file của iOS đôi khi không chạy → dùng "Sao chép JSON" rồi dán vào Ghi chú.
+- Dữ liệu chỉ nằm trên iPad. Nên bấm **💾 Sao lưu** mỗi tuần ở màn Phụ huynh (bảng Chia sẻ của iOS → **Lưu vào Tệp**,
+  hoặc dán vào Ghi chú nếu app đã chép dữ liệu).
 - Âm thanh: nếu im lặng, kiểm tra âm lượng và công tắc/chế độ im lặng (iPadOS 17+ đã được xử lý bằng
   `audioSession = playback`; bản cũ hơn có thể bị tắt tiếng khi bật im lặng).
 - Khi iPad khóa màn hình / chuyển app, âm thanh bị tạm dừng → app hiện nút "Chạm để bật lại âm thanh".

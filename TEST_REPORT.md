@@ -548,3 +548,19 @@ Chuyên gia chấm lại bản 0.9.1: sư phạm **B** (trước C+/B−), trả
   - trạng thái "sẵn sàng" không còn mâu thuẫn khi đang giữ tuần.
 - **Màn bắt đầu:** không kẹt nếu âm thanh không mở được.
 - 1294 test; e2e A, C, D, E qua.
+
+## 27. Biên tập tiếng Việt + mở app nhanh hơn trên iPad cũ (2026-10-07)
+
+- **Biên tập ~160 câu chữ / 32 file**, theo một quy ước chung:
+  - xưng "con" khi nói với bé, "bé" khi nói với bố mẹ;
+  - "app" khi chấm, "thầy" khi đàn mẫu;
+  - thuật ngữ thống nhất ("dấu nối", "nốt trắng chấm dôi", "tốc độ" thay BPM);
+  - câu đọc bằng giọng máy không còn ký hiệu, mã nốt (C4) hay dấu "/";
+  - giọng máy đọc "nhịp 2/4" là "nhịp hai bốn", "5/6" là "5 trên 6".
+- **Mở app nhanh hơn:**
+  - mã tải lúc đầu 191 → 88 KB (gzip); thời gian dịch mã khi mở ~1/4 (máy làm chậm ×20);
+  - các màn ít dùng (Phụ huynh, Báo cáo, Soạn bài, Thử micro, Thư viện, Sticker, Ngẫu hứng, Sân khấu) chỉ tải khi cần và được tải sẵn ở nền;
+  - dữ liệu bài hát dạng `JSON.parse` (nhanh hơn);
+  - phông chữ màn bắt đầu được tải trước;
+  - offline vẫn mở được mọi màn.
+- **Kiểm tra:** 1295 test; compat iPadOS 15+; e2e A, C, D, E; WebKit P, A, C, B, D.

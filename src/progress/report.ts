@@ -12,15 +12,15 @@
  *   (trò trong bài + khởi động của tuần / tuần trước; bài "Luyện tập mỗi ngày" có thể có "Nốt nào đây?").
  *   Buổi có cả hai loại → không xếp (không đoán bừa).
  */
-import { LEVELS, MAX_WEEK, findLesson, levelOf, masteredSongs, songFresh, songStats, weekComplete, weekPlan } from '../lessons/lessonEngine';
+import { LEVELS, MAX_WEEK, levelOf, masteredSongs, songFresh, songStats, weekComplete, weekPlan } from '../lessons/lessonEngine';
 import { firstSessionDate, hist } from './history';
 import { allStickers, dynamicsDone } from '../lessons/stickers';
 import type { LevelInfo } from '../lessons/types';
-import type { QuizVariant } from '../practice/quiz';
+import { sessionAnswers } from './answers';
 import { findTune } from '../music/exercises';
 import { SONGS } from '../music/tune';
 import { actionFor, topStruggles, type Struggle } from '../ui/screens/tonight';
-import { localDateStr, type AppData, type Session } from './schema';
+import { localDateStr, type AppData } from './schema';
 
 const DAY = 86_400_000;
 /** Cửa sổ "gần đây" cho độ chính xác (giống "Việc cần làm tối nay"). */
@@ -172,69 +172,14 @@ export function weeklyBars(d: Readonly<AppData>, now: Date, weeks = CHART_WEEKS)
   return bars;
 }
 
-/* ---------------- Trò chơi app chấm: xếp loại kỹ năng ---------------- */
-
-const isPitch = (s: string) => /^[A-G](#|b)?-?\d$/.test(s);
-const EAR_CODES = new Set(['up', 'down', 'step', 'skip', 'major', 'minor']);
-const INTERVAL_RE = /^(same|(step|skip|4th|5th)-(up|down))$/;
-const EAR_PITCH: ReadonlySet<QuizVariant> = new Set(['identify']);
-const READ_PITCH: ReadonlySet<QuizVariant> = new Set(['read', 'landmark']);
-
-/** Các kiểu trò có thể xuất hiện trong buổi `s` (trò trong bài + khởi động tuần này / tuần trước). */
-export function sessionQuizVariants(s: Pick<Session, 'lessonId'>): Set<QuizVariant> {
-  const out = new Set<QuizVariant>();
-  const m = /^w(\d+)-/.exec(s.lessonId);
-  const week = m ? Number(m[1]) : 0;
-  const lesson = findLesson(s.lessonId);
-  for (const a of lesson?.activities ?? []) if (a.kind === 'quiz') out.add(a.quiz.variant);
-  if (/^w\d+-daily$/.test(s.lessonId)) {
-    out.add('identify');
-    out.add('majorminor');
-  }
-  if (week >= 1 && week <= MAX_WEEK) {
-    const w = weekPlan(week).warmup;
-    if (w) out.add(w.variant);
-    if (week > 1) {
-      const p = weekPlan(week - 1).warmup;
-      if (p) out.add(p.variant);
-    }
-  }
-  return out;
-}
-
-/** Kỹ năng của một câu trả lời app chấm (null = không xếp được). */
-export function classifyAppAssessment(expected: string, variants: ReadonlySet<QuizVariant>): 'reading' | 'ear' | null {
-  if (EAR_CODES.has(expected)) return 'ear';
-  if (INTERVAL_RE.test(expected)) return 'reading';
-  if (!isPitch(expected)) return null;
-  const ear = [...variants].some((v) => EAR_PITCH.has(v));
-  const read = [...variants].some((v) => READ_PITCH.has(v));
-  if (ear && !read) return 'ear';
-  if (read && !ear) return 'reading';
-  return null;
-}
+/* Trò chơi app chấm: xếp loại kỹ năng → ./answers.ts (nhẹ, compaction.ts dùng lúc mở app) */
+export { classifyAppAssessment, sessionAnswers, sessionQuizVariants } from './answers';
 
 const acc = (correct: number, total: number): Accuracy => ({
   correct,
   total,
   pct: total ? Math.round((correct / total) * 100) : null,
 });
-
-/** Các câu trả lời (theo kỹ năng) của MỘT buổi — dùng chung cho báo cáo và gộp lịch sử (compaction.ts). */
-export function sessionAnswers(s: Session): Array<{ skill: SkillKind; ok: boolean }> {
-  const out: Array<{ skill: SkillKind; ok: boolean }> = [];
-  if (s.appAssessments.length) {
-    const v = sessionQuizVariants(s);
-    for (const a of s.appAssessments) {
-      const k = classifyAppAssessment(a.expected, v);
-      if (k) out.push({ skill: k, ok: a.correct });
-    }
-  }
-  for (const a of s.parentAssessments) {
-    if (a.note.startsWith('rhythm:')) out.push({ skill: 'rhythm', ok: a.result === 'correct' });
-  }
-  return out;
-}
 
 /** Mỗi câu trả lời (theo kỹ năng) kèm ngày buổi học — các buổi còn giữ. */
 function answers(d: Readonly<AppData>): Array<{ skill: SkillKind; ok: boolean; date: string }> {

@@ -39,7 +39,7 @@ export const LEVELS: readonly LevelInfo[] = [
   {
     level: 1,
     name: 'Cấp 1 · Làm quen',
-    goal: 'Thế Đô hai tay, nhịp Đi – Chạy-chạy – 2/4, đọc nốt khóa Sol theo nốt mốc & quãng, ứng tấu phím đen',
+    goal: 'Thế Đô hai tay, nhịp Đi – Chạy-chạy – 2/4, đọc nốt khóa Sol theo nốt mốc & quãng, ngẫu hứng phím đen',
     weeks: [1, 10],
   },
   {

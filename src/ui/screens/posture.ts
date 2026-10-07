@@ -10,7 +10,7 @@ function coachBox(): HTMLElement {
   return h(
     'aside',
     { class: 'coach-box', 'aria-label': 'Câu nói cho bố mẹ' },
-    h('b', {}, '👪 Khi con vấp, bố mẹ nói:'),
+    h('b', {}, '👪 Khi bé vấp, bố mẹ nói:'),
     h('ul', {}, ...PARENT_PHRASES.map((t) => h('li', {}, t))),
   );
 }

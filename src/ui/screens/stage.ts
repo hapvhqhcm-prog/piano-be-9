@@ -49,7 +49,7 @@ export function stageScreen(app: App, hooks: StageHooks) {
             'div',
             { class: 'stage scroll-y scrollable' },
             h('div', { class: 'step-tag' }, 'Sân khấu'),
-            h('h1', { class: 'title' }, `Con chọn ${picked.length ? `thêm (đã chọn ${picked.length}/3)` : '2–3 bài'} để biểu diễn`),
+            h('h1', { class: 'title' }, `Con chọn ${picked.length ? `thêm (đã chọn ${picked.length}/3)` : '2 hoặc 3 bài'} để biểu diễn`),
             h(
               'div',
               { class: 'stage-picks' },
