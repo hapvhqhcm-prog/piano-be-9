@@ -183,7 +183,7 @@ type VnSpec = {
 };
 const range = (a: number, b: number) => Array.from({ length: b - a }, (_, i) => a + i);
 const NEW_VN: VnSpec[] = [
-  { id: 'ga_gay', composer: 'Dân ca Cống', vn: 'folk', week: 10, lessons: ['w10-l2'] },
+  { id: 'ga_gay', composer: 'Dân ca Cống', vn: 'folk', week: 10, lessons: ['w10-l3'] },
   { id: 'ly_cay_xanh', composer: 'Dân ca Nam Bộ', vn: 'folk', week: 11, lessons: ['w13-l2'] },
   { id: 'ngay_mua_vui', composer: 'Dân ca Thái', vn: 'folk', week: 13 },
   { id: 'ly_con_sao', composer: 'Dân ca Nam Bộ', vn: 'folk', week: 17 },

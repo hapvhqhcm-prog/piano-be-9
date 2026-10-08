@@ -81,6 +81,17 @@ export function renderPiano(notes: SimNote[], seconds: number, o: SimOptions = {
     const tail = 1.2;
     const end = Math.min(n, Math.floor((note.start + held + tail) * SR));
     const phases = amps.map(() => r() * Math.PI * 2);
+    // Hằng số theo họa âm/dây tính trước (cùng thứ tự phép tính như công thức gốc → kết quả y hệt, nhanh hơn nhiều)
+    const nh = amps.findIndex((_, k) => (k + 1) * f0 * Math.sqrt(1 + B * (k + 1) * (k + 1)) > 9000);
+    const H = nh < 0 ? amps.length : nh;
+    const ws: number[][] = [];
+    const as: number[] = [];
+    for (let k = 0; k < H; k++) {
+      const kk = k + 1;
+      const fk = kk * f0 * Math.sqrt(1 + B * kk * kk);
+      ws.push(strs.map((c) => 2 * Math.PI * fk * Math.pow(2, c / 1200)));
+      as.push(amps[k] / strs.length);
+    }
     for (let i = s0; i < end; i++) {
       const t = (i - s0) / SR;
       // tắt dần: nhanh rồi chậm; nhả phím → giảm âm nhanh (damper)
@@ -88,14 +99,14 @@ export function renderPiano(notes: SimNote[], seconds: number, o: SimOptions = {
       env *= Math.min(1, t / 0.003);
       if (t > held) env *= Math.exp(-(t - held) / 0.08);
       let v = 0;
-      for (let k = 0; k < amps.length; k++) {
+      for (let k = 0; k < H; k++) {
         const kk = k + 1;
-        const fk = kk * f0 * Math.sqrt(1 + B * kk * kk);
-        if (fk > 9000) break;
         // họa âm cao tắt nhanh hơn
         // Búa gõ mọi dây CÙNG LÚC → cùng pha lúc đầu; lệch cents làm tiếng "rung" dần về sau
-        for (const c of strs) {
-          v += (amps[k] / strs.length) * Math.exp(-t * kk * 0.4) * Math.sin(2 * Math.PI * fk * Math.pow(2, c / 1200) * t + phases[k]);
+        const w = ws[k];
+        const ph = phases[k];
+        for (let j = 0; j < w.length; j++) {
+          v += as[k] * Math.exp(-t * kk * 0.4) * Math.sin(w[j] * t + ph);
         }
       }
       // tiếng búa gõ
@@ -163,8 +174,12 @@ function fft(re: Float64Array, im: Float64Array, inverse: boolean): void {
     for (; j & bit; bit >>= 1) j ^= bit;
     j ^= bit;
     if (i < j) {
-      [re[i], re[j]] = [re[j], re[i]];
-      [im[i], im[j]] = [im[j], im[i]];
+      const tr = re[i];
+      re[i] = re[j];
+      re[j] = tr;
+      const ti = im[i];
+      im[i] = im[j];
+      im[j] = ti;
     }
   }
   for (let len = 2; len <= n; len <<= 1) {
@@ -237,6 +252,67 @@ function applyNoiseSuppression(out: Float32Array, SR: number, dB: number, tau: n
     }
   }
   for (let i = 0; i < out.length; i++) out[i] = res[i];
+}
+
+/**
+ * Lọc ồn kiểu thoại DẠNG DÒNG (cùng thuật toán applyNoiseSuppression) — cho mô phỏng vòng kín (tests/weekSim.ts):
+ * tín hiệu được nối thêm dần; mẫu k là "xong" khi mọi khung STFT phủ nó đã xử lý (cần đọc trước 1024 mẫu ≈ 21 ms).
+ */
+export class StreamNS {
+  private readonly N = 1024;
+  private readonly hop = 256;
+  private readonly gmin: number;
+  private readonly aUp: number;
+  private readonly aDown: number;
+  private readonly win = new Float64Array(1024);
+  private readonly noise = new Float64Array(513).fill(-1);
+  private readonly re = new Float64Array(1024);
+  private readonly im = new Float64Array(1024);
+  /** đầu ra (chồng-cộng) */
+  readonly out: Float64Array;
+  /** khung kế tiếp bắt đầu ở mẫu này; mọi mẫu < s đã xong */
+  private s: number;
+  constructor(SR: number, dB: number, tau: number, private readonly total: number) {
+    const dt = this.hop / SR;
+    this.gmin = Math.pow(10, -dB / 20);
+    this.aUp = 1 - Math.exp(-dt / tau);
+    this.aDown = 1 - Math.exp(-dt / 0.03);
+    for (let i = 0; i < this.N; i++) this.win[i] = Math.sqrt(0.5 - 0.5 * Math.cos((2 * Math.PI * i) / this.N));
+    this.out = new Float64Array(total + this.N);
+    this.s = -this.N + this.hop;
+  }
+  /** Xử lý các khung có đủ dữ liệu (`input` đã đúng tới `avail`, không gồm). Trả về số mẫu đầu ra đã xong. */
+  advance(input: Float32Array, avail: number): number {
+    const { N, hop, re, im, win, noise } = this;
+    while (this.s < this.total && (this.s + N <= avail || avail >= this.total)) {
+      const s = this.s;
+      for (let i = 0; i < N; i++) {
+        const k = s + i;
+        re[i] = k >= 0 && k < this.total ? input[k] * win[i] : 0;
+        im[i] = 0;
+      }
+      fft(re, im, false);
+      for (let k = 0; k <= N / 2; k++) {
+        const p = re[k] * re[k] + im[k] * im[k];
+        if (noise[k] < 0) noise[k] = p;
+        else noise[k] += (p - noise[k]) * (p > noise[k] ? this.aUp : this.aDown);
+        const g = p > 0 ? Math.max(this.gmin, Math.sqrt(Math.max(0, 1 - noise[k] / p))) : this.gmin;
+        re[k] *= g;
+        im[k] *= g;
+        if (k > 0 && k < N / 2) {
+          re[N - k] = re[k];
+          im[N - k] = -im[k];
+        }
+      }
+      fft(re, im, true);
+      for (let i = 0; i < N; i++) {
+        const k = s + i;
+        if (k >= 0 && k < this.total) this.out[k] += (re[i] * win[i]) / 2;
+      }
+      this.s += hop;
+    }
+    return Math.min(this.total, Math.max(0, this.s));
+  }
 }
 
 export { SIM_RATE_DEFAULT as SIM_RATE };

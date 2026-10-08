@@ -86,7 +86,7 @@ export function stageScreen(app: App, hooks: StageHooks) {
             'div',
             { class: 'actions' },
             backButton(hooks.onBack),
-            button({ icon: '🎟', label: 'Mời khán giả', kind: 'primary', disabled: picked.length < 2, onTap: invite }),
+            button({ icon: '🎟️', label: 'Mời khán giả', kind: 'primary', disabled: picked.length < 2, onTap: invite }),
           ),
         ),
       );

@@ -1932,6 +1932,36 @@ h3,
   transform: rotate(45deg);
   border-radius: 5px 0 0 0;
 }
+/* Màn kết: thẻ "Con làm thầy" nằm DƯỚI tiêu đề → bỏ đuôi bong bóng (đuôi đè lên chữ tiêu đề) */
+.closing-teach {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.closing-teach .teach-card::before {
+  display: none;
+}
+.rating-options .btn.rate-compact {
+  min-height: 150px;
+}
+/* iPad mini ngang (744px) — màn kết có thẻ Con làm thầy: gọn lại để 3 nút Dễ/Vừa/Khó không bị thanh nút che */
+@media (max-height: 780px) {
+  .closing-teach .hero-mascot {
+    display: none;
+  }
+  .closing-teach .teach-card {
+    padding: 12px 28px;
+  }
+  .rating-options .btn.rate-compact {
+    min-height: 124px;
+    padding: 10px 14px;
+    gap: 4px;
+  }
+  .rating-options .btn.rate-compact .btn-icon {
+    font-size: 56px;
+  }
+}
 .gate-card {
   display: flex;
   flex-direction: column;
@@ -3119,6 +3149,19 @@ h3,
 }
 .iv-grid .iv-same {
   min-width: 150px;
+}
+/* iPad mini ngang: 5 nút quãng (Giống / Bước / Nhảy) không chạm mép bàn phím */
+@media (max-height: 780px) {
+  .staff-mini.staff-quiz.staff-pair {
+    height: min(190px, 25vh);
+    max-height: min(190px, 25vh);
+  }
+  .iv-grid .iv-col {
+    gap: 10px;
+  }
+  .iv-answers .btn-big {
+    min-height: 66px;
+  }
 }
 .iv-dirs {
   align-items: center;

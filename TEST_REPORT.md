@@ -606,3 +606,26 @@ Phụ huynh → Nâng cao (hoặc thẻ Cài micro) → 🩺 Kiểm tra iPad. B�
   - Màn "Cài micro" nhắc chạy Kiểm tra 5 nốt.
 - Bench: 14 kịch bản "NHẸ" mới, gồm cả giả lập bộ lọc ồn của iOS. Tổng từ 74% lên khoảng 99%. 21 kịch bản cũ đạt 100%. 0 nốt ma ở phòng im lặng, quạt hoặc tiếng nói. Độ trễ giữ nguyên, trung vị 68 ms. Hợp âm 160/160.
 - 1384 test; compat iPadOS 15+; e2e nhanh qua.
+
+## 31. Tuần 4–10 thật mượt (OWNER chọn 2026-10-08; bé đang ở tuần 4)
+- **Nội dung:** lời dẫn bài hát đưa thông tin quan trọng lên đầu (thế tay, f/p/mf, nốt mới). Giải thích nốt tròn 4 phách (tuần 4) và nốt 3 phách (tuần 6). Tuần 6 đổi tên thành "Bài ca niềm vui". Xòe hoa và Gà gáy có phím sáng.
+- **Bố mẹ duyệt, đã làm:**
+  - Kìa con bướm vàng thống nhất ngón 3-4-5.
+  - Ông lão vui tính ghi lại đủ nốt, 8 ô.
+  - Thêm thẻ dạy nốt Si trước Gà gáy.
+  - Tuần 10 bài 2 tách thành hai buổi (bài mới w10-l3).
+  - Trò vỗ nhịp có nốt tròn 🐘 "Đi-i-i-i".
+  - Tàu hỏa xình xịch thêm vào cuối bài 3 tuần 4.
+  - Chèo thuyền nhẹ: chơi Mức 2 trước Mức 3.
+- **Giữ tiến độ:** các bước mới ở tuần 4 thêm vào cuối bài, số thứ tự hoạt động cũ không đổi, có test chứng minh (`tests/weeks4-10-owner.test.ts`).
+- **Giao diện:** chụp đủ 181 bước của tuần 4–10.
+  - Lời dẫn bài hát hiện đủ 2 dòng, chạm để mở hết.
+  - Màn cuối buổi vừa iPad mini; đố quãng gọn hơn trên màn thấp.
+  - Lời nhắc vỗ nhịp rõ hơn; khi đàn sai thì báo đúng phím và ngón cần đàn.
+  - Biểu tượng 🎟 và 🗑 hiện đúng dạng emoji.
+- **Micro trên bài thật:** mô phỏng mọi bài tuần 4–10 qua đúng đường chấm của app (`tests/weekSim.ts`, `tests/weekSongsMic.test.ts`).
+  - Bắt được nốt nhẹ bị iOS lọc ồn làm tắt nhanh.
+  - Một lần bấm nhẹ không còn bị đếm hai lần (vd Rê Rê, Mi Mi Mi).
+  - Không còn báo nhầm nốt nằm giữa hai nốt cùng đang ngân (vd Sol#).
+  - Theo nhịp còn tối đa 1 lần báo sai oan mỗi bài (jingle_bells, this_old_man).
+- 1395 test; compat iPadOS 15+; e2e nhanh A–E.

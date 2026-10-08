@@ -58,7 +58,7 @@ export const WEEK8: WeekPlan = {
       activities: [
         { kind: 'quiz', title: 'Đọc nốt 📖', intro: 'Nốt hiện trên khuông — con chạm đúng phím trên iPad. Gặp khó: tìm nốt mốc gần nhất rồi đếm lên hoặc xuống.', quiz: { variant: 'read', pool: ['C4', 'D4', 'E4', 'F4', 'G4'], rounds: 6 } },
         { kind: 'song', songId: 'ode_to_joy_easy', mode: 'wait', hints: 'names', intro: 'Lần này phím không sáng nữa — nhìn tên nốt trên khuông nhé.' },
-        { kind: 'song', songId: 'ode_to_joy_easy', mode: 'tempo', level: 2, hints: 'staff', intro: 'Thử thách: chỉ nhìn khuông nhạc! (Bấm "Gợi ý" nếu cần.)' },
+        { kind: 'song', songId: 'ode_to_joy_easy', mode: 'tempo', level: 2, hints: 'staff', intro: 'Thử thách: chỉ nhìn khuông nhạc mà đàn!' },
       ],
     },
     {
@@ -80,7 +80,7 @@ export const WEEK8: WeekPlan = {
             staffNote('A4', 'Ở khe 2'),
           ],
         }),
-        { kind: 'song', songId: 'frere_jacques_easy', mode: 'wait', hints: 'full', intro: 'Mỗi câu hát hai lần: lần đầu TO (f), lần sau NHỎ (p) như tiếng vọng.' },
+        { kind: 'song', songId: 'frere_jacques_easy', mode: 'wait', hints: 'full', intro: 'Lần đầu đàn TO (f), lần nhắc lại NHỎ (p)! Nhìn kỹ số ngón: tay nhích sang phải ở câu có La; câu cuối ngón 1 với xuống Sol trầm.' },
       ],
     },
     {
@@ -95,8 +95,8 @@ export const WEEK8: WeekPlan = {
           intro: 'Khuông hiện HAI nốt. Cùng chỗ = GIỐNG; nốt sau ở vạch hoặc khe ngay cạnh = BƯỚC; cách một vạch hoặc khe = NHẢY. Đi lên hay đi xuống?',
           quiz: { variant: 'interval', pool: ['C4', 'D4', 'E4', 'F4', 'G4'], rounds: 6, maxInterval: 3 },
         },
-        { kind: 'song', songId: 'london_bridge', mode: 'wait', hints: 'names' },
-        { kind: 'song', songId: 'twinkle_easy', mode: 'wait', hints: 'names' },
+        { kind: 'song', songId: 'london_bridge', mode: 'wait', hints: 'names', intro: 'Tay nhích sang phải: Sol ngón 4, La ngón 5!' },
+        { kind: 'song', songId: 'twinkle_easy', mode: 'wait', hints: 'names', intro: 'Đô ngón 1, Sol ngón 4, La ngón 5 — xòe tay rộng một chút!' },
         { kind: 'song', songId: 'twinkle_easy', mode: 'tempo', level: 3, hints: 'names' },
       ],
     },

@@ -10,7 +10,7 @@ export const WEEK6: WeekPlan = {
   week: 6,
   island: 'Sân khấu nhỏ',
   islandEmoji: '🎪',
-  title: 'Bài hát đầu tiên',
+  title: 'Bài ca niềm vui',
   story: 'Ở Sân khấu nhỏ, cả làng chờ nghe con đàn "Bài ca niềm vui". Bố mẹ sẽ đàn cùng con!',
   warmup: { variant: 'identify', pool: ['C4', 'D4', 'E4', 'F4', 'G4'], rounds: 6, reference: 'C4' },
   teach: { emoji: '👨‍🏫', text: 'Con dạy bố mẹ câu đầu "Bài ca niềm vui": Mi Mi Fa Sol – Sol Fa Mi Rê. Đàn một lần TO (f), một lần NHỎ (p)!' },
@@ -38,7 +38,7 @@ export const WEEK6: WeekPlan = {
             { pitches: ['G4', 'F4', 'E4', 'D4', 'C4'], want: 'f', fingers: [5, 4, 3, 2, 1], hand: 'RH' },
           ],
         },
-        { kind: 'song', songId: 'ode_to_joy_easy', mode: 'wait', hints: 'full', intro: 'Bài của nhạc sĩ Beethoven! Dấu "mf" ở đầu bài = đàn VỪA, không to không nhỏ. Mình tập từng nốt trước.' },
+        { kind: 'song', songId: 'ode_to_joy_easy', mode: 'wait', hints: 'full', intro: 'Dấu "mf" = đàn VỪA, không to không nhỏ. Bài của nhạc sĩ Beethoven — mình tập từng nốt trước.' },
       ],
     },
     {
@@ -64,7 +64,7 @@ export const WEEK6: WeekPlan = {
       title: 'Các thánh tiến bước',
       emoji: '🎺',
       activities: [
-        { kind: 'song', songId: 'saints', mode: 'wait', hints: 'full', intro: 'Bài này có chỗ "Suỵt" (nghỉ) ở đầu mỗi câu — nhớ chờ nhé!' },
+        { kind: 'song', songId: 'saints', mode: 'wait', hints: 'full', intro: 'Bài này có chỗ "Suỵt" (nghỉ) ở đầu mỗi câu — nhớ chờ nhé! Có một nốt Đô "Đi-i-i" giữ 3 phách.' },
         { kind: 'song', songId: 'saints', mode: 'tempo', level: 3, hints: 'full' },
       ],
     },

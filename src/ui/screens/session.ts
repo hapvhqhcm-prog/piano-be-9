@@ -290,5 +290,7 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
     }
   };
 
+  // DEV (scripts/shots*.mjs): nhảy thẳng tới bước i của buổi để chụp màn từng bước
+  if (import.meta.env.DEV) (window as unknown as { __session?: unknown }).__session = { steps, go };
   go(0);
 }

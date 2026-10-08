@@ -68,7 +68,7 @@ export function closingScreen(app: App, hooks: ClosingHooks) {
           },
         });
         // Có thẻ "Con làm thầy" ở trên → nút thấp hơn chút cho vừa một màn iPad
-        if (card) b.style.minHeight = '150px';
+        if (card) b.classList.add('rate-compact');
         return b;
       });
       stage.replaceChildren(

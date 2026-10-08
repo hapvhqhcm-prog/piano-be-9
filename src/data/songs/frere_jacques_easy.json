@@ -81,18 +81,18 @@
   {
    "pitch": "E4",
    "beats": 1,
-   "finger": 2,
+   "finger": 3,
    "dyn": "p"
   },
   {
    "pitch": "F4",
    "beats": 1,
-   "finger": 3
+   "finger": 4
   },
   {
    "pitch": "G4",
    "beats": 2,
-   "finger": 4
+   "finger": 5
   },
   {
    "pitch": "G4",

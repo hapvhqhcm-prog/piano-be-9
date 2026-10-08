@@ -110,8 +110,8 @@ describe('lessonEngine', () => {
     const LIBRARY_ONLY = new Set(['ngay_mua_vui', 'ly_con_sao', 'xuan_va_tuoi_tre', 'mua_roi', 'trong_com', 'beo_dat_may_troi',
       'dem_thu', 'con_thuyen_khong_ben', 'nguoi_oi_nguoi_o_dung_ve',
       // 2026-10-06: bài tự sáng tác lấp chỗ mỏng của kho bài — mở theo tuần trong Thư viện
-      // (snail_stroll, sparrow_minuet, summer_shower thì nằm trong bài học tuần 3, 29, 30)
-      'duckling_waddle', 'choo_choo_train', 'little_elephant', 'bear_lullaby', 'mid_autumn_night', 'robot_dance',
+      // (snail_stroll, sparrow_minuet, summer_shower thì nằm trong bài học tuần 3, 29, 30; choo_choo_train — tuần 4 từ 2026-10-08)
+      'duckling_waddle', 'little_elephant', 'bear_lullaby', 'mid_autumn_night', 'robot_dance',
       'tet_rice_cake', 'kitten_stalks', 'flying_kite', 'boat_race']);
     const used = new Set(WEEKS.flatMap((w) => w.lessons.flatMap((l) => l.activities.flatMap((a) => (a.kind === 'song' ? [a.songId] : [])))));
     for (const s of SONGS) expect(used.has(s.id) || LIBRARY_ONLY.has(s.id), s.id).toBe(true);

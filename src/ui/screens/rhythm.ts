@@ -12,6 +12,8 @@ export const SYMBOL: Record<RhythmSymbol, { label: string; emoji: string; beats:
   run: { label: 'Chạy-chạy', emoji: '🏃', beats: 1, hits: [0, 0.5] },
   long: { label: 'Đi-i', emoji: '🐢', beats: 2, hits: [0] },
   long3: { label: 'Đi-i-i', emoji: '🐌', beats: 3, hits: [0] },
+  // (2026-10-08, OWNER duyệt) nốt tròn — dạy ở tuần 4 (bài theo nhịp tuần 4 đã có nốt 4 phách)
+  long4: { label: 'Đi-i-i-i', emoji: '🐘', beats: 4, hits: [0] },
   dotted: { label: 'Đi-chấm chạy', emoji: '🐪', beats: 2, hits: [0, 1.5] },
   rest: { label: 'Suỵt', emoji: '🤫', beats: 1, hits: [] },
   // v5 (tuần 18): móc kép, nghịch phách, dây nối
@@ -100,7 +102,7 @@ export function rhythmScreen(app: App, hooks: RhythmHooks) {
     const sayHow = () =>
       counting()
         ? `Vỗ tay và đếm to: ${Array.from({ length: meterOf(hooks.patterns[i]) }, (_, k) => k + 1).join(' – ')}`
-        : 'Vỗ tay và đọc to: Đi, Chạy-chạy…';
+        : 'Vỗ tay và đọc to chữ dưới mỗi hình!';
 
     function intro(): void {
       token++;

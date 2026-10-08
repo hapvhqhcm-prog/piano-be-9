@@ -348,7 +348,7 @@ export function parentScreen(app: App) {
                   button({ icon: '▶', label: 'Chơi thử', kind: 'mint', onTap: () => playSong(app, t) }),
                   button({ icon: '✏️', label: 'Sửa', onTap: () => openEditor(c.id) }),
                   button({
-                    icon: '🗑',
+                    icon: '🗑️',
                     label: 'Xóa',
                     kind: 'danger',
                     onTap: () =>
@@ -356,7 +356,7 @@ export function parentScreen(app: App) {
                         title: `Xóa “${c.title}”?`,
                         text: 'Bài sẽ biến mất khỏi Thư viện (các lượt bé đã chơi vẫn giữ trong lịch sử). Sao lưu dữ liệu trước nếu muốn giữ.',
                         okLabel: 'Xóa bài',
-                        okIcon: '🗑',
+                        okIcon: '🗑️',
                         danger: true,
                         onOk: () => {
                           store.deleteParentSong(c.id);
@@ -978,7 +978,7 @@ export function parentScreen(app: App) {
           h('h3', {}, 'Đặt lại toàn bộ dữ liệu'),
           resetStep === 0
             ? button({
-                icon: '🗑',
+                icon: '🗑️',
                 label: 'Đặt lại toàn bộ dữ liệu…',
                 kind: 'danger',
                 onTap: () => {
@@ -1002,7 +1002,7 @@ export function parentScreen(app: App) {
                     },
                   }),
                   button({
-                    icon: '🗑',
+                    icon: '🗑️',
                     label: 'Xóa hẳn',
                     kind: 'danger',
                     onTap: () => {
@@ -1013,7 +1013,7 @@ export function parentScreen(app: App) {
                         return confirmDialog({
                           title: 'Không cất được bản dự phòng',
                           text: 'Bộ nhớ iPad gần đầy nên KHÔNG cất được bản dự phòng. Xóa rồi sẽ không lấy lại được. Vẫn xóa hẳn?',
-                          okIcon: '🗑',
+                          okIcon: '🗑️',
                           okLabel: 'Vẫn xóa',
                           onOk: () => {
                             store.resetAll({ force: true });

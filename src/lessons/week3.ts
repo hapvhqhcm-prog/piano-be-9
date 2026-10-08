@@ -23,7 +23,7 @@ export const WEEK3: WeekPlan = {
       id: 'w3-l1',
       week: 3,
       title: 'Fa và Sol',
-      emoji: '🖐',
+      emoji: '🖐️',
       activities: [
         notes({
           id: 'w3-l1-a',

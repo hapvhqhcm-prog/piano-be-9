@@ -49,7 +49,7 @@ export const WEEK9: WeekPlan = {
       activities: [
         { kind: 'song', songId: 'school_drum', mode: 'tempo', level: 2, hints: 'names' },
         // Dân ca Việt Nam (OWNER yêu cầu 2026-10-05): chỉ Rê Mi Sol La — tay ở "thế nhích lên", Sol–La = 4-5. v5: dời từ tuần 7 cũ (sau bài nhịp 2/4)
-        { kind: 'song', songId: 'inh_la_oi', mode: 'wait', hints: 'full', intro: 'Dân ca Thái Tây Bắc, nhịp 2/4! Bàn tay nhích sang phải: ngón 1 ở Rê, Sol – La là ngón 4 – 5. Câu cuối đàn NHỎ (p) như tiếng vọng núi rừng.' },
+        { kind: 'song', songId: 'inh_la_oi', mode: 'wait', hints: 'full', intro: 'Tay nhích sang phải: ngón 1 ở Rê! Sol – La là ngón 4 – 5. Dân ca Thái Tây Bắc, nhịp 2/4 — câu cuối đàn NHỎ (p) như tiếng vọng núi rừng.' },
       ],
     },
     {
@@ -59,7 +59,7 @@ export const WEEK9: WeekPlan = {
       emoji: '⛴️',
       activities: [
         { kind: 'song', songId: 'inh_la_oi', mode: 'tempo', level: 2, hints: 'names' },
-        { kind: 'song', songId: 'ferry_song', mode: 'wait', hints: 'full', intro: 'Con đò lắc lư "MỘT-hai". Sol – La đi cùng nhau: ngón 4 – 5 như tuần trước.' },
+        { kind: 'song', songId: 'ferry_song', mode: 'wait', hints: 'full', intro: 'Sol – La đi cùng nhau: ngón 4 – 5! Con đò lắc lư "MỘT-hai" — nhìn số ngón để biết lúc tay nhích sang phải.' },
       ],
     },
     {
@@ -69,7 +69,7 @@ export const WEEK9: WeekPlan = {
       emoji: '💃',
       activities: [
         // Dân ca Việt Nam (OWNER yêu cầu 2026-10-05) — v5: dời từ tuần 8 cũ (sau bài nhịp 2/4)
-        { kind: 'song', songId: 'xoe_hoa', mode: 'wait', hints: 'names', intro: 'Điệu múa xòe của người Thái, nhịp 2/4! Bàn tay ngũ cung: Đô 1, Rê 2, Fa 3, Sol 4, La 5 — mỗi ngón một phím. Bài bắt đầu bằng một nốt Đô lấy đà.' },
+        { kind: 'song', songId: 'xoe_hoa', mode: 'wait', hints: 'full', intro: 'Tay ngũ cung: Đô 1, Rê 2, Fa 3, Sol 4, La 5! Mỗi ngón một phím. Điệu múa xòe của người Thái, nhịp 2/4 — bài bắt đầu bằng một nốt Đô lấy đà.' },
         {
           kind: 'improv',
           title: 'Hỏi – Đáp 💬',

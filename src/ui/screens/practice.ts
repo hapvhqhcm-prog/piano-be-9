@@ -380,7 +380,8 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
               'div',
               { class: 'intro-kicker-row' },
               h('div', { class: 'intro-mascot' }, mascot(pick([...INTRO_MOODS]), 64)),
-              h('div', { class: 'intro-kicker' }, pick(KICKERS)),
+              // Ôn nhanh không phải điều MỚI → bỏ các câu "… mới!"
+              h('div', { class: 'intro-kicker' }, pick(seg.step === 'Ôn nhanh' ? KICKERS.filter((k) => !k.includes('mới')) : KICKERS)),
               h('div', { class: 'step-tag' }, seg.step),
             ),
             h('h1', { class: 'title' }, seg.title),
@@ -515,7 +516,10 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
                     : pick(PRAISE_SUB)
                 : needHelp
                   ? 'Nhìn ngón tay của thầy, rồi con làm theo'
-                  : pick(RETRY_SUB),
+                  : // Một nốt: nói rõ tìm phím nào, ngón nào (thay vì câu chung chung lặp lại tiêu đề)
+                    t0.keys.length === 1 && t0.finger && !t0.staff
+                    ? `Tìm ${plainTitle(t0)} — phím đang sáng, ngón ${t0.finger} nhé`
+                    : pick(RETRY_SUB),
             ),
             countdown,
           );

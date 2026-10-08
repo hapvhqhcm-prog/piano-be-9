@@ -28,10 +28,11 @@ export const WEEK4: WeekPlan = {
         {
           kind: 'rhythm',
           title: 'Ngôn ngữ nhịp',
-          intro: '"Đi" = 1 phách · "Chạy-chạy" = 2 nốt nhanh trong 1 phách · "Đi-i" = 2 phách · "Suỵt" = nghỉ 1 phách.',
+          intro: '"Đi" = 1 phách · "Chạy-chạy" = 2 nốt nhanh trong 1 phách · "Đi-i" = 2 phách · "Đi-i-i-i" = nốt tròn, giữ cả 4 phách · "Suỵt" = nghỉ 1 phách.',
           patterns: [
             ['walk', 'walk', 'walk', 'walk'],
             ['walk', 'walk', 'long'],
+            ['long4'],
             ['run', 'run', 'walk', 'walk'],
             ['walk', 'rest', 'walk', 'rest'],
             ['run', 'walk', 'run', 'walk'],
@@ -46,8 +47,8 @@ export const WEEK4: WeekPlan = {
       title: 'Mức 2: Mỗi phách một nốt',
       emoji: '🥁',
       activities: [
-        { kind: 'song', songId: 'ex_c_quarter', mode: 'tempo', level: 2, hints: 'full', intro: 'Đánh một nốt đúng mỗi tiếng "tích" — mỗi ô nhịp 4 lần cùng một nốt: Đô, Rê, Mi… Con trỏ nhảy tới đâu, con đánh tới đó!' },
-        { kind: 'song', songId: 'ex_cde_walk', mode: 'tempo', level: 2, hints: 'full' },
+        { kind: 'song', songId: 'ex_c_quarter', mode: 'tempo', level: 2, hints: 'full', intro: 'Mỗi tiếng "tích" đánh một nốt! Con trỏ tới đâu, con đánh tới đó. Mỗi ô nhịp 4 lần cùng một nốt: Đô, Rê, Mi…' },
+        { kind: 'song', songId: 'ex_cde_walk', mode: 'tempo', level: 2, hints: 'full', intro: 'Nốt tròn "Đi-i-i-i": giữ phím đủ 4 tiếng "tích"!' },
       ],
     },
     {
@@ -55,7 +56,13 @@ export const WEEK4: WeekPlan = {
       week: 4,
       title: 'Bánh nóng theo nhịp',
       emoji: '🥐',
-      activities: [{ kind: 'song', songId: 'hot_cross_buns', mode: 'tempo', level: 2, hints: 'full', intro: 'Bài con đã thuộc — giờ đàn theo nhịp nhé!' }],
+      activities: [
+        { kind: 'song', songId: 'hot_cross_buns', mode: 'tempo', level: 2, hints: 'full', intro: 'Bài con đã thuộc — giờ đàn theo nhịp nhé!' },
+        // (2026-10-08, OWNER duyệt) luyện "Chạy-chạy" theo nhịp bằng bài 8 ô. THÊM VÀO CUỐI bài (không chèn giữa):
+        // mã đã lưu "w4-l3#0" vẫn trỏ đúng Bánh nóng; bài đã xong vẫn xong (lessonsCompleted giữ "w4-l3").
+        { kind: 'song', songId: 'choo_choo_train', mode: 'wait', hints: 'full', intro: 'Tàu chạy "Chạy-chạy-chạy-chạy" — đọc to trước khi đàn nhé!' },
+        { kind: 'song', songId: 'choo_choo_train', mode: 'tempo', level: 2, hints: 'full', intro: 'Giờ cho tàu chạy theo nhịp: đều như bánh xe!' },
+      ],
     },
     {
       id: 'w4-l4',

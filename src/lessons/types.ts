@@ -42,7 +42,7 @@ export interface Segment {
 /** Nhịp tuần 4 mức 1: "Đi" (1 phách) · "Chạy-chạy" (2 nửa phách) · "Đi-i" (2 phách) · "Suỵt" (lặng). */
 /**
  * walk = nốt đen "Đi" (1 phách) · run = hai móc đơn "Chạy-chạy" · long = nốt trắng "Đi-i" (2 phách)
- * long3 = nốt trắng chấm "Đi-i-i" (3 phách) · dotted = đen chấm + móc đơn "Đi-chấm chạy" (2 phách: vỗ ở 0 và 1,5)
+ * long3 = nốt trắng chấm "Đi-i-i" (3 phách) · long4 = nốt tròn "Đi-i-i-i" (4 phách, tuần 4) · dotted = đen chấm + móc đơn "Đi-chấm chạy" (2 phách: vỗ ở 0 và 1,5)
  * rest = lặng đen "Suỵt".
  */
 export type TechniqueDrill = 'arm-drop' | 'wrist-circle' | 'finger-tap' | 'five-finger' | 'thumb-under' | 'hand-shape';
@@ -54,7 +54,7 @@ export type TechniqueDrill = 'arm-drop' | 'wrist-circle' | 'finger-tap' | 'five-
  * tie = hai nốt đen nối bằng DÂY NỐI "Đi‿đi" (2 phách, vỗ MỘT lần) · sync = nghịch phách "Chạy-Đi-chạy" (2 phách: vỗ 0, 0,5, 1,5).
  * Nhịp 2/4 (tuần 9): mẫu dài 2 phách dùng các ký hiệu sẵn có.
  */
-export type RhythmSymbol = 'walk' | 'run' | 'long' | 'long3' | 'dotted' | 'rest' | 'run4' | 'run3' | 'dotted8' | 'tie' | 'sync';
+export type RhythmSymbol = 'walk' | 'run' | 'long' | 'long3' | 'long4' | 'dotted' | 'rest' | 'run4' | 'run3' | 'dotted8' | 'tie' | 'sync';
 
 export type Activity =
   | { kind: 'notes'; segment: Segment }

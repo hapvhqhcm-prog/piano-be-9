@@ -411,7 +411,7 @@ export function songEditorScreen(app: App, existing: ParentSong | null, hooks: S
           { class: 'row' },
           button({ icon: '↶', label: 'Xóa nốt cuối', disabled: !tapNotes.length, onTap: () => ((tapNotes = tapNotes.slice(0, -1)), (dirty = true), renderTap()) }),
           button({
-            icon: '🗑',
+            icon: '🗑️',
             label: 'Xóa hết',
             disabled: !tapNotes.length,
             onTap: () => confirmDialog({ title: 'Xóa hết nốt?', text: 'Mọi nốt đã chạm sẽ bị xóa.', okLabel: 'Xóa hết', danger: true, onOk: () => ((tapNotes = []), renderTap()) }),

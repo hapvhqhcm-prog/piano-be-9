@@ -72,6 +72,14 @@ export function gateFor(floor: number, s: Sensitivity): number {
   return Math.max(MIN_GATE[s], (floor < 0 ? 0.002 : floor) * SENSITIVITY[s]);
 }
 
+/**
+ * (2026-10-08, mô phỏng bài tuần 4–10) GIỮ NỐT: đã có tiếng đàn vượt ngưỡng ở khung trước thì khung sau còn được
+ * nghe cao độ tới HOLD_RATIO × ngưỡng (không thấp hơn ngưỡng theo ồn nền). iOS lọc ồn (ns) dập phần ngân của nốt khẽ
+ * trong ~0,1 s → nốt nhẹ chỉ vượt MIN_GATE đúng 1 khung → không đủ 2 khung ổn định → bị nuốt dù to hơn ồn nền 16 dB.
+ * Chỉ áp dụng nối tiếp một khung đã vượt ngưỡng → không mở cửa cho tiếng ồn/giọng nói nhỏ (bài thử phòng im/quạt/nói chuyện).
+ */
+export const HOLD_RATIO = 0.6;
+
 /** Tần số cắt của MỖI tầng lọc (2 tầng nối tiếp → −6 dB ở đây, −3,3 dB ở Mi6 = 1319 Hz). */
 export const LOWPASS_HZ = 1600;
 /** Hệ số giảm mẫu trước YIN. */
@@ -167,6 +175,8 @@ export class MicAnalyzer {
   private nearLatched = false;
   /** Lúc bắt đầu chuỗi khung có tiếng tích (−1 = không có) */
   private clickFrom = -1;
+  /** Khung trước có tiếng đàn (vượt ngưỡng, hoặc đang giữ nốt) → khung này được nghe tới ngưỡng giữ */
+  private holding = false;
   /** Tùy chọn YIN cho tín hiệu đã lọc (minRms = 0 vì đã có ngưỡng thích nghi) — tính lại khi `detect` đổi */
   private detectFor: DetectOptions | null = null;
   private detectNoGate: DetectOptions = DEFAULT_DETECT;
@@ -272,6 +282,7 @@ export class MicAnalyzer {
     if (this.recentN < this.recent.length) this.recentN++;
 
     if (app !== 'quiet') {
+      this.holding = false;
       this.updateFloor(r, false);
       this.tracker.reset(true);
       this.tracker.forgetRinging();
@@ -284,16 +295,21 @@ export class MicAnalyzer {
       this.pendingOnset = false;
     }
     if (!needPitch) {
+      this.holding = false;
       // Chỉ chấm vỗ nhịp: không biết khung có cao độ không → chỉ cho ồn nền tăng khi đã lâu không có tiếng gõ
       this.updateFloor(r, !onset && t - this.lastOnsetFrame > 1);
       return this.result(null, level, r, gate, null, onset, onsetAt);
     }
     let pitch: PitchResult | null = null;
     let nearMiss = false;
-    if (r >= gate) {
+    const holdGate = Math.max(gate * HOLD_RATIO, Math.max(0, this.floor) * SENSITIVITY[this.sensitivity]);
+    if (r >= gate || (this.holding && r >= holdGate)) {
       pitch = this.pitchOf(x, sampleRate, r);
       this.nearLeft = 0;
+      // Giữ nốt chỉ khi khung này có cao độ RÕ (tiếng tích / tiếng động / đuôi nốt không rõ cao độ thì thôi)
+      this.holding = !!pitch && pitch.clarity >= 0.8;
     } else {
+      this.holding = false;
       nearMiss = this.checkNearMiss(x, sampleRate, r, base);
     }
     // Khung có cao độ rõ hoặc có lần gõ = tiếng đàn → KHÔNG được coi là ồn nền
@@ -379,6 +395,7 @@ export class MicAnalyzer {
     }
     this.pendingOnset = false;
     this.nearLeft = 0;
+    this.holding = false;
     this.tracker.reset(requireOnset);
   }
 }

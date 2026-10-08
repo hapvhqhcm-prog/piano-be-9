@@ -29,7 +29,7 @@ export const WEEK7: WeekPlan = {
           step: 'Bài mới',
           title: 'Ngón 5 tay trái ở Đô',
           intro: 'Tay trái đặt ngón 5 (ngón út) lên Đô trầm, ngón 1 (ngón cái) lên Sol.',
-          targets: [lhNote('C3', 'Ngón 5 — ngón út'), lhNote('D3'), lhNote('E3'), lhNote('F3'), lhNote('G3', 'Ngón 1 — ngón cái')],
+          targets: [lhNote('C3', 'Đô TRẦM — bên trái Đô giữa'), lhNote('D3'), lhNote('E3'), lhNote('F3'), lhNote('G3', 'Sol TRẦM — gần Đô giữa')],
         }),
         notes({
           id: 'w7-stairs',
@@ -53,7 +53,7 @@ export const WEEK7: WeekPlan = {
       title: 'Bánh nóng — tay trái',
       emoji: '🥐',
       activities: [
-        { kind: 'song', songId: 'hot_cross_buns_lh', mode: 'wait', hints: 'full', intro: 'Trò tiếng vọng: ô 1 đàn TO (f), ô 2 đàn NHỎ (p) như tiếng vọng trong hang!' },
+        { kind: 'song', songId: 'hot_cross_buns_lh', mode: 'wait', hints: 'full', intro: 'Ô 1 đàn TO (f), ô 2 đàn NHỎ (p) — như tiếng vọng trong hang!' },
         { kind: 'song', songId: 'hot_cross_buns_lh', mode: 'tempo', level: 2, hints: 'full' },
       ],
     },
@@ -73,7 +73,7 @@ export const WEEK7: WeekPlan = {
       title: 'Khúc Largo (tay phải)',
       emoji: '🏡',
       activities: [
-        { kind: 'song', songId: 'largo_new_world', mode: 'wait', hints: 'full', intro: 'Một giai điệu rất hay của nhạc sĩ Dvořák. Dấu p = đàn NHỎ — chậm và êm nhé.' },
+        { kind: 'song', songId: 'largo_new_world', mode: 'wait', hints: 'full', intro: 'Dấu p = đàn NHỎ — chậm và êm nhé. Giai điệu rất hay của nhạc sĩ Dvořák.' },
         { kind: 'song', songId: 'largo_new_world', mode: 'tempo', level: 3, hints: 'full' },
       ],
     },

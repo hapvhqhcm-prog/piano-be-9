@@ -152,10 +152,31 @@ const RING_FRAMES = 60;
 const PITCH_ONSET_FRAMES = 3;
 const PITCH_ONSET_CLARITY = 0.85;
 const PITCH_ONSET_CENTS = 35;
+/**
+ * (2026-10-08) …và cao độ phải ĐỨNG YÊN qua 3 khung gần nhất (chênh ≤ 15 cents, mọi khung lệch ≤ 35 cents). Nốt to còn ngân (bé giữ phím La) + nốt
+ * khẽ vừa đàn (Sol) đang tắt: YIN "trôi" dần 67,3 → 67,7 → 68,0 = Sol# — nốt ma, không phải bé đàn (Xòe hoa).
+ */
+const PITCH_ONSET_SPREAD = 15;
+/**
+ * (2026-10-08, mô phỏng bài tuần 4–10 — tests/weekSongsMic.test.ts) Lần gõ tới ≤ 2 khung (50 ms) SAU khi nốt đã được báo
+ * (báo sớm nhờ đàn im trước đó) là tiếng búa của CHÍNH lần bấm ấy (âm lượng lên chậm khi đàn khẽ) → không báo lại
+ * (trước đây: nốt lặp đàn khẽ "Rê Rê" bị đếm 2 lần cho một lần bấm). Nhớ cả qua reset(true): chế độ chờ xóa trí nhớ
+ * ngay khi nghe đúng — lần gõ trễ đó không được làm con trỏ nhảy thêm một nốt (Mi Mi Mi).
+ */
+const SAME_STRIKE_FRAMES = 2;
+/**
+ * "Nốt ma" giữa hai nốt cùng ngân: bé chưa nhả Sol đã đàn La → Sol + La ngân cùng lúc, YIN có lúc ra Sol# (68) —
+ * nằm GIỮA hai nốt vừa báo, cách nhau ≤ 4 nửa cung. Không có lần gõ mới gần đây thì đó không phải bé đàn → bỏ
+ * (trước đây: "đàn sai" oan trong Xòe hoa / Gà gáy khi bé giữ phím Sol lâu).
+ */
+const BETWEEN_MAX_SPAN = 4;
+const BETWEEN_ONSET_FRAMES = 4;
 
 export class NoteTracker {
   private candidate: number | null = null;
   private count = 0;
+  /** Độ lệch (cents) của các khung ứng viên gần nhất (vòng tròn PITCH_ONSET_FRAMES) */
+  private candCents = new Float64Array(PITCH_ONSET_FRAMES);
   private emitted: number | null = null;
   private lastRms = 0;
   /** Chặn báo nốt cho tới khi có lần gõ phím mới hoặc im lặng. */
@@ -163,6 +184,16 @@ export class NoteTracker {
   /** Nốt bé vừa đàn (còn ngân) — giữ qua reset(true); null = không biết (vd tiếng app) */
   private ringing: number | null = null;
   private ringLeft = 0;
+  /** Nốt ngân TRƯỚC `ringing` (còn được nhớ bao lâu) — để nhận ra "nốt ma" giữa hai nốt cùng ngân */
+  private prevRinging: number | null = null;
+  private prevLeft = 0;
+  /** Số khung từ lần báo nốt / lần gõ gần nhất */
+  private sinceEmit = 1e9;
+  /** Nốt báo gần nhất (giữ qua reset(true)) */
+  private lastEmit: number | null = null;
+  /** Nốt KHÔNG được báo lại cho tới lần gõ thật sự mới / im lặng (lần gõ trễ của chính nốt vừa báo) */
+  private suppress: number | null = null;
+  private sinceOnset = 1e9;
 
   constructor(
     private readonly stableFrames = 2,
@@ -184,6 +215,11 @@ export class NoteTracker {
       this.lastRms = 0;
       this.ringing = null;
       this.ringLeft = 0;
+      this.prevRinging = null;
+      this.prevLeft = 0;
+      this.lastEmit = null;
+      this.sinceEmit = 1e9;
+      this.suppress = null;
     }
   }
 
@@ -194,6 +230,8 @@ export class NoteTracker {
   forgetRinging(): void {
     this.ringing = null;
     this.ringLeft = 0;
+    this.prevRinging = null;
+    this.prevLeft = 0;
   }
 
   /** Đưa vào kết quả 1 khung; trả về nốt khi có nốt mới được đánh. */
@@ -202,8 +240,13 @@ export class NoteTracker {
     const onset = onsetIn ?? (!!result && this.lastRms > 0 && result.rms > this.lastRms * this.onsetRatio);
     if (onsetIn !== undefined || result) this.lastRms = r;
     if (this.ringLeft > 0 && --this.ringLeft === 0) this.ringing = null;
+    if (this.prevLeft > 0 && --this.prevLeft === 0) this.prevRinging = null;
+    this.sinceEmit++;
+    this.sinceOnset++;
     if (onset) {
-      // Lần nhấn mới: đếm ổn định lại từ đầu
+      this.sinceOnset = 0;
+      // Lần nhấn mới: đếm ổn định lại từ đầu — trừ khi nốt vừa được báo ngay trước đó (cùng một lần bấm)
+      this.suppress = this.lastEmit !== null && this.sinceEmit <= SAME_STRIKE_FRAMES ? this.lastEmit : null;
       this.emitted = null;
       this.candidate = null;
       this.count = 0;
@@ -215,6 +258,7 @@ export class NoteTracker {
         this.emitted = null;
         this.lastRms = 0;
         this.blocked = false;
+        this.suppress = null;
       }
       this.candidate = null;
       this.count = 0;
@@ -225,16 +269,20 @@ export class NoteTracker {
     // của nốt mới + đuôi nốt cũ còn ngân (vd Fa4 + Đô4 → Fa2), không phải bé đàn thêm → không báo.
     if (
       (this.emitted !== null && SUBHARMONIC_STEPS.includes(this.emitted - note.midi)) ||
-      (this.ringing !== null && this.ringing - note.midi >= RING_MIN_STEP && note.midi < RING_BELOW)
+      (this.ringing !== null && this.ringing - note.midi >= RING_MIN_STEP && note.midi < RING_BELOW) ||
+      this.between(note.midi)
     ) {
       this.candidate = null;
       this.count = 0;
       return null;
     }
-    if (note.midi === this.candidate) this.count++;
-    else {
+    if (note.midi === this.candidate) {
+      this.count++;
+      this.candCents[(this.count - 1) % PITCH_ONSET_FRAMES] = note.cents;
+    } else {
       this.candidate = note.midi;
       this.count = 1;
+      this.candCents[0] = note.cents;
     }
     if (this.blocked) {
       // Đang chờ lần gõ mới (nốt cũ còn ngân). Bé đàn KHẼ thì âm lượng có khi không bật đủ để thành "lần gõ" →
@@ -246,16 +294,44 @@ export class NoteTracker {
         Math.abs(note.midi - r0) !== 12 &&
         !SUBHARMONIC_STEPS.includes(r0 - note.midi) &&
         result.clarity >= PITCH_ONSET_CLARITY &&
-        Math.abs(note.cents) <= PITCH_ONSET_CENTS;
+        this.steadyCents();
       if (!fresh || this.count < Math.max(this.stableFrames, PITCH_ONSET_FRAMES)) return null;
       this.blocked = false;
     }
-    if (this.count >= this.stableFrames && this.emitted !== note.midi) {
+    if (this.count >= this.stableFrames && this.emitted !== note.midi && this.suppress !== note.midi) {
       this.emitted = note.midi;
+      if (this.ringing !== null && this.ringing !== note.midi) {
+        this.prevRinging = this.ringing;
+        this.prevLeft = this.ringLeft;
+      }
       this.ringing = note.midi;
       this.ringLeft = RING_FRAMES;
+      this.sinceEmit = 0;
+      this.lastEmit = note.midi;
       return note;
     }
     return null;
+  }
+
+  /** 3 khung ứng viên gần nhất: mọi khung lệch ≤ 35 cents và chênh nhau ≤ 15 cents (cao độ đứng yên). */
+  private steadyCents(): boolean {
+    const n = Math.min(this.count, PITCH_ONSET_FRAMES);
+    let lo = Infinity;
+    let hi = -Infinity;
+    for (let i = 0; i < n; i++) {
+      const c = this.candCents[i];
+      if (c < lo) lo = c;
+      if (c > hi) hi = c;
+    }
+    return Math.max(-lo, hi) <= PITCH_ONSET_CENTS && hi - lo <= PITCH_ONSET_SPREAD;
+  }
+
+  /** "Nốt ma" nằm giữa hai nốt vừa báo còn ngân (cách nhau ≤ 4 nửa cung), không có lần gõ mới gần đây. */
+  private between(midi: number): boolean {
+    const a = this.ringing;
+    const b = this.prevRinging;
+    if (a === null || b === null || this.sinceOnset <= BETWEEN_ONSET_FRAMES) return false;
+    if (Math.abs(a - b) > BETWEEN_MAX_SPAN) return false;
+    return midi > Math.min(a, b) && midi < Math.max(a, b);
   }
 }

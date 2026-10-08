@@ -230,7 +230,20 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
           'div',
           { class: 'song-lines' },
           intro
-            ? h('div', { class: 'song-intro' }, h('span', { class: 'song-intro-text' }, introShort), introShort !== intro ? speakChip(app, intro) : null)
+            ? // Lời dẫn ĐẦY ĐỦ (tối đa 2 dòng; dài hơn → chạm để mở hết, 🔊 đọc to) — câu đầu ngắn hay bỏ mất thế tay / sắc thái
+              h(
+                'div',
+                { class: 'song-intro' },
+                h(
+                  'span',
+                  {
+                    class: 'song-intro-text',
+                    onclick: (e: Event) => (e.currentTarget as HTMLElement).classList.toggle('open'),
+                  },
+                  intro,
+                ),
+                introShort !== intro ? speakChip(app, intro) : null,
+              )
             : null,
           hardBack ? h('b', {}, `🔁 Câu ${phraseRanges(full).findIndex(([a]) => a === hardBack!.range[0]) + 1} — đàn đúng ${LOOP_TARGET} lần liền nhé!`) : null,
           h(

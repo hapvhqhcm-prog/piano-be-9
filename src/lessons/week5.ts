@@ -25,7 +25,7 @@ export const WEEK5: WeekPlan = {
       title: 'Ếch con nhảy',
       emoji: '🐸',
       activities: [
-        { kind: 'song', songId: 'frog_hop', mode: 'wait', hints: 'full', intro: 'Ếch con nhảy cóc: Đô – Mi – Sol, mỗi lần nhảy qua một phím. Ngón 1 – 3 – 5!' },
+        { kind: 'song', songId: 'frog_hop', mode: 'wait', hints: 'full', intro: 'Ếch nhảy cóc Đô – Mi – Sol: ngón 1 – 3 – 5! Mỗi lần nhảy qua một phím.' },
         { kind: 'song', songId: 'frog_hop', mode: 'tempo', level: 2, hints: 'full' },
       ],
     },
@@ -45,7 +45,7 @@ export const WEEK5: WeekPlan = {
       title: 'Thuyền giấy & phím đen',
       emoji: '⛵',
       activities: [
-        { kind: 'song', songId: 'paper_boat', mode: 'wait', hints: 'full', intro: 'Thuyền giấy trôi chậm: có nốt dài "Đi-i" và chỗ "Suỵt" — nhớ chờ đủ phách!' },
+        { kind: 'song', songId: 'paper_boat', mode: 'wait', hints: 'full', intro: 'Nhớ giữ đủ "Đi-i" và chờ đủ "Suỵt" nhé! Thuyền giấy trôi chậm thôi.' },
         {
           kind: 'improv',
           title: 'Mưa trên phím đen 🎨',
@@ -67,7 +67,9 @@ export const WEEK5: WeekPlan = {
           intro: 'Nghe kỹ rồi đàn lại đúng thứ tự — có cả bước lẫn nhảy.',
           targets: [echo(['C4', 'E4', 'G4']), echo(['G4', 'F4', 'E4']), echo(['D4', 'F4', 'E4']), echo(['E4', 'C4', 'D4'])],
         }),
-        { kind: 'song', songId: 'lightly_row', mode: 'tempo', level: 3, hints: 'full', intro: 'Bài quen tuần trước — giờ thử băng chuyền nhé!' },
+        // (2026-10-08, OWNER duyệt) một lượt Mức 2 trước Mức 3 — tuần 5 chưa có tiến độ nên chèn giữa an toàn
+        { kind: 'song', songId: 'lightly_row', mode: 'tempo', level: 2, hints: 'full', intro: 'Bài quen tuần trước — đàn theo nhịp trước nhé!' },
+        { kind: 'song', songId: 'lightly_row', mode: 'tempo', level: 3, hints: 'full', intro: 'Giờ thử băng chuyền nhé!' },
       ],
     },
   ],
