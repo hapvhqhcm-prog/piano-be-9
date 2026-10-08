@@ -1,0 +1,226 @@
+{
+ "id": "minuet_f",
+ "title": "Little Minuet in F",
+ "titleVi": "Minuet nhỏ Fa trưởng",
+ "composer": "Bài tự sáng tác cho app (piano-be-9)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Bài tự sáng tác cho app (piano-be-9)",
+ "attributionRequired": false,
+ "hand": "BOTH",
+ "bpm": 60,
+ "timeSignature": "3/4",
+ "week": 37,
+ "position": "free",
+ "phrases": [
+  0,
+  4
+ ],
+ "notes": [
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 1,
+   "dyn": "mf",
+   "slur": "start"
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "C5",
+   "beats": 1,
+   "finger": 5,
+   "slur": "end"
+  },
+  {
+   "pitch": "Bb4",
+   "beats": 1,
+   "finger": 4,
+   "slur": "start"
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 2,
+   "slur": "end"
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 3,
+   "slur": "start"
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "C5",
+   "beats": 1,
+   "finger": 5,
+   "slur": "end"
+  },
+  {
+   "pitch": "G4",
+   "beats": 3,
+   "finger": 2
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 1,
+   "dyn": "p",
+   "slur": "start"
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "C5",
+   "beats": 1,
+   "finger": 5,
+   "slur": "end"
+  },
+  {
+   "pitch": "Bb4",
+   "beats": 1,
+   "finger": 4,
+   "slur": "start"
+  },
+  {
+   "pitch": "C5",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "Bb4",
+   "beats": 1,
+   "finger": 4,
+   "slur": "end"
+  },
+  {
+   "pitch": "C5",
+   "beats": 1,
+   "finger": 5,
+   "dyn": "mf",
+   "slur": "start"
+  },
+  {
+   "pitch": "Bb4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 2,
+   "slur": "end"
+  },
+  {
+   "pitch": "F4",
+   "beats": 3,
+   "finger": 1
+  }
+ ],
+ "lh": [
+  {
+   "pitch": "F2",
+   "beats": 3,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "C3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "G2",
+   "beats": 3,
+   "finger": 4,
+   "also": [
+    {
+     "pitch": "C3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "F2",
+   "beats": 3,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "C3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "G2",
+   "beats": 3,
+   "finger": 4,
+   "also": [
+    {
+     "pitch": "C3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "F2",
+   "beats": 3,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "C3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "F2",
+   "beats": 3,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "Bb2",
+     "finger": 2
+    }
+   ]
+  },
+  {
+   "pitch": "G2",
+   "beats": 3,
+   "finger": 4,
+   "also": [
+    {
+     "pitch": "C3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "F2",
+   "beats": 3,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "C3",
+     "finger": 1
+    }
+   ]
+  }
+ ],
+ "lhPosition": "free"
+}

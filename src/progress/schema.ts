@@ -141,6 +141,24 @@ export interface Settings {
   micSetupHidden?: boolean;
   /** (+ 2026-10-06) Lần gần nhất app hỏi "sao lưu nhé?" (ms) */
   backupAskedAt?: number;
+  /** (+ 2026-10-08) Lần gần nhất bố mẹ ẩn nhắc "💾 sao lưu" ở màn chính của bé (ms) — ẩn 3 ngày */
+  backupNudgeHiddenAt?: number;
+  /**
+   * (+ 2026-10-08) 🎁 Quà mở khóa theo đảo (lessons/unlocks.ts): món bé ĐANG DÙNG (trang phục Bé Nốt, tiếng đàn tự do,
+   * kiểu nhạc đệm) + các món đã xem màn mừng (`seen`). Không có = chưa chọn gì. Đọc MỀM (mục hỏng bị bỏ qua).
+   */
+  cosmetics?: Cosmetics;
+  /** (+ 2026-10-08) ⏰ Giờ tập bố mẹ đặt gần nhất (màn Phụ huynh → tạo lịch nhắc .ics): thứ (0 = CN … 6 = T7) + "HH:MM" */
+  reminder?: { days: number[]; time: string };
+}
+
+/** (+ 2026-10-08) Món quà đang dùng — mã món trong lessons/unlocks.ts. */
+export interface Cosmetics {
+  outfit?: string;
+  timbre?: string;
+  backing?: string;
+  /** Mã các món đã hiện màn "🎁 Quà mới!" */
+  seen?: string[];
 }
 
 export interface Progress {
@@ -196,6 +214,30 @@ export interface AppData {
    * Tách khỏi sessions → không ảnh hưởng gộp lịch sử (compaction) hay tiêu chí tuần.
    */
   games?: Record<string, GameScore>;
+  /**
+   * (+ 2026-10-08) "🎤 Biểu diễn cho cả nhà": nhật ký các buổi diễn hằng tuần (lessons/concert.ts). Chỉ THÊM — không có = chưa
+   * diễn lần nào. Tách khỏi sessions → gộp lịch sử (compaction) không đụng tới, không ảnh hưởng tiêu chí tuần.
+   * Bản ghi hỏng bên trong bị bỏ qua khi đọc (concertLog) — không làm hỏng cả dữ liệu.
+   */
+  concerts?: ConcertEntry[];
+}
+
+/** (+ 2026-10-08) Một buổi "Biểu diễn cho cả nhà". */
+export interface ConcertEntry {
+  id: string;
+  /** Ngày diễn (YYYY-MM-DD, giờ máy) */
+  date: string;
+  /** Lúc lưu (ms) */
+  ts: number;
+  /** Tuần giáo trình mà buổi diễn này mừng (mỗi tuần tối đa MỘT sticker) */
+  week: number;
+  songId: string;
+  /** Số lần khán giả chạm 👏 / ❤️ / 🌟 */
+  reactions: { clap: number; heart: number; star: number };
+  /** Ai nghe (chip "Ông", "Bà", "Mẹ"… + tên bố mẹ gõ thêm) */
+  audience: string[];
+  /** Lượt diễn đạt (micro ≥ ngưỡng / bố mẹ tích đủ) — có thì ghi */
+  passed?: boolean;
 }
 
 /** (+ 2026-10-07) Kỷ lục một trò chơi. */
@@ -420,6 +462,10 @@ export function validateAppData(x: unknown): string[] {
     if (st.holdWeek !== undefined && st.holdWeek !== null && !(Number.isInteger(st.holdWeek) && (st.holdWeek as number) >= 1 && (st.holdWeek as number) <= MAX_WEEK_LIMIT)) errs.push('settings.holdWeek');
     if (st.micSetupHidden !== undefined && typeof st.micSetupHidden !== 'boolean') errs.push('settings.micSetupHidden');
     if (st.backupAskedAt !== undefined && !(typeof st.backupAskedAt === 'number' && Number.isFinite(st.backupAskedAt))) errs.push('settings.backupAskedAt');
+    if (st.backupNudgeHiddenAt !== undefined && !(typeof st.backupNudgeHiddenAt === 'number' && Number.isFinite(st.backupNudgeHiddenAt))) errs.push('settings.backupNudgeHiddenAt');
+    // (+ 2026-10-08) quà mở khóa / giờ nhắc tập — chỉ chặn kiểu sai hẳn; giá trị bên trong đọc mềm (lessons/unlocks.ts, reminder.ts)
+    if (st.cosmetics !== undefined && !isObj(st.cosmetics)) errs.push('settings.cosmetics');
+    if (st.reminder !== undefined && !(isObj(st.reminder) && Array.isArray(st.reminder.days) && typeof st.reminder.time === 'string')) errs.push('settings.reminder');
   }
   const p = x.progress;
   if (!isObj(p)) errs.push('Thiếu progress');
@@ -530,6 +576,8 @@ export function validateAppData(x: unknown): string[] {
   }
   // (+ 2026-10-07) Kỷ lục trò chơi — migrate() đã lọc mục hỏng (sanitizeGames); ở đây chỉ chặn kiểu sai hẳn
   if (x.games !== undefined && (!isObj(x.games) || !Object.values(x.games).every(validGameScore))) errs.push('games');
+  // (+ 2026-10-08) Nhật ký buổi diễn — chỉ chặn kiểu sai hẳn; bản ghi hỏng bị lọc khi đọc (lessons/concert.ts)
+  if (x.concerts !== undefined && !Array.isArray(x.concerts)) errs.push('concerts');
   // (+ 2026-10-06) Tổng hợp lịch sử đã gộp — không có = chưa gộp
   if (x.history !== undefined) {
     const hs = x.history;

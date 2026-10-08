@@ -92,6 +92,11 @@ export async function checkForUpdate(force = false): Promise<boolean> {
   }
 }
 
+/** (+ 2026-10-08) Đang ở điểm an toàn (màn Bắt đầu / màn chính) — không giữa buổi học. */
+export function isAtSafePoint(): boolean {
+  return atSafePoint;
+}
+
 export function isUpdateReady(): boolean {
   return updateReady;
 }

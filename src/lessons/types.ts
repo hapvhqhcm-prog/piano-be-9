@@ -74,6 +74,11 @@ export type Activity =
        * Dùng cho tập tách tay trên CÂU KHÓ (không cả bài). Lượt ghi phrase ≠ null → không tính tiêu chí tuần.
        */
       phrase?: [number, number];
+      /**
+       * (OWNER duyệt 2026-10-08) GIỮ NHỊP TRONG ĐẦU — chỉ chế độ theo nhịp: máy gõ nhịp (và nhạc đệm) IM 2 ô giữa bài rồi
+       * gõ lại; micro chấm riêng các nốt trong 2 ô im. Không có cờ: bài đã đạt theo nhịp (từ tuần 5) tự bật ở lượt sau.
+       */
+      pulseDrop?: boolean;
     }
   | { kind: 'rhythm'; title: string; intro: string; patterns: RhythmSymbol[][] }
   /** Đọc nhạc ngẫu nhiên: sinh `count` đoạn nhạc mới trong một thế tay */
@@ -89,7 +94,7 @@ export type Activity =
       /** names = có tên nốt (Cấp 2), staff = chỉ khuông (Cấp 3) */
       hints: 'names' | 'staff';
     }
-  | { kind: 'stage'; level?: 1 | 2 | 3 }
+  | { kind: 'stage'; level?: 1 | 2 | 3 | 4 }
   /**
    * v5 — KHỞI ĐỘNG KỸ THUẬT (~1 phút, OWNER duyệt 2026-10-05): thầy làm mẫu (hình/hoạt hình), bé làm theo, bố mẹ xác nhận.
    * arm-drop = thả rơi cánh tay "cầu vồng"; wrist-circle = xoay cổ tay; finger-tap = gõ ngón trên nắp đàn;
@@ -123,7 +128,25 @@ export type Activity =
       intro: string;
       mode: 'loud-soft' | 'stac-leg';
       rounds: Array<{ pitches: Pitch[]; want: 'p' | 'f' | 'stac' | 'leg'; fingers?: number[]; hand?: Hand }>;
+    }
+  /**
+   * (OWNER duyệt 2026-10-08) HÁT TRƯỚC KHI ĐÀN: mỗi lượt app đàn 2–3 nốt (trong tầm giọng bé La3–Rê5), bé HÁT lại từng
+   * nốt (micro so tên nốt ±50 cent, chấp nhận hát thấp/cao một quãng 8; tắt micro → bố mẹ chạm "Đúng rồi"), rồi ĐÀN
+   * các nốt đó trên đàn. Không bao giờ chê giọng hát. Ghi PARENT_ASSESSMENT `sing:<nốt>` và `singplay:<nốt>`.
+   */
+  | {
+      kind: 'sing';
+      title: string;
+      intro: string;
+      rounds: SingRound[];
     };
+
+/** Một lượt "hát rồi đàn": 2–3 nốt; ngón cho từng nốt (mặc định theo thế Đô) */
+export interface SingRound {
+  notes: Pitch[];
+  fingers?: number[];
+  hand?: Hand;
+}
 
 export interface Lesson {
   id: string;
@@ -160,11 +183,23 @@ export interface WeekPlan {
   drills?: TechniqueDrill[];
   /** Tuần dùng tay trái */
   leftHand?: boolean;
+  /**
+   * Cấp 4 (OWNER duyệt 2026-10-08) — tiêu chí DẠNG DỮ LIỆU (lessonEngine.criterionDays dùng khi tuần không có luật riêng).
+   * Tuần đạt ⇔ mọi bài trong `songs` đạt trọn bài (không tách tay / một câu; `tempo`: theo nhịp; `minBpm`) ở ≥ 2 ngày
+   * (tiến độ = bài chậm nhất) VÀ mọi thẻ `parentChecks` (PARENT_ASSESSMENT note) có lần chấm GẦN NHẤT trong tuần là "Đúng rồi".
+   */
+  criterionSpec?: CriterionSpec;
+}
+
+/** Cấp 4 — tiêu chí tuần dạng dữ liệu (xem WeekPlan.criterionSpec). */
+export interface CriterionSpec {
+  songs: Array<{ songId: string; tempo?: boolean; minBpm?: number }>;
+  parentChecks?: string[];
 }
 
 /** Cấp độ: v5.1 — Cấp 1 tuần 1–10, Cấp 2 tuần 11–21, Cấp 3 tuần 22–31. */
 export interface LevelInfo {
-  level: 1 | 2 | 3;
+  level: 1 | 2 | 3 | 4;
   name: string;
   goal: string;
   weeks: [number, number];

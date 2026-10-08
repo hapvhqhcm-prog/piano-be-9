@@ -15,7 +15,18 @@ export interface BonusDef {
   title: string;
   /** Hai màu nền (sáng → đậm) của huy hiệu tròn */
   bg: [string, string];
+  /**
+   * (+ 2026-10-08) Ngày (YYYY-MM-DD) sticker này BẮT ĐẦU có trong trứng. Không có = từ đầu. Buổi trước ngày này bốc trứng
+   * từ kho của đúng ngày đó → dòng thời gian trứng của các buổi cũ KHÔNG đổi khi kho lớn thêm.
+   */
+  from?: string;
 }
+
+/**
+ * (+ 2026-10-08) Ngày kho trứng lớn thêm (OWNER duyệt: trứng đủ cho 150+ buổi). Là ngày SAU bản phát hành để mọi buổi
+ * bé đã học (đã thấy trứng) giữ đúng trứng cũ.
+ */
+export const EGG_POOL_V2_FROM = '2026-10-09';
 
 export const WELCOME_STICKER: BonusDef = { key: 'welcome', emoji: '🎹', title: 'Chào mừng', bg: ['#fff3c4', '#ffcb3d'] };
 
@@ -37,7 +48,57 @@ export const BONUS_POOL: readonly BonusDef[] = [
   { key: 'comet', emoji: '☄️', title: 'Sao chổi', bg: ['#ffeed2', '#ff9f43'] },
   { key: 'ninja', emoji: '🥷', title: 'Ninja âm nhạc', bg: ['#e7e3f6', '#5b5680'] },
   { key: 'trex-egg', emoji: '🐣', title: 'Gà con phá vỏ', bg: ['#fff8e1', '#ffd96a'] },
+  // (+ 2026-10-08) Kho lớn thêm 40 con — chỉ THÊM vào cuối, tất cả có `from` = EGG_POOL_V2_FROM.
+  ...(
+    [
+      ['octopus', '🐙', 'Bạch tuộc tí hon', '#ffe0ec', '#ff8fb1'],
+      ['whale', '🐳', 'Cá voi phun nước', '#dff3ff', '#4aa3dc'],
+      ['shark', '🦈', 'Cá mập con', '#e6f0f7', '#6f9bbd'],
+      ['turtle', '🐢', 'Rùa biển', '#e7f9f0', '#4fd1a5'],
+      ['crab', '🦀', 'Cua đỏ', '#ffe3dc', '#ff7a6b'],
+      ['penguin', '🐧', 'Chim cánh cụt', '#eef1f8', '#7d8db5'],
+      ['owl', '🦉', 'Cú mèo thông thái', '#f6ead9', '#c48a4a'],
+      ['fox', '🦊', 'Cáo nhỏ', '#ffeed2', '#ff9f43'],
+      ['panda', '🐼', 'Gấu trúc', '#f3f3f3', '#9a9a9a'],
+      ['tiger', '🐯', 'Hổ con', '#fff3c4', '#f0a81c'],
+      ['lion', '🦁', 'Sư tử', '#fff1d6', '#e8a33c'],
+      ['elephant', '🐘', 'Voi con', '#ece9f5', '#8c84b8'],
+      ['unicorn', '🦄', 'Kỳ lân', '#f6e6ff', '#c58cff'],
+      ['butterfly', '🦋', 'Bướm xanh', '#dff3ff', '#5aa9f0'],
+      ['bee', '🐝', 'Ong chăm chỉ', '#fff8d0', '#f5c400'],
+      ['ladybug', '🐞', 'Bọ rùa', '#ffe0dc', '#e8443a'],
+      ['satellite', '🛰️', 'Vệ tinh', '#e8e4ff', '#5b54d6'],
+      ['telescope', '🔭', 'Kính thiên văn', '#ece7ff', '#8a6cff'],
+      ['moon', '🌙', 'Trăng khuyết', '#fff8e1', '#ffcb3d'],
+      ['star2', '🌟', 'Ngôi sao sáng', '#fff3c4', '#ffb800'],
+      ['rainbow', '🌈', 'Cầu vồng', '#fdf0ff', '#ff8fb1'],
+      ['volcano', '🌋', 'Núi lửa', '#ffe3dc', '#e85a4a'],
+      ['race-car', '🏎️', 'Xe đua', '#ffe0dc', '#ff5a4f'],
+      ['train', '🚂', 'Tàu hỏa', '#e6f0f7', '#4a6f8f'],
+      ['helicopter', '🚁', 'Trực thăng', '#e7f9f0', '#3ccf88'],
+      ['sailboat', '⛵', 'Thuyền buồm', '#dff3ff', '#7cc8f2'],
+      ['guitar', '🎸', 'Đàn ghi-ta', '#ffeed2', '#d9822b'],
+      ['drum', '🥁', 'Trống', '#ffe3dc', '#ff7a6b'],
+      ['trumpet', '🎺', 'Kèn trumpet', '#fff3c4', '#e0a800'],
+      ['violin', '🎻', 'Vĩ cầm', '#f6ead9', '#b06a2f'],
+      ['saxophone', '🎷', 'Kèn saxophone', '#fff8e1', '#e6b422'],
+      ['crown', '👑', 'Vương miện', '#fff3c4', '#ffcb3d'],
+      ['koala', '🐨', 'Gấu túi', '#eef1f8', '#8c9bb8'],
+      ['dolphin', '🐬', 'Cá heo', '#dff3ff', '#4aa3dc'],
+      ['parrot', '🦜', 'Vẹt sặc sỡ', '#e7f9f0', '#3ccf88'],
+      ['hedgehog', '🦔', 'Nhím con', '#f6ead9', '#b07a4a'],
+      ['kangaroo', '🦘', 'Chuột túi', '#ffeed2', '#d9822b'],
+      ['flamingo', '🦩', 'Hồng hạc', '#ffe0ec', '#ff7aa8'],
+      ['snowman', '⛄', 'Người tuyết', '#eef7ff', '#7cc8f2'],
+      ['accordion', '🪗', 'Đàn xếp', '#ffe3dc', '#e85a4a'],
+    ] as const
+  ).map(([key, emoji, title, c1, c2]): BonusDef => ({ key, emoji, title, bg: [c1, c2], from: EGG_POOL_V2_FROM })),
 ];
+
+/** Kho trứng có hiệu lực ở ngày `date` (YYYY-MM-DD) — giữ thứ tự của BONUS_POOL. */
+export function poolOn(date: string): readonly BonusDef[] {
+  return BONUS_POOL.filter((d) => !d.from || date >= d.from);
+}
 
 /** Trung bình 1 trứng / EGG_EVERY buổi */
 export const EGG_EVERY = 4;
@@ -94,10 +155,12 @@ export function stepBonus(st: BonusState, s: Readonly<Session>): BonusEvent | nu
   st.gap++;
   if (hashStr(s.id) % EGG_EVERY !== 0 && st.gap < MAX_GAP) return null;
   st.gap = 0;
-  const start = hashStr(`${s.id}#pick`) % BONUS_POOL.length;
-  let pick = BONUS_POOL[start];
-  for (let k = 0; k < BONUS_POOL.length; k++) {
-    const c = BONUS_POOL[(start + k) % BONUS_POOL.length];
+  // Kho của ĐÚNG ngày buổi đó → buổi cũ bốc y như trước khi kho lớn thêm
+  const pool = poolOn(s.date);
+  const start = hashStr(`${s.id}#pick`) % pool.length;
+  let pick = pool[start];
+  for (let k = 0; k < pool.length; k++) {
+    const c = pool[(start + k) % pool.length];
     if (!st.owned[c.key]) {
       pick = c;
       break;

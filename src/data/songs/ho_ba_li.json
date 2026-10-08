@@ -1,0 +1,796 @@
+{
+ "id": "ho_ba_li",
+ "title": "Ho Ba Li (Vietnamese folk song)",
+ "titleVi": "Hò ba lí (dân ca Quảng Nam)",
+ "vn": "folk",
+ "composer": "Dân ca Quảng Nam",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Ký âm đơn giản cho app từ các bản ký âm dân ca phổ biến; tay phải giai điệu, tay trái đệm quãng 5 (Cấp 4)",
+ "attributionRequired": false,
+ "hand": "BOTH",
+ "bpm": 40,
+ "timeSignature": "2/4",
+ "week": 42,
+ "position": "free",
+ "phrases": [
+  0,
+  4,
+  10,
+  16,
+  21,
+  25
+ ],
+ "notes": [
+  {
+   "rest": true,
+   "beats": 1
+  },
+  {
+   "rest": true,
+   "beats": 0.5
+  },
+  {
+   "pitch": "C5",
+   "beats": 0.5,
+   "finger": 3,
+   "dyn": "mf"
+  },
+  {
+   "pitch": "D5",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "E5",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "D5",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "C5",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.25,
+   "finger": 1
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.25,
+   "finger": 2
+  },
+  {
+   "pitch": "C5",
+   "beats": 1.5,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 1.5,
+   "finger": 1
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "C5",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "C5",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "rest": true,
+   "beats": 0.5
+  },
+  {
+   "pitch": "C5",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D5",
+   "beats": 1,
+   "finger": 4,
+   "dyn": "p"
+  },
+  {
+   "pitch": "D5",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "C5",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "C5",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "E5",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "D5",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "C5",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "D5",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "rest": true,
+   "beats": 0.5
+  },
+  {
+   "pitch": "C5",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "D5",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "E5",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "D5",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "C5",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 1.5,
+   "finger": 1
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "C5",
+   "beats": 1.5,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "rest": true,
+   "beats": 0.5
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "C5",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "C5",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.5,
+   "finger": 3,
+   "dyn": "f"
+  },
+  {
+   "rest": true,
+   "beats": 0.5
+  },
+  {
+   "pitch": "C5",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "E5",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "D5",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "C5",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "D5",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "rest": true,
+   "beats": 0.5
+  },
+  {
+   "pitch": "C5",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "D5",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "E5",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "rest": true,
+   "beats": 0.5
+  },
+  {
+   "pitch": "D5",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "C5",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 2,
+   "dyn": "mf"
+  },
+  {
+   "pitch": "C5",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "E5",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "D5",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "D5",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "E5",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "D5",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "C5",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "D5",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "E5",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "D5",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "C5",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "C5",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "rest": true,
+   "beats": 1
+  }
+ ],
+ "lh": [
+  {
+   "rest": true,
+   "beats": 2
+  },
+  {
+   "pitch": "C3",
+   "beats": 2,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "C3",
+   "beats": 2,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "C3",
+   "beats": 2,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "D3",
+   "beats": 2,
+   "finger": 4,
+   "also": [
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "D3",
+   "beats": 2,
+   "finger": 4,
+   "also": [
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "D3",
+   "beats": 2,
+   "finger": 4,
+   "also": [
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "D3",
+   "beats": 2,
+   "finger": 4,
+   "also": [
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "D3",
+   "beats": 2,
+   "finger": 4,
+   "also": [
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "C3",
+   "beats": 2,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "C3",
+   "beats": 2,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "C3",
+   "beats": 2,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "C3",
+   "beats": 2,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "C3",
+   "beats": 2,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "C3",
+   "beats": 2,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "C3",
+   "beats": 2,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "D3",
+   "beats": 2,
+   "finger": 4,
+   "also": [
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "D3",
+   "beats": 2,
+   "finger": 4,
+   "also": [
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "D3",
+   "beats": 2,
+   "finger": 4,
+   "also": [
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "D3",
+   "beats": 2,
+   "finger": 4,
+   "also": [
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "D3",
+   "beats": 2,
+   "finger": 4,
+   "also": [
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "C3",
+   "beats": 2,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "C3",
+   "beats": 2,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "C3",
+   "beats": 2,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "C3",
+   "beats": 2,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "C3",
+   "beats": 2,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "C3",
+   "beats": 2,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "C3",
+   "beats": 2,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "C3",
+   "beats": 2,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "C3",
+   "beats": 2,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "C3",
+   "beats": 2,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  }
+ ]
+}

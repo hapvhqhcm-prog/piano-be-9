@@ -1,0 +1,105 @@
+{
+ "id": "scale_d_lh",
+ "title": "D major scale (left hand)",
+ "titleVi": "Gam Rê trưởng — tay trái",
+ "composer": "Bài tập (traditional)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Bài tự sáng tác cho app (piano-be-9)",
+ "attributionRequired": false,
+ "hand": "LH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 34,
+ "position": "free",
+ "phrases": [
+  0,
+  2
+ ],
+ "notes": [
+  {
+   "pitch": "D3",
+   "beats": 1,
+   "finger": 5,
+   "dyn": "mf",
+   "slur": "start"
+  },
+  {
+   "pitch": "E3",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "F#3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G3",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "A3",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "B3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "C#4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 1,
+   "slur": "end"
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 1,
+   "slur": "start"
+  },
+  {
+   "pitch": "C#4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "B3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "A3",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "G3",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "F#3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E3",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "D3",
+   "beats": 1,
+   "finger": 5,
+   "slur": "end"
+  }
+ ]
+}

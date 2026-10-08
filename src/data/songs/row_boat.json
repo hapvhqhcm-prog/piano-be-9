@@ -1,0 +1,158 @@
+{
+ "id": "row_boat",
+ "title": "Row, Row, Row Your Boat",
+ "titleVi": "Chèo thuyền (Row, row, row your boat)",
+ "composer": "Bài hát thiếu nhi Mỹ (traditional, thế kỷ 19)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Original simple arrangement for this app",
+ "attributionRequired": false,
+ "hand": "RH",
+ "bpm": 60,
+ "timeSignature": "6/8",
+ "week": 39,
+ "position": "free",
+ "phrases": [
+  0,
+  4
+ ],
+ "notes": [
+  {
+   "pitch": "C4",
+   "beats": 3,
+   "finger": 1,
+   "dyn": "mf"
+  },
+  {
+   "pitch": "C4",
+   "beats": 3,
+   "finger": 1
+  },
+  {
+   "pitch": "C4",
+   "beats": 2,
+   "finger": 1
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 3,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "G4",
+   "beats": 6,
+   "finger": 5
+  },
+  {
+   "pitch": "C5",
+   "beats": 1,
+   "finger": 4,
+   "dyn": "f"
+  },
+  {
+   "pitch": "C5",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "C5",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "G4",
+   "beats": 2,
+   "finger": 5,
+   "dyn": "mf"
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "E4",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 6,
+   "finger": 1
+  }
+ ]
+}

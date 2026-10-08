@@ -1,0 +1,323 @@
+{
+ "id": "greensleeves",
+ "title": "Greensleeves (English folk song)",
+ "titleVi": "Greensleeves (dân ca Anh)",
+ "composer": "Dân ca Anh (traditional, thế kỷ 16)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Original simple arrangement for this app (Level 4: melody + left-hand accompaniment)",
+ "attributionRequired": false,
+ "hand": "BOTH",
+ "bpm": 60,
+ "timeSignature": "6/8",
+ "week": 42,
+ "tempoTerm": "Andante",
+ "position": "free",
+ "phrases": [
+  0,
+  5
+ ],
+ "notes": [
+  {
+   "rest": true,
+   "beats": 5
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 1,
+   "dyn": "mf"
+  },
+  {
+   "pitch": "C5",
+   "beats": 2,
+   "finger": 2
+  },
+  {
+   "pitch": "D5",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E5",
+   "beats": 1.5,
+   "finger": 4
+  },
+  {
+   "pitch": "F5",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "E5",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "D5",
+   "beats": 2,
+   "finger": 5
+  },
+  {
+   "pitch": "B4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 1.5,
+   "finger": 1
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "B4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "C5",
+   "beats": 2,
+   "finger": 4
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "A4",
+   "beats": 1.5,
+   "finger": 2
+  },
+  {
+   "pitch": "G#4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "B4",
+   "beats": 2,
+   "finger": 5
+  },
+  {
+   "pitch": "G#4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 2,
+   "finger": 1
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "C5",
+   "beats": 2,
+   "finger": 2,
+   "dyn": "p",
+   "hairpin": "cresc"
+  },
+  {
+   "pitch": "D5",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E5",
+   "beats": 1.5,
+   "finger": 4
+  },
+  {
+   "pitch": "F5",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "E5",
+   "beats": 1,
+   "finger": 4,
+   "hairpin": "end"
+  },
+  {
+   "pitch": "D5",
+   "beats": 2,
+   "finger": 5,
+   "hairpin": "dim"
+  },
+  {
+   "pitch": "B4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 1.5,
+   "finger": 1
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "B4",
+   "beats": 1,
+   "finger": 3,
+   "hairpin": "end"
+  },
+  {
+   "pitch": "C5",
+   "beats": 1.5,
+   "finger": 5,
+   "rit": true
+  },
+  {
+   "pitch": "B4",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G#4",
+   "beats": 1.5,
+   "finger": 2
+  },
+  {
+   "pitch": "F#4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "G#4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "A4",
+   "beats": 6,
+   "finger": 3
+  }
+ ],
+ "lh": [
+  {
+   "rest": true,
+   "beats": 6
+  },
+  {
+   "pitch": "A2",
+   "beats": 6,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "E3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "G2",
+   "beats": 6,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "D3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "A2",
+   "beats": 6,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "E3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "B2",
+   "beats": 6,
+   "finger": 4,
+   "also": [
+    {
+     "pitch": "E3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "A2",
+   "beats": 6,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "E3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "G2",
+   "beats": 6,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "D3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "A2",
+   "beats": 3,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "E3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "B2",
+   "beats": 3,
+   "finger": 4,
+   "also": [
+    {
+     "pitch": "E3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "A2",
+   "beats": 6,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "E3",
+     "finger": 1
+    }
+   ]
+  }
+ ],
+ "lhPosition": "free"
+}

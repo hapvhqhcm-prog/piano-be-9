@@ -14,21 +14,29 @@ import { closingScreen } from './rating';
 import { rhythmScreen } from './rhythm';
 import { sessionEndScreen } from './sessionEnd';
 import { songScreen } from './song';
+import { sightDailyScreen } from './sightDaily';
 import { techniqueScreen } from './technique';
+import { warmupScreen } from './warmup';
 import { weekHeld } from './weekHold';
 import { lazy, lazyScreen } from '../lazy';
 
 // Ít gặp trong buổi (sáng tạo / sân khấu) → chunk riêng, nạp trước ngay khi buổi học có bước đó.
 const improvMod = lazy(() => import('./improv'));
 const stageMod = lazy(() => import('./stage'));
+// (2026-10-08) Hát trước khi đàn — chỉ tuần 6–10, chunk riêng
+const singMod = lazy(() => import('./sing'));
+type SingHooks = Parameters<typeof import('./sing').singScreen>[1];
+const singScreen = (app: App, hooks: SingHooks): Screen => lazyScreen(singMod, (m) => m.singScreen(app, hooks));
 type ImprovHooks = Parameters<typeof import('./improv').improvScreen>[1];
 type StageHooks = Parameters<typeof import('./stage').stageScreen>[1];
 const improvScreen = (app: App, hooks: ImprovHooks): Screen => lazyScreen(improvMod, (m) => m.improvScreen(app, hooks));
 const stageScreen = (app: App, hooks: StageHooks): Screen => lazyScreen(stageMod, (m) => m.stageScreen(app, hooks));
 
 /**
- * Chạy một buổi (v5.1 — ≤ 7 màn): Tư thế + khởi động tay 30" → Ôn nhanh → Khởi động tai/đọc nốt → Bài mới → (Ôn bài cũ)
+ * Chạy một buổi (v5.1 — ≤ 7 màn): [v5.2: Khởi động bằng nhạc + câu nhắc tư thế (+ thẻ tư thế đầy đủ đầu tuần) + khởi động
+ * tay 30"] → Ôn nhanh → Khởi động tai/đọc nốt → (v5.2: Đọc nhạc 1 phút, từ tuần 8) → Bài mới → (Ôn bài cũ)
  * → Màn kết (Con làm thầy + Dễ/Vừa/Khó). Hết thời lượng buổi: sau hoạt động đang làm → sang màn kết (§9, không khóa).
+ * Chỉ bước 'activity' đánh dấu activityDoneId (học tiếp); các bước khác không ghi tiến độ bài.
  */
 export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean } = {}): void {
   const store = app.store;
@@ -38,11 +46,13 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
   const stickersBefore = earnedStickerIds(store.get());
   const session = store.startSession(lesson.id);
   // songReview: thêm bước "Ôn bài cũ" (một câu của bài 2–4 tuần trước) — không tính vào hoàn thành bài
-  const steps = buildSessionPlan(lesson, store.get(), { ...opts, songReview: true, now: Date.now() });
+  // sightRead (v5.2): thêm "Đọc nhạc 1 phút" từ tuần 8 — cũng không tính vào hoàn thành bài
+  const steps = buildSessionPlan(lesson, store.get(), { ...opts, songReview: true, sightRead: true, now: Date.now() });
   const wrapUp = steps.findIndex((s) => s.kind === 'closing');
   for (const s of steps) {
     if (s.kind === 'activity' && s.activity.kind === 'improv') improvMod.prefetch();
     if (s.kind === 'activity' && s.activity.kind === 'stage') stageMod.prefetch();
+    if (s.kind === 'activity' && s.activity.kind === 'sing') singMod.prefetch();
   }
   const deadline = Date.now() + store.settings.sessionMinutes * 60_000;
   let lessonFinished = false;
@@ -111,7 +121,7 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
           app,
           tune,
           // v5.1 — tách tay sẵn trong bài (hand: 'RH' | 'LH'), chỉ trên một câu khó (phrase); lượt một tay / một câu không tính tiêu chí tuần
-          { mode: a.mode, level: a.level, hints: a.hints, intro: a.intro, hand: a.hand, ...(a.phrase ? { phrase: a.phrase } : {}) },
+          { mode: a.mode, level: a.level, hints: a.hints, intro: a.intro, hand: a.hand, ...(a.phrase ? { phrase: a.phrase } : {}), ...(a.pulseDrop ? { pulseDrop: true } : {}) },
           { onRun: (run) => store.addSongRun(session.id, run), onDone: onComplete, onBack: onExit },
         );
       }
@@ -120,6 +130,7 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
           title: a.title,
           intro: a.intro,
           patterns: a.patterns,
+          week: lesson.week,
           record: (id, r) => store.addParentAssessment(session.id, id, r),
           onDone: onComplete,
           onBack: onExit,
@@ -179,6 +190,16 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
           onDone: onComplete,
           onBack: onExit,
         });
+      case 'sing':
+        // (2026-10-08) Hát trước khi đàn: ghi PARENT_ASSESSMENT `sing:<nốt>` / `singplay:<nốt>`
+        return singScreen(app, {
+          title: a.title,
+          intro: a.intro,
+          rounds: a.rounds,
+          record: (id, r) => store.addParentAssessment(session.id, id, r),
+          onDone: onComplete,
+          onBack: onExit,
+        });
       case 'stage':
         return stageScreen(app, {
           level: a.level ?? 1,
@@ -219,9 +240,12 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
     const nextOrWrap = () => (Date.now() >= deadline && i + 1 < wrapUp ? go(wrapUp) : next());
     switch (step.kind) {
       case 'posture': {
-        // v5.1 — tư thế rồi MỘT bài khởi động tay ~30 giây (cùng một chấm tiến trình); ghi PARENT_ASSESSMENT `tech:${drill}`
-        const posture = (): void =>
-          show(postureScreen(app, { short: step.short, onDone: drill, onBack: back }));
+        // v5.2 — MỞ ĐẦU BẰNG NHẠC (20–30 giây, bỏ qua được; câu nhắc tư thế một dòng) → thẻ tư thế ĐẦY ĐỦ chỉ khi step.full
+        // → v5.1: MỘT bài khởi động tay ~30 giây. Cả ba trên cùng một chấm tiến trình. Khởi động bằng nhạc không ghi gì;
+        // khởi động tay ghi PARENT_ASSESSMENT `tech:${drill}` như trước.
+        const music = (): void => show(warmupScreen(app, step.warmup, { onDone: afterMusic, onBack: back }));
+        const posture = (): void => show(postureScreen(app, { onDone: drill, onBack: music }));
+        const afterMusic = (): void => (step.full ? posture() : drill());
         const drill = (): void =>
           show(
             techniqueScreen(app, {
@@ -230,11 +254,14 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
               mini: true,
               record: (id, r) => store.addParentAssessment(session.id, id, r),
               onDone: next,
-              onBack: posture,
+              onBack: step.full ? posture : music,
             }),
           );
-        return posture();
+        return music();
       }
+      case 'sight-daily':
+        // v5.2 — Đọc nhạc 1 phút (đoạn mới mỗi lần): không đánh dấu activityDoneId, không ghi lượt chơi
+        return show(sightDailyScreen(app, step, { onDone: nextOrWrap, onBack: back }));
       case 'review':
         return show(segmentScreen(step.segment, nextOrWrap, back));
       case 'quiz':

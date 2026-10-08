@@ -1,0 +1,196 @@
+{
+ "id": "gallop_allegro",
+ "title": "Galloping Pony (Allegro)",
+ "titleVi": "Ngựa con phi nước kiệu",
+ "composer": "Bài tự sáng tác cho app (piano-be-9)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Bài tự sáng tác cho app (piano-be-9)",
+ "attributionRequired": false,
+ "hand": "RH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 40,
+ "tempoTerm": "Allegro",
+ "position": "G",
+ "phrases": [
+  0,
+  4
+ ],
+ "notes": [
+  {
+   "pitch": "G4",
+   "beats": 0.5,
+   "finger": 1,
+   "dyn": "mf",
+   "stac": true
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 2,
+   "stac": true
+  },
+  {
+   "pitch": "B4",
+   "beats": 1,
+   "finger": 3,
+   "stac": true
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 1,
+   "stac": true
+  },
+  {
+   "pitch": "D5",
+   "beats": 1,
+   "finger": 5,
+   "stac": true
+  },
+  {
+   "pitch": "C5",
+   "beats": 1,
+   "finger": 4,
+   "stac": true
+  },
+  {
+   "pitch": "B4",
+   "beats": 1,
+   "finger": 3,
+   "stac": true
+  },
+  {
+   "pitch": "A4",
+   "beats": 2,
+   "finger": 2
+  },
+  {
+   "pitch": "B4",
+   "beats": 0.5,
+   "finger": 3,
+   "stac": true
+  },
+  {
+   "pitch": "C5",
+   "beats": 0.5,
+   "finger": 4,
+   "stac": true
+  },
+  {
+   "pitch": "D5",
+   "beats": 1,
+   "finger": 5,
+   "stac": true
+  },
+  {
+   "pitch": "C5",
+   "beats": 1,
+   "finger": 4,
+   "stac": true
+  },
+  {
+   "pitch": "B4",
+   "beats": 1,
+   "finger": 3,
+   "stac": true
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 2,
+   "stac": true
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 1,
+   "stac": true
+  },
+  {
+   "pitch": "A4",
+   "beats": 2,
+   "finger": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.5,
+   "finger": 1,
+   "stac": true,
+   "hairpin": "cresc"
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 2,
+   "stac": true
+  },
+  {
+   "pitch": "B4",
+   "beats": 1,
+   "finger": 3,
+   "stac": true
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 1,
+   "stac": true
+  },
+  {
+   "pitch": "D5",
+   "beats": 1,
+   "finger": 5,
+   "stac": true
+  },
+  {
+   "pitch": "C5",
+   "beats": 1,
+   "finger": 4,
+   "stac": true
+  },
+  {
+   "pitch": "D5",
+   "beats": 1,
+   "finger": 5,
+   "stac": true
+  },
+  {
+   "pitch": "B4",
+   "beats": 2,
+   "finger": 3,
+   "dyn": "f",
+   "hairpin": "end"
+  },
+  {
+   "pitch": "B4",
+   "beats": 1,
+   "finger": 3,
+   "stac": true,
+   "rit": true
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 2,
+   "stac": true
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 1,
+   "stac": true
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 2,
+   "stac": true
+  },
+  {
+   "pitch": "G4",
+   "beats": 4,
+   "finger": 1
+  }
+ ]
+}

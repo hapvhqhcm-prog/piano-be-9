@@ -1,4 +1,4 @@
-import { LEVELS, WEEKS, songEverPlayed, songMastered } from '../../lessons/lessonEngine';
+import { LEVELS, songEverPlayed, songMastered } from '../../lessons/lessonEngine';
 import { songsUpToWeek, type Tune } from '../../music/tune';
 import type { SongRun } from '../../progress/schema';
 import type { App } from '../App';
@@ -12,12 +12,30 @@ const SUGGEST = 6;
 
 export interface StageHooks {
   /** Cấp của buổi hòa nhạc (tuần cuối mỗi cấp, xem LEVELS): 1 = bài tay phải, 2 = thêm bài hai tay, 3 = mọi bài */
-  level?: 1 | 2 | 3;
+  level?: 1 | 2 | 3 | 4;
   onRun(run: Omit<SongRun, 'ts'>): void;
   /** Phụ huynh tặng huy chương — tiêu chí tuần hòa nhạc cuối cấp (PARENT) */
   onMedal(): void;
   onDone(): void;
   onBack(): void;
+}
+
+/**
+ * (+ 2026-10-08) Một bài trên SÂN KHẤU: theo nhịp, đếm vào, chơi cả bài một lần, vỗ tay khi xong (songScreen `stage`).
+ * Dùng chung cho tuần hòa nhạc cuối cấp (bên dưới) và "🎤 Biểu diễn cho cả nhà" hằng tuần (concert.ts).
+ */
+export function stageSongScreen(
+  app: App,
+  tune: Tune,
+  o: { level: 1 | 2 | 3 | 4; intro: string; bpm?: number },
+  hooks: { onRun(run: Omit<SongRun, 'ts'>): void; onDone(): void; onBack(): void },
+) {
+  return songScreen(
+    app,
+    tune,
+    { mode: 'tempo', level: o.level >= 3 ? 3 : 2, hints: o.level >= 3 ? 'staff' : 'names', stage: true, intro: o.intro, ...(o.bpm ? { bpm: o.bpm } : {}) },
+    hooks,
+  );
 }
 
 /**
@@ -115,10 +133,10 @@ export function stageScreen(app: App, hooks: StageHooks) {
 
     const perform = (k: number) => {
       if (k >= picked.length) return medal();
-      const screen = songScreen(
+      const screen = stageSongScreen(
         app,
         picked[k],
-        { mode: 'tempo', level: level === 3 ? 3 : 2, hints: level === 3 ? 'staff' : 'names', stage: true, intro: `Bài ${k + 1}/${picked.length}: ${picked[k].titleVi}.` },
+        { level, intro: `Bài ${k + 1}/${picked.length}: ${picked[k].titleVi}.` },
         { onRun: hooks.onRun, onDone: () => perform(k + 1), onBack: invite },
       );
       root.replaceChildren();
@@ -156,7 +174,7 @@ export function stageScreen(app: App, hooks: StageHooks) {
                     h(
             'h1',
             { class: 'hero-title' },
-            level === 1 ? 'Con đã chinh phục Lâu đài Âm nhạc!' : level === 2 ? 'Huy chương Cấp 2 — nghệ sĩ hai tay!' : `🏆 Huy chương vàng — con đã đi hết ${WEEKS.length} tuần học đàn!`,
+            level === 1 ? 'Con đã chinh phục Lâu đài Âm nhạc!' : level === 2 ? 'Huy chương Cấp 2 — nghệ sĩ hai tay!' : `🏆 Huy chương vàng — con đã đi hết ${LEVELS[level - 1].weeks[1]} tuần học đàn!`,
           ),
                     button({ icon: '▶', label: 'Tiếp', kind: 'primary', big: true, onTap: hooks.onDone }),
                   ),

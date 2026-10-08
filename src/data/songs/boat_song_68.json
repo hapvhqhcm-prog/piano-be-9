@@ -1,0 +1,222 @@
+{
+ "id": "boat_song_68",
+ "title": "Boat Song (6/8)",
+ "titleVi": "Thuyền đưa — nhịp 6/8",
+ "composer": "Bài tự sáng tác cho app (piano-be-9)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Bài tự sáng tác cho app (piano-be-9)",
+ "attributionRequired": false,
+ "hand": "BOTH",
+ "bpm": 60,
+ "timeSignature": "6/8",
+ "week": 39,
+ "phrases": [
+  0,
+  4
+ ],
+ "notes": [
+  {
+   "pitch": "E4",
+   "beats": 2,
+   "finger": 3,
+   "dyn": "mf",
+   "slur": "start"
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "G4",
+   "beats": 3,
+   "finger": 5,
+   "slur": "end"
+  },
+  {
+   "pitch": "G4",
+   "beats": 2,
+   "finger": 5,
+   "slur": "start"
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "E4",
+   "beats": 3,
+   "finger": 3,
+   "slur": "end"
+  },
+  {
+   "pitch": "D4",
+   "beats": 2,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "F4",
+   "beats": 2,
+   "finger": 4
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 3,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 3,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 2,
+   "finger": 3,
+   "dyn": "p",
+   "slur": "start"
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "G4",
+   "beats": 3,
+   "finger": 5,
+   "slur": "end"
+  },
+  {
+   "pitch": "G4",
+   "beats": 2,
+   "finger": 5,
+   "slur": "start"
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "E4",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2,
+   "slur": "end"
+  },
+  {
+   "pitch": "E4",
+   "beats": 3,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 3,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 6,
+   "finger": 1
+  }
+ ],
+ "lh": [
+  {
+   "pitch": "C3",
+   "beats": 3,
+   "finger": 5
+  },
+  {
+   "pitch": "G3",
+   "beats": 3,
+   "finger": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 3,
+   "finger": 5
+  },
+  {
+   "pitch": "G3",
+   "beats": 3,
+   "finger": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 3,
+   "finger": 4
+  },
+  {
+   "pitch": "G3",
+   "beats": 3,
+   "finger": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 3,
+   "finger": 4
+  },
+  {
+   "pitch": "G3",
+   "beats": 3,
+   "finger": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 3,
+   "finger": 5
+  },
+  {
+   "pitch": "G3",
+   "beats": 3,
+   "finger": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 3,
+   "finger": 5
+  },
+  {
+   "pitch": "G3",
+   "beats": 3,
+   "finger": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 3,
+   "finger": 4
+  },
+  {
+   "pitch": "G3",
+   "beats": 3,
+   "finger": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 6,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  }
+ ]
+}

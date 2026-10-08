@@ -413,8 +413,8 @@ function typicalOps(days: number): Op[] {
         const ok = rng() < 0.85;
         st.addSongRun(s.id, { songId: pick(SONG_IDS), mode: i % 2 ? 'tempo' : 'wait', ...(i % 2 ? { level: 2 as const } : {}), bpm: 72, hints: 'names', phrase: null, total: 24, hits: ok ? 24 : 15, source: mic ? 'mic' : 'parent', passed: ok, ...(!mic ? { checklist: { notes: ok, beat: ok, fingers: true } } : {}) });
       }
-      // Lên sân khấu cuối Cấp (tuần huy chương) — tuần 31 đạt thì bé chuyển sang "Luyện tập mỗi ngày"
-      if ([10, 21, 31].includes(w)) st.addParentAssessment(s.id, 'medal', 'correct');
+      // Lên sân khấu cuối Cấp (tuần huy chương) — tuần 43 (Cấp 4, 2026-10-08) đạt thì bé chuyển sang "Luyện tập mỗi ngày"
+      if ([10, 21, 31, 43].includes(w)) st.addParentAssessment(s.id, 'medal', 'correct');
       st.setSelfRating(s.id, 'all');
       st.finishSession(s.id);
       st.markLessonCompleted(lesson.id);

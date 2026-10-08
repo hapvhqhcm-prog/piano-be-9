@@ -19,7 +19,45 @@ const arm = (d: string, hx: number, hy: number, cls = '') =>
   `<g${cls ? ` class="${cls}"` : ''}><path d="${d}" fill="none" stroke="${BODY_DARK}" stroke-width="6.5" stroke-linecap="round"/>` +
   `<circle cx="${hx}" cy="${hy}" r="6" fill="#c8bcff" stroke="${BODY_DARK}" stroke-width="2"/></g>`;
 
-export function mascot(mood: Mood = 'happy', size = 120): SVGSVGElement {
+/**
+ * (+ 2026-10-08) 🎁 Trang phục Bé Nốt (quà mở khóa theo đảo — lessons/unlocks.ts). Mã lạ / null = không mặc gì.
+ * Vẽ ĐÈ lên trên cùng (sau mặt, tay) trong cùng khung 120×140.
+ */
+export const OUTFITS: Readonly<Record<string, string>> = {
+  cap:
+    `<path d="M31 75 q1 -22 25 -22 q22 0 25 19 Z" fill="${P.coral}" stroke="${INK}" stroke-opacity=".4" stroke-width="1.6"/>` +
+    `<path d="M28 76 q26 -9 56 -4 q-2 6 -8 7 q-22 -3 -46 3 Z" fill="#e85a4a" stroke="${INK}" stroke-opacity=".4" stroke-width="1.4"/>` +
+    `<circle cx="56" cy="53" r="3" fill="#e85a4a"/><path d="M44 60 q10 -5 22 -1" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="2.4" stroke-linecap="round"/>`,
+  headphones:
+    `<path d="M24 94 Q22 56 56 56 Q88 56 91 90" fill="none" stroke="${INK}" stroke-width="5" stroke-linecap="round"/>` +
+    `<rect x="15" y="86" width="14" height="22" rx="7" fill="${P.coral}" stroke="${INK}" stroke-width="2"/>` +
+    `<rect x="86" y="81" width="14" height="22" rx="7" fill="${P.coral}" stroke="${INK}" stroke-width="2"/>`,
+  bowtie:
+    `<path d="M44 111 L56 117 L44 123 Z M68 111 L56 117 L68 123 Z" fill="#e8443a" stroke="${INK}" stroke-opacity=".5" stroke-width="1.4" stroke-linejoin="round"/>` +
+    `<circle cx="56" cy="117" r="3.2" fill="#c2324d"/>`,
+  sunglasses:
+    `<rect x="36" y="81" width="19" height="13" rx="5" fill="#1d1838"/><rect x="58" y="80" width="19" height="13" rx="5" fill="#1d1838"/>` +
+    `<path d="M55 86 h3 M36 85 l-8 -3 M77 84 l8 -4" stroke="#1d1838" stroke-width="2.4" stroke-linecap="round"/>` +
+    `<path d="M40 84 l5 -1 M62 83 l5 -1" stroke="#fff" stroke-opacity=".7" stroke-width="2" stroke-linecap="round"/>`,
+  wizard:
+    `<path d="M33 72 L52 18 L78 70 Z" fill="${P.violet}" stroke="${INK}" stroke-opacity=".5" stroke-width="1.8" stroke-linejoin="round"/>` +
+    `<ellipse cx="55" cy="72" rx="28" ry="6" fill="${P.indigo}" stroke="${INK}" stroke-opacity=".5" stroke-width="1.6"/>` +
+    `<path d="${starPath(56, 50, 5)}" fill="${P.sun}"/><path d="${starPath(47, 62, 3)}" fill="${P.sun}"/>`,
+  mask:
+    `<path fill-rule="evenodd" d="M27 88 Q56 72 88 82 L88 95 Q56 86 27 101 Z M40 89 a6 5.5 0 1 0 12 0 a6 5.5 0 1 0 -12 0 Z M61 88 a6 5.5 0 1 0 12 0 a6 5.5 0 1 0 -12 0 Z" fill="#e8443a" stroke="${INK}" stroke-opacity=".45" stroke-width="1.4"/>`,
+  crown:
+    `<path d="M33 72 L36 49 L46 61 L56 44 L66 61 L76 49 L79 72 Z" fill="${P.sun}" stroke="#c48a00" stroke-width="2" stroke-linejoin="round"/>` +
+    `<circle cx="56" cy="64" r="3.4" fill="#e8443a"/><circle cx="43" cy="66" r="2.4" fill="${P.mint}"/><circle cx="69" cy="66" r="2.4" fill="${P.water}"/>`,
+};
+
+let currentOutfit: string | null = null;
+/** (+ 2026-10-08) Đặt trang phục cho MỌI Bé Nốt vẽ từ nay (màn chính / sổ sticker gọi theo settings.cosmetics). */
+export function setMascotOutfit(outfit: string | null): void {
+  currentOutfit = outfit && OUTFITS[outfit] ? outfit : null;
+}
+export const mascotOutfit = (): string | null => currentOutfit;
+
+export function mascot(mood: Mood = 'happy', size = 120, outfit: string | null = currentOutfit): SVGSVGElement {
   const svg = document.createElementNS(SVG, 'svg');
   svg.setAttribute('viewBox', '0 0 120 140');
   svg.setAttribute('width', String(size));
@@ -93,6 +131,7 @@ export function mascot(mood: Mood = 'happy', size = 120): SVGSVGElement {
     <ellipse cx="36" cy="101" rx="6" ry="4" fill="#ff9fb6" opacity=".75"/><ellipse cx="78" cy="98" rx="6" ry="4" fill="#ff9fb6" opacity=".75"/>
     ${mouth}
     ${arms}
-    ${extras}`;
+    ${extras}
+    ${outfit && OUTFITS[outfit] ? `<g class="mascot-outfit outfit-${outfit}">${OUTFITS[outfit]}</g>` : ''}`;
   return svg;
 }

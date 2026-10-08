@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   CHALLENGE_ORDER,
+  NEW_CHALLENGES_FROM,
   MAIN_TEMPO_SONG,
   challengeStreak,
   completedChallengeWeeks,
@@ -81,10 +82,13 @@ describe('🏆 Thử thách tuần — chọn cố định', () => {
     expect(pool).not.toContain('record'); // chưa chơi trò chơi nào
     const a = weeklyChallenge(d, '2026-10-07');
     expect(weeklyChallenge({ ...d }, '2026-10-09').id).toBe(a.id); // cùng tuần lịch (thứ 4 / thứ 6)
-    const ids = Array.from({ length: 6 }, (_, i) => weeklyChallenge(d, addDays('2026-10-05', 7 * i)).id);
+    // (+ 2026-10-08) từ tuần lịch NEW_CHALLENGES_FROM kho có thêm thử thách "ngoài đời" (tuần cũ giữ kho cũ)
+    const poolNew = eligibleChallenges(d, NEW_CHALLENGES_FROM).map((p) => p.id);
+    expect(poolNew).toEqual([...pool, 'audience', 'compose', 'findC', 'softSong', 'singPlay', 'teach']);
+    const ids = Array.from({ length: poolNew.length }, (_, i) => weeklyChallenge(d, addDays(NEW_CHALLENGES_FROM, 7 * i)).id);
     for (let i = 1; i < ids.length; i++) expect(ids[i]).not.toBe(ids[i - 1]);
     // xoay vòng đủ kho
-    expect(new Set(ids).size).toBe(pool.length);
+    expect(new Set(ids).size).toBe(poolNew.length);
   });
 
   it('không đổi giữa tuần khi bé qua đảo / thuộc thêm bài', () => {
@@ -109,8 +113,9 @@ describe('🏆 Thử thách tuần — chọn cố định', () => {
     }
   });
 
-  it('kho thử thách có đủ 7 loại, thứ tự cố định', () => {
-    expect(CHALLENGE_ORDER).toEqual(['days4', 'faster', 'perfect', 'review3', 'vn', 'ear', 'record']);
+  it('kho thử thách: 7 loại gốc giữ nguyên thứ tự, 6 loại mới (2026-10-08) chỉ thêm vào cuối', () => {
+    expect(CHALLENGE_ORDER.slice(0, 7)).toEqual(['days4', 'faster', 'perfect', 'review3', 'vn', 'ear', 'record']);
+    expect(CHALLENGE_ORDER.slice(7)).toEqual(['audience', 'compose', 'findC', 'softSong', 'singPlay', 'teach']);
   });
 });
 

@@ -5,6 +5,7 @@ import type { WeekPlan } from './types';
  * đàn cùng bố mẹ (app đánh bè đệm). Thêm "Chuông ngân vang", "Các thánh tiến bước".
  * Tiêu chí: chơi trọn Ode to Joy ở tốc độ 60 (phiếu 3 ý của bố mẹ, hoặc micro ≥ 80%) — v5: ở 2 NGÀY khác nhau.
  * SẮC THÁI (OWNER duyệt 2026-10-05): trò "To hay nhỏ?" (f = to, p = nhỏ) mở đầu bài 1 — từ đây bài hát có dấu p / mf / f.
+ * (2026-10-08, OWNER duyệt) lượt theo nhịp chỉ tên nốt (week4.ts "GỢI Ý RÚT DẦN"); ứng tấu 1 phút "Hỏi to, đáp nhỏ" ở bài 2.
  */
 export const WEEK6: WeekPlan = {
   week: 6,
@@ -27,7 +28,7 @@ export const WEEK6: WeekPlan = {
         {
           kind: 'dynamics',
           title: 'To hay nhỏ? 🦁🐭',
-          intro: 'Đàn TO như sư tử (f): ngón chắc, ấn sâu hơn. Đàn NHỎ như chú chuột (p): chạm phím thật nhẹ. Thầy đàn mẫu, con đàn lại!',
+          intro: 'Đàn TO như sư tử, NHỎ như chuột nhắt — theo thầy!',
           mode: 'loud-soft',
           rounds: [
             { pitches: ['C4'], want: 'f', fingers: [1], hand: 'RH' },
@@ -38,7 +39,7 @@ export const WEEK6: WeekPlan = {
             { pitches: ['G4', 'F4', 'E4', 'D4', 'C4'], want: 'f', fingers: [5, 4, 3, 2, 1], hand: 'RH' },
           ],
         },
-        { kind: 'song', songId: 'ode_to_joy_easy', mode: 'wait', hints: 'full', intro: 'Dấu "mf" = đàn VỪA, không to không nhỏ. Bài của nhạc sĩ Beethoven — mình tập từng nốt trước.' },
+        { kind: 'song', songId: 'ode_to_joy_easy', mode: 'wait', hints: 'full', intro: 'Dấu mf = đàn VỪA. Tập từng nốt trước nhé!' },
       ],
     },
     {
@@ -46,7 +47,25 @@ export const WEEK6: WeekPlan = {
       week: 6,
       title: 'Bài ca niềm vui — theo nhịp',
       emoji: '🎼',
-      activities: [{ kind: 'song', songId: 'ode_to_joy_easy', mode: 'tempo', level: 2, hints: 'full', intro: 'Tập từng câu, rồi cả bài. Bật nhạc đệm để bố mẹ "đàn cùng"!' }],
+      activities: [
+        { kind: 'song', songId: 'ode_to_joy_easy', mode: 'tempo', level: 2, hints: 'names', intro: 'Tập từng câu, rồi cả bài. Bật nhạc đệm nhé!' },
+        // (2026-10-08, OWNER duyệt) ứng tấu 1 phút mỗi tuần — sắc thái của tuần: TO / NHỎ
+        {
+          kind: 'improv',
+          title: 'Hỏi to, đáp nhỏ 💬',
+          intro: 'App hỏi TO. Con đáp NHỎ, kết ở Đô nhé!',
+          mode: 'question-answer',
+          position: 'C',
+          bars: 2,
+        },
+        // (2026-10-08, OWNER duyệt) HÁT TRƯỚC KHI ĐÀN — cuối bài: nghe 2–3 nốt, hát lại từng nốt, rồi đàn
+        {
+          kind: 'sing',
+          title: 'Hát rồi đàn 🎤',
+          intro: 'Nghe thầy đàn, hát lại từng nốt, rồi đàn trên đàn. Hát chưa trúng cũng không sao — hát giúp tai nhớ nốt!',
+          rounds: [{ notes: ['E4', 'F4', 'G4'], fingers: [3, 4, 5] }, { notes: ['G4', 'F4', 'E4'], fingers: [5, 4, 3] }],
+        },
+      ],
     },
     {
       id: 'w6-l3',
@@ -55,7 +74,7 @@ export const WEEK6: WeekPlan = {
       emoji: '🔔',
       activities: [
         { kind: 'song', songId: 'jingle_bells', mode: 'wait', hints: 'full' },
-        { kind: 'song', songId: 'jingle_bells', mode: 'tempo', level: 2, hints: 'full' },
+        { kind: 'song', songId: 'jingle_bells', mode: 'tempo', level: 2, hints: 'names', pulseDrop: true },
       ],
     },
     {
@@ -64,8 +83,8 @@ export const WEEK6: WeekPlan = {
       title: 'Các thánh tiến bước',
       emoji: '🎺',
       activities: [
-        { kind: 'song', songId: 'saints', mode: 'wait', hints: 'full', intro: 'Bài này có chỗ "Suỵt" (nghỉ) ở đầu mỗi câu — nhớ chờ nhé! Có một nốt Đô "Đi-i-i" giữ 3 phách.' },
-        { kind: 'song', songId: 'saints', mode: 'tempo', level: 3, hints: 'full' },
+        { kind: 'song', songId: 'saints', mode: 'wait', hints: 'full', intro: 'Đầu mỗi câu có "Suỵt" — chờ một phách rồi đàn!' },
+        { kind: 'song', songId: 'saints', mode: 'tempo', level: 3, hints: 'names' },
       ],
     },
   ],

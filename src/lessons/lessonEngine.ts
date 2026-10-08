@@ -3,10 +3,13 @@ import { starsFor } from '../music/timing';
 import { beatsPerMeasure, measureCount, phraseRanges, slice } from '../music/tune';
 import { makeQuestion, type QuizSpec } from '../practice/quiz';
 import type { AppAssessment, AppData, Session, SongAgg } from '../progress/schema';
-import { completedDates, completedSessionCount, hist, memo, sessionCount } from '../progress/history';
+import { completedDates, firstDateOfWeek, hist, memo, sessionCount } from '../progress/history';
 import type { Activity, LevelInfo, Lesson, Segment, Target, TechniqueDrill, WeekPlan } from './types';
+import { POSITIONS, type Hand, type PositionId } from '../piano/fingering';
+import { pitchToMidi, type Pitch } from '../piano/pitchTable';
 import { LEVEL2_WEEKS } from './level2';
 import { LEVEL3_WEEKS } from './level3';
+import { LEVEL4_WEEKS } from './level4';
 import { SONGS } from '../music/tune';
 import { WEEK1 } from './week1';
 import { WEEK2 } from './week2';
@@ -33,6 +36,8 @@ export const WEEKS: readonly WeekPlan[] = [
   WEEK1, WEEK2, WEEK3, WEEK4, WEEK5, WEEK6, WEEK7, WEEK8, WEEK9, WEEK10,
   ...LEVEL2_WEEKS,
   ...LEVEL3_WEEKS,
+  // Cấp 4 (OWNER duyệt 2026-10-08): tuần 32–43 thêm ở CUỐI — mã tuần/bài cũ không đổi, không cần migration
+  ...LEVEL4_WEEKS,
 ];
 
 export const LEVELS: readonly LevelInfo[] = [
@@ -53,6 +58,12 @@ export const LEVELS: readonly LevelInfo[] = [
     name: 'Cấp 3 · Vững vàng',
     goal: 'Hợp âm, dòng kẻ phụ & khuông lớn, đổi thế, trưởng/thứ, đọc hai khóa, Minuet & Für Elise giản lược — ≈ hoàn thành Faber cấp 1 / đầu cấp 2',
     weeks: [22, 31],
+  },
+  {
+    level: 4,
+    name: 'Cấp 4 · Nghệ sĩ nhỏ',
+    goal: 'Gam Sol, Fa, Rê trưởng & La thứ hai tay, hợp âm rải, bass Alberti, pedal, nhịp 6/8, to dần – nhỏ dần, Andante – Allegro — ≈ ABRSM Initial / đầu Grade 1',
+    weeks: [32, 43],
   },
 ];
 
@@ -326,9 +337,23 @@ function criterionDays(week: number, sessions: readonly Session[]): { days: numb
       return song('minuet_g', true, 50);
     case 30:
       return song('fur_elise', true, 50);
-    default:
-      return null;
+    default: {
+      // Cấp 4 (2026-10-08): tiêu chí dạng dữ liệu — mọi bài đạt ở ≥ 2 ngày (tiến độ = bài chậm nhất) + thẻ bố mẹ xác nhận
+      const spec = WEEKS[week - 1]?.criterionSpec;
+      if (!spec) return null;
+      const days = Math.min(...spec.songs.map((x) => song(x.songId, !!x.tempo, x.minBpm ?? 0).days));
+      return { days, extra: (spec.parentChecks ?? []).every((note) => parentCheckOk(sessions, note)) };
+    }
   }
+}
+
+/** Cấp 4 — thẻ bố mẹ xác nhận (PARENT_ASSESSMENT `note`): lần chấm GẦN NHẤT trong các buổi của tuần là "Đúng rồi". */
+function parentCheckOk(sessions: readonly Session[], note: string): boolean {
+  let last: { ts: number; ok: boolean } | null = null;
+  for (const s of sessions)
+    for (const a of s.parentAssessments)
+      if (a.note === note && (!last || a.ts >= last.ts)) last = { ts: a.ts, ok: a.result === 'correct' };
+  return !!last?.ok;
 }
 
 /**
@@ -394,7 +419,9 @@ export function nextLesson(data: Readonly<AppData>, rng: () => number = Math.ran
     const helper = criterionLesson(plan.week, data);
     if (helper) return helper;
   }
-  return regular[regular.length - 1];
+  // Cấp 4 (2026-10-08): tuần XONG mà chưa sang tuần mới (vd bé xong tuần 31 trước khi có Cấp 4; tuần chỉ có buổi hòa nhạc)
+  // → luyện tập mỗi ngày; xong buổi đó session.ts thấy tuần đã xong → sang tuần kế (lên Cấp 4).
+  return regular[regular.length - 1] ?? dailyLesson(data, rng, now);
 }
 
 /* ---------- Bài nào giúp đạt tiêu chí tuần? (giả lập buổi học "hoàn hảo") ---------- */
@@ -465,9 +492,25 @@ export function criterionLesson(week: number, data: Readonly<AppData>): Lesson |
   return null;
 }
 
+/**
+ * v5.2 (OWNER duyệt 2026-10-08) — KHỞI ĐỘNG BẰNG NHẠC 20–30 giây mở đầu MỌI buổi (bước 'posture'):
+ * - 'song': câu đầu (≤ ~16 phách) của một bài bé ĐÃ THUỘC / nhiều sao (songStats), theo nhịp Mức 2 (nhạc đệm nếu bố mẹ bật);
+ * - 'riff': chưa có bài nào thuộc → "thầy đàn — con đàn lại" 2 câu ngắn trong thế tay hiện tại.
+ * KHÔNG ghi gì vào buổi (không lượt chơi, không PARENT/MIC_ASSESSMENT) → không ảnh hưởng tiến độ, tiêu chí, "đã thuộc".
+ */
+export type WarmupMusic =
+  | { kind: 'song'; songId: string; phrase: [number, number]; bpm: 40 | 50 | 60; hints: 'full' | 'names' }
+  | { kind: 'riff'; position: Exclude<PositionId, 'free'>; hand: Hand; riffs: Pitch[][] };
+
+/** v5.2 — Câu nhắc tư thế MỘT dòng (đọc to + hiện chữ) trên màn khởi động bằng nhạc. */
+export const POSTURE_CUE = 'Lưng thẳng · cổ tay ngang · ngón cong';
+
 export type SessionStep =
-  /** Tư thế + v5.1: MỘT bài khởi động kỹ thuật ~30 giây (`drill`, xoay vòng theo buổi — sessionDrill) trên cùng một màn/chấm tiến trình */
-  | { kind: 'posture'; short: boolean; drill: TechniqueDrill }
+  /**
+   * Bước MỞ ĐẦU (một chấm tiến trình): v5.2 — khởi động bằng nhạc (`warmup`, kèm câu nhắc tư thế một dòng) →
+   * thẻ tư thế ĐẦY ĐỦ chỉ khi `full` (postureFull) → v5.1: MỘT bài khởi động kỹ thuật ~30 giây (`drill`, xoay vòng — sessionDrill).
+   */
+  | { kind: 'posture'; full: boolean; drill: TechniqueDrill; warmup: WarmupMusic }
   | { kind: 'review'; segment: Segment }
   | { kind: 'quiz'; title: string; intro: string; quiz: QuizSpec; warmup: boolean }
   | { kind: 'activity'; activity: Activity; last: boolean; /** vị trí trong lesson.activities */ index: number }
@@ -490,6 +533,22 @@ export type SessionStep =
    * v5.1 — MÀN KẾT (gộp "Con làm thầy" + tự chấm Dễ/Vừa/Khó thành MỘT màn): `teach` = thẻ "Con làm thầy"
    * (null khi chơi lại / sân khấu). Ghi cả hai dữ liệu như trước: PARENT_ASSESSMENT 'teach-back' và selfRating.
    */
+  /**
+   * v5.2 (OWNER duyệt 2026-10-08) — ĐỌC NHẠC 1 PHÚT MỖI NGÀY (từ tuần SIGHT_DAILY_WEEK): một đoạn MỚI do app sinh
+   * (music/sightread.ts) trong thế tay hiện tại, chơi Từng nốt. Như 'review-song': KHÔNG phải hoạt động của bài
+   * (không activityDoneId) và không ghi lượt chơi → không đổi tiến độ / tiêu chí / học tiếp.
+   */
+  | {
+      kind: 'sight-daily';
+      position: Exclude<PositionId, 'free'>;
+      hand: Hand;
+      measures: number;
+      timeSignature: '4/4' | '3/4' | '2/4';
+      rhythm: 1 | 2;
+      /** names = có tên nốt; staff = chỉ khuông (rút dần theo tuần — sightDailyHints) */
+      hints: 'names' | 'staff';
+      startAnywhere: boolean;
+    }
   | { kind: 'closing'; teach: { emoji: string; text: string } | null };
 
 /** v5.1 — Buổi học tối đa ngần này màn (đếm cả tư thế, ôn nhanh, khởi động, hoạt động, ôn bài cũ, màn kết). */
@@ -657,11 +716,173 @@ export function reviewSegment(
   };
 }
 
+/* ---------- v5.2 (OWNER duyệt 2026-10-08, sau rà soát chuyên gia): khởi động bằng nhạc · đọc nhạc 1 phút mỗi ngày ---------- */
+
+/** Settings thêm (cộng dồn, không cần migration): 👪 bố mẹ bật "nhắc tư thế đầy đủ" mọi buổi. */
+export interface PostureSettings {
+  postureFull?: boolean;
+}
+
+/**
+ * v5.2 — Thẻ tư thế ĐẦY ĐỦ (3 thẻ) chỉ khi: bài tuần 1 · buổi ĐẦU của tuần giáo trình (chưa có buổi nào của tuần đó)
+ * · buổi ĐẦU của tuần lịch (chưa có buổi hoàn thành nào từ thứ 2) · bố mẹ bật "nhắc tư thế đầy đủ".
+ * Các buổi khác: chỉ câu nhắc MỘT dòng (POSTURE_CUE) trên màn khởi động bằng nhạc.
+ */
+export function postureFull(lesson: Lesson, data: Readonly<AppData> | undefined, now: number = Date.now()): boolean {
+  if (lesson.week === 1 || !data) return true;
+  if ((data.settings as AppData['settings'] & PostureSettings).postureFull) return true;
+  if (firstDateOfWeek(data, lesson.week) === null) return true;
+  const monday = mondayOf(new Date(now));
+  for (const d of completedDates(data)) if (d >= monday) return false;
+  return true;
+}
+
+/** Xoay vòng khởi động trong ngần này bài bé thuộc nhất. */
+const WARMUP_SONGS_ROTATION = 4;
+/** Câu khởi động ≤ ngần này phách (~16 giây ở tốc độ 60, + đếm vào ≈ 20–25 giây). */
+export const WARMUP_BEATS = 16;
+/** Cặp "thầy đàn — con đàn lại" (vị trí trong thế tay, thấp → cao); xoay vòng theo buổi. Tuần ≤ 3: chỉ bậc liền. */
+const RIFFS: ReadonlyArray<ReadonlyArray<readonly number[]>> = [
+  [[0, 1, 2], [2, 1, 0]],
+  [[0, 2, 4], [4, 2, 0]],
+  [[2, 3, 4], [4, 3, 2, 1, 0]],
+  [[0, 1, 2, 3, 4], [4, 2, 0]],
+];
+
+/**
+ * v5.2 — Thế tay hiện tại của bài: bài hát đầu tiên (trong bài, rồi lùi dần các tuần trước) có thế tay cố định.
+ * Không tìm thấy → thế Đô tay phải.
+ */
+export function lessonHandPosition(lesson: Lesson): { position: Exclude<PositionId, 'free'>; hand: Hand; timeSignature: string } {
+  const from = (acts: readonly Activity[]) => {
+    for (const a of acts) {
+      if (a.kind !== 'song') continue;
+      const t = findTune(a.songId);
+      if (!t || t.id.startsWith('sight')) continue;
+      const hand: Hand = a.hand ?? (t.hand === 'LH' ? 'LH' : 'RH');
+      const pos = (hand === 'LH' && t.hand === 'BOTH' ? t.lhPosition : t.position) ?? 'C';
+      if (pos === 'free' || !POSITIONS[pos]?.[hand]) continue;
+      return { position: pos, hand, timeSignature: t.timeSignature };
+    }
+    return null;
+  };
+  const own = from(lesson.activities);
+  if (own) return own;
+  for (let w = Math.min(lesson.week, MAX_WEEK); w >= 1; w--) {
+    for (const l of [...weekPlan(w).lessons].reverse()) {
+      const r = from(l.activities);
+      if (r) return r;
+    }
+  }
+  return { position: 'C', hand: 'RH', timeSignature: '4/4' };
+}
+
+/**
+ * v5.2 — Khởi động bằng nhạc của buổi: bài bé thuộc nhất (đã thuộc gần đây → nhiều sao → mới chơi), không trùng bài
+ * hôm nay / bài "Ôn bài cũ" (`exclude`); xoay vòng trong 4 bài đầu theo số buổi. Chưa có bài nào → "thầy đàn — con đàn lại".
+ * "Thuộc" = đã thuộc (theo nhịp ≥ 60), hoặc 3 sao và đã từng chơi trọn đạt.
+ */
+export function warmupMusic(
+  lesson: Lesson,
+  data: Readonly<AppData> | undefined,
+  exclude: readonly string[] = [],
+  /** Bài nên dùng (vd bài "Ôn bài cũ" bị bỏ vì quá số màn → ôn ngắt quãng vẫn diễn ra ở phần khởi động) */
+  prefer?: string | null,
+): WarmupMusic {
+  const n = data ? sessionCount(data) : 0;
+  if (data) {
+    const stats = songStats(data);
+    const skip = new Set([...exclude, ...lesson.activities.flatMap((a) => (a.kind === 'song' ? [a.songId] : []))]);
+    const known = SONGS.filter((t) => {
+      const a = stats[t.id];
+      return !!a && !t.id.startsWith('sight') && !skip.has(t.id) && (a.m !== undefined || ((a.s ?? 0) >= 3 && a.h === 1));
+    }).sort((x, y) => {
+      const a = stats[x.id];
+      const b = stats[y.id];
+      return (
+        (b.m !== undefined ? 1 : 0) - (a.m !== undefined ? 1 : 0) ||
+        (b.m ?? 0) - (a.m ?? 0) ||
+        (b.s ?? 0) - (a.s ?? 0) ||
+        (b.r?.[0] ?? 0) - (a.r?.[0] ?? 0)
+      );
+    });
+    const preferred = prefer && !skip.has(prefer) && stats[prefer] ? SONGS.find((t) => t.id === prefer) : undefined;
+    if (preferred || known.length) {
+      const top = known.slice(0, WARMUP_SONGS_ROTATION);
+      const t = preferred ?? top[n % top.length];
+      const mastered = stats[t.id].m !== undefined;
+      const [a, b] = phraseRanges(t)[0];
+      return {
+        kind: 'song',
+        songId: t.id,
+        phrase: [a, Math.min(b, a + Math.max(1, Math.floor(WARMUP_BEATS / beatsPerMeasure(t))))],
+        bpm: t.bpm <= 40 ? 40 : mastered ? 60 : 50,
+        hints: lesson.week >= 8 ? 'names' : 'full',
+      };
+    }
+  }
+  const lp = lessonHandPosition(lesson);
+  // Khởi động cho vui: ưu tiên tay phải nếu thế tay có tay phải
+  const hand: Hand = POSITIONS[lp.position].RH ? 'RH' : 'LH';
+  const keys = (Object.keys(POSITIONS[lp.position][hand]!) as Pitch[]).sort((a, b) => pitchToMidi(a) - pitchToMidi(b));
+  const set = lesson.week <= 3 ? RIFFS[0] : RIFFS[n % RIFFS.length];
+  return { kind: 'riff', position: lp.position, hand, riffs: set.map((r) => r.map((i) => keys[Math.min(i, keys.length - 1)])) };
+}
+
+/** v5.2 — Đọc nhạc 1 phút mỗi ngày bắt đầu từ tuần này. */
+export const SIGHT_DAILY_WEEK = 8;
+/** Ước lượng (phút) của bước đọc nhạc mỗi ngày. */
+export const SIGHT_DAILY_MIN = 1;
+/** Trần ước lượng một buổi (phút) — test pacing; bước đọc nhạc mỗi ngày chỉ thêm khi còn chỗ. */
+export const MAX_SESSION_MINUTES = 12;
+
+/** Gợi ý khi đọc nhạc mỗi ngày — RÚT DẦN: tuần 8–11 có tên nốt · 12–21 xen kẽ tên nốt / chỉ khuông · từ 22 chỉ khuông. */
+export function sightDailyHints(week: number, n: number): 'names' | 'staff' {
+  if (week < 12) return 'names';
+  if (week >= 22) return 'staff';
+  return n % 2 ? 'staff' : 'names';
+}
+
+/**
+ * Bài có chỗ cho "Đọc nhạc 1 phút" không: từ tuần SIGHT_DAILY_WEEK, không phải bài kiểm tra / sân khấu / luyện tập mỗi ngày,
+ * bài chưa có hoạt động đọc nhạc riêng (có rồi thì chính nó là bài đọc nhạc hôm nay — "gộp"), và ước lượng buổi + 1 phút ≤ 12.
+ */
+export function sightDailyFits(lesson: Lesson): boolean {
+  return (
+    lesson.week >= SIGHT_DAILY_WEEK &&
+    !lesson.isWeekTest &&
+    !lesson.id.endsWith('-daily') &&
+    !lesson.activities.some((a) => a.kind === 'sight' || a.kind === 'stage') &&
+    baseLessonMinutes(lesson) + SIGHT_DAILY_MIN <= MAX_SESSION_MINUTES
+  );
+}
+
+/** v5.2 — Bước "Đọc nhạc 1 phút" (đoạn MỚI trong thế tay hiện tại; session.ts sinh nốt bằng makeSightTune). */
+export function sightDailyStep(lesson: Lesson, data?: Readonly<AppData>): Extract<SessionStep, { kind: 'sight-daily' }> {
+  const lp = lessonHandPosition(lesson);
+  const ts = lp.timeSignature === '3/4' || lp.timeSignature === '2/4' ? lp.timeSignature : '4/4';
+  const per = Number(ts[0]);
+  return {
+    kind: 'sight-daily',
+    position: lp.position,
+    hand: lp.hand,
+    measures: per === 2 ? 4 : per === 3 ? 3 : 2,
+    timeSignature: ts,
+    rhythm: lesson.week >= 17 ? 2 : 1,
+    hints: sightDailyHints(lesson.week, data ? sessionCount(data) : 0),
+    // Cấp 1 (tuần 8–10): bắt đầu ở nốt chủ cho dễ; từ Cấp 2 bắt đầu ở nốt bất kỳ (đọc QUÃNG)
+    startAnywhere: lesson.week >= 11,
+  };
+}
+
 /**
  * Kế hoạch một buổi (v5.1 — OWNER duyệt 2026-10-06: ≤ MAX_SESSION_STEPS màn, ≤ ~12 phút):
- * Tư thế + khởi động kỹ thuật 30" → Ôn nhanh 1' (từ tuần 2) → Khởi động tai/đọc nốt → Bài mới → (Ôn bài cũ) → Màn kết
+ * [v5.2: Khởi động bằng nhạc + câu nhắc tư thế (+ thẻ tư thế đầy đủ khi postureFull) + khởi động kỹ thuật 30"] → Ôn nhanh 1'
+ * (từ tuần 2) → Khởi động tai/đọc nốt → (v5.2: Đọc nhạc 1 phút, từ tuần 8) → Bài mới → (Ôn bài cũ) → Màn kết
  * (Con làm thầy + Dễ/Vừa/Khó). Khởi động tai/đọc nốt bị BỎ khi bài có ≥ 3 lượt bài hát (trừ tuần chấm bằng khởi động).
- * Quá MAX_SESSION_STEPS màn → bỏ lần lượt: Ôn bài cũ → khởi động (không phải tiêu chí) → Ôn nhanh. Hoạt động của bài không bị bỏ.
+ * Quá MAX_SESSION_STEPS màn → bỏ lần lượt: Ôn bài cũ → khởi động tai/đọc nốt (không phải tiêu chí) → Ôn nhanh
+ * → Đọc nhạc 1 phút. Hoạt động của bài không bị bỏ. (v5.2: đọc nhạc mỗi ngày ưu tiên hơn Ôn nhanh — nó cũng là đọc nốt
+ * trên khuông; bài đã có hoạt động đọc nhạc thì không thêm — "gộp".)
  * replay=true ("Chơi lại bài vừa học"): chỉ bài + màn kết (không thẻ "Con làm thầy").
  */
 export function buildSessionPlan(
@@ -677,6 +898,8 @@ export function buildSessionPlan(
      * (bước lạ mà session.ts không xử lý → màn trắng). Mặc định tắt.
      */
     songReview?: boolean;
+    /** v5.2 — Thêm bước "Đọc nhạc 1 phút" (kind 'sight-daily'); BẬT TƯỜNG MINH như songReview. Mặc định tắt. */
+    sightRead?: boolean;
   } = {},
 ): SessionStep[] {
   const now = opts.now === undefined ? Date.now() : typeof opts.now === 'number' ? opts.now : opts.now.getTime();
@@ -714,14 +937,22 @@ export function buildSessionPlan(
   // Tuần chấm bằng khởi động (tai nghe / đọc nốt ≥ 5/6): buổi đầu học bài TRƯỚC, khởi động-chấm điểm SAU.
   // v5.1 (chơi thử 2026-10-06): tuần 1 khởi động tai luôn SAU bài — bé chạm đàn thật ngay sau tư thế.
   const warmAfter = !!warm && ((criterionQuiz && firstOfWeek) || lesson.week === 1);
+  let opening: Extract<SessionStep, { kind: 'posture' }> | null = null;
   if (!opts.replay && !isStage) {
-    const completed = data ? completedSessionCount(data) : 0; // gồm cả buổi đã gộp (history)
-    // Tư thế: buổi ĐẦU TIÊN chỉ 1 thẻ (chơi thử 2026-10-06 — vào đàn thật sớm), buổi 2–3 đủ 3 thẻ, từ buổi 4 lại 1 thẻ
-    steps.push({ kind: 'posture', short: completed === 0 || completed >= 3, drill: sessionDrill(lesson.week, data ? sessionCount(data) : 0) });
+    // v5.2: mở đầu bằng NHẠC (bài khởi động chọn ở cuối, để không trùng bài "Ôn bài cũ"); thẻ tư thế đầy đủ chỉ khi postureFull
+    opening = {
+      kind: 'posture',
+      full: postureFull(lesson, data, now),
+      drill: sessionDrill(lesson.week, data ? sessionCount(data) : 0),
+      warmup: { kind: 'riff', position: 'C', hand: 'RH', riffs: [] },
+    };
+    steps.push(opening);
     // Bài kiểm tra tuần: KHÔNG ôn nhanh (để kết quả ôn không lẫn vào tiêu chí, vd C4 10/10)
     const review = data && !lesson.isWeekTest ? reviewSegment(lesson, data, opts.rng, now) : null;
     if (review) steps.push({ kind: 'review', segment: review });
     if (warm && !warmAfter) steps.push(warmStep(warm));
+    // v5.2 — Đọc nhạc 1 phút: TRƯỚC bài mới (không bị "hết giờ" cắt mất); không phải hoạt động của bài
+    if (opts.sightRead && data && sightDailyFits(lesson)) steps.push(sightDailyStep(lesson, data));
   }
   // v5.1: trò quiz trong bài cũng ≤ MAX_QUIZ_ROUNDS lượt (dữ liệu giáo trình đã ≤ 6; chặn thêm cho bài tự tạo về sau)
   const capQuiz = (a: Activity): Activity =>
@@ -729,9 +960,11 @@ export function buildSessionPlan(
   todo.forEach((x, k) => steps.push({ kind: 'activity', activity: capQuiz(x.activity), index: x.index, last: k === todo.length - 1 }));
   if (!opts.replay && !isStage && warm && warmAfter) steps.push(warmStep(warm));
   // Ôn bài cũ (một câu, theo nhịp): SAU bài mới — hết giờ thì session.ts nhảy thẳng tới phần kết, bài mới không bị lấn
+  let reviewSongId: string | null = null;
   if (opts.songReview && data && !opts.replay && !isStage && !lesson.isWeekTest && todo.length < 4 && !lesson.id.endsWith('-daily')) {
     const rs = reviewSongStep(lesson, data, now, opts.rng);
     if (rs) steps.push(rs);
+    reviewSongId = rs?.songId ?? null;
   }
   let teach: { emoji: string; text: string } | null = null;
   if (!opts.replay && !isStage) {
@@ -747,6 +980,13 @@ export function buildSessionPlan(
   if (steps.length > MAX_SESSION_STEPS) drop((s) => s.kind === 'review-song');
   if (steps.length > MAX_SESSION_STEPS && !criterionQuiz) drop((s) => s.kind === 'quiz' && s.warmup);
   if (steps.length > MAX_SESSION_STEPS) drop((s) => s.kind === 'review');
+  if (steps.length > MAX_SESSION_STEPS) drop((s) => s.kind === 'sight-daily');
+  // v5.2 — bài khởi động bằng nhạc: không trùng bài "Ôn bài cũ" CÒN LẠI trong buổi
+  if (opening) {
+    const keptReview = !!reviewSongId && steps.some((s) => s.kind === 'review-song');
+    // Ôn bài cũ bị bỏ vì quá số màn → dùng chính bài đến hạn ôn làm bài khởi động (giữ ôn ngắt quãng)
+    opening.warmup = warmupMusic(lesson, data, keptReview ? [reviewSongId!] : [], keptReview ? null : reviewSongId);
+  }
   return steps;
 }
 
@@ -755,11 +995,19 @@ export function buildSessionPlan(
  * v5.1 — phần cố định: tư thế + khởi động kỹ thuật 1,5 · ôn nhanh 1 · màn kết (con làm thầy + tự chấm) 1,5
  * · khởi động tai/đọc nốt 1,5 nếu buổi CÓ bước này (tuần có khởi động; bị bỏ khi bài ≥ 3 lượt bài hát hoặc ≥ 4 hoạt động,
  * trừ tuần chấm bằng khởi động). "Ôn bài cũ" không tính (chỉ có khi còn chỗ, và bị bỏ khi hết giờ).
+ * v5.2: phần mở đầu 1,5 nay là khởi động bằng nhạc ~25" + câu nhắc tư thế + khởi động kỹ thuật 30" (THAY thẻ tư thế — không
+ * thêm giờ); + 1 phút "Đọc nhạc mỗi ngày" khi bài có chỗ (sightDailyFits).
  * Hoạt động: kỹ thuật 1 · từng nốt 0,3/việc · trò nghe/đọc 0,2/lượt · nhịp 0,4/mẫu · đọc nhạc 1/đoạn
  * · sáng tạo 2 (sáng tác 3) · sắc thái 0,3/lượt · bài hát chờ 3 giây/nốt (tách tay: chỉ nốt của tay đó; một câu: chỉ ô của câu) + 0,5
  * · theo nhịp 2 lượt cả bài + 0,5.
  */
 export function estimateLessonMinutes(lesson: Lesson): number {
+  const m = baseLessonMinutes(lesson);
+  return m && sightDailyFits(lesson) ? Math.round((m + SIGHT_DAILY_MIN) * 10) / 10 : m;
+}
+
+/** Ước lượng KHÔNG gồm bước "Đọc nhạc 1 phút" (v5.2) — xem estimateLessonMinutes. */
+function baseLessonMinutes(lesson: Lesson): number {
   if (lesson.activities.some((a) => a.kind === 'stage')) return 0;
   const plan = weekPlan(lesson.week);
   const songs = lesson.activities.filter((a) => a.kind === 'song').length;
@@ -788,6 +1036,10 @@ export function estimateLessonMinutes(lesson: Lesson): number {
         break;
       case 'dynamics':
         m += 0.3 * a.rounds.length;
+        break;
+      case 'sing':
+        // (2026-10-08) hát rồi đàn: ~0,6 phút/lượt (nghe – hát từng nốt – đàn)
+        m += 0.6 * a.rounds.length;
         break;
       case 'song': {
         const full = findTune(a.songId);
@@ -919,7 +1171,7 @@ export function dailyLesson(data: Readonly<AppData>, rng: () => number = Math.ra
     keep = [...keepable].sort((a, b) => lastWholePlay(data, a.id) - lastWholePlay(data, b.id))[0];
   }
   const keepStale = !!keep && stale.includes(keep);
-  const positions = week >= 26 ? (['C', 'G', 'C5'] as const) : week >= 14 ? (['C', 'G'] as const) : (['C'] as const);
+  const positions = week >= 34 ? (['C', 'G', 'C5', 'D', 'Am'] as const) : week >= 26 ? (['C', 'G', 'C5'] as const) : week >= 14 ? (['C', 'G'] as const) : (['C'] as const);
   const position = positions[Math.floor(rng() * positions.length) % positions.length];
   const activities: Activity[] = [
     {

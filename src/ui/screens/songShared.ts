@@ -25,6 +25,8 @@ export interface SongOptions {
   hand?: 'RH' | 'LH';
   /** Cùng `phrase`: mở thẳng chế độ "🔁 Lặp 3 lần đúng" của câu đó (vd "▶ Làm ngay" ở màn Phụ huynh) */
   loop?: boolean;
+  /** (2026-10-08) Giữ nhịp trong đầu: máy gõ nhịp im 2 ô giữa bài (chế độ theo nhịp). Không có: tự bật khi bài đã đạt theo nhịp (từ tuần 5) */
+  pulseDrop?: boolean;
 }
 
 /** Tập tách tay (bài hai tay): RH / LH = chỉ chấm tay đó; BOTH = hai tay như thường. */

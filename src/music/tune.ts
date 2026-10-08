@@ -21,6 +21,19 @@ export interface TuneNote {
   stac?: boolean;
   /** v4 — Luyến (legato): dấu luyến bắt đầu / kết thúc ở nốt này — các nốt trong đó đàn liền, không hở */
   slur?: 'start' | 'end';
+  /**
+   * Cấp 4 — Pedal vang (ghi ở bè THẤP nhất: `lh` của bài hai tay, `notes` của bài một tay):
+   * 'start' = đạp pedal ngay sau khi nốt này kêu · 'change' = thay pedal liền ("nhả trước — nhấn sau": nhả đúng lúc
+   * nốt này kêu, đạp lại ngay sau) · 'end' = nhả pedal ở CUỐI nốt này. Một đoạn pedal: 'start' … ('change')* … 'end'.
+   */
+  ped?: 'start' | 'change' | 'end';
+  /**
+   * Cấp 4 — Dấu to dần / nhỏ dần (chỉ ở bè chính `notes`): nêm bắt đầu ở nốt 'cresc' / 'dim',
+   * kết thúc ở nốt 'end' kế tiếp (tính cả nốt đó).
+   */
+  hairpin?: 'cresc' | 'dim' | 'end';
+  /** Cấp 4 — Chữ "rit." (chậm dần) trên khuông ở nốt này — chỉ để hiển thị, không đổi nhịp khi phát/chấm */
+  rit?: boolean;
 }
 
 export type Dynamic = 'p' | 'mf' | 'f';
@@ -45,7 +58,13 @@ export interface Tune {
   attributionRequired?: boolean;
   hand: TuneHand;
   bpm: number;
+  /**
+   * "4/4", "3/4", "2/4" — phách = nốt đen. Cấp 4: "6/8" (nhịp ghép) — phách = nốt MÓC ĐƠN: `beats` của nốt tính theo
+   * móc đơn (móc đơn 1, đen 2, đen chấm 3, trắng chấm 6), `bpm` là số móc đơn mỗi phút, mỗi ô 6 phách.
+   */
   timeSignature: string;
+  /** Cấp 4 — Chữ tốc độ ("Andante", "Allegro", "Moderato") in đậm trên ô nhịp đầu — chỉ để hiển thị */
+  tempoTerm?: string;
   week?: number;
   extension?: Pitch;
   /** Thế tay của bè chính (mặc định 'C') */
@@ -67,6 +86,18 @@ export interface TimedNote extends TuneNote {
 
 export function beatsPerMeasure(t: Tune): number {
   return Number(t.timeSignature.split('/')[0]) || 4;
+}
+
+/** Cấp 4 — Số nốt đen trong một phách của bài: 1 với x/4, 0,5 với x/8 (phách = móc đơn). `beats × noteUnit` = trường độ tính theo nốt đen (để vẽ hình nốt). */
+export function noteUnit(t: Tune): number {
+  const d = Number(t.timeSignature.split('/')[1]) || 4;
+  return 4 / d;
+}
+
+/** Cấp 4 — Nhịp ghép (6/8, 9/8, 12/8): mỗi "nhịp lớn" = nốt đen chấm = 3 móc đơn. */
+export function isCompound(t: Tune): boolean {
+  const [n, d] = t.timeSignature.split('/').map(Number);
+  return d === 8 && n >= 6 && n % 3 === 0;
 }
 
 /** Bè chính: tay phải (RH/BOTH) hoặc tay trái (LH). */
@@ -167,11 +198,14 @@ export function phraseRanges(t: Tune): Array<[number, number]> {
 function sliceVoice(notes: TuneNote[], bpm: number, from: number, to: number): TuneNote[] {
   const all = timed(notes, bpm, 'RH', 0);
   const inside = all.filter((n) => n.start >= from * bpm - 1e-9 && n.start < to * bpm - 1e-9);
-  const out: TuneNote[] = inside.map(({ pitch, beats, finger, rest, also, dyn, stac, slur }) => {
+  const out: TuneNote[] = inside.map(({ pitch, beats, finger, rest, also, dyn, stac, slur, ped, hairpin, rit }) => {
     const n: TuneNote = { pitch, beats, finger, rest, also };
     if (dyn) n.dyn = dyn;
     if (stac) n.stac = stac;
     if (slur) n.slur = slur;
+    if (ped) n.ped = ped;
+    if (hairpin) n.hairpin = hairpin;
+    if (rit) n.rit = rit;
     return n;
   });
   if (!inside.length) return out;
@@ -191,7 +225,47 @@ function sliceVoice(notes: TuneNote[], bpm: number, from: number, to: number): T
     if (last?.slur === 'start') delete last.slur;
     else if (last) last.slur = 'end';
   }
+  const lastNote = [...out].reverse().find((n) => !n.rest);
+  // Cấp 4: pedal bị cắt ngang → đạp lại ở nốt đầu câu / nhả ở nốt cuối câu
+  if (pedalOpen(before) && first) {
+    if (first.ped === 'end') delete first.ped;
+    else if (first.ped !== 'start') first.ped = 'start';
+  }
+  if (pedalOpen(out) && lastNote) {
+    if (lastNote.ped === 'start') delete lastNote.ped;
+    else lastNote.ped = 'end';
+  }
+  // Cấp 4: nêm to dần / nhỏ dần bị cắt ngang → mở lại ở nốt đầu câu / đóng ở nốt cuối câu
+  const hpBefore = hairpinOpen(before);
+  if (hpBefore && first) {
+    if (first.hairpin === 'end') delete first.hairpin;
+    else if (!first.hairpin) first.hairpin = hpBefore;
+  }
+  if (hairpinOpen(out) && lastNote) {
+    if (lastNote.hairpin === 'cresc' || lastNote.hairpin === 'dim') delete lastNote.hairpin;
+    else lastNote.hairpin = 'end';
+  }
   return out;
+}
+
+/** Cấp 4 — Pedal còn đang đạp (chưa nhả) ở cuối dãy nốt không. */
+function pedalOpen(notes: TuneNote[]): boolean {
+  let open = false;
+  for (const n of notes) {
+    if (n.ped === 'start' || n.ped === 'change') open = true;
+    else if (n.ped === 'end') open = false;
+  }
+  return open;
+}
+
+/** Cấp 4 — Nêm đang mở ở cuối dãy nốt: loại nêm, hoặc null. */
+function hairpinOpen(notes: TuneNote[]): 'cresc' | 'dim' | null {
+  let open: 'cresc' | 'dim' | null = null;
+  for (const n of notes) {
+    if (n.hairpin === 'cresc' || n.hairpin === 'dim') open = n.hairpin;
+    else if (n.hairpin === 'end') open = null;
+  }
+  return open;
 }
 
 /** Có dấu luyến đang mở (chưa đóng) ở cuối dãy nốt không. */
@@ -270,6 +344,40 @@ export function validateTune(t: Tune): string[] {
     }
   } else if (t.lh) errs.push('chỉ bài hai tay mới có bè lh');
   if (totalBeats(t) % beatsPerMeasure(t) !== 0) errs.push('tổng phách không tròn ô nhịp');
+  // Cấp 4: pedal & nêm phải đóng/mở đúng cặp
+  const main = mainHand(t);
+  errs.push(...validateMarks(t.notes, main));
+  if (t.lh) {
+    errs.push(...validateMarks(t.lh, 'LH'));
+    if (t.lh.some((n) => n.hairpin)) errs.push('LH: dấu to dần/nhỏ dần chỉ ghi ở bè chính');
+    if (t.lh.some((n) => n.ped) && t.notes.some((n) => n.ped)) errs.push('pedal chỉ ghi ở MỘT bè (bè thấp nhất: lh)');
+  }
+  return errs;
+}
+
+/** Cấp 4 — Kiểm tra cặp pedal ('start' … 'change'* … 'end') và nêm ('cresc'/'dim' … 'end') của một bè. */
+function validateMarks(notes: TuneNote[], label: string): string[] {
+  const errs: string[] = [];
+  let ped = false;
+  let hp = false;
+  for (const [i, n] of notes.entries()) {
+    if (n.ped === 'start') {
+      if (ped) errs.push(`${label} nốt ${i}: pedal 'start' khi pedal đang đạp (chưa 'end')`);
+      ped = true;
+    } else if (n.ped === 'change' || n.ped === 'end') {
+      if (!ped) errs.push(`${label} nốt ${i}: pedal '${n.ped}' khi chưa có 'start'`);
+      ped = n.ped === 'change';
+    } else if (n.ped !== undefined) errs.push(`${label} nốt ${i}: ped lạ ${String(n.ped)}`);
+    if (n.hairpin === 'cresc' || n.hairpin === 'dim') {
+      if (hp) errs.push(`${label} nốt ${i}: nêm '${n.hairpin}' lồng trong nêm chưa 'end'`);
+      hp = true;
+    } else if (n.hairpin === 'end') {
+      if (!hp) errs.push(`${label} nốt ${i}: nêm 'end' khi chưa có 'cresc'/'dim'`);
+      hp = false;
+    } else if (n.hairpin !== undefined) errs.push(`${label} nốt ${i}: hairpin lạ ${String(n.hairpin)}`);
+  }
+  if (ped) errs.push(`${label}: pedal chưa 'end' tới cuối bài`);
+  if (hp) errs.push(`${label}: nêm to dần/nhỏ dần chưa 'end' tới cuối bài`);
   return errs;
 }
 
@@ -294,10 +402,25 @@ export interface AccompNote {
 }
 
 /**
+ * (+ 2026-10-08) 🎁 Kiểu nhạc đệm (quà mở khóa theo đảo — lessons/unlocks.ts): 'basic' = như cũ (gốc phách 1 + quãng 5),
+ * 'march' = gốc / quãng 5 xen kẽ MỖI phách, 'arpeggio' = rải gốc–3–5–3 mỗi phách, 'bounce' = "bùm-tách" (gốc trầm ở phách
+ * mạnh, quãng 3 + 5 cao ở phách nhẹ). Chọn ở Sổ sticker → settings.cosmetics.backing → setBackingStyle (màn chính gọi).
+ */
+export type BackingStyle = 'basic' | 'march' | 'arpeggio' | 'bounce';
+export const BACKING_STYLES: readonly BackingStyle[] = ['basic', 'march', 'arpeggio', 'bounce'];
+let currentBacking: BackingStyle = 'basic';
+/** Đặt kiểu nhạc đệm mặc định cho các lần gọi accompaniment(t) sau (mã lạ → 'basic'). */
+export function setBackingStyle(style: string | null | undefined): void {
+  currentBacking = (BACKING_STYLES as readonly string[]).includes(style ?? '') ? (style as BackingStyle) : 'basic';
+}
+export const backingStyle = (): BackingStyle => currentBacking;
+
+/**
  * Bè đệm đơn giản: mỗi ô nhịp chọn hợp âm hợp với giai điệu nhất,
  * đánh nốt gốc ở phách 1 và quãng 5 ở phách sau. Bài hai tay: không đệm (tay trái là bè đệm).
+ * (+ 2026-10-08) `style` khác 'basic': cùng hợp âm, đổi cách đánh (xem BackingStyle).
  */
-export function accompaniment(t: Tune): AccompNote[] {
+export function accompaniment(t: Tune, style: BackingStyle = currentBacking): AccompNote[] {
   if (t.lh) return [];
   const bpm = beatsPerMeasure(t);
   const notes = playable(t);
@@ -321,8 +444,36 @@ export function accompaniment(t: Tune): AccompNote[] {
     }
     prev = best;
     const root = base + best.root + (best.root > 6 ? -12 : 0);
+    // nhịp ghép (6/8 — phách là móc đơn): giữ kiểu cơ bản
+    if (style !== 'basic' && !isCompound(t)) {
+      out.push(...styledMeasure(style, m * bpm, bpm, root, best));
+      continue;
+    }
+    if (isCompound(t)) {
+      // Cấp 4 — nhịp ghép: mỗi nhịp lớn (3 móc đơn) một nốt — gốc, quãng 5, gốc, quãng 5…
+      for (let g = 0; g * 3 < bpm; g++) out.push({ start: m * bpm + g * 3, beats: 3, midi: g % 2 ? root + 7 : root });
+      continue;
+    }
     out.push({ start: m * bpm, beats: Math.min(2, bpm), midi: root });
     if (bpm >= 3) out.push({ start: m * bpm + 2, beats: Math.min(2, bpm - 2), midi: root + 7 });
+  }
+  return out;
+}
+
+/** Một ô nhịp nhạc đệm kiểu `style` (gốc `root` MIDI, hợp âm `c`, `bpm` phách mỗi ô). */
+function styledMeasure(style: Exclude<BackingStyle, 'basic'>, start: number, bpm: number, root: number, c: { tones: number[]; root: number }): AccompNote[] {
+  // quãng 3 của hợp âm (trưởng 4 / thứ 3 nửa cung) tính từ gốc
+  const third = (((c.tones[1] - c.root) % 12) + 12) % 12;
+  const out: AccompNote[] = [];
+  for (let b = 0; b < bpm; b++) {
+    const t = start + b;
+    if (style === 'march') out.push({ start: t, beats: 0.9, midi: b % 2 ? root + 7 : root });
+    else if (style === 'arpeggio') out.push({ start: t, beats: 1, midi: root + [0, third, 7, third][b % 4] });
+    else if (b === 0) out.push({ start: t, beats: 1, midi: root });
+    else {
+      out.push({ start: t, beats: 0.6, midi: root + 12 + third });
+      out.push({ start: t, beats: 0.6, midi: root + 19 });
+    }
   }
   return out;
 }
@@ -347,19 +498,43 @@ export interface NoteStyle {
   slurred: boolean;
 }
 
-/** Bài có dùng ký hiệu sắc thái / ngắt / luyến không (để hiện chú thích). */
-export function expressionUsed(t: Tune): { dyn: boolean; stac: boolean; slur: boolean } {
+/**
+ * Bài có dùng ký hiệu sắc thái / ngắt / luyến không (để hiện chú thích).
+ * Cấp 4: `ped` (pedal) và `hairpin` (to dần / nhỏ dần) CHỈ có mặt khi bài dùng (= true) — bài cũ giữ nguyên kết quả.
+ */
+export function expressionUsed(t: Tune): ExpressionUsed {
   const all = [...t.notes, ...(t.lh ?? [])];
-  return { dyn: all.some((n) => !!n.dyn), stac: all.some((n) => !!n.stac), slur: all.some((n) => !!n.slur) };
+  const out: ExpressionUsed = {
+    dyn: all.some((n) => !!n.dyn),
+    stac: all.some((n) => !!n.stac),
+    slur: all.some((n) => !!n.slur),
+  };
+  if (all.some((n) => !!n.ped)) out.ped = true;
+  if (t.notes.some((n) => !!n.hairpin)) out.hairpin = true;
+  return out;
+}
+
+export interface ExpressionUsed {
+  dyn: boolean;
+  stac: boolean;
+  slur: boolean;
+  /** Cấp 4 — chỉ có (true) khi bài ghi pedal */
+  ped?: boolean;
+  /** Cấp 4 — chỉ có (true) khi bè chính ghi nêm to dần / nhỏ dần */
+  hairpin?: boolean;
 }
 
 /** Kiểu đàn của từng nốt (theo TimedNote.index, cả hai bè). */
 export function noteStyles(t: Tune): Map<number, NoteStyle> {
   const out = new Map<number, NoteStyle>();
-  const anyDyn = expressionUsed(t).dyn;
+  const used = expressionUsed(t);
+  const anyDyn = used.dyn;
+  // Cấp 4: nêm to dần / nhỏ dần (theo bè chính, áp cho cả hai bè như sắc thái) và pedal vang (giữ tiếng)
+  const hpVol = used.hairpin ? hairpinVolume(t) : null;
+  const pedSegs = used.ped ? [...pedalSegments(timeline(t)), ...pedalSegments(lhTimeline(t))] : [];
   for (const voice of [timeline(t), lhTimeline(t)]) {
-    // Bài có ghi sắc thái: trước dấu đầu tiên coi như mf
-    let cur: Dynamic | null = anyDyn ? 'mf' : null;
+    // Bài có ghi sắc thái (hoặc nêm): trước dấu đầu tiên coi như mf
+    let cur: Dynamic | null = anyDyn || used.hairpin ? 'mf' : null;
     // Bè không có dấu riêng (thường là tay trái) đi theo sắc thái CHUNG của bè chính — khuông vẽ một hàng chung
     const ownDyn = voice.some((n) => !!n.dyn);
     let open = false;
@@ -372,11 +547,58 @@ export function noteStyles(t: Tune): Map<number, NoteStyle> {
       const slurred = open || ending;
       // Trong dấu luyến: giữ phím tới tận nốt sau (chồng nhẹ cho liền tiếng); nốt cuối luyến nhấc tay
       const frac = n.stac ? STAC_FRACTION : open && !ending ? 1.02 : ending ? 0.85 : NORMAL_FRACTION;
-      out.set(n.index, { dyn: cur, vol: cur ? DYN_VOLUME[cur] : 1, len: n.beats * frac, slurred });
+      let len = n.beats * frac;
+      // Pedal đang đạp lúc nốt kêu → tiếng ngân tới lúc thay / nhả pedal (không bao giờ ngắn hơn)
+      for (const [a, b] of pedSegs) if (n.start >= a - 1e-9 && n.start < b - 1e-9) len = Math.max(len, b - n.start);
+      const vol = hpVol?.(n.start) ?? (cur ? DYN_VOLUME[cur] : 1);
+      out.set(n.index, { dyn: cur, vol, len, slurred });
       if (ending) open = false;
     }
   }
   return out;
+}
+
+/** Thang âm lượng cho nêm: (pp) · p · mf · f — nêm không có sắc thái đích thì đi một bậc. */
+const VOL_STEPS = [0.3, DYN_VOLUME.p, DYN_VOLUME.mf, DYN_VOLUME.f];
+
+/**
+ * Cấp 4 — Âm lượng theo nêm của bè chính tại phách `beat` (null = không trong nêm / sau nêm):
+ * trong nêm đi dần từ sắc thái lúc bắt đầu tới sắc thái ghi ngay sau nêm (không có / ngược chiều → một bậc);
+ * sau nêm giữ mức mới cho tới dấu sắc thái kế tiếp.
+ */
+export function hairpinVolume(t: Tune): (beat: number) => number | null {
+  const main = timeline(t);
+  const spans = hairpinSpans(main);
+  const segs: Array<{ a: number; b: number; v0: number; v1: number; hold: number }> = [];
+  spans.forEach((sp, k) => {
+    const a = main[sp.from].start;
+    const endN = main[sp.to];
+    const b = endN.start + endN.beats;
+    const prev = segs[segs.length - 1];
+    const held = prev && a >= prev.b - 1e-9 && a < prev.hold - 1e-9 ? prev.v1 : null;
+    const v0 = held ?? DYN_VOLUME[dynAtBeat(t, a) ?? 'mf'];
+    const limit = k + 1 < spans.length ? spans[k + 1].from : main.length - 1;
+    const next = main.slice(sp.to, limit + 1).find((n) => !!n.dyn);
+    const dir = sp.kind === 'cresc' ? 1 : -1;
+    let v1 = next ? DYN_VOLUME[next.dyn!] : NaN;
+    if (!next || (v1 - v0) * dir <= 0) {
+      let i = 0;
+      VOL_STEPS.forEach((v, j) => {
+        if (Math.abs(v - v0) < Math.abs(VOL_STEPS[i] - v0)) i = j;
+      });
+      v1 = VOL_STEPS[Math.max(0, Math.min(VOL_STEPS.length - 1, i + dir))];
+    }
+    const after = main.find((n) => n.start >= b - 1e-9 && !!n.dyn);
+    const nextSpan = k + 1 < spans.length ? main[spans[k + 1].from].start : Infinity;
+    segs.push({ a, b, v0, v1, hold: Math.min(after?.start ?? Infinity, nextSpan) });
+  });
+  return (beat) => {
+    for (const s of segs) {
+      if (beat >= s.a - 1e-9 && beat < s.b - 1e-9) return s.v0 + ((s.v1 - s.v0) * (beat - s.a)) / (s.b - s.a);
+      if (beat >= s.b - 1e-9 && beat < s.hold - 1e-9) return s.v1;
+    }
+    return null;
+  };
 }
 
 /** Sắc thái của bè chính tại phách `beat` (null = bài không ghi sắc thái). */
@@ -405,6 +627,80 @@ export function slurSpans(voice: TimedNote[]): Array<[number, number]> {
     }
   }
   if (from >= 0 && last > from) out.push([from, last]);
+  return out;
+}
+
+/** Cấp 4 — Một đoạn pedal: nốt đạp, các nốt thay pedal, nốt nhả (TimedNote.index). */
+export interface PedalSpan {
+  start: number;
+  changes: number[];
+  end: number;
+}
+
+/**
+ * Cấp 4 — Các đoạn pedal của một bè ('start' … 'change'* … 'end'). Viết lỏng vẫn đọc được:
+ * 'change' khi chưa đạp = 'start'; 'start' khi đang đạp = 'change'; chưa 'end' → tới nốt cuối bè.
+ */
+export function pedalSpans(voice: TimedNote[]): PedalSpan[] {
+  const out: PedalSpan[] = [];
+  let open: PedalSpan | null = null;
+  for (const n of voice) {
+    if (!n.ped) continue;
+    if (n.ped === 'end') {
+      if (open) out.push({ ...open, end: n.index });
+      open = null;
+    } else if (open) open.changes.push(n.index);
+    else open = { start: n.index, changes: [], end: -1 };
+  }
+  if (open && voice.length) out.push({ ...open, end: voice[voice.length - 1].index });
+  return out;
+}
+
+/**
+ * Cấp 4 — Khoảng thời gian (phách) pedal đang đạp: [lúc đạp, lúc nhả/thay). Mỗi 'change' mở một khoảng mới
+ * (nốt ở 'change' thuộc khoảng mới); khoảng cuối kết thúc ở CUỐI nốt 'end'.
+ */
+export function pedalSegments(voice: TimedNote[]): Array<[number, number]> {
+  const by = new Map(voice.map((n) => [n.index, n]));
+  const out: Array<[number, number]> = [];
+  for (const sp of pedalSpans(voice)) {
+    const pts = [sp.start, ...sp.changes].map((i) => by.get(i)!.start);
+    const e = by.get(sp.end)!;
+    const endT = Math.max(e.start + e.beats, pts[pts.length - 1]);
+    pts.forEach((p, i) => {
+      const q = i + 1 < pts.length ? pts[i + 1] : endT;
+      if (q > p) out.push([p, q]);
+    });
+  }
+  return out;
+}
+
+/** Cấp 4 — Một nêm to dần / nhỏ dần: [nốt đầu, nốt cuối] (TimedNote.index, tính cả nốt cuối). */
+export interface HairpinSpan {
+  from: number;
+  to: number;
+  kind: 'cresc' | 'dim';
+}
+
+/**
+ * Cấp 4 — Các nêm của một bè (thường là bè chính): từ nốt 'cresc'/'dim' tới nốt 'end' kế tiếp.
+ * Nêm mới khi nêm cũ chưa đóng → nêm cũ đóng ở nốt ngay trước; chưa 'end' → tới nốt cuối bè.
+ */
+export function hairpinSpans(voice: TimedNote[]): HairpinSpan[] {
+  const out: HairpinSpan[] = [];
+  let open: { from: number; kind: 'cresc' | 'dim' } | null = null;
+  let prev = -1;
+  for (const n of voice) {
+    if (n.hairpin === 'end') {
+      if (open && n.index > open.from) out.push({ ...open, to: n.index });
+      open = null;
+    } else if (n.hairpin === 'cresc' || n.hairpin === 'dim') {
+      if (open && prev > open.from) out.push({ ...open, to: prev });
+      open = { from: n.index, kind: n.hairpin };
+    }
+    prev = n.index;
+  }
+  if (open && prev > open.from) out.push({ ...open, to: prev });
   return out;
 }
 

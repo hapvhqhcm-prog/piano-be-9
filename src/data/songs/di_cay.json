@@ -1,0 +1,635 @@
+{
+ "id": "di_cay",
+ "title": "Di Cay (Vietnamese folk song)",
+ "titleVi": "Đi cấy (dân ca Thanh Hóa)",
+ "vn": "folk",
+ "composer": "Dân ca Thanh Hóa",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Ký âm đơn giản cho app từ các bản ký âm dân ca phổ biến; tay phải giai điệu, tay trái đệm quãng 5 (Cấp 4)",
+ "attributionRequired": false,
+ "hand": "BOTH",
+ "bpm": 40,
+ "timeSignature": "2/4",
+ "week": 37,
+ "position": "free",
+ "phrases": [
+  0,
+  5,
+  9,
+  13,
+  17
+ ],
+ "notes": [
+  {
+   "rest": true,
+   "beats": 1
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 3,
+   "dyn": "mf"
+  },
+  {
+   "pitch": "D4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "D4",
+   "beats": 0.25,
+   "finger": 1
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.25,
+   "finger": 2
+  },
+  {
+   "pitch": "D4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "D4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "D4",
+   "beats": 0.25,
+   "finger": 1
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.25,
+   "finger": 2
+  },
+  {
+   "pitch": "D4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "D4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "D4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.25,
+   "finger": 3
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.25,
+   "finger": 4
+  },
+  {
+   "pitch": "B4",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "B4",
+   "beats": 0.25,
+   "finger": 5
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.25,
+   "finger": 4
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "F#4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "F#4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "F#4",
+   "beats": 0.25,
+   "finger": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.25,
+   "finger": 3
+  },
+  {
+   "pitch": "F#4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "rest": true,
+   "beats": 0.5
+  },
+  {
+   "pitch": "B4",
+   "beats": 0.75,
+   "finger": 3
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.25,
+   "finger": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 1,
+   "dyn": "p"
+  },
+  {
+   "pitch": "B4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.25,
+   "finger": 2
+  },
+  {
+   "pitch": "B4",
+   "beats": 0.25,
+   "finger": 3
+  },
+  {
+   "pitch": "D5",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "B4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "D5",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "B4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "B4",
+   "beats": 0.25,
+   "finger": 3
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.25,
+   "finger": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "rest": true,
+   "beats": 0.5
+  },
+  {
+   "pitch": "B4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "D5",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "B4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "B4",
+   "beats": 0.25,
+   "finger": 3
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.25,
+   "finger": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.75,
+   "finger": 1
+  },
+  {
+   "pitch": "B4",
+   "beats": 0.25,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "A4",
+   "beats": 2,
+   "finger": 2
+  },
+  {
+   "rest": true,
+   "beats": 0.5
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.5,
+   "finger": 1,
+   "dyn": "mf"
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "D5",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "B4",
+   "beats": 1.5,
+   "finger": 3
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.25,
+   "finger": 4
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.25,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.25,
+   "finger": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.25,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 1.5,
+   "finger": 3
+  }
+ ],
+ "lh": [
+  {
+   "rest": true,
+   "beats": 2
+  },
+  {
+   "pitch": "G2",
+   "beats": 2,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "D3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "G2",
+   "beats": 2,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "D3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "G2",
+   "beats": 2,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "D3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "G2",
+   "beats": 2,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "D3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "G2",
+   "beats": 2,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "D3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "G2",
+   "beats": 2,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "D3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "A2",
+   "beats": 2,
+   "finger": 4,
+   "also": [
+    {
+     "pitch": "D3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "A2",
+   "beats": 2,
+   "finger": 4,
+   "also": [
+    {
+     "pitch": "D3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "G2",
+   "beats": 2,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "D3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "G2",
+   "beats": 2,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "D3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "G2",
+   "beats": 2,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "D3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "G2",
+   "beats": 2,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "D3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "G2",
+   "beats": 2,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "D3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "G2",
+   "beats": 2,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "D3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "G2",
+   "beats": 2,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "D3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "A2",
+   "beats": 2,
+   "finger": 4,
+   "also": [
+    {
+     "pitch": "D3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "G2",
+   "beats": 2,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "D3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "G2",
+   "beats": 2,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "D3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "G2",
+   "beats": 2,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "D3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "G2",
+   "beats": 2,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "D3",
+     "finger": 1
+    }
+   ]
+  }
+ ],
+ "lhPosition": "G"
+}

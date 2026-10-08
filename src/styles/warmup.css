@@ -1,0 +1,72 @@
+/* =========================================================
+   v5.2 (OWNER duyệt 2026-10-08) — KHỞI ĐỘNG BẰNG NHẠC (screens/warmup.ts)
+   và ĐỌC NHẠC 1 PHÚT MỖI NGÀY (screens/sightDaily.ts)
+   ========================================================= */
+
+/* Nhãn "🎵 Khởi động" + nút "Bỏ qua ⏭": giữa mép trên, dưới thanh tiến trình buổi (góc phải là nút ⚙️ Tùy chọn của màn bài hát) */
+.warmup-bar {
+  position: fixed;
+  top: calc(env(safe-area-inset-top) + 14px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 45;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.warmup-tag {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--violet-600);
+  background: var(--violet-50);
+  border: 1px solid var(--violet-200);
+  border-radius: 999px;
+  padding: 4px 12px 2px;
+}
+.warmup-skip {
+  min-height: 44px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--ink-2);
+  background: var(--surface);
+  border: 2px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 6px 16px 4px;
+  cursor: pointer;
+}
+.warmup-skip:active {
+  transform: translateY(1px);
+  background: var(--surface-2);
+}
+
+/* Màn bài hát dùng chế độ khoá câu của bước "Ôn bài cũ" — khởi động thì không hiện nhãn "🔁 ôn bài cũ" */
+.is-warmup .review-tag {
+  display: none;
+}
+
+/* Nhãn nhỏ "📖 1 phút mỗi ngày" trên màn đọc nhạc mỗi ngày */
+.sight-daily-tag {
+  position: fixed;
+  top: calc(env(safe-area-inset-top) + 18px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 45;
+  pointer-events: none;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--mint-800);
+  background: var(--mint-50);
+  border: 1px solid var(--mint-100);
+  border-radius: 999px;
+  padding: 4px 12px 2px;
+}
+
+@media (max-width: 700px) {
+  .warmup-tag,
+  .sight-daily-tag {
+    display: none;
+  }
+}

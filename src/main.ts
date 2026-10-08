@@ -6,6 +6,11 @@ import { App } from './ui/App';
 import { installAudioOverlay } from './ui/components/audioOverlay';
 import { startScreen } from './ui/screens/start';
 import { registerServiceWorker } from './pwa/updater';
+import { installErrorCapture } from './pwa/errorLog';
+import { SaveMirror, idbBackend, restoreFromMirror } from './progress/mirror';
+
+// (+ 2026-10-08) Ghi lại mọi lỗi chưa xử lý (nhật ký nhỏ — màn 🩺 Kiểm tra iPad) — càng sớm càng tốt
+installErrorCapture();
 
 /** localStorage có thể bị chặn (chế độ riêng tư cũ) → dùng bộ nhớ tạm. */
 function storage(): KeyValueStorage {
@@ -41,12 +46,30 @@ function installTouchGuards(): void {
   });
 }
 
-const root = document.getElementById('app') as HTMLElement;
-const app = new App(root, new AudioEngine(), new ProgressStore(storage()));
-installTouchGuards();
-installAudioOverlay(app.audio, () => app.started);
-registerServiceWorker();
-app.show(startScreen(app));
+/**
+ * (+ 2026-10-08) Bản sao thứ hai trong IndexedDB (progress/mirror.ts): dữ liệu chính trống / hỏng mà bản sao có
+ * tiến độ → khôi phục TRƯỚC khi tạo store (chờ IndexedDB tối đa 1,5 s; dữ liệu chính đọc được thì không chờ gì).
+ */
+async function boot(): Promise<void> {
+  const kv = storage();
+  let backend: ReturnType<typeof idbBackend> = null;
+  try {
+    backend = idbBackend();
+  } catch {
+    backend = null;
+  }
+  const restored = await restoreFromMirror(kv, backend).catch(() => false);
+  const store = new ProgressStore(kv, undefined, backend ? { mirror: new SaveMirror(backend) } : {});
+  store.recoveredFromMirror = restored;
+  const root = document.getElementById('app') as HTMLElement;
+  const app = new App(root, new AudioEngine(), store);
+  installTouchGuards();
+  installAudioOverlay(app.audio, () => app.started);
+  registerServiceWorker();
+  app.show(startScreen(app));
 
-// Chỉ bản dev: cho phép kiểm thử tự động điều khiển app (không có trong bản build).
-if (import.meta.env.DEV) (window as unknown as { __piano: App }).__piano = app;
+  // Chỉ bản dev: cho phép kiểm thử tự động điều khiển app (không có trong bản build).
+  if (import.meta.env.DEV) (window as unknown as { __piano: App }).__piano = app;
+}
+
+void boot();

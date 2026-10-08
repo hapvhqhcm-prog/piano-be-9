@@ -141,9 +141,11 @@ export function dynamicsScreen(app: App, hooks: DynamicsHooks) {
     function intro(): void {
       halt();
       kb.clear();
-      const pair: Want[] = loudSoft ? ['f', 'p'] : ['stac', 'leg'];
+      // (2026-10-08) trò chỉ có một kiểu (vd "Đàn liền" tuần 5 — chỉ LIỀN) → chỉ hiện thẻ kiểu đó
+      const all: Want[] = loudSoft ? ['f', 'p'] : ['stac', 'leg'];
+      const pair = all.filter((w) => hooks.rounds.some((r) => r.want === w));
       stage.replaceChildren(
-        h('div', { class: 'step-tag' }, loudSoft ? 'To – nhỏ' : 'Ngắt – liền'),
+        h('div', { class: 'step-tag' }, loudSoft ? 'To – nhỏ' : pair.length === 1 && pair[0] === 'leg' ? 'Liền' : 'Ngắt – liền'),
         h('h1', { class: 'title' }, hooks.title),
         h('div', { class: 'dyn-pair' }, ...pair.map((w) => card(w, false))),
         h('p', { class: 'lead' }, hooks.intro),

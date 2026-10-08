@@ -1,0 +1,250 @@
+{
+ "id": "falling_leaves",
+ "title": "Falling Leaves",
+ "titleVi": "Lá vàng rơi",
+ "composer": "Bài tự sáng tác cho app (piano-be-9)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Bài tự sáng tác cho app (piano-be-9)",
+ "attributionRequired": false,
+ "hand": "BOTH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 33,
+ "position": "free",
+ "phrases": [
+  0,
+  4
+ ],
+ "notes": [
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 1,
+   "dyn": "mf",
+   "slur": "start"
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "Bb4",
+   "beats": 1,
+   "finger": 4,
+   "slur": "end"
+  },
+  {
+   "pitch": "C5",
+   "beats": 2,
+   "finger": 5
+  },
+  {
+   "pitch": "A4",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "Bb4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "C5",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "Bb4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "A4",
+   "beats": 4,
+   "finger": 3
+  },
+  {
+   "pitch": "Bb4",
+   "beats": 1,
+   "finger": 4,
+   "dyn": "p",
+   "slur": "start"
+  },
+  {
+   "pitch": "C5",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "Bb4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 3,
+   "slur": "end"
+  },
+  {
+   "pitch": "A4",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "F4",
+   "beats": 2,
+   "finger": 1
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 2,
+   "dyn": "mf",
+   "slur": "start"
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "Bb4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 2,
+   "slur": "end"
+  },
+  {
+   "pitch": "F4",
+   "beats": 4,
+   "finger": 1
+  }
+ ],
+ "lh": [
+  {
+   "pitch": "F2",
+   "beats": 4,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "A2",
+     "finger": 3
+    },
+    {
+     "pitch": "C3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "F2",
+   "beats": 4,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "A2",
+     "finger": 3
+    },
+    {
+     "pitch": "C3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "G2",
+   "beats": 4,
+   "finger": 4,
+   "also": [
+    {
+     "pitch": "C3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "F2",
+   "beats": 4,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "A2",
+     "finger": 3
+    },
+    {
+     "pitch": "C3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "F2",
+   "beats": 4,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "Bb2",
+     "finger": 2
+    }
+   ]
+  },
+  {
+   "pitch": "F2",
+   "beats": 4,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "A2",
+     "finger": 3
+    },
+    {
+     "pitch": "C3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "G2",
+   "beats": 4,
+   "finger": 4,
+   "also": [
+    {
+     "pitch": "C3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "F2",
+   "beats": 4,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "A2",
+     "finger": 3
+    },
+    {
+     "pitch": "C3",
+     "finger": 1
+    }
+   ]
+  }
+ ],
+ "lhPosition": "free"
+}

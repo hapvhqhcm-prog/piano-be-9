@@ -21,7 +21,8 @@
    "pitch": "E4",
    "beats": 0.5,
    "finger": 3,
-   "dyn": "p"
+   "dyn": "p",
+   "slur": "start"
   },
   {
    "pitch": "F4",
@@ -31,12 +32,14 @@
   {
    "pitch": "G4",
    "beats": 1,
-   "finger": 5
+   "finger": 5,
+   "slur": "end"
   },
   {
    "pitch": "E4",
    "beats": 0.5,
-   "finger": 3
+   "finger": 3,
+   "slur": "start"
   },
   {
    "pitch": "D4",
@@ -46,7 +49,8 @@
   {
    "pitch": "C4",
    "beats": 1,
-   "finger": 1
+   "finger": 1,
+   "slur": "end"
   },
   {
    "pitch": "D4",
@@ -66,7 +70,8 @@
   {
    "pitch": "E4",
    "beats": 0.5,
-   "finger": 2
+   "finger": 2,
+   "slur": "start"
   },
   {
    "pitch": "F4",
@@ -86,12 +91,14 @@
   {
    "pitch": "G4",
    "beats": 1,
-   "finger": 4
+   "finger": 4,
+   "slur": "end"
   },
   {
    "pitch": "F4",
    "beats": 0.5,
-   "finger": 3
+   "finger": 3,
+   "slur": "start"
   },
   {
    "pitch": "E4",
@@ -106,7 +113,8 @@
   {
    "pitch": "C4",
    "beats": 2,
-   "finger": 1
+   "finger": 1,
+   "slur": "end"
   }
  ]
 }

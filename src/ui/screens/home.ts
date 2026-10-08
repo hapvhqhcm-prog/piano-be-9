@@ -21,13 +21,17 @@ import { lazy, lazyScreen, prefetchLater, withLazy } from '../lazy';
 import { parentGateScreen } from './parentGate';
 import { BUSY_WEEK_DAYS, earnedStickerIds, islandPassed } from '../../lessons/stickers';
 import { storageStatus } from '../../progress/ProgressStore';
+import { backupNudge } from '../components/backupNudge';
 import { cancelSpeech, speak } from '../../audio/voice';
 import { speakChip } from '../components/speakChip';
 import { challengeLine } from '../components/challengeSheet';
 import { weeklyChallenge } from '../../lessons/challenges';
 import { markSafePoint } from '../../pwa/updater';
 import type { AppData } from '../../progress/schema';
+import { playableSongCount, welcomeBack } from '../../lessons/shortSession';
+import { showUnlockCelebration, takeFreshUnlocks } from '../components/unlocksUi';
 import '../../styles/pedagogy.css';
+import '../../styles/longterm.css';
 import '../../styles/kidux.css';
 
 // Màn chính chỉ nạp phần cần để VẼ màn chính; các màn khác là chunk riêng (src/ui/lazy.ts).
@@ -37,6 +41,7 @@ const libraryMod = lazy(() => import('./library'));
 const freePlayMod = lazy(() => import('./freePlay'));
 const stickersMod = lazy(() => import('./stickers'));
 const gamesMod = lazy(() => import('./games'));
+const shortMod = lazy(() => import('./shortSession'));
 const startSession = (app: App, l: Lesson): void => withLazy(sessionMod, (m) => m.startSession(app, l));
 const libraryScreen = (app: App): Screen => lazyScreen(libraryMod, (m) => m.libraryScreen(app));
 const freePlayScreen = (app: App): Screen => lazyScreen(freePlayMod, (m) => m.freePlayScreen(app));
@@ -207,7 +212,6 @@ export function homeScreen(app: App, banner?: string) {
     // v5.1: mục tiêu bằng lời của BÉ (kidGoal); chưa có thì lời tiêu chí. Lời đầy đủ + tiến độ ở màn Phụ huynh.
     const gd = goalDays(plan.week, data, today);
     const goalText = plan.kidGoal ? (gd ? stripKidDays(plan.kidGoal) : plan.kidGoal) : gd ? stripDaysTail(plan.criterion.text) : plan.criterion.text;
-    // Chấm ngày của tiêu chí nằm ở hàng 2 (cạnh "Tuần này") để hàng 1 đủ chỗ cho lời mục tiêu — khung tối đa 2 dòng
     const daysEl = gd && !goalMetNotDone
       ? h(
           'span',
@@ -224,6 +228,8 @@ export function homeScreen(app: App, banner?: string) {
               : null,
         )
       : null;
+    // (+ 2026-10-08, OWNER duyệt "màn chính đơn giản hơn") Hàng chính: chấm NGÀY tuần này + 🎵 "Con chơi được N bài"
+    const songsN = playableSongCount(data);
     const goalRow = h(
       'div',
       { class: 'goal-row' },
@@ -234,11 +240,74 @@ export function homeScreen(app: App, banner?: string) {
         ...[0, 1, 2, 3, 4].map((i) => h('span', { class: `dot${i < weekDone ? ' on' : ''}` })),
       ),
       weekDone >= BUSY_WEEK_DAYS ? h('div', { class: 'streak week-star' }, '🌟 Tuần chăm chỉ!') : null,
-      daysEl,
+      h(
+        'button',
+        {
+          class: 'songs-stat',
+          type: 'button',
+          'aria-label': `Con chơi được ${songsN} bài. Chạm để mở Bài hát`,
+          onClick: () => app.show(libraryScreen(app)),
+        },
+        h('span', { 'aria-hidden': 'true' }, '🎵'),
+        songsN ? ` Con chơi được ${songsN} bài` : ' Bài đầu tiên đang chờ con!',
+      ),
     );
-    // (+ 2026-10-07) 🏆 Thử thách tuần: lưu tuần đã xong / chụp mốc kỷ lục trò chơi (chỉ ghi khi có đổi) rồi hiện một dòng gọn
+    // (+ 2026-10-07) 🏆 Thử thách tuần: lưu tuần đã xong / chụp mốc kỷ lục trò chơi (chỉ ghi khi có đổi)
     app.store.recordChallenges();
-    const chalLine = challengeLine(app, weeklyChallenge(app.store.get(), today), today, { blocked: () => overLimit, onBlocked: restToast });
+    const wc = weeklyChallenge(app.store.get(), today);
+    const chalLine = challengeLine(app, wc, today, {
+      blocked: () => overLimit,
+      onBlocked: restToast,
+      onConfirmed: () => app.show(homeScreen(app, banner)),
+    });
+    // (+ 2026-10-08) Mục tiêu đảo + thử thách tuần GỘP vào MỘT hàng chạm-để-mở (mỗi lần về màn chính: gọn — "Học tiếp" luôn thấy)
+    let moreOpen = false;
+    const miniDots = (have: number, need: number) =>
+      h('span', { class: 'mini-dots', 'aria-hidden': 'true' }, ...Array.from({ length: need }, (_, i) => h('span', { class: `md${i < have ? ' on' : ''}` })));
+    const goalSummary = goalMetNotDone
+      ? h('span', { class: 'more-goal met' }, '🎯 ✓')
+      : h('span', { class: 'more-goal' }, '🎯', gd ? miniDots(Math.min(gd.days, gd.needDays), gd.needDays) : null);
+    const chalSummary = h('span', { class: 'more-chal' }, '🏆', wc.done ? ' ✓' : miniDots(wc.have, wc.need));
+    const moreBody = h(
+      'div',
+      { class: 'more-body', id: 'home-more-body', hidden: !moreOpen },
+      goalMetNotDone
+        ? h('div', { class: 'goal-target met' }, `🎯 Đạt mục tiêu rồi! Còn ${leftLessons} bài nữa là qua đảo`)
+        : h(
+            'div',
+            { class: 'goal-target', title: plan.criterion.text },
+            h('span', { 'aria-hidden': 'true' }, '🎯'),
+            h('span', { class: 'goal-text' }, goalText),
+          ),
+      daysEl,
+      chalLine,
+    );
+    const moreBtn: HTMLButtonElement = h(
+      'button',
+      {
+        class: `home-more${moreOpen ? ' open' : ''}`,
+        type: 'button',
+        'aria-expanded': String(moreOpen),
+        'aria-controls': 'home-more-body',
+        'aria-label': `Mục tiêu đảo và thử thách tuần ${wc.title}. Chạm để ${moreOpen ? 'thu gọn' : 'xem'}`,
+        onClick: () => {
+          moreOpen = !moreOpen;
+          moreBody.hidden = !moreOpen;
+          moreBtn.classList.toggle('open', moreOpen);
+          moreBtn.setAttribute('aria-expanded', String(moreOpen));
+        },
+      },
+      h('span', { class: 'more-label' }, 'Mục tiêu & thử thách'),
+      goalSummary,
+      chalSummary,
+      h('span', { class: 'more-caret', 'aria-hidden': 'true' }, '›'),
+    );
+    // (+ 2026-10-08) 👋 Nghỉ ≥ 3 ngày: Bé Nốt chào "nhớ con" + nút Buổi ngắn 5 phút (bài con thích + 1 bài ôn)
+    const missed = welcomeBack(data, now) && !overLimit;
+    const greet = '👋 Bé Nốt nhớ con! Hôm nay mình chơi bài con thích nhé';
+    const bubbleText = missed ? greet : plan.story;
+    // 🎁 Quà mở khóa theo đảo: món mới → mặc luôn trang phục mới (Bé Nốt vẽ bên dưới đã mặc), màn mừng hiện sau khi vẽ
+    const freshUnlocks = takeFreshUnlocks(app);
 
     root.append(
       h(
@@ -265,6 +334,7 @@ export function homeScreen(app: App, banner?: string) {
           'div',
           { class: 'home-main scrollable' },
           storageBanner(),
+          backupNudge(app, () => app.show(parentGateScreen(app))),
           banner ? h('div', { class: 'banner home-banner' }, banner) : null,
           h(
             'section',
@@ -272,23 +342,18 @@ export function homeScreen(app: App, banner?: string) {
             h(
               'div',
               { class: 'story-row' },
-              mascot('happy', 84),
-              h('p', { class: 'story bubble' }, plan.story, speakChip(app, plan.story)),
+              mascot(missed ? 'wave' : 'happy', 84),
+              h('p', { class: `story bubble${missed ? ' welcome-back' : ''}` }, bubbleText, speakChip(app, bubbleText)),
             ),
-            h(
-              'div',
-              { class: 'goal-panel has-chal' },
-              goalMetNotDone
-                ? h('div', { class: 'goal-target met' }, `🎯 Đạt mục tiêu rồi! Còn ${leftLessons} bài nữa là qua đảo`)
-                : h(
-                    'div',
-                    { class: 'goal-target', title: plan.criterion.text },
-                    h('span', { 'aria-hidden': 'true' }, '🎯'),
-                    h('span', { class: 'goal-text' }, goalText),
-                  ),
-              goalRow,
-              chalLine,
-            ),
+            missed
+              ? button({
+                  icon: '⏱',
+                  label: 'Buổi ngắn 5 phút',
+                  kind: 'sun',
+                  onTap: () => withLazy(shortMod, (m) => m.startShortSession(app)),
+                })
+              : null,
+            h('div', { class: 'goal-panel has-chal simple' }, goalRow, moreBtn, moreBody),
             overLimit
               ? h('div', { class: 'banner rest' }, '🌙 Hôm nay con học đủ rồi. Mai mình học tiếp nhé!')
               : button({
@@ -341,7 +406,11 @@ export function homeScreen(app: App, banner?: string) {
     prefetchLater([sessionMod], 300);
     // Đọc to câu chuyện của tuần — mỗi ngày một lần (không phải mỗi lần về màn chính)
     // (hẹn giờ được gỡ khi rời màn — trước đây rời màn trong 0,6 s thì câu chuyện vẫn đọc đè lên màn kế tiếp)
-    const storyTimer = shouldTellStory(today, plan.week) ? window.setTimeout(() => void speak(app, plan.story), 600) : 0;
+    const storyTimer = shouldTellStory(today, plan.week) ? window.setTimeout(() => void speak(app, bubbleText), 600) : 0;
+    // 🎁 Màn mừng quà mới (sau khi màn chính đã vẽ — bé thấy Bé Nốt mặc đồ mới phía sau)
+    const unlockTimer = freshUnlocks.length
+      ? window.setTimeout(() => root.isConnected && showUnlockCelebration(app, freshUnlocks, () => app.show(stickersScreen(app))), 450)
+      : 0;
     // Ghi hỏng khi đang ở màn chính → hiện băng chặn ngay (vẽ lại màn)
     const unStore = app.store.subscribe(() => {
       const st = storageStatus();
@@ -350,6 +419,7 @@ export function homeScreen(app: App, banner?: string) {
     return () => {
       unStore();
       window.clearTimeout(storyTimer);
+      window.clearTimeout(unlockTimer);
       cancelSpeech();
     };
   };

@@ -19,25 +19,30 @@ import { pitchToMidi } from '../src/piano/pitchTable';
 const ALLOWED = [
   'id', 'title', 'titleVi', 'vn', 'aka', 'composer', 'sourceStatus', 'arrangementBy', 'attributionRequired',
   'hand', 'bpm', 'timeSignature', 'week', 'extension', 'position', 'lh', 'lhPosition', 'phrases', 'notes',
+  // Cấp 4 (2026-10-08): thuật ngữ tốc độ (Andante, Allegro…) — chỉ hiển thị
+  'tempoTerm',
 ];
+/** Cấp 4 (2026-10-08): số bài mới tuần 32–43 (tests/level4.test.ts kiểm nội dung) */
+const LEVEL4_SONGS = 29;
 
-it('có 95 bài hát (56 cũ + 14 bài tự sáng tác v5 + 12 bài Việt Nam + 13 bài tự sáng tác bổ sung 2026-10-06), id không trùng, đủ tuần 2–30 (trừ 21 — hòa nhạc Cấp 2; v5.1: 31 tuần)', () => {
+it('có 97 bài hát (56 cũ + 14 bài tự sáng tác v5 + 12 bài Việt Nam + 13 bài tự sáng tác bổ sung 2026-10-06 + 2 bài 2026-10-08: Bánh nóng thế Sol, Xích đu 3/4), id không trùng, đủ tuần 2–30 (trừ 21 — hòa nhạc Cấp 2; v5.1: 31 tuần)', () => {
   // 51 bài + 6 bài dân ca Việt Nam − "Cầu London — chấm dôi" (bài lặp, thay bằng "Bắc kim thang") — OWNER yêu cầu 2026-10-05
   // v5 (OWNER duyệt 2026-10-05): + 14 bài tự sáng tác cho tuần củng cố / tuần nhịp mới (giữ đủ 56 bài cũ)
   // 2026-10-06: + 9 dân ca + 3 ca khúc nhạc sĩ Việt Nam đã thuộc về công chúng (Lý ngựa ô thay bằng bản đầy đủ — cùng id)
   // 2026-10-06 (rà soát kho bài): + 13 bài tự sáng tác lấp tuần mỏng — mỗi tuần 2–30 (trừ 21) giờ có ≥ 2 bài, tuần 29–30 có 2
-  expect(SONGS).toHaveLength(95);
-  expect(new Set(SONGS.map((s) => s.id)).size).toBe(95);
+  expect(SONGS).toHaveLength(97 + LEVEL4_SONGS);
+  expect(new Set(SONGS.map((s) => s.id)).size).toBe(97 + LEVEL4_SONGS);
+  for (let w = 32; w <= 42; w++) expect(SONGS.filter((s) => s.week === w).length, `tuần ${w}`).toBeGreaterThanOrEqual(2);
   const weeks = new Set(SONGS.map((s) => s.week));
   for (let w = 2; w <= 30; w++) if (w !== 21) expect(weeks.has(w), `tuần ${w}`).toBe(true);
   for (let w = 2; w <= 30; w++) if (w !== 21) expect(SONGS.filter((s) => s.week === w).length, `tuần ${w}`).toBeGreaterThanOrEqual(2);
 });
 
-it('bài Việt Nam (2026-10-06): 15 dân ca vn=folk; 3 ca khúc PD vn=composed; bài quen hát lời Việt vn=lyrics, tên gọi khác chỉ là tên', () => {
+it('bài Việt Nam (2026-10-06): 15 dân ca (+ 2 Cấp 4) vn=folk; 3 ca khúc PD vn=composed; bài quen hát lời Việt vn=lyrics, tên gọi khác chỉ là tên', () => {
   const folk = SONGS.filter((s) => s.vn === 'folk').map((s) => s.id).sort();
   expect(folk).toEqual([
-    'bac_kim_thang', 'beo_dat_may_troi', 'co_la', 'ga_gay', 'inh_la_oi', 'ly_cay_bong', 'ly_cay_da', 'ly_cay_xanh', 'ly_con_sao',
-    'ly_ngua_o', 'mua_roi', 'ngay_mua_vui', 'nguoi_oi_nguoi_o_dung_ve', 'trong_com', 'xoe_hoa',
+    'bac_kim_thang', 'beo_dat_may_troi', 'co_la', 'di_cay', 'ga_gay', 'ho_ba_li', 'inh_la_oi', 'ly_cay_bong', 'ly_cay_da', 'ly_cay_xanh',
+    'ly_con_sao', 'ly_ngua_o', 'mua_roi', 'ngay_mua_vui', 'nguoi_oi_nguoi_o_dung_ve', 'trong_com', 'xoe_hoa', // + di_cay, ho_ba_li (Cấp 4)
   ]);
   // mọi bài "Dân ca <vùng miền / dân tộc Việt Nam>" đều được đánh dấu
   for (const s of SONGS) if (/^Dân ca (Nam Bộ|Bắc Bộ|quan họ|Thái|Xá|Cống)/.test(s.composer ?? '')) expect(s.vn, s.id).toBe('folk');
@@ -76,7 +81,8 @@ describe.each(SONGS.map((s) => [s.id, s] as const))('bài hát %s', (_id, song: 
     for (const k of Object.keys(song)) expect(ALLOWED).toContain(k);
     expect(song.sourceStatus).toBe('public-domain');
     expect(song.attributionRequired).toBe(false);
-    expect(['4/4', '3/4', '2/4']).toContain(song.timeSignature);
+    expect(['4/4', '3/4', '2/4', '6/8']).toContain(song.timeSignature);
+    if (song.timeSignature === '6/8') expect(song.week, 'nhịp 6/8 dạy ở tuần 39').toBeGreaterThanOrEqual(39);
     // Tốc độ theo nốt đen, trên thang 40–50–60–72; bài có móc kép (dân ca 2/4) khởi đầu chậm ở 40
     const has16th = [...song.notes, ...(song.lh ?? [])].some((n) => n.beats < 0.5);
     expect(song.bpm).toBe(has16th ? 40 : 60);
@@ -98,7 +104,9 @@ describe.each(SONGS.map((s) => [s.id, s] as const))('bài hát %s', (_id, song: 
           expect(n.stac ?? n.slur).toBeUndefined();
           continue;
         }
-        if (n.stac !== undefined || n.slur !== undefined) expect(song.week).toBeGreaterThanOrEqual(12);
+        // (2026-10-08, OWNER duyệt) LIỀN dạy sớm (trò "Đàn liền" tuần 5) → dấu luyến từ tuần 6; NGẮT vẫn từ tuần 12
+        if (n.stac !== undefined) expect(song.week).toBeGreaterThanOrEqual(12);
+        if (n.slur !== undefined) expect(song.week).toBeGreaterThanOrEqual(6);
         if (n.stac !== undefined) {
           expect(n.stac).toBe(true);
           expect(open).toBe(false); // không ngắt trong dấu luyến

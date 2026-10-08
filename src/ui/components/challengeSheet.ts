@@ -7,13 +7,15 @@ import { nextLesson } from '../../lessons/lessonEngine';
 import { findSong } from '../../music/tune';
 import type { App, Screen } from '../App';
 import { lazy, lazyScreen, withLazy } from '../lazy';
-import { button, h, toast } from './dom';
+import { button, confirmDialog, h, toast } from './dom';
+import { confetti } from './celebrate';
 import { speakChip } from './speakChip';
 import { stickerArt } from './art/stickerArt';
 import { cancelSpeech } from '../../audio/voice';
 import '../../styles/challenges.css';
 
 const libraryMod = lazy(() => import('../screens/library'));
+const freePlayMod = lazy(() => import('../screens/freePlay'));
 const sessionMod = lazy(() => import('../screens/session'));
 
 /**
@@ -60,6 +62,10 @@ export function runChallengeAction(app: App, a: ChallengeAction): void {
       return app.show(lazyScreen(libraryMod, (m) => m.libraryScreen(app, a.filter ?? 'all')));
     case 'lesson':
       return startNext();
+    case 'freeplay':
+      return app.show(lazyScreen(freePlayMod, (m) => m.freePlayScreen(app)));
+    case 'none':
+      return;
     case 'games': {
       if (!gamesMod) return startNext();
       gamesMod.load().then(
@@ -76,7 +82,12 @@ export function runChallengeAction(app: App, a: ChallengeAction): void {
 }
 
 /** Tấm chi tiết thử thách (nền mờ + thẻ giữa màn). Chạm nền mờ / "Đóng" để tắt. */
-export function openChallengeSheet(app: App, c: WeeklyChallenge, today: string, opts: { blocked?: () => boolean; onBlocked?: () => void } = {}): void {
+export function openChallengeSheet(
+  app: App,
+  c: WeeklyChallenge,
+  today: string,
+  opts: { blocked?: () => boolean; onBlocked?: () => void; onConfirmed?: () => void } = {},
+): void {
   const close = () => {
     cancelSpeech();
     wrap.remove();
@@ -118,7 +129,31 @@ export function openChallengeSheet(app: App, c: WeeklyChallenge, today: string, 
       'div',
       { class: 'dialog-actions' },
       button({ label: 'Đóng', onTap: close }),
-      c.done
+      // (+ 2026-10-08) Thử thách "ngoài đời": bố mẹ xác nhận (nhấn giữ không cần — có hộp xác nhận)
+      c.selfReport && !c.done
+        ? button({
+            icon: '👪',
+            label: 'Bố mẹ: con đã làm',
+            kind: 'good',
+            onTap: () =>
+              confirmDialog({
+                title: `${c.icon} ${c.title}`,
+                text: 'Bố mẹ xác nhận con đã làm xong thử thách tuần này?',
+                okIcon: '🏆',
+                okLabel: 'Đúng, con làm rồi!',
+                onOk: () => {
+                  close();
+                  if (app.store.confirmChallenge(c.id)) {
+                    confetti(40);
+                    void app.audio.chime();
+                    toast('🏆 Xong thử thách tuần! Con nhận được một cúp mới');
+                  }
+                  opts.onConfirmed?.();
+                },
+              }),
+          })
+        : null,
+      c.done || c.action.kind === 'none'
         ? null
         : button({
             icon: '▶',
@@ -141,7 +176,12 @@ export function openChallengeSheet(app: App, c: WeeklyChallenge, today: string, 
 }
 
 /** Dòng gọn ở khung mục tiêu màn chính: "🏆 Thử thách tuần: 🐇 Nhanh hơn ●○ chưa xong ›" — chạm mở tấm chi tiết. */
-export function challengeLine(app: App, c: WeeklyChallenge, today: string, opts: { blocked?: () => boolean; onBlocked?: () => void } = {}): HTMLElement {
+export function challengeLine(
+  app: App,
+  c: WeeklyChallenge,
+  today: string,
+  opts: { blocked?: () => boolean; onBlocked?: () => void; onConfirmed?: () => void } = {},
+): HTMLElement {
   return h(
     'button',
     {

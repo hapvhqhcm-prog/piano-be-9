@@ -154,3 +154,28 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* (2026-10-08) Cầu nối vần → đếm số: dòng đếm dưới mỗi ô nhịp; vần mờ dần theo tuần (timing.ts COUNT_BRIDGE) */
+.rh-countline {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.rh-countline.rh-strong {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--violet-500, var(--primary));
+}
+.rh-label.rh-faint {
+  font-size: 15px;
+  font-weight: 600;
+  opacity: 0.55;
+}
+/* Giữ nhịp trong đầu: dòng "máy im" khi 2 ô không có tiếng tích */
+.pulse-silent {
+  font-weight: 800;
+  color: var(--violet-500, var(--primary));
+}

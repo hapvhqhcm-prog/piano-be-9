@@ -13,6 +13,12 @@ import type { Activity, Lesson, WeekPlan } from './types';
  * đọc theo quãng tới quãng 5; sáng tác 4 ô nhịp (tuần 13, 17). Tiêu chí bài hát: đạt ở 2 NGÀY khác nhau (lessonEngine.weekPassed).
  * v5.1: khởi động kỹ thuật ~30 giây MỖI buổi (WeekPlan.drills, ngay sau tư thế) thay cho hoạt động 1 phút ở bài đầu tuần;
  * bài hai tay cùng lúc đầu tuần 12, 13 TÁCH TAY sẵn trên CÂU KHÓ (chờ tay phải → chờ tay trái → hai tay cả bài).
+ * (2026-10-08, OWNER duyệt sau rà soát chuyên gia):
+ *  · NHỊP 3/4 SỚM: bài "w11-l4" (vỗ "MỘT-hai-ba" + bài 3/4 đầu tiên "Xích đu") — tuần 15 Vũ hội Valse đào sâu.
+ *  · rút dần phím sáng (week4.ts "GỢI Ý RÚT DẦN"): lượt THEO NHỊP mặc định 'names'; tuần 15 bài thế Đô: chờ 'names', theo nhịp 'staff'.
+ *  · ứng tấu 1 phút MỖI tuần (tuần chưa có; trừ tuần 21 hòa nhạc — bài ôn đã đủ 3 hoạt động): Hỏi – Đáp ở thế tay
+ *    của tuần, hoặc phím đen theo nhịp của tuần.
+ *  · lời cho bé ngắn (≤ ~12 chữ, ý chính trước) — chi tiết cho người lớn ở parentTips.ts.
  */
 
 const song = (songId: string, mode: 'wait' | 'tempo', level: 2 | 3 = 2, hints: 'full' | 'names' | 'staff' = 'full', intro?: string): Activity => ({
@@ -24,13 +30,32 @@ const song = (songId: string, mode: 'wait' | 'tempo', level: 2 | 3 = 2, hints: '
   intro,
 });
 
-const pair = (id: string, week: number, title: string, emoji: string, songId: string, hints: 'full' | 'names' = 'full', intro?: string): Lesson => ({
+/** Chờ → theo nhịp. Lượt theo nhịp bớt một bậc gợi ý (2026-10-08): mặc định 'names' (phím không sáng). */
+const pair = (
+  id: string,
+  week: number,
+  title: string,
+  emoji: string,
+  songId: string,
+  hints: 'full' | 'names' = 'full',
+  intro?: string,
+  tempoHints: 'names' | 'staff' = 'names',
+): Lesson => ({
   id,
   week,
   title,
   emoji,
-  activities: [song(songId, 'wait', 2, hints, intro), song(songId, 'tempo', 2, hints)],
+  activities: [song(songId, 'wait', 2, hints, intro), song(songId, 'tempo', 2, tempoHints)],
 });
+
+/** (2026-10-08) thêm hoạt động (ứng tấu 1 phút) vào cuối bài */
+const plus = (lesson: Lesson, ...extra: Activity[]): Lesson => ({ ...lesson, activities: [...lesson.activities, ...extra] });
+
+/** (2026-10-08) Hỏi – Đáp 2 ô nhịp ở thế tay của tuần — ứng tấu 1 phút */
+const qa = (title: string, intro: string, position: 'C' | 'G' | 'D'): Activity => ({ kind: 'improv', title, intro, mode: 'question-answer', position, bars: 2 });
+
+/** (2026-10-08) phím đen trên nền app đàn — ứng tấu 1 phút theo nhịp của tuần */
+const blackKeys = (title: string, intro: string): Activity => ({ kind: 'improv', title, intro, mode: 'black-keys' });
 
 /**
  * v5.1 — TÁCH TAY có sẵn (bài hai tay cùng lúc đầu tuần). OWNER duyệt 2026-10-06 sau buổi bé chơi thử (đàn cả bài 3 lần
@@ -39,10 +64,10 @@ const pair = (id: string, week: number, title: string, emoji: string, songId: st
  * Lượt một tay / một câu KHÔNG tính cho tiêu chí tuần (lessonEngine.passedWhole bỏ lượt có `hand` hoặc `phrase`).
  */
 const handsApart = (songId: string, phrase: [number, number], phraseNo: number, rhIntro: string, lhIntro: string): Activity[] => [
-  { kind: 'song', songId, mode: 'wait', level: 2, hints: 'full', hand: 'RH', phrase, intro: `Câu ${phraseNo} — câu khó nhất. ${rhIntro}` },
+  { kind: 'song', songId, mode: 'wait', level: 2, hints: 'full', hand: 'RH', phrase, intro: `Câu ${phraseNo} (khó nhất). ${rhIntro}` },
   { kind: 'song', songId, mode: 'wait', level: 2, hints: 'full', hand: 'LH', phrase, intro: `Câu ${phraseNo}. ${lhIntro}` },
-  song(songId, 'wait', 2, 'full', 'Ghép HAI TAY cả bài — chậm thôi, đúng trước nhanh sau!'),
-  song(songId, 'tempo'),
+  song(songId, 'wait', 2, 'full', 'Ghép HAI TAY cả bài — chậm thôi, đúng trước!'),
+  song(songId, 'tempo', 2, 'names'),
 ];
 
 export const WEEK11: WeekPlan = {
@@ -68,7 +93,7 @@ export const WEEK11: WeekPlan = {
           id: 'w11-mc',
           step: 'Bài mới',
           title: 'Thế Đô giữa — tay trái',
-          intro: 'Ngón cái tay trái đặt ở Đô giữa, các ngón khác xuống Si, La, Sol, Fa. Trên khuông Fa, Đô giữa ở trên cùng.',
+          intro: 'Tay trái: ngón cái ở Đô giữa, ngón út ở Fa.',
           targets: [
             posNote('C4', 'LH', 'MC', 'Ngón 1 — Đô giữa'),
             posNote('B3', 'LH', 'MC'),
@@ -87,7 +112,7 @@ export const WEEK11: WeekPlan = {
         {
           kind: 'quiz',
           title: 'Nốt mốc khóa Fa 🧭',
-          intro: 'Khóa Fa có hai dấu chấm ôm lấy vạch 4: đó là nốt FA. Đô giữa "đội mũ" vạch phụ ở TRÊN khuông; Đô trầm ở khe 2.',
+          intro: 'Khóa Fa: hai dấu chấm ôm vạch FA. Đô giữa ở trên.',
           quiz: { variant: 'landmark', pool: ['C4', 'F3', 'C3'], rounds: 6, clef: 'bass' },
         },
       ],
@@ -97,7 +122,7 @@ export const WEEK11: WeekPlan = {
       week: 11,
       title: 'Trăng & Cừu — Đô giữa',
       emoji: '🐑',
-      activities: [song('au_clair_mc_lh', 'wait'), song('mary_mc_lh', 'wait'), song('mary_mc_lh', 'tempo')],
+      activities: [song('au_clair_mc_lh', 'wait'), song('mary_mc_lh', 'wait'), song('mary_mc_lh', 'tempo', 2, 'names')],
     },
     {
       id: 'w11-l3',
@@ -106,15 +131,37 @@ export const WEEK11: WeekPlan = {
       emoji: '💬',
       activities: [
         song('question_answer', 'wait', 2, 'full', 'Tay phải hỏi, tay trái đáp — lần lượt từng tay!'),
-        song('question_answer', 'tempo'),
+        song('question_answer', 'tempo', 2, 'names'),
         {
           kind: 'improv',
           title: 'Con trả lời 💬',
-          intro: 'App đàn câu HỎI 2 ô nhịp. Con đàn câu TRẢ LỜI 2 ô bằng thế Đô — kết thúc ở Đô cho câu trả lời "chắc chắn".',
+          intro: 'App hỏi 2 ô. Con đáp 2 ô, kết ở Đô!',
           mode: 'question-answer',
           position: 'C',
           bars: 2,
         },
+      ],
+    },
+    {
+      // (2026-10-08, OWNER duyệt) NHỊP 3/4 SỚM: vỗ "MỘT-hai-ba" (có "Đi-i-i" 3 phách) rồi bài 3/4 đầu tiên, thế Đô quen tay
+      id: 'w11-l4',
+      week: 11,
+      title: 'MỘT-hai-ba: Xích đu',
+      emoji: '🎠',
+      activities: [
+        {
+          kind: 'rhythm',
+          title: 'Nhịp 3',
+          intro: '3 phách: "MỘT-hai-ba". Vỗ MẠNH ở phách MỘT!',
+          patterns: [
+            ['walk', 'walk', 'walk'],
+            ['long', 'walk'],
+            ['long3'],
+            ['walk', 'long'],
+          ],
+        },
+        song('swing_waltz', 'wait', 2, 'full', 'Xích đu đung đưa "MỘT-hai-ba" — đàn LIỀN nhé!'),
+        song('swing_waltz', 'tempo', 2, 'names'),
       ],
     },
   ],
@@ -131,7 +178,7 @@ export const WEEK12: WeekPlan = {
   teach: { emoji: '👨‍🏫', text: 'Con chỉ bố mẹ: tay trái bấm Đô và GIỮ, tay phải đàn Mi Rê Đô. Rồi đàn Đô Rê Mi NGẮT (nảy như bóng) và LIỀN (nối như dòng nước).' },
   drills: ['finger-tap', 'five-finger'],
   criterion: { text: 'Chơi trọn "Bài ca niềm vui — hai tay" theo nhịp — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
-  kidGoal: 'Hai tay cùng hát Bài ca niềm vui theo nhịp — 2 hôm nhé! 🎎',
+  kidGoal: 'Hai tay hát Bài ca niềm vui — 2 hôm nhé! 🎎',
   lessons: [
     {
       id: 'w12-l1',
@@ -140,7 +187,7 @@ export const WEEK12: WeekPlan = {
       emoji: '🥐',
       activities: [
         // Câu 2 (ô 3–4): 11 nốt tay phải chạy nhanh trong khi tay trái đổi nốt
-        ...handsApart('hot_cross_buns_both', [2, 4], 2, 'Tay phải trước: "Bánh nóng" quen thuộc.', 'Giờ tay trái: bấm rồi GIỮ thật lâu — tay phải nghỉ.'),
+        ...handsApart('hot_cross_buns_both', [2, 4], 2, 'Tay phải trước: "Bánh nóng" quen thuộc.', 'Tay trái: bấm rồi GIỮ thật lâu!'),
       ],
     },
     {
@@ -153,7 +200,7 @@ export const WEEK12: WeekPlan = {
         {
           kind: 'dynamics',
           title: 'Ngắt hay liền? 🏀🌊',
-          intro: 'NGẮT (dấu chấm): chạm rồi nhấc ngón ngay, như bóng nảy. LIỀN (dấu luyến): giữ nốt tới khi nốt sau vang lên, như nước chảy. Thầy đàn mẫu, con đàn lại!',
+          intro: 'NGẮT: nảy như bóng. LIỀN: nối như nước chảy. Theo thầy!',
           mode: 'stac-leg',
           rounds: [
             { pitches: ['C4', 'D4', 'E4'], want: 'leg', fingers: [1, 2, 3], hand: 'RH' },
@@ -164,11 +211,11 @@ export const WEEK12: WeekPlan = {
             { pitches: ['G4', 'G4', 'G4'], want: 'stac', fingers: [5, 5, 5], hand: 'RH' },
           ],
         },
-        song('robot_march', 'wait', 2, 'full', 'Rô-bốt đi đều: mọi nốt có dấu chấm — đàn NGẮT và TO (f). Ô 5 rô-bốt đi xa: NHỎ (p)!'),
-        song('robot_march', 'tempo', 2, 'full'),
+        song('robot_march', 'wait', 2, 'full', 'Rô-bốt đàn NGẮT và TO; ô 5 đi xa: NHỎ!'),
+        song('robot_march', 'tempo', 2, 'names'),
       ],
     },
-    pair('w12-l3', 12, 'Bài ca niềm vui — hai tay', '🎶', 'ode_to_joy_both'),
+    plus(pair('w12-l3', 12, 'Bài ca niềm vui — hai tay', '🎶', 'ode_to_joy_both'), qa('Hỏi – Đáp nảy 🏀', 'App hỏi. Con đáp bằng nốt NGẮT, nảy như bóng!', 'C')),
   ],
 };
 
@@ -201,8 +248,8 @@ export const WEEK13: WeekPlan = {
           'bell_tower',
           [4, 8],
           2,
-          'Chuông nhỏ (tay phải) hát trước — câu này đàn NHỎ (p) như chuông ở xa.',
-          'Tay trái là chuông lớn: bấm một nốt rồi GIỮ cả ô nhịp.',
+          'Tay phải: NHỎ như chuông ở xa.',
+          'Tay trái: chuông lớn, bấm rồi GIỮ cả ô!',
         ),
       ],
     },
@@ -212,12 +259,12 @@ export const WEEK13: WeekPlan = {
       title: 'Đôi bạn & Lý cây xanh',
       emoji: '👫',
       activities: [
-        ...pair('w13-l2', 13, 'Đôi bạn', '👫', 'two_friends', 'full', 'Tay trái đi nốt trắng (2 phách), tay phải đi nốt đen — hai bạn đi cùng nhau mà không vội!').activities,
+        ...pair('w13-l2', 13, 'Đôi bạn', '👫', 'two_friends', 'full', 'Tay trái nốt trắng, tay phải nốt đen — đi cùng nhau!').activities,
         // (2026-10-06) Dân ca Nam Bộ, 2/4 — hai tay LUÂN PHIÊN như tuần 11 (không đánh cùng lúc)
-        song('ly_cay_xanh', 'wait', 2, 'names', 'Dân ca Nam Bộ, nhịp 2/4! Tay phải "thế Mi": Mi 1, Sol 2, La 3, Đô cao 5. Tay trái chỉ có Rê (ngón cái) và Đô (ngón 2) ở câu giữa — hai tay thay nhau, không đàn cùng lúc.'),
+        song('ly_cay_xanh', 'wait', 2, 'names', 'Hai tay thay nhau! Tay phải ngón 1 ở Mi.'),
       ],
     },
-    pair('w13-l3', 13, 'Thung lũng tiếng vọng', '⛰️', 'echo_valley', 'full', 'Câu LIỀN (dấu luyến) rồi câu NGẮT (dấu chấm); TO (f) rồi NHỎ (p) như tiếng vọng.'),
+    pair('w13-l3', 13, 'Thung lũng tiếng vọng', '⛰️', 'echo_valley', 'full', 'Câu LIỀN rồi câu NGẮT; TO rồi NHỎ như tiếng vọng.'),
     {
       id: 'w13-l4',
       week: 13,
@@ -227,13 +274,13 @@ export const WEEK13: WeekPlan = {
         {
           kind: 'quiz',
           title: 'Bước, nhảy hay nhảy xa? 🐸',
-          intro: 'Khuông hiện HAI nốt. Đếm vạch và khe từ nốt này tới nốt kia: bước (quãng 2), nhảy (quãng 3), nhảy xa (quãng 4). Lên hay xuống?',
+          intro: 'Hai nốt: bước, nhảy hay nhảy xa? Lên hay xuống?',
           quiz: { variant: 'interval', pool: ['C4', 'D4', 'E4', 'F4', 'G4'], rounds: 6, maxInterval: 4 },
         },
         {
           kind: 'improv',
           title: 'Con là nhạc sĩ ✍️',
-          intro: 'Con sáng tác 4 ô nhịp ở thế Đô tay phải: ô 1 và 2 "hỏi", ô 3 và 4 "đáp", kết thúc ở Đô. App lưu bài vào Thư viện!',
+          intro: 'Sáng tác 4 ô: hỏi rồi đáp, kết ở Đô!',
           mode: 'compose',
           position: 'C',
           bars: 4,
@@ -253,7 +300,7 @@ export const WEEK14: WeekPlan = {
   teach: { emoji: '👨‍🏫', text: 'Con dạy bố mẹ dời tay từ thế Đô sang thế Sol: ngón cái nhảy từ Đô lên Sol.' },
   drills: ['five-finger', 'hand-shape'],
   criterion: { text: 'Chơi trọn "Bài ca niềm vui — thế Sol" theo nhịp — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
-  kidGoal: 'Leo Núi Sol: Bài ca niềm vui tốc độ 60 — 2 hôm nhé! ⛰️',
+  kidGoal: 'Bài ca niềm vui thế Sol — 2 hôm nhé! ⛰️',
   lessons: [
     {
       id: 'w14-l1',
@@ -265,7 +312,7 @@ export const WEEK14: WeekPlan = {
           id: 'w14-g',
           step: 'Bài mới',
           title: 'Thế Sol — tay phải',
-          intro: 'Ngón 1 ở Sol, ngón 2 La, ngón 3 Si, ngón 4 Đô cao, ngón 5 Rê cao.',
+          intro: 'Ngón cái ở Sol, ngón út ở Rê cao.',
           targets: [
             posNote('G4', 'RH', 'G', 'Ngón 1 — Sol'),
             posNote('A4', 'RH', 'G'),
@@ -284,7 +331,7 @@ export const WEEK14: WeekPlan = {
         { kind: 'sight', title: 'Đọc nhạc thế Sol', position: 'G', hand: 'RH', count: 2, hints: 'names' },
       ],
     },
-    pair('w14-l2', 14, 'Bài ca niềm vui — thế Sol', '🎶', 'ode_to_joy_g', 'names'),
+    plus(pair('w14-l2', 14, 'Bài ca niềm vui — thế Sol', '🎶', 'ode_to_joy_g', 'names'), qa('Hỏi – Đáp thế Sol 💬', 'App hỏi ở thế Sol. Con đáp, kết ở Sol!', 'G')),
     {
       id: 'w14-l3',
       week: 14,
@@ -306,7 +353,7 @@ export const WEEK14: WeekPlan = {
           targets: [posNote('G2', 'LH', 'G', 'Ngón 5'), posNote('A2', 'LH', 'G'), posNote('B2', 'LH', 'G'), posNote('C3', 'LH', 'G'), posNote('D3', 'LH', 'G', 'Ngón 1')],
         }),
         song('hot_cross_buns_g_lh', 'wait'),
-        song('hot_cross_buns_g_lh', 'tempo'),
+        song('hot_cross_buns_g_lh', 'tempo', 2, 'names'),
       ],
     },
   ],
@@ -335,7 +382,7 @@ export const WEEK15: WeekPlan = {
         {
           kind: 'rhythm',
           title: 'Nhịp 3',
-          intro: 'Mỗi ô nhịp có 3 phách. "Đi-i" = 2 phách (nốt trắng), "Đi-i-i" = 3 phách (nốt trắng chấm dôi) — giữ hết ô nhịp!',
+          intro: 'Nhắc lại nhịp 3: "Đi-i-i" giữ cả ô 3 phách!',
           patterns: [
             ['walk', 'walk', 'walk'],
             ['long', 'walk'],
@@ -347,9 +394,13 @@ export const WEEK15: WeekPlan = {
         { kind: 'sight', title: 'Đọc nhạc nhịp 3', position: 'C', hand: 'RH', count: 2, hints: 'names', timeSignature: '3/4' },
       ],
     },
-    pair('w15-l2', 15, 'Điệu valse con mèo', '🐱', 'waltz_cat'),
-    pair('w15-l3', 15, 'Điệu valse mưa rơi', '🌧️', 'waltz_rain', 'full', 'Dấu luyến cong: đàn LIỀN, nốt nọ nối nốt kia. Dấu p: NHỎ như mưa phùn.'),
-    pair('w15-l4', 15, 'Chúc mừng sinh nhật', '🎂', 'birthday_both', 'full', 'Bài bắt đầu ở phách 3 (hai nốt lấy đà). Câu 1 tay trái hát trọn; các câu sau tay trái mở đầu, tay phải nối tiếp!'),
+    // (2026-10-08) thế Đô quen tay, nhịp 3 đã gặp ở tuần 11 → chờ chỉ tên nốt, theo nhịp chỉ nhìn khuông
+    pair('w15-l2', 15, 'Điệu valse con mèo', '🐱', 'waltz_cat', 'names', undefined, 'staff'),
+    plus(
+      pair('w15-l3', 15, 'Điệu valse mưa rơi', '🌧️', 'waltz_rain', 'names', 'Dấu luyến: đàn LIỀN. Dấu p: NHỎ như mưa phùn.', 'staff'),
+      qa('Hỏi – Đáp liền 💬', 'App hỏi. Con đáp thật LIỀN và NHẸ, kết ở Đô!', 'C'),
+    ),
+    pair('w15-l4', 15, 'Chúc mừng sinh nhật', '🎂', 'birthday_both', 'full', 'Bắt đầu ở phách 3. Tay trái mở đầu, tay phải nối!'),
   ],
 };
 
@@ -363,7 +414,7 @@ export const WEEK16: WeekPlan = {
   teach: { emoji: '👨‍🏫', text: 'Con chỉ cho bố mẹ: Fa thăng ở đâu? Mi giáng ở đâu?' },
   drills: ['five-finger', 'hand-shape'],
   criterion: { text: 'Chơi trọn "Bài ca niềm vui — thế Rê" theo nhịp — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
-  kidGoal: 'Nhớ phím đen Fa thăng: Bài ca niềm vui thế Rê, tốc độ 60 — 2 hôm nhé! 🦇',
+  kidGoal: 'Nhớ Fa thăng: Bài ca niềm vui thế Rê — 2 hôm nhé! 🦇',
   lessons: [
     {
       id: 'w16-l1',
@@ -375,7 +426,7 @@ export const WEEK16: WeekPlan = {
           id: 'w16-d',
           step: 'Bài mới',
           title: 'Thế Rê — có Fa thăng',
-          intro: 'Ngón 1 ở Rê. Ngón 3 KHÔNG đánh Fa trắng mà đánh phím đen Fa thăng ngay bên phải!',
+          intro: 'Ngón 1 ở Rê. Ngón 3 đánh phím ĐEN Fa thăng!',
           targets: [posNote('D4', 'RH', 'D', 'Ngón 1'), posNote('E4', 'RH', 'D'), posNote('F#4', 'RH', 'D', 'Phím ĐEN — Fa thăng'), posNote('G4', 'RH', 'D'), posNote('A4', 'RH', 'D', 'Ngón 5')],
         }),
         notes({
@@ -389,7 +440,10 @@ export const WEEK16: WeekPlan = {
     },
     pair('w16-l2', 16, 'Bài ca niềm vui — thế Rê', '🎶', 'ode_to_joy_d', 'names'),
     // OWNER duyệt 2026-10-05: thay "Chú cừu — thế Rê" (bài lặp) bằng bài tự sáng tác ở thế Rê
-    pair('w16-l3', 16, 'Siêu nhân bay', '🦸', 'superhero_fly', 'names', 'Thế Rê có Fa thăng. Nhảy Rê – Fa thăng – La thật TO (f) như siêu nhân cất cánh!'),
+    plus(
+      pair('w16-l3', 16, 'Siêu nhân bay', '🦸', 'superhero_fly', 'names', 'Nhảy Rê – Fa thăng – La thật TO như siêu nhân!'),
+      qa('Hỏi – Đáp thế Rê 💬', 'App hỏi ở thế Rê. Nhớ Fa thăng, kết ở Rê!', 'D'),
+    ),
     {
       id: 'w16-l4',
       week: 16,
@@ -400,7 +454,7 @@ export const WEEK16: WeekPlan = {
           id: 'w16-cm',
           step: 'Bài mới',
           title: 'Đô thứ — có Mi giáng',
-          intro: 'Thế Đô nhưng ngón 3 đánh phím đen Mi giáng (bên TRÁI Mi). Nghe buồn hơn hẳn!',
+          intro: 'Ngón 3 đánh phím ĐEN Mi giáng — nghe buồn hẳn!',
           targets: [posNote('C4', 'RH', 'Cm'), posNote('D4', 'RH', 'Cm'), posNote('Eb4', 'RH', 'Cm', 'Phím ĐEN — Mi giáng'), posNote('F4', 'RH', 'Cm'), posNote('G4', 'RH', 'Cm')],
         }),
         song('frere_jacques_minor', 'wait', 2, 'names', 'Bài "Kìa con bướm vàng" nhưng ở giọng buồn — nghe lạ không?'),
@@ -420,7 +474,7 @@ export const WEEK17: WeekPlan = {
   teach: { emoji: '👨‍🏫', text: 'Con đọc to cho bố mẹ nhịp "Đi-chấm chạy Đi Đi" (nốt chấm dôi).' },
   drills: ['thumb-under', 'finger-tap'],
   criterion: { text: 'Chơi "Bài ca niềm vui" đúng nhịp chấm dôi, 60 nhịp/phút — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
-  kidGoal: 'Lạc đà đi "Đi-chấm chạy": Bài ca niềm vui tốc độ 60 — 2 hôm nhé! 🐪',
+  kidGoal: 'Lạc đà "Đi-chấm chạy": Bài ca niềm vui — 2 hôm! 🐪',
   lessons: [
     {
       id: 'w17-l1',
@@ -431,7 +485,7 @@ export const WEEK17: WeekPlan = {
         {
           kind: 'rhythm',
           title: 'Đi-chấm chạy',
-          intro: 'Nốt đen CHẤM = 1 phách rưỡi ("Đi-chấm"), nốt móc đơn theo sau = nửa phách ("chạy"). Khác "Đi-i" (nốt trắng, 2 phách đều)!',
+          intro: '"Đi-chấm" dài 1 phách rưỡi, "chạy" theo sau ngắn!',
           patterns: [
             ['long', 'walk', 'walk'],
             ['dotted', 'walk', 'walk'],
@@ -456,7 +510,7 @@ export const WEEK17: WeekPlan = {
         {
           kind: 'improv',
           title: 'Con là nhạc sĩ ✍️',
-          intro: 'Con sáng tác một bài 4 ô nhịp ở thế Đô: thử dùng nhịp "Đi-chấm chạy" vừa học! Kết thúc ở Đô. App ghi lại thành bài của con trong Thư viện.',
+          intro: 'Sáng tác 4 ô ở thế Đô — thử "Đi-chấm chạy"!',
           mode: 'compose',
           position: 'C',
           bars: 4,
@@ -496,7 +550,7 @@ export const WEEK18: WeekPlan = {
         {
           kind: 'rhythm',
           title: 'Móc kép: Chạy-chạy-chạy-chạy',
-          intro: 'Móc đơn "Chạy-chạy" = 2 nốt trong 1 phách. MÓC KÉP (hai gạch ngang) = 4 nốt trong 1 phách: "Chạy-chạy-chạy-chạy". "Chạy chạy-chạy" = 1 móc đơn + 2 móc kép.',
+          intro: 'MÓC KÉP: 4 nốt trong 1 phách — "Chạy-chạy-chạy-chạy"!',
           patterns: [
             ['run', 'run', 'walk', 'walk'],
             ['run4', 'walk', 'run4', 'walk'],
@@ -506,7 +560,7 @@ export const WEEK18: WeekPlan = {
             ['run4', 'run3', 'long'],
           ],
         },
-        { kind: 'song', songId: 'rabbit_run', mode: 'wait', hints: 'names', intro: 'Thỏ con chạy 4 nốt trong một phách! Chế độ chờ: đúng nốt trước, nhanh sau.' },
+        { kind: 'song', songId: 'rabbit_run', mode: 'wait', hints: 'names', intro: 'Thỏ chạy 4 nốt một phách — đúng trước, nhanh sau!' },
       ],
     },
     {
@@ -515,9 +569,9 @@ export const WEEK18: WeekPlan = {
       title: 'Thỏ con & Lý cây đa',
       emoji: '🌳',
       activities: [
-        { kind: 'song', songId: 'rabbit_run', mode: 'tempo', level: 2, hints: 'names', intro: 'Bắt đầu chậm (tốc độ 40) — đọc to "Chạy-chạy-chạy-chạy" trong đầu.' },
+        { kind: 'song', songId: 'rabbit_run', mode: 'tempo', level: 2, hints: 'names', intro: 'Bắt đầu chậm — đọc thầm "Chạy-chạy-chạy-chạy"!' },
         // Dân ca Việt Nam (OWNER yêu cầu 2026-10-05): chỉ Đô Rê Mi — v5: dời từ tuần 2 (sau khi học móc đơn & móc kép)
-        { kind: 'song', songId: 'ly_cay_da', mode: 'wait', hints: 'names', intro: 'Dân ca quan họ Bắc Ninh, nhịp 2/4 — chỉ có Đô, Rê, Mi! Nhiều chỗ "Chạy chạy-chạy". Ô đầu có chỗ nghỉ: chờ một chút rồi mới đàn Đô.' },
+        { kind: 'song', songId: 'ly_cay_da', mode: 'wait', hints: 'names', intro: 'Chỉ Đô, Rê, Mi! Nhớ "Chạy chạy-chạy"; ô đầu chờ một chút.' },
         { kind: 'song', songId: 'ly_cay_da', mode: 'tempo', level: 2, hints: 'names' },
       ],
     },
@@ -531,7 +585,7 @@ export const WEEK18: WeekPlan = {
         {
           kind: 'rhythm',
           title: 'Tập-tễnh',
-          intro: '"Tập-tễnh" = móc đơn CHẤM (dài) + móc kép (ngắn) trong 1 phách — như bạn đi cà nhắc. Nhịp 2: mỗi mẫu 2 phách.',
+          intro: '"Tập-tễnh": dài rồi ngắn, như đi cà nhắc!',
           patterns: [
             ['dotted8', 'walk'],
             ['dotted8', 'run'],
@@ -540,6 +594,7 @@ export const WEEK18: WeekPlan = {
           ],
         },
         { kind: 'song', songId: 'ly_cay_da', mode: 'tempo', level: 2, hints: 'names', intro: 'Lý cây đa theo nhịp — nhớ "Chạy chạy-chạy" nhé!' },
+        blackKeys('Mưa móc kép 🎨', 'App đàn nền. Con làm mưa nhanh "Chạy-chạy-chạy-chạy"!'),
       ],
     },
   ],
@@ -573,7 +628,7 @@ export const WEEK19: WeekPlan = {
         {
           kind: 'rhythm',
           title: 'Chạy-Đi-chạy & dấu nối',
-          intro: 'NGHỊCH PHÁCH "Chạy-Đi-chạy": nốt "Đi" vang giữa hai phách — vỗ ở "và". DẤU NỐI (đường cong nối hai nốt CÙNG cao độ): vỗ MỘT lần, giữ cho đủ cả hai nốt.',
+          intro: '"Chạy-Đi-chạy": "Đi" vang lệch phách. Dấu nối: vỗ MỘT lần!',
           patterns: [
             ['sync', 'walk', 'walk'],
             ['walk', 'walk', 'sync'],
@@ -583,7 +638,7 @@ export const WEEK19: WeekPlan = {
             ['run', 'tie', 'run'],
           ],
         },
-        { kind: 'song', songId: 'cyclo_ride', mode: 'wait', hints: 'names', intro: 'Xích lô đi "Chạy-Đi-chạy": nốt giữa dài hơn, vang lệch phách — nghe mẫu trước nhé!' },
+        { kind: 'song', songId: 'cyclo_ride', mode: 'wait', hints: 'names', intro: 'Xích lô "Chạy-Đi-chạy" — nghe mẫu trước nhé!' },
         { kind: 'song', songId: 'cyclo_ride', mode: 'tempo', level: 2, hints: 'names' },
       ],
     },
@@ -595,7 +650,7 @@ export const WEEK19: WeekPlan = {
       emoji: '🎋',
       activities: [
         // OWNER yêu cầu 2026-10-05: dân ca Việt Nam có "Tập-tễnh" & móc kép
-        song('bac_kim_thang', 'wait', 2, 'names', 'Dân ca Nam Bộ! Có "Tập-tễnh" và "Chạy chạy-chạy". Bàn tay ngũ cung: Đô 1, Rê 2, Fa 3, Sol 4, La 5. Hai nốt dưới dấu luyến: đàn LIỀN.'),
+        song('bac_kim_thang', 'wait', 2, 'names', 'Tay ngũ cung như "Xòe hoa" — có "Tập-tễnh"!'),
         song('bac_kim_thang', 'tempo', 2, 'names'),
       ],
     },
@@ -607,6 +662,7 @@ export const WEEK19: WeekPlan = {
       activities: [
         { kind: 'song', songId: 'cyclo_ride', mode: 'tempo', level: 3, hints: 'names', intro: 'Băng chuyền: xích lô chạy về vạch đỏ — "Chạy-Đi-chạy"!' },
         { kind: 'sight', title: 'Đọc nhạc có móc đơn & chấm dôi', position: 'C', hand: 'RH', count: 2, rhythm: 2, hints: 'names' },
+        blackKeys('Phím đen lệch phách 🎨', 'App đàn nền. Con đàn phím đen "Chạy-Đi-chạy"!'),
       ],
     },
   ],
@@ -623,7 +679,7 @@ export const WEEK20: WeekPlan = {
   teach: { emoji: '👨‍🏫', text: 'Con chỉ bố mẹ cách luồn ngón cái dưới ngón 3 khi đi lên gam.' },
   drills: ['thumb-under', 'wrist-circle'],
   criterion: { text: 'Chơi gam Đô trưởng hai tay (lần lượt) theo nhịp — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
-  kidGoal: 'Cá lặn qua thác: gam tay phải và tay trái — 2 hôm nhé! 🐟',
+  kidGoal: 'Gam tay phải và tay trái — 2 hôm nhé! 🐟',
   lessons: [
     {
       id: 'w20-l1',
@@ -631,13 +687,16 @@ export const WEEK20: WeekPlan = {
       title: 'Gam tay phải',
       emoji: '🌊',
       activities: [
-        song('scale_c_rh', 'wait', 2, 'full', 'Đô Rê Mi (ngón 1 – 2 – 3) rồi LUỒN ngón cái xuống Fa!'),
-        song('scale_c_rh', 'tempo'),
+        song('scale_c_rh', 'wait', 2, 'full', 'Đô Rê Mi rồi LUỒN ngón cái xuống Fa!'),
+        song('scale_c_rh', 'tempo', 2, 'names'),
         // (2026-10-06) Dân ca Bắc Bộ đầy "Tập-tễnh" (tuần 18) — dịch xuống Đô trưởng: tay phải thế Đô, tay trái chỉ Sol (ngón cái)
-        song('co_la', 'wait', 2, 'names', 'Cò lả — dân ca đồng bằng Bắc Bộ! Rất nhiều nhịp "Tập-tễnh" đã học ở tuần 18. Tay phải thế Đô (Đô 1, Rê 2, Mi 3, Sol 5); hai nốt Sol trầm là của tay trái (ngón cái). Bài bắt đầu bằng một nốt lấy đà.'),
+        song('co_la', 'wait', 2, 'names', 'Nhiều "Tập-tễnh"! Hai nốt Sol trầm: ngón cái tay trái.'),
       ],
     },
-    pair('w20-l2', 20, 'Gam tay trái', '🌊', 'scale_c_lh', 'full', 'Tay trái đi lên: ngón 5 – 4 – 3 – 2 – 1 rồi ngón 3 VẮT qua La.'),
+    plus(
+      pair('w20-l2', 20, 'Gam tay trái', '🌊', 'scale_c_lh', 'full', 'Tay trái lên: 5 → 1, rồi ngón 3 VẮT qua La!'),
+      qa('Hỏi – Đáp về Đô 💬', 'App hỏi. Con đáp bằng bậc đi xuống về Đô!', 'C'),
+    ),
     pair('w20-l3', 20, 'Niềm vui cho thế giới', '🎄', 'joy_to_the_world', 'full', 'Bài này chính là gam đi xuống!'),
   ],
 };

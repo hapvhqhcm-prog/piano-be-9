@@ -1,0 +1,469 @@
+{
+ "id": "sonatina_c",
+ "title": "Little Sonatina in C (Clementi-style)",
+ "titleVi": "Sonatina nhỏ (phong cách Clementi)",
+ "composer": "Bài tự sáng tác cho app (piano-be-9)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Bài tự sáng tác cho app (piano-be-9) — phong cách sonatina cổ điển (Clementi)",
+ "attributionRequired": false,
+ "hand": "BOTH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 36,
+ "position": "free",
+ "phrases": [
+  0,
+  4
+ ],
+ "notes": [
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1,
+   "dyn": "f",
+   "slur": "start"
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 2,
+   "finger": 5,
+   "slur": "end"
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "C4",
+   "beats": 2,
+   "finger": 1
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 3,
+   "dyn": "p",
+   "slur": "start"
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 3,
+   "slur": "end"
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2,
+   "dyn": "mf"
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 4,
+   "finger": 1
+  }
+ ],
+ "lh": [
+  {
+   "pitch": "C3",
+   "beats": 0.5,
+   "finger": 5,
+   "slur": "start"
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "E3",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "E3",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 1,
+   "slur": "end"
+  },
+  {
+   "pitch": "C3",
+   "beats": 0.5,
+   "finger": 5,
+   "slur": "start"
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "E3",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "E3",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 1,
+   "slur": "end"
+  },
+  {
+   "pitch": "B2",
+   "beats": 0.5,
+   "finger": 5,
+   "slur": "start"
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "B2",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 1,
+   "slur": "end"
+  },
+  {
+   "pitch": "C3",
+   "beats": 0.5,
+   "finger": 5,
+   "slur": "start"
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "E3",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "E3",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 1,
+   "slur": "end"
+  },
+  {
+   "pitch": "C3",
+   "beats": 0.5,
+   "finger": 5,
+   "slur": "start"
+  },
+  {
+   "pitch": "A3",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "F3",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "A3",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "A3",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "F3",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "A3",
+   "beats": 0.5,
+   "finger": 1,
+   "slur": "end"
+  },
+  {
+   "pitch": "C3",
+   "beats": 0.5,
+   "finger": 5,
+   "slur": "start"
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "E3",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "E3",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 1,
+   "slur": "end"
+  },
+  {
+   "pitch": "B2",
+   "beats": 0.5,
+   "finger": 5,
+   "slur": "start"
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "B2",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 1,
+   "slur": "end"
+  },
+  {
+   "pitch": "C3",
+   "beats": 4,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "E3",
+     "finger": 3
+    },
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  }
+ ],
+ "lhPosition": "free"
+}

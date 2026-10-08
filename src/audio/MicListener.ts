@@ -34,6 +34,11 @@ export interface MicFrame {
 export const MIC_STALE_MS = 1000;
 /** Track bị iOS 'mute' bao lâu (không tự 'unmute') thì coi là điếc. */
 export const MIC_MUTE_GRACE_MS = 1000;
+/**
+ * (+ 2026-10-08) Chờ ctx.resume() tối đa bao lâu. iOS sau cuộc gọi / Siri có thể để resume() treo mãi →
+ * micro kẹt 'starting' (mọi lần chạm sau bị bỏ qua). Giống AudioEngine.unlock() (1500 ms).
+ */
+export const MIC_RESUME_TIMEOUT_MS = 1500;
 /** Thông tin micro THẬT SỰ được áp dụng (để nhật ký chẩn đoán). */
 export interface MicTrackInfo {
   /** Bộ lọc xử lý giọng nói mà trình duyệt báo là đang BẬT (undefined = trình duyệt không báo) */
@@ -397,10 +402,26 @@ export class MicListener {
         if (myGen === this.gen) clearTimeout(this.muteTimer);
       };
     }
-    if (ctx.state !== 'running') await ctx.resume().catch(() => undefined);
+    if (ctx.state !== 'running') {
+      // resume() có thể treo trên iOS (bị "interrupted") → chờ có hạn, không kẹt 'starting'
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      await Promise.race([
+        Promise.resolve()
+          .then(() => ctx.resume())
+          .catch(() => undefined),
+        new Promise<void>((r) => (timer = setTimeout(r, MIC_RESUME_TIMEOUT_MS))),
+      ]);
+      clearTimeout(timer);
+    }
     if (myGen !== this.gen) {
       stream.getTracks().forEach((t) => t.stop());
       this.stream = null;
+      return this._state;
+    }
+    if (ctx.state !== 'running') {
+      // Âm thanh chưa chạy lại được → tắt micro, báo 'off' + cần bật lại → lần chạm sau thử lại (App.armMicRestart)
+      this._needsRestart = true;
+      this.teardown();
       return this._state;
     }
     this.source = ctx.createMediaStreamSource(stream);

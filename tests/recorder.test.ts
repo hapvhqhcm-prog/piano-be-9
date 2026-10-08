@@ -5,6 +5,7 @@ import {
   pickMimeType,
   playbackGain,
   PLAYBACK_MAX_GAIN,
+  clipFromBlob,
   takeRecorder,
   type RecorderDeps,
   type RecorderLike,
@@ -12,7 +13,7 @@ import {
 
 /**
  * "Nghe lại con đàn" (recorder.ts) với MediaRecorder / AudioContext / thẻ <audio> GIẢ:
- * chọn định dạng, ghi → dừng → nghe lại, giới hạn 60 s, hủy, giải phóng, đánh dấu "app đang phát" để micro bỏ qua.
+ * chọn định dạng, ghi → dừng → nghe lại, giới hạn MAX_TAKE_SECONDS (90 s), hủy, giải phóng, đánh dấu "app đang phát" để micro bỏ qua.
  */
 
 class FakeRecorder implements RecorderLike {
@@ -297,5 +298,33 @@ describe('recorder — ghi & nghe lại', () => {
     clip.stopPlayback();
     await p;
     expect(audios[0].paused).toBe(true);
+  });
+});
+
+describe('recorder — Album (+ 2026-10-08)', () => {
+  it('bản ghi đưa ra Blob đúng định dạng (iPad: audio/mp4); dispose() thì bỏ', async () => {
+    const { mic, deps, advance } = setup();
+    const rec = takeRecorder(mic, deps)!;
+    rec.start();
+    advance(5000);
+    const clip = (await rec.stop())!;
+    const b = clip.blob?.();
+    expect(b?.type).toBe('audio/mp4');
+    expect(b?.size).toBe(4);
+    clip.dispose();
+    expect(clip.blob?.()).toBeNull();
+  });
+
+  it('clipFromBlob phát lại bản đã lưu (không cần MediaRecorder)', async () => {
+    const { ctx, sources } = fakeCtx(0.1);
+    const { mic } = setup({ ctx });
+    const clip = clipFromBlob(new Blob([new Uint8Array([1, 2])], { type: 'audio/mp4' }), 12, mic.engine, { MediaRecorder: undefined });
+    const p = clip.play();
+    await new Promise((r) => setTimeout(r, 0));
+    expect(sources).toHaveLength(1);
+    expect(sources[0].started).toBe(true);
+    clip.stopPlayback();
+    await p;
+    clip.dispose();
   });
 });

@@ -1,0 +1,154 @@
+/* (+ 2026-10-08) 🎧 Album của con (src/ui/screens/album.ts) + "Micro nói thật" (src/ui/components/micHonesty.ts) */
+
+/* ---- Màn kết quả bài hát: dòng "📀 Đã lưu vào Album" dưới nút Nghe lại ---- */
+.take-row {
+  flex-wrap: wrap;
+}
+.take-album {
+  flex-basis: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--mint-800);
+}
+.take-album-undo {
+  min-height: 40px;
+  padding: 2px 14px;
+  border-radius: 999px;
+  border: 2px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+/* ---- Màn Album ---- */
+.album-wrap {
+  padding: 12px 16px 24px;
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+.album-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.album-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: var(--e1), inset 0 0 0 2px var(--line);
+}
+.album-item.playing {
+  box-shadow: var(--e2), inset 0 0 0 3px var(--violet-400);
+}
+.album-emoji {
+  font-size: 40px;
+  flex: none;
+}
+.album-info {
+  flex: 1;
+  min-width: 0;
+}
+.album-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.album-sub {
+  font-size: 18px;
+  color: var(--ink-2);
+}
+.album-sub .stars-off {
+  opacity: 0.25;
+}
+.album-stars {
+  color: var(--sun-600);
+  letter-spacing: 2px;
+}
+.album-actions {
+  display: flex;
+  gap: 8px;
+  flex: none;
+}
+.album-actions .btn {
+  min-height: 48px;
+  padding: 2px 16px;
+  font-size: 18px;
+}
+.album-empty {
+  text-align: center;
+  font-size: 20px;
+  color: var(--ink-2);
+  margin: 32px 0;
+}
+.album-empty-emoji {
+  font-size: 64px;
+}
+.album-note {
+  font-size: 16px;
+  color: var(--ink-2);
+  margin: 4px 0 12px;
+}
+.lib-album-row {
+  display: flex;
+  justify-content: flex-start;
+  margin: 4px 0 8px;
+}
+
+@media (max-width: 600px) {
+  .album-item {
+    flex-wrap: wrap;
+  }
+  .album-actions {
+    flex-basis: 100%;
+    justify-content: flex-end;
+  }
+}
+
+/* ---- Micro nói thật ---- */
+.mic-honest {
+  margin: 10px auto 4px;
+  padding: 12px 16px;
+  max-width: 640px;
+  border-radius: 18px;
+  background: var(--sky-100);
+  box-shadow: inset 0 0 0 2px var(--sky-200);
+  text-align: center;
+}
+.mic-honest-text {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink);
+}
+.mic-honest-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px 14px;
+  margin-top: 8px;
+}
+.mic-honest-row .btn {
+  min-height: 44px;
+  padding: 2px 16px;
+  font-size: 18px;
+}
+.mic-honest-hint {
+  font-size: 15px;
+  color: var(--ink-2);
+}

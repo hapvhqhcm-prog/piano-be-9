@@ -1,0 +1,192 @@
+{
+ "id": "scale_am_rh",
+ "title": "A minor scale, natural & harmonic (right hand)",
+ "titleVi": "Gam La thứ — tay phải",
+ "composer": "Bài tập (traditional)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Bài tự sáng tác cho app (piano-be-9)",
+ "attributionRequired": false,
+ "hand": "RH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 41,
+ "position": "free",
+ "phrases": [
+  0,
+  2,
+  4,
+  6
+ ],
+ "notes": [
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 1,
+   "dyn": "mf",
+   "slur": "start"
+  },
+  {
+   "pitch": "B4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "C5",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D5",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "E5",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "F5",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G5",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "A5",
+   "beats": 1,
+   "finger": 5,
+   "slur": "end"
+  },
+  {
+   "pitch": "A5",
+   "beats": 1,
+   "finger": 5,
+   "slur": "start"
+  },
+  {
+   "pitch": "G5",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "F5",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E5",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "D5",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "C5",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "B4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 1,
+   "slur": "end"
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 1,
+   "dyn": "p",
+   "slur": "start"
+  },
+  {
+   "pitch": "B4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "C5",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D5",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "E5",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "F5",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G#5",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "A5",
+   "beats": 1,
+   "finger": 5,
+   "slur": "end"
+  },
+  {
+   "pitch": "A5",
+   "beats": 1,
+   "finger": 5,
+   "slur": "start"
+  },
+  {
+   "pitch": "G#5",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "F5",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E5",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "D5",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "C5",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "B4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 1,
+   "slur": "end"
+  }
+ ]
+}

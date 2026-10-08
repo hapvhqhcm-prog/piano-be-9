@@ -11,6 +11,8 @@ const si = (subtitle: string, staff = false): Target => ({
  * TUẦN 10 (tuần 8 cũ — v5: cuối Cấp 1 sau 10 tuần) — Lâu đài Âm nhạc: thêm 3 bài mới, rồi bé TỰ CHỌN chương trình 2–3 bài và biểu diễn.
  * (2026-10-08, OWNER duyệt) bài 2 cũ có 3 bài mới → tách: "Gà gáy" sang bài 3 mới (w10-l3), mở đầu bằng thẻ dạy nốt Si.
  * Tiêu chí: phụ huynh tặng huy chương. "Xòe hoa" đã dời sang tuần 9 (sau bài nhịp 2/4) — vẫn chọn được khi biểu diễn.
+ * (2026-10-08, OWNER duyệt sau rà soát chuyên gia) bài mới "w10-g": XEM TRƯỚC THẾ SOL bằng bài quen "Bánh nóng"
+ * (Sol La Si = ngón 1 2 3 — ngay sau thẻ nốt Si), 4 tuần trước tuần 14 "Thế Sol"; kèm ứng tấu 1 phút trên phím đen.
  */
 export const WEEK10: WeekPlan = {
   week: 10,
@@ -30,8 +32,15 @@ export const WEEK10: WeekPlan = {
       title: 'Ông lão vui tính',
       emoji: '👴',
       activities: [
-        { kind: 'song', songId: 'this_old_man', mode: 'wait', hints: 'names', intro: 'Tay nhích sang phải: Sol ngón 4, Mi ngón 2! Giữa bài tay về thế Đô.' },
+        { kind: 'song', songId: 'this_old_man', mode: 'wait', hints: 'names', intro: 'Tay nhích phải: Sol ngón 4! Giữa bài về thế Đô.' },
         { kind: 'song', songId: 'this_old_man', mode: 'tempo', level: 3, hints: 'names' },
+        // (2026-10-08, OWNER duyệt) HÁT TRƯỚC KHI ĐÀN — cuối bài: nghe 2–3 nốt, hát lại từng nốt, rồi đàn
+        {
+          kind: 'sing',
+          title: 'Hát rồi đàn 🎤',
+          intro: 'Nghe thầy đàn, hát lại từng nốt, rồi đàn trên đàn. Hát chưa trúng cũng không sao — hát giúp tai nhớ nốt!',
+          rounds: [{ notes: ['G4', 'E4', 'G4'], fingers: [4, 3, 4] }, { notes: ['C4', 'D4', 'E4'], fingers: [1, 2, 3] }],
+        },
       ],
     },
     {
@@ -41,7 +50,7 @@ export const WEEK10: WeekPlan = {
       emoji: '🐮',
       activities: [
         { kind: 'song', songId: 'old_macdonald', mode: 'wait', hints: 'names', intro: 'Bài này bắt đầu ở Fa — ngón 4 nhé!' },
-        { kind: 'song', songId: 'oh_susanna', mode: 'wait', hints: 'names', intro: 'Đô ngón 1, Sol ngón 4, La ngón 5 — như "Ngôi sao nhỏ"!' },
+        { kind: 'song', songId: 'oh_susanna', mode: 'wait', hints: 'names', intro: 'Như "Ngôi sao nhỏ": Đô 1, Sol 4, La 5!' },
       ],
     },
     {
@@ -54,7 +63,7 @@ export const WEEK10: WeekPlan = {
           id: 'w10-si',
           step: 'Bài mới',
           title: 'Nốt Si',
-          intro: 'Nốt mới Si ở ngay bên phải La. Đặt tay: Rê 1, Mi 2, Sol 3, La 4, Si 5 — mỗi ngón một phím.',
+          intro: 'Nốt mới Si — ngay bên phải La, ngón 5!',
           targets: [
             si('Si — ngón 5'),
             { ...echo(['A4', 'B4', 'A4']), subtitle: 'Ngón 4 – 5 – 4', fingers: [4, 5, 4] },
@@ -63,7 +72,25 @@ export const WEEK10: WeekPlan = {
           ],
         }),
         // (2026-10-06) Dân ca Cống — bàn tay ngũ cung như "Xòe hoa", nhích lên: thêm một bài Việt Nam cho buổi biểu diễn
-        { kind: 'song', songId: 'ga_gay', mode: 'wait', hints: 'full', intro: 'Tay: Rê 1, Mi 2, Sol 3, La 4, Si 5! Gà gáy — dân ca Cống (Lai Châu), nhịp 2/4: đàn TO như tiếng gà gáy sáng!' },
+        { kind: 'song', songId: 'ga_gay', mode: 'wait', hints: 'full', intro: 'Tay: Rê 1 … Si 5. Đàn TO như gà gáy sáng!' },
+      ],
+    },
+    {
+      // (2026-10-08, OWNER duyệt) xem trước thế Sol (tuần 14) bằng bài quen
+      id: 'w10-g',
+      week: 10,
+      title: 'Bánh nóng — thế Sol',
+      emoji: '⛰️',
+      activities: [
+        { kind: 'song', songId: 'hot_cross_buns_g', mode: 'wait', hints: 'full', intro: 'Ngón cái dời lên Sol: Sol 1, La 2, Si 3!' },
+        { kind: 'song', songId: 'hot_cross_buns_g', mode: 'tempo', level: 2, hints: 'names', intro: 'Bài quen ở chỗ mới — theo nhịp nhé!' },
+        // ứng tấu 1 phút mỗi tuần (2026-10-08)
+        {
+          kind: 'improv',
+          title: 'Mở màn trên phím đen 🎨',
+          intro: 'App đàn nền. Con chào khán giả trên phím đen!',
+          mode: 'black-keys',
+        },
       ],
     },
     {

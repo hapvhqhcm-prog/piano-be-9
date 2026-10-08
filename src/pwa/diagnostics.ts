@@ -7,6 +7,8 @@
  * Không gửi gì tự động; không kèm tên bé trừ khi bố mẹ tự tích "kèm tên bé".
  */
 
+import type { ErrorEntry } from './errorLog';
+
 export type DiagStatus = 'ok' | 'warn' | 'bad' | 'info' | 'wait';
 
 export const STATUS_ICON: Record<DiagStatus, string> = { ok: '✅', warn: '⚠️', bad: '❌', info: 'ℹ️', wait: '⏳' };
@@ -175,6 +177,8 @@ export interface DiagSnapshot {
     cores: number | null;
     memoryGB: number | null;
   };
+  /** (+ 2026-10-08) Nhật ký lỗi gần đây (errorLog.ts, cũ → mới); không có = không đọc */
+  errors?: ErrorEntry[];
 }
 
 // ---------------------------------------------------------------- Chấm từng mục
@@ -256,6 +260,22 @@ function deviceRows(s: DiagSnapshot): DiagRow[] {
     value: s.appVersion + (s.updateReady ? ' (đã tải bản mới — sẽ dùng khi về màn của bé)' : ''),
     explain: 'Người hỗ trợ cần số này để biết bé đang dùng bản nào.',
   });
+  if (s.errors) {
+    const n = s.errors.length;
+    const last = s.errors[n - 1];
+    rows.push(
+      n
+        ? {
+            id: 'errors',
+            label: 'Lỗi gần đây',
+            status: 'warn',
+            value: `${n} lỗi · gần nhất ${fmtTime(last.t)}`,
+            explain: 'App tự ghi lại lỗi kỹ thuật (chỉ trên iPad này) để người hỗ trợ tìm nguyên nhân.',
+            tip: 'Bấm “📤 Gửi kết quả” để gửi kèm danh sách lỗi cho người hỗ trợ.',
+          }
+        : { id: 'errors', label: 'Lỗi gần đây', status: 'ok', value: 'Không có', explain: 'App chưa ghi lại lỗi kỹ thuật nào.' },
+    );
+  }
   const small = Math.min(s.screen.vw, s.screen.vh) < 600;
   rows.push({
     id: 'screen',
@@ -639,6 +659,7 @@ export function technicalJSON(s: DiagSnapshot, micLog?: unknown): Record<string,
     storage: { ...s.storage, lastBackupAt: s.storage.lastBackupAt ? new Date(s.storage.lastBackupAt).toISOString() : null },
     offline: s.offline,
     perf: s.perf,
+    errors: s.errors ?? null,
     micLog: micLog ?? null,
   };
 }
@@ -664,6 +685,12 @@ export function composeReport(s: DiagSnapshot, opts: ReportOptions = {}): string
       lines.push(`${STATUS_ICON[r.status]} ${r.label}: ${r.value}`);
       if ((r.status === 'warn' || r.status === 'bad') && r.tip) lines.push(`   → ${r.tip}`);
     }
+  }
+  // (+ 2026-10-08) Lỗi gần đây (tối đa 5, mới nhất trước) — đầy đủ trong phần JSON
+  if (s.errors?.length) {
+    lines.push('');
+    lines.push('[🐞 Lỗi gần đây]');
+    for (const e of s.errors.slice(-5).reverse()) lines.push(`${fmtTime(e.t)} · ${e.kind}${e.screen ? ` · ${e.screen}` : ''} · ${e.v}: ${e.msg}`);
   }
   const fb = opts.feedback?.trim();
   lines.push('');

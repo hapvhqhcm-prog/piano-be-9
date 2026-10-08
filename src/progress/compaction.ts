@@ -13,6 +13,8 @@
  *   cũng được gộp: tiêu chí của nó không còn quyết định gì (đảo < tuần hiện tại luôn sáng; sticker được lưu trước khi lùi tuần).
  *
  * Idempotent: buổi đã gộp bị xóa khỏi sessions, chạy lại không gộp thêm gì. Xuất / nhập JSON mang theo `history`.
+ * (+ 2026-10-08) Nhật ký "🎤 Biểu diễn cho cả nhà" (AppData.concerts) nằm NGOÀI sessions → gộp không bao giờ đụng tới
+ * (sticker "Buổi diễn" tính từ nhật ký đó, giữ nguyên sau khi gộp — tests/concert.test.ts).
  */
 import { forEachTargetOutcome, foldSongRun, weekPassed } from '../lessons/lessonEngine';
 import { DYNAMICS_ROUNDS, EFFORT_BY_DAYS_FROM, monotonicStickerIds } from '../lessons/stickers';

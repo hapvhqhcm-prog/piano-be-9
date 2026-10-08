@@ -1,0 +1,245 @@
+{
+ "id": "march_d",
+ "title": "March in D",
+ "titleVi": "Hành khúc Rê trưởng",
+ "composer": "Bài tự sáng tác cho app (piano-be-9)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Bài tự sáng tác cho app (piano-be-9)",
+ "attributionRequired": false,
+ "hand": "BOTH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 34,
+ "position": "D",
+ "phrases": [
+  0,
+  4
+ ],
+ "notes": [
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 1,
+   "dyn": "f"
+  },
+  {
+   "pitch": "F#4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "A4",
+   "beats": 2,
+   "finger": 5
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "A4",
+   "beats": 2,
+   "finger": 5
+  },
+  {
+   "pitch": "F#4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "F#4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 4,
+   "finger": 2
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 1,
+   "dyn": "mf"
+  },
+  {
+   "pitch": "F#4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "A4",
+   "beats": 2,
+   "finger": 5
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "F#4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 5,
+   "dyn": "f"
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "F#4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "D4",
+   "beats": 4,
+   "finger": 1
+  }
+ ],
+ "lh": [
+  {
+   "pitch": "D3",
+   "beats": 4,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "F#3",
+     "finger": 3
+    },
+    {
+     "pitch": "A3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "E3",
+   "beats": 4,
+   "finger": 4,
+   "also": [
+    {
+     "pitch": "A3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "D3",
+   "beats": 4,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "F#3",
+     "finger": 3
+    },
+    {
+     "pitch": "A3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "E3",
+   "beats": 4,
+   "finger": 4,
+   "also": [
+    {
+     "pitch": "A3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "D3",
+   "beats": 4,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "F#3",
+     "finger": 3
+    },
+    {
+     "pitch": "A3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "D3",
+   "beats": 4,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "G3",
+     "finger": 2
+    }
+   ]
+  },
+  {
+   "pitch": "E3",
+   "beats": 4,
+   "finger": 4,
+   "also": [
+    {
+     "pitch": "A3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "D3",
+   "beats": 4,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "F#3",
+     "finger": 3
+    },
+    {
+     "pitch": "A3",
+     "finger": 1
+    }
+   ]
+  }
+ ],
+ "lhPosition": "free"
+}

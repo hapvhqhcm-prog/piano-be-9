@@ -6,6 +6,8 @@ import type { WeekPlan } from './types';
  * chuyên gia sư phạm: tốc độ cũ quá nhanh → thêm một tuần ở CÙNG kỹ năng (thế Đô, nốt đen/trắng/móc đơn, lặng)
  * với 3 bài tự sáng tác mới + một bài quen, trò Nhại lại 3 nốt và ứng tấu phím đen. Chưa có sắc thái p/f (tuần 6 mới dạy).
  * Tiêu chí: chơi trọn "Ếch con nhảy" theo nhịp — đạt ở 2 ngày khác nhau (micro hoặc phiếu 3 ý của bố mẹ).
+ * (2026-10-08, OWNER duyệt) LIỀN dạy sớm: trò "Đàn liền" (chỉ LIỀN — NGẮT vẫn để tuần 12) mở đầu bài 3;
+ * từ tuần 6 bài hát có dấu luyến. Lượt theo nhịp của bài đã gặp: chỉ tên nốt (xem "GỢI Ý RÚT DẦN" ở week4.ts).
  */
 export const WEEK5: WeekPlan = {
   week: 5,
@@ -25,8 +27,8 @@ export const WEEK5: WeekPlan = {
       title: 'Ếch con nhảy',
       emoji: '🐸',
       activities: [
-        { kind: 'song', songId: 'frog_hop', mode: 'wait', hints: 'full', intro: 'Ếch nhảy cóc Đô – Mi – Sol: ngón 1 – 3 – 5! Mỗi lần nhảy qua một phím.' },
-        { kind: 'song', songId: 'frog_hop', mode: 'tempo', level: 2, hints: 'full' },
+        { kind: 'song', songId: 'frog_hop', mode: 'wait', hints: 'full', intro: 'Ếch nhảy Đô – Mi – Sol: ngón 1 – 3 – 5!' },
+        { kind: 'song', songId: 'frog_hop', mode: 'tempo', level: 2, hints: 'names' },
       ],
     },
     {
@@ -35,21 +37,35 @@ export const WEEK5: WeekPlan = {
       title: 'Mưa rơi tí tách',
       emoji: '🌧️',
       activities: [
-        { kind: 'song', songId: 'raindrops', mode: 'wait', hints: 'full', intro: 'Giọt mưa rơi "Chạy-chạy" — hai nốt nhanh trong một phách. Đọc to "Chạy-chạy" trước khi đàn nhé!' },
-        { kind: 'song', songId: 'raindrops', mode: 'tempo', level: 2, hints: 'full' },
+        { kind: 'song', songId: 'raindrops', mode: 'wait', hints: 'full', intro: 'Mưa rơi "Chạy-chạy" — đọc to trước khi đàn nhé!' },
+        { kind: 'song', songId: 'raindrops', mode: 'tempo', level: 2, hints: 'names' },
       ],
     },
     {
       id: 'w5-l3',
       week: 5,
-      title: 'Thuyền giấy & phím đen',
+      title: 'Đàn liền & thuyền giấy',
       emoji: '⛵',
       activities: [
-        { kind: 'song', songId: 'paper_boat', mode: 'wait', hints: 'full', intro: 'Nhớ giữ đủ "Đi-i" và chờ đủ "Suỵt" nhé! Thuyền giấy trôi chậm thôi.' },
+        // (2026-10-08, OWNER duyệt) LIỀN sớm (legato): chỉ các lượt LIỀN — thẻ "Ngắt" chỉ hiện từ tuần 12
+        {
+          kind: 'dynamics',
+          title: 'Đàn liền 🐢🌊',
+          intro: 'Giữ phím tới khi nốt sau vang — liền như dòng nước!',
+          mode: 'stac-leg',
+          rounds: [
+            { pitches: ['C4', 'D4'], want: 'leg', fingers: [1, 2], hand: 'RH' },
+            { pitches: ['C4', 'D4', 'E4'], want: 'leg', fingers: [1, 2, 3], hand: 'RH' },
+            { pitches: ['E4', 'D4', 'C4'], want: 'leg', fingers: [3, 2, 1], hand: 'RH' },
+            { pitches: ['C4', 'D4', 'E4', 'F4', 'G4'], want: 'leg', fingers: [1, 2, 3, 4, 5], hand: 'RH' },
+            { pitches: ['G4', 'F4', 'E4', 'D4', 'C4'], want: 'leg', fingers: [5, 4, 3, 2, 1], hand: 'RH' },
+          ],
+        },
+        { kind: 'song', songId: 'paper_boat', mode: 'wait', hints: 'full', intro: 'Thuyền trôi êm: đàn LIỀN, giữ đủ "Đi-i" và "Suỵt".' },
         {
           kind: 'improv',
           title: 'Mưa trên phím đen 🎨',
-          intro: 'App đàn nền. Con làm mưa trên phím đen: lúc thì mưa nhỏ lất phất, lúc thì mưa rào. Không có nốt nào sai cả!',
+          intro: 'App đàn nền. Con làm mưa trên phím đen!',
           mode: 'black-keys',
         },
       ],
@@ -64,12 +80,12 @@ export const WEEK5: WeekPlan = {
           id: 'w5-echo',
           step: 'Nhại lại',
           title: 'Con vẹt nhại 3 nốt 🦜',
-          intro: 'Nghe kỹ rồi đàn lại đúng thứ tự — có cả bước lẫn nhảy.',
+          intro: 'Nghe kỹ rồi đàn lại đúng thứ tự!',
           targets: [echo(['C4', 'E4', 'G4']), echo(['G4', 'F4', 'E4']), echo(['D4', 'F4', 'E4']), echo(['E4', 'C4', 'D4'])],
         }),
         // (2026-10-08, OWNER duyệt) một lượt Mức 2 trước Mức 3 — tuần 5 chưa có tiến độ nên chèn giữa an toàn
-        { kind: 'song', songId: 'lightly_row', mode: 'tempo', level: 2, hints: 'full', intro: 'Bài quen tuần trước — đàn theo nhịp trước nhé!' },
-        { kind: 'song', songId: 'lightly_row', mode: 'tempo', level: 3, hints: 'full', intro: 'Giờ thử băng chuyền nhé!' },
+        { kind: 'song', songId: 'lightly_row', mode: 'tempo', level: 2, hints: 'names', intro: 'Bài quen tuần trước — đàn theo nhịp trước nhé!' },
+        { kind: 'song', songId: 'lightly_row', mode: 'tempo', level: 3, hints: 'names', intro: 'Giờ thử băng chuyền nhé!' },
       ],
     },
   ],

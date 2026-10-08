@@ -629,3 +629,36 @@ Phụ huynh → Nâng cao (hoặc thẻ Cài micro) → 🩺 Kiểm tra iPad. B�
   - Không còn báo nhầm nốt nằm giữa hai nốt cùng đang ngân (vd Sol#).
   - Theo nhịp còn tối đa 1 lần báo sai oan mỗi bài (jingle_bells, this_old_man).
 - 1395 test; compat iPadOS 15+; e2e nhanh A–E.
+
+## 32. Phản biện chuyên gia → OWNER duyệt cả 16 đề xuất (2026-10-08)
+Có ba chuyên gia đánh giá: sư phạm, động lực cho trẻ và kỹ thuật iPad.
+- **An toàn & ổn định**
+  - Có bản sao thứ hai trong IndexedDB (`mirror.ts`). Bản này chỉ được dùng để khôi phục khi dữ liệu localStorage trống hoặc hỏng.
+  - Màn chính có nhắc sao lưu, phải qua cổng phụ huynh.
+  - Micro không còn treo khi `resume()` bị kẹt (chờ tối đa 1,5 s).
+  - Gặp lỗi khi hiện màn thì có màn phục hồi. Nhật ký lỗi được ghi vào báo cáo 🩺.
+  - Nhập hoặc xoá dữ liệu mà ghi thất bại thì báo lỗi thật.
+  - Nếu tải màn lỗi sau khi cập nhật, app tải lại trang một lần. Service worker giữ thêm cache của bản trước.
+  - Các bản sao hỏng không đọc được sẽ bị dọn.
+- **Sư phạm**
+  - Phím sáng giảm dần qua các tuần; dạy đàn liền từ tuần 5.
+  - Tuần 10 xem trước thế tay Sol; tuần 11 xem trước nhịp 3/4 (bài Xích đu).
+  - Mỗi tuần 1 phút ngẫu hứng; lời dẫn cho bé ≤ 12 chữ.
+  - Trò vỗ nhịp có dòng đếm số (chữ đi kèm nhỏ dần theo tuần).
+  - Có lượt máy gõ nhịp im 2 ô, chấm xem bé có giữ đều nhịp không.
+  - Hoạt động mới **Hát rồi đàn**, từ tuần 6 đến 10.
+  - Mỗi buổi mở đầu bằng âm nhạc; từ tuần 8 có 1 phút đọc nốt.
+- **Cấp 4 (tuần 32–43)**
+  - Nội dung: gam Sol/Fa/Rê trưởng, La thứ, hợp âm rải I–IV–V, Alberti, pedal, 6/8, to dần – nhỏ dần, thuật ngữ tốc độ.
+  - Có 29 bài mới, tổng cộng 126 bài; 2 dân ca mới (Đi cấy, Hò ba lí), mỗi bài có 2 nguồn sách giáo khoa.
+  - Bổ sung ký hiệu pedal, hairpin, rit. và nhịp 6/8 trên khuông.
+- **Động lực**
+  - 🎤 Biểu diễn cho cả nhà mỗi tuần: người nghe bấm 👏❤️🌟, nhận sticker "Buổi diễn".
+  - Album lưu bản thu hay nhất của từng bài (IndexedDB, chỉ trong máy).
+  - Màn chính gọn hơn, có dòng "Con chơi được N bài".
+  - Sticker đếm "ngày tập", thay cho "ngày liền".
+  - Nhắc giờ tập bằng tệp .ics; bé quay lại sau ≥ 3 ngày thì có buổi ngắn 5 phút.
+  - 16 phần quà mở theo đảo; thêm 6 loại thử thách (bắt đầu từ tuần 12/10); thêm 40 trứng.
+  - Micro không nghe ra nốt thì báo "không phải lỗi của con", kèm nút để bố mẹ chấm giúp.
+- **Giữ tiến độ:** tuần 1–4 chỉ thêm hoạt động vào cuối bài. curriculumRev vẫn là 4. Có golden test cho thử thách, trứng và sticker của các tuần đã qua.
+- **Kiểm tra:** 1891 test đạt; compat iPadOS 15+ đạt; e2e A–E.

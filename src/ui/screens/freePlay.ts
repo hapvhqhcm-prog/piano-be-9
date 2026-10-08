@@ -8,6 +8,10 @@ import { FINGER_NAMES, handDiagram, type HandDiagram } from '../components/handD
 import { mascot } from '../components/mascot';
 import { confetti } from '../components/celebrate';
 import { homeScreen } from './home';
+import { pitchFreq } from '../../piano/pitchTable';
+import { isTimbre, playTimbre } from '../../audio/timbres';
+import { unlockedItems } from '../../lessons/unlocks';
+import { applyCosmetics, currentTimbre, setTimbre } from '../components/unlocksUi';
 import '../../styles/kidux.css';
 
 /** Trò "Đàn theo thầy": thầy đàn vài nốt (thế Đô), bé đàn lại đúng thứ tự — đúng thì dài thêm một nốt. */
@@ -19,6 +23,45 @@ const ECHO_MAX = 6;
 export function freePlayScreen(app: App) {
   return (root: HTMLElement) => {
     const lhOn = leftHandActive(app.store.get());
+    applyCosmetics(app.store.get());
+    // (+ 2026-10-08) 🎁 Tiếng đàn mở khóa theo đảo: 🎹 Piano + các tiếng đã mở (chọn được ngay tại đây)
+    let timbre = currentTimbre(app.store.get());
+    const timbres = unlockedItems(app.store.get()).filter((d) => d.kind === 'timbre');
+    const timbreRow = timbres.length
+      ? h(
+          'div',
+          { class: 'timbre-row', role: 'group', 'aria-label': 'Chọn tiếng đàn' },
+          ...[{ key: null as string | null, icon: '🎹', title: 'Piano' }, ...timbres].map((d) => {
+            const b = h(
+              'button',
+              {
+                class: `timbre-chip${timbre === d.key ? ' on' : ''}`,
+                type: 'button',
+                'data-timbre': d.key ?? 'piano',
+                'aria-pressed': String(timbre === d.key),
+                onClick: () => {
+                  timbre = d.key;
+                  setTimbre(app, d.key);
+                  timbreRow?.querySelectorAll('.timbre-chip').forEach((x) => {
+                    const on = x === b;
+                    x.classList.toggle('on', on);
+                    x.setAttribute('aria-pressed', String(on));
+                  });
+                  sound('C4', 0.5);
+                },
+              },
+              h('span', { 'aria-hidden': 'true' }, d.icon),
+              ` ${d.title}`,
+            );
+            return b;
+          }),
+        )
+      : null;
+    /** Một nốt bằng tiếng đang chọn (piano = AudioEngine như cũ). */
+    const sound = (p: Pitch, dur: number) => {
+      if (timbre && isTimbre(timbre)) playTimbre(app.audio.context, timbre, pitchFreq(p), dur);
+      else void app.audio.playPitch(p, dur);
+    };
     const big = h('div', { class: 'note-big' }, 'Chạm một phím');
     const fingerText = h('div', { class: 'finger-big' }, ' ');
     const fingerName = h('div', { class: 'finger-name' }, lhOn ? 'Tay phải: Đô→Sol, ngón 1 đến 5 · Tay trái: Đô trầm→Sol trầm' : 'Đô Rê Mi Fa Sol: ngón 1 2 3 4 5');
@@ -116,7 +159,7 @@ export function freePlayScreen(app: App) {
       labels: 'all',
       fingerOnPress: (p) => fingerOnKeyboard(p, lhOn),
       onPress: (p) => {
-        void app.audio.playPitch(p, 1.0);
+        sound(p, 1.0);
         const m = fingerOnKeyboard(p, lhOn);
         const hand: Hand = m?.hand ?? 'RH';
         row.className = `finger-row hand-${hand.toLowerCase()}`;
@@ -148,7 +191,7 @@ export function freePlayScreen(app: App) {
       h(
         'div',
         { class: 'screen' },
-        h('div', { class: 'stage scrollable' }, echoBox, big, row, small),
+        h('div', { class: 'stage scrollable' }, timbreRow, echoBox, big, row, small),
         h('div', { class: 'keyboard-wrap' }, kb.el),
         actionBar(
           backButton(() => app.show(homeScreen(app))),

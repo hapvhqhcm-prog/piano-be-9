@@ -1,4 +1,4 @@
-# Piano bé — PIANO-BE-9-TUOI (3 cấp · 31 tuần · luyện tập mỗi ngày)
+# Piano bé — PIANO-BE-9-TUOI (4 cấp · 43 tuần · luyện tập mỗi ngày)
 
 **Bản đang chạy:** https://hapvhqhcm-prog.github.io/piano-be-9/
 
@@ -9,14 +9,19 @@ chỉ phím, chỉ ngón, phát âm mẫu. Khi bật micro, app **nghe đàn cơ
 - **0 thư viện runtime.** Không backend, không đăng nhập, không analytics, không CDN.
 - **Micro (tùy chọn, mặc định tắt):** app nghe đàn cơ và tự chấm từng nốt — xử lý ngay trên iPad,
   không gửi đi đâu. Đây là quyền duy nhất app xin (OWNER mở khóa ngày 2026-10-04).
-- **🎧 Nghe lại con đàn (OWNER duyệt 2026-10-06):** khi micro đang bật, app ghi **tạm** lượt đàn (tối đa 60 giây)
-  để bé nghe lại. Bản ghi chỉ nằm trong bộ nhớ (Blob), **không lưu xuống máy, không gửi đi**; lượt mới, rời màn
+- **🎧 Nghe lại con đàn (OWNER duyệt 2026-10-06):** khi micro đang bật, app ghi **tạm** lượt đàn (tối đa 90 giây)
+  để bé nghe lại. Bản ghi nằm trong bộ nhớ (Blob), **không gửi đi**; lượt mới, rời màn
   hay tắt app là xóa. Micro tắt thì không bao giờ ghi.
+- **🎧 Album của con (OWNER duyệt 2026-10-08):** bản thu HAY NHẤT của mỗi bài (nhiều sao nhất, tối đa 90 giây/bản,
+  tổng ≤ 60 MB) được giữ trong IndexedDB **chỉ trên iPad này**; Thư viện → 🎧 Album của con (nghe, 📤 Gửi ông bà qua bảng
+  Chia sẻ của iOS). Bố mẹ tắt / xoá ở Phụ huynh → Nâng cao. Album **không** nằm trong bản Sao lưu JSON.
+- **Micro nói thật (2026-10-08):** bé đàn/hát mà micro không nhận ra nốt nào 3 lần liền → "Micro nghe chưa rõ — không
+  phải lỗi của con 👂" + "👪 Bố mẹ chấm giúp". Micro nghe ra nốt SAI thì vẫn là phản hồi bình thường.
 - Offline-first: sau lần mở đầu tiên từ GitHub Pages, app chạy hoàn toàn không cần mạng.
 
 ## Có gì trong app
 
-- **3 cấp, 31 tuần** (giáo trình v5/v5.1, OWNER duyệt 2026-10-05 và 2026-10-06), sau đó **Luyện tập mỗi ngày** không có điểm dừng.
+- **4 cấp, 43 tuần** (giáo trình v5/v5.1, OWNER duyệt 2026-10-05 và 2026-10-06; Cấp 4 tuần 32–43 duyệt 2026-10-08: gam Sol/Fa/Rê trưởng, La thứ, hợp âm rải, Alberti, pedal, 6/8, to dần – nhỏ dần), sau đó **Luyện tập mỗi ngày** không có điểm dừng.
   **Mục tiêu cuối nói thật: ≈ hoàn thành Faber cấp 1 / đầu cấp 2** (không phải "thành thạo" theo nghĩa nhạc viện).
   - **Cấp 1 · Làm quen** (1–10): bàn phím, thế Đô hai tay, nhịp Đi / Chạy-chạy (tuần 4) / 2/4 (tuần 9), đọc nốt khóa Sol theo
     NỐT MỐC & QUÃNG, to/nhỏ (f/p), nốt La (Sol–La ngón 4–5), ngẫu hứng phím đen, Hỏi – Đáp; tuần củng cố 5; hòa nhạc tuần 10.
@@ -27,9 +32,9 @@ chỉ phím, chỉ ngón, phát âm mẫu. Khi bật micro, app **nghe đàn cơ
     đọc nhạc hai khóa, bài hai tay, rồi Minuet (tuần 29), Für Elise (tuần 30), Đại hòa nhạc (tuần 31).
 - **Khởi động kỹ thuật 1 phút** đầu tuần (thả rơi cánh tay, xoay cổ tay, tay tròn, gõ ngón, 5 ngón to/nhỏ, luồn ngón cái).
 - **Tiêu chí qua tuần** bằng bài hát: đạt ở **2 ngày khác nhau** (micro, hoặc phiếu 3 ý của bố mẹ: đúng nốt · đều nhịp · đúng ngón).
-- **Mỗi buổi 10–15 phút**: Tư thế → Ôn nhanh → Khởi động tai/đọc nốt → Bài mới → Con làm thầy → Tự đánh giá.
+- **Mỗi buổi 10–15 phút**: Khởi động bằng âm nhạc (+ nhắc tư thế; thẻ tư thế đầy đủ đầu tuần) → Ôn nhanh → Khởi động tai/đọc nốt → 1 phút đọc nốt (từ tuần 8) → Bài mới → Con làm thầy → Tự đánh giá; cuối tuần: 🎤 Biểu diễn cho cả nhà.
 - **Trò chơi**: Lên hay xuống? · Bước hay nhảy? · Nốt nào đây? (có mốc) · Đọc nốt khóa Sol/Fa · Nốt mốc · Giống/bước/nhảy trên khuông (quãng) · Vui hay buồn? · Nhại lại · Vỗ nhịp · Sáng tạo (phím đen, hỏi – đáp, sáng tác).
-- **95 bài** (public domain / dân ca Việt Nam / tự sáng tác, kể cả bài tập gam); **Thư viện** (⭐ bài đã thuộc) để bé tự chọn bài.
+- **126 bài** (public domain / dân ca Việt Nam / tự sáng tác, kể cả bài tập gam); **Thư viện** (⭐ bài đã thuộc) để bé tự chọn bài.
 - **Đọc nhạc ngẫu nhiên**: app sinh đoạn nhạc mới mỗi lần (đúng thế tay, nhịp 4/4 hoặc 3/4) — luyện đọc vô hạn.
 - **Màn bài hát**: Từng nốt (chờ bé đàn đúng) · Theo nhịp (đếm vào, máy gõ nhịp, nhạc đệm; con trỏ hoặc băng chuyền) ·
   tập từng câu · tốc độ 40/50/60 · khuông nhạc với gợi ý rút dần (phím sáng → tên nốt → chỉ khuông).

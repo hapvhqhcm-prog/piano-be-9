@@ -10,6 +10,8 @@ import type { WeekPlan } from './types';
  * tuần 1–7 Sol vẫn là ngón 5 ở thế Đô.
  * Gợi ý rút dần: khuông + tên + phím sáng → khuông + tên → chỉ khuông.
  * Tiêu chí: chơi bài tuần 6 chỉ nhìn khuông (phiếu 3 ý của bố mẹ, hoặc micro ≥ 80%) — v5: ở 2 NGÀY khác nhau.
+ * (2026-10-08, OWNER duyệt) rút dần phím sáng: tuần đầu tiên có 'staff' (week4.ts "GỢI Ý RÚT DẦN");
+ * "Kìa con bướm vàng" có dấu luyến; ứng tấu 1 phút Hỏi – Đáp "bước & nhảy" ở bài 1.
  */
 export const WEEK8: WeekPlan = {
   week: 8,
@@ -21,7 +23,7 @@ export const WEEK8: WeekPlan = {
   teach: { emoji: '👨‍🏫', text: 'Con chỉ trên khuông cho bố mẹ: Đô "đội mũ", Mi "trên vạch 1", Sol "trên vạch 2".' },
   drills: ['finger-tap', 'wrist-circle'],
   criterion: { text: 'Chơi "Bài ca niềm vui" chỉ nhìn khuông nhạc — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
-  kidGoal: 'Chỉ nhìn khuông mà đàn được Bài ca niềm vui — 2 hôm nhé! 📖',
+  kidGoal: 'Chỉ nhìn khuông: Bài ca niềm vui — 2 hôm nhé! 📖',
   lessons: [
     {
       id: 'w8-l1',
@@ -33,7 +35,7 @@ export const WEEK8: WeekPlan = {
           id: 'w8-staff',
           step: 'Bài mới',
           title: 'Nốt ngồi ở đâu?',
-          intro: 'Nốt đi lên trên khuông = đi sang phải trên đàn. Nốt đi xuống = sang trái.',
+          intro: 'Nốt lên trên khuông = sang phải trên đàn.',
           targets: [
             staffNote('C4', 'Đội mũ vạch phụ'),
             staffNote('D4', 'Ngồi dưới vạch 1'),
@@ -45,8 +47,24 @@ export const WEEK8: WeekPlan = {
         {
           kind: 'quiz',
           title: 'Nốt mốc 🧭',
-          intro: 'Ba nốt MỐC giúp con đọc mọi nốt khác: Đô giữa "đội mũ" vạch phụ, Sol ngồi trên vạch 2 (vạch khóa Sol cuộn quanh), Đô cao ở khe 3.',
+          intro: 'Ba nốt MỐC: Đô giữa, Sol (vạch 2), Đô cao (khe 3).',
           quiz: { variant: 'landmark', pool: ['C4', 'G4', 'C5'], rounds: 6 },
+        },
+        // (2026-10-08, OWNER duyệt) ứng tấu 1 phút mỗi tuần — quãng của tuần: bước & nhảy
+        {
+          kind: 'improv',
+          title: 'Hỏi – Đáp: bước & nhảy 💬',
+          intro: 'App hỏi. Con đáp bằng bước và nhảy, kết ở Đô!',
+          mode: 'question-answer',
+          position: 'C',
+          bars: 2,
+        },
+        // (2026-10-08, OWNER duyệt) HÁT TRƯỚC KHI ĐÀN — cuối bài: nghe 2–3 nốt, hát lại từng nốt, rồi đàn
+        {
+          kind: 'sing',
+          title: 'Hát rồi đàn 🎤',
+          intro: 'Nghe thầy đàn, hát lại từng nốt, rồi đàn trên đàn. Hát chưa trúng cũng không sao — hát giúp tai nhớ nốt!',
+          rounds: [{ notes: ['G4', 'A4', 'G4'], fingers: [4, 5, 4] }, { notes: ['C4', 'E4', 'G4'], fingers: [1, 3, 5] }],
         },
       ],
     },
@@ -56,9 +74,9 @@ export const WEEK8: WeekPlan = {
       title: 'Đàn nhìn khuông',
       emoji: '👀',
       activities: [
-        { kind: 'quiz', title: 'Đọc nốt 📖', intro: 'Nốt hiện trên khuông — con chạm đúng phím trên iPad. Gặp khó: tìm nốt mốc gần nhất rồi đếm lên hoặc xuống.', quiz: { variant: 'read', pool: ['C4', 'D4', 'E4', 'F4', 'G4'], rounds: 6 } },
+        { kind: 'quiz', title: 'Đọc nốt 📖', intro: 'Chạm đúng phím. Khó thì tìm nốt mốc rồi đếm!', quiz: { variant: 'read', pool: ['C4', 'D4', 'E4', 'F4', 'G4'], rounds: 6 } },
         { kind: 'song', songId: 'ode_to_joy_easy', mode: 'wait', hints: 'names', intro: 'Lần này phím không sáng nữa — nhìn tên nốt trên khuông nhé.' },
-        { kind: 'song', songId: 'ode_to_joy_easy', mode: 'tempo', level: 2, hints: 'staff', intro: 'Thử thách: chỉ nhìn khuông nhạc mà đàn!' },
+        { kind: 'song', songId: 'ode_to_joy_easy', mode: 'tempo', level: 2, hints: 'staff', intro: 'Thử thách: chỉ nhìn khuông nhạc mà đàn!', pulseDrop: true },
       ],
     },
     {
@@ -71,7 +89,7 @@ export const WEEK8: WeekPlan = {
           id: 'w8-a4',
           step: 'Bài mới',
           title: 'Nốt La',
-          intro: 'Nốt mới La ở ngay bên phải Sol. Khi Sol và La đi cùng nhau, tay NHÍCH sang phải một phím: ngón 4 đánh Sol, ngón 5 đánh La. Nhìn số ngón trên nốt nhé!',
+          intro: 'Nốt mới La. Sol–La đi cùng nhau: ngón 4 – 5!',
           targets: [
             rhNote('G4', 'Thế Đô: Sol vẫn là ngón 5'),
             rhNote('A4', 'La — ngón 5'),
@@ -80,7 +98,7 @@ export const WEEK8: WeekPlan = {
             staffNote('A4', 'Ở khe 2'),
           ],
         }),
-        { kind: 'song', songId: 'frere_jacques_easy', mode: 'wait', hints: 'full', intro: 'Lần đầu đàn TO (f), lần nhắc lại NHỎ (p)! Nhìn kỹ số ngón: tay nhích sang phải ở câu có La; câu cuối ngón 1 với xuống Sol trầm.' },
+        { kind: 'song', songId: 'frere_jacques_easy', mode: 'wait', hints: 'full', intro: 'Lần đầu TO, nhắc lại NHỎ. Câu có La: tay nhích phải!' },
       ],
     },
     {
@@ -92,11 +110,11 @@ export const WEEK8: WeekPlan = {
         {
           kind: 'quiz',
           title: 'Giống, bước hay nhảy? 🐸',
-          intro: 'Khuông hiện HAI nốt. Cùng chỗ = GIỐNG; nốt sau ở vạch hoặc khe ngay cạnh = BƯỚC; cách một vạch hoặc khe = NHẢY. Đi lên hay đi xuống?',
+          intro: 'Hai nốt: GIỐNG, BƯỚC hay NHẢY? Lên hay xuống?',
           quiz: { variant: 'interval', pool: ['C4', 'D4', 'E4', 'F4', 'G4'], rounds: 6, maxInterval: 3 },
         },
         { kind: 'song', songId: 'london_bridge', mode: 'wait', hints: 'names', intro: 'Tay nhích sang phải: Sol ngón 4, La ngón 5!' },
-        { kind: 'song', songId: 'twinkle_easy', mode: 'wait', hints: 'names', intro: 'Đô ngón 1, Sol ngón 4, La ngón 5 — xòe tay rộng một chút!' },
+        { kind: 'song', songId: 'twinkle_easy', mode: 'wait', hints: 'names', intro: 'Đô 1, Sol 4, La 5 — xòe tay rộng một chút!' },
         { kind: 'song', songId: 'twinkle_easy', mode: 'tempo', level: 3, hints: 'names' },
       ],
     },

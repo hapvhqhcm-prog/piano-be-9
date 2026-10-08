@@ -13,8 +13,14 @@ import { stickersScreen } from './stickers';
 import '../../styles/kidux.css';
 import '../../styles/challenges.css';
 import { weeklyChallenge, type WeeklyChallenge } from '../../lessons/challenges';
+import { concertOfferWeek } from '../../lessons/concert';
+import { lazy, lazyScreen } from '../lazy';
+import '../../styles/concert.css';
 
-const KIND_ORDER: Sticker['kind'][] = ['challenge', 'medal', 'songs', 'week', 'streak', 'folk', 'mic', 'dynamics', 'island'];
+// (+ 2026-10-08) 🎤 Biểu diễn cho cả nhà — chunk riêng (kéo theo sân khấu), nạp trước khi màn kết có lời mời
+const concertMod = lazy(() => import('./concert'));
+
+const KIND_ORDER: Sticker['kind'][] = ['challenge', 'medal', 'concert', 'songs', 'week', 'activeWeeks', 'days', 'streak', 'folk', 'mic', 'dynamics', 'island'];
 /** (+ 2026-10-07) Tuần (thứ 2) đã mừng "hoàn thành thử thách tuần" — chỉ là tiện ích trong máy (mất thì mừng thêm tối đa một lần). */
 const CHEERED_KEY = 'piano-be-9:challenge-cheered';
 function cheeredFor(monday: string): boolean {
@@ -159,6 +165,11 @@ export function sessionEndScreen(
     const from = o.weekBefore ?? (o.banner && /^(🏅|🎉)/u.test(o.banner) ? week - 1 : week);
     const advanced = from >= 1 && from < week;
     const rewards = fresh.length > 0 || !!bonus || cheer;
+    // (+ 2026-10-08) 🎤 Mời (không bắt buộc) biểu diễn cho cả nhà — mỗi tuần giáo trình một lần, sau khi đạt tiêu chí tuần
+    const concertWeek = concertOfferWeek(data);
+    if (concertWeek !== null) concertMod.prefetch();
+    const openConcert = (week: number) =>
+      app.show(lazyScreen(concertMod, (m) => m.concertScreen(app, { week, onDone: o.onHome })));
     let timer = 0;
 
     const content = () => {
@@ -186,6 +197,13 @@ export function sessionEndScreen(
             button({ icon: '↻', label: 'Chơi lại bài vừa học', big: true, onTap: o.onReplay }),
             button({ icon: '🌙', label: 'Để mai học tiếp', kind: 'primary', big: true, onTap: o.onHome }),
           ),
+          concertWeek !== null
+            ? h(
+                'div',
+                { class: 'concert-offer-row' },
+                button({ icon: '🎤', label: 'Biểu diễn cho cả nhà', kind: 'sun', onTap: () => openConcert(concertWeek) }),
+              )
+            : null,
         ),
       );
       // Bé đọc chậm → đọc to dòng tóm tắt

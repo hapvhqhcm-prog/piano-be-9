@@ -129,6 +129,30 @@ export const BACKUP_MESSAGE: Record<BackupResult, string> = {
   failed: '❌ Chưa sao lưu được — hãy thử lại.',
 };
 
+const DAY_MS = 86_400_000;
+/** (+ 2026-10-08) Nhắc sao lưu ở màn chính của bé khi lần sao lưu gần nhất cũ hơn ngần này ngày */
+export const BACKUP_NUDGE_DAYS = 14;
+/** …hoặc chưa sao lưu lần nào mà đã học ngần này buổi */
+export const BACKUP_NUDGE_SESSIONS = 10;
+/** Bố mẹ bấm ✕ → ẩn ngần này ngày (không làm phiền) */
+export const BACKUP_NUDGE_SNOOZE_DAYS = 3;
+
+/**
+ * (+ 2026-10-08) Có hiện nhắc nhỏ "💾 Nhắc bố mẹ: sao lưu" ở màn chính của bé không.
+ * `sessions` = tổng số buổi (gồm buổi đã gộp — history.sessionCount).
+ */
+export function backupNudgeDue(
+  settings: { lastBackupAt?: number; backupNudgeHiddenAt?: number },
+  sessions: number,
+  now: number = Date.now(),
+): boolean {
+  const hidden = settings.backupNudgeHiddenAt ?? 0;
+  if (hidden && now - hidden >= 0 && now - hidden < BACKUP_NUDGE_SNOOZE_DAYS * DAY_MS) return false;
+  const last = settings.lastBackupAt ?? 0;
+  if (last) return now - last >= BACKUP_NUDGE_DAYS * DAY_MS;
+  return sessions >= BACKUP_NUDGE_SESSIONS;
+}
+
 /**
  * Xin trình duyệt KHÔNG tự xóa dữ liệu của app (Safari xóa dữ liệu trang sau 7 ngày không dùng, trừ khi "bền").
  * Gọi sau lần chạm "Bắt đầu" đầu tiên. Trả về true nếu dữ liệu đã được lưu bền.

@@ -20,7 +20,28 @@ const DISC: Record<Sticker['kind'], [string, string, string]> = {
   mic: [P.lavender, P.violetLight, P.violet],
   dynamics: [P.sunLight, P.sun, P.orange],
   challenge: [P.violetLight, P.indigo, P.indigoDark],
+  concert: [P.coralLight, P.pink, P.coral],
+  days: ['#fff3c4', P.sun, P.orange],
+  activeWeeks: [P.sky, '#7cc8f2', P.waterDark],
 };
+
+/** (+ 2026-10-08) "N ngày tập": tờ lịch có nốt nhạc — cộng dồn, không phải chuỗi. */
+function practiceDay(): string {
+  return `<rect x="28" y="30" width="64" height="62" rx="9" fill="#fff" stroke="${P.orange}" stroke-width="2.5"/>
+    <rect x="28" y="30" width="64" height="16" rx="9" fill="${P.coral}"/><rect x="28" y="40" width="64" height="6" fill="${P.coral}"/>
+    <rect x="40" y="23" width="6" height="14" rx="3" fill="${P.ink}"/><rect x="74" y="23" width="6" height="14" rx="3" fill="${P.ink}"/>
+    ${noteGlyph(58, 80, 7, P.indigo)}${sparkle(98, 30, 6, '#fff')}`;
+}
+
+/** (+ 2026-10-08) "N tuần có tập": xấp lịch tuần chồng nhau. */
+function weekStack(): string {
+  const page = (dx: number, dy: number, fill: string) =>
+    `<rect x="${30 + dx}" y="${36 + dy}" width="56" height="48" rx="8" fill="${fill}" stroke="${P.waterDark}" stroke-width="2"/>`;
+  return `${page(10, -8, '#e8f6ff')}${page(5, -4, '#f4fbff')}${page(0, 0, '#fff')}
+    <rect x="30" y="36" width="56" height="13" rx="8" fill="${P.water}"/><rect x="30" y="44" width="56" height="5" fill="${P.water}"/>
+    ${[0, 1, 2, 3, 4, 5, 6].map((i) => `<circle cx="${37 + i * 7}" cy="64" r="2.6" fill="${i < 3 ? P.mint : '#d9e3ee'}"/>`).join('')}
+    <path d="M40 74 h36" stroke="${P.water}" stroke-width="3" stroke-linecap="round" opacity=".6"/>`;
+}
 
 /** Huy hiệu số nhỏ (mốc 5 bài, 7 ngày…) ở góc dưới phải. */
 function numberBadge(n: number, fill: string, ink: string): string {
@@ -87,6 +108,13 @@ const CUP: Record<string, [string, string]> = {
   vn: [P.coralLight, '#e85a4a'],
   ear: ['#ffd3e2', '#e0668f'],
   record: [P.sunLight, P.orange],
+  // (+ 2026-10-08) thử thách "ngoài đời" — hình trên thân cúp: ngôi sao (mặc định của cupGlyph)
+  audience: ['#ffe0ec', P.pink],
+  compose: ['#e6ddff', P.indigo],
+  findC: [P.mintLight, P.grassDark],
+  softSong: ['#dff3ff', P.water],
+  singPlay: ['#ffeed2', P.orange],
+  teach: [P.sunLight, '#c48a00'],
 };
 
 /** Hình nhỏ trên thân cúp — mỗi thử thách một hình (tâm cx, cy). */
@@ -147,6 +175,18 @@ function mic(): string {
     ${sparkle(92, 18, 7, P.sun)}`;
 }
 
+/** (+ 2026-10-08) 🎤 Buổi diễn cho cả nhà: micro trên sân khấu có rèm + trái tim + sao. */
+function concertMic(): string {
+  return `
+    <path d="M22 26 Q30 50 26 84 L36 84 Q40 52 34 26 Z M98 26 Q90 50 94 84 L84 84 Q80 52 86 26 Z" fill="${P.coral}" stroke="#e85a4a" stroke-width="1.6"/>
+    <rect x="50" y="26" width="20" height="30" rx="10" fill="${P.indigo}" stroke="${P.ink}" stroke-opacity=".35" stroke-width="1.6"/>
+    <path d="M54 35 H66 M54 42 H66" stroke="#fff" stroke-opacity=".5" stroke-width="2" stroke-linecap="round"/>
+    <path d="M60 56 V84 M48 86 H72" stroke="${P.ink}" stroke-opacity=".65" stroke-width="4" stroke-linecap="round"/>
+    <path d="M84 62 c-3 -6 -12 -4 -10 3 c1 4 10 9 10 9 c0 0 9 -5 10 -9 c2 -7 -7 -9 -10 -3 Z" fill="#fff" stroke="${P.coral}" stroke-width="1.5"/>
+    <path d="${starPath(36, 64, 9)}" fill="${P.sun}" stroke="#e0a400" stroke-width="1.2"/>
+    ${sparkle(60, 16, 6, P.sun)}`;
+}
+
 function loudSoft(): string {
   return `
     <text x="44" y="74" text-anchor="middle" font-size="58" font-style="italic" font-family="Georgia,'Times New Roman',serif" font-weight="700" fill="${P.ink}">f</text>
@@ -186,12 +226,18 @@ function emblem(s: Sticker, earned: boolean): string {
     case 'challenge':
       // phóng to cúp cho đầy huy hiệu (tâm 60 60)
       return `<g transform="translate(60 62) scale(1.16) translate(-60 -58)">${weekCup(s.challenge ?? 'faster')}</g>`;
+    case 'concert':
+      return concertMic();
+    case 'days':
+      return practiceDay();
+    case 'activeWeeks':
+      return weekStack();
   }
 }
 
 /** Huy hiệu số (mốc bài hát / chuỗi ngày) — vẽ NGOÀI lớp bóng xám để sticker còn khóa vẫn đọc được mốc. */
 function badge(s: Sticker, earned: boolean): string {
-  if (!s.n || (s.kind === 'songs' && s.n === 1) || (s.kind !== 'songs' && s.kind !== 'streak' && s.kind !== 'week')) return '';
+  if (!s.n || (s.kind === 'songs' && s.n === 1) || !['songs', 'streak', 'week', 'days', 'activeWeeks'].includes(s.kind)) return '';
   if (!earned) return numberBadge(s.n, '#e4e0f4', '#8c84b8');
   return s.kind === 'songs' ? numberBadge(s.n, P.sun, '#8a5a00') : numberBadge(s.n, '#fff', '#c2412b');
 }

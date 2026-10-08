@@ -1,6 +1,6 @@
 import { ledgerSteps, staffStep, stemUp, type Clef } from '../../music/staff';
 import {
-  beamGroups,
+  beamGroupsIn,
   beamSegments,
   flagCount,
   groupStemUp,
@@ -12,8 +12,12 @@ import {
 import {
   beatsPerMeasure,
   expressionUsed,
+  hairpinSpans,
+  isCompound,
   lhTimeline,
   measureCount,
+  noteUnit,
+  pedalSpans,
   pitchesOf,
   slurSpans,
   timeline,
@@ -85,8 +89,17 @@ interface StemInfo {
 /** v4 — chỗ dành thêm cho hàng chữ sắc thái (chỉ khi bài có ghi sắc thái) */
 const DYN_PAD = 30;
 
-/** pxPerBeat mặc định theo nhịp: 2/4 (dân ca, nhiều móc kép) giãn rộng gấp đôi để mỗi trang vẫn 4 ô nhịp dễ đọc */
-function defaultPxPerBeat(bpm: number): number {
+/** Cấp 4 — hàng chữ tốc độ / "rit." trên cùng (chỉ khi bài có) */
+const TOP_PAD = 26;
+/** Cấp 4 — hàng pedal dưới khuông thấp nhất (chỉ khi bài có pedal) */
+const PED_PAD = 40;
+
+/**
+ * pxPerBeat mặc định theo nhịp: 2/4 (dân ca, nhiều móc kép) giãn rộng gấp đôi để mỗi trang vẫn 4 ô nhịp dễ đọc.
+ * Cấp 4 — x/8 (phách = móc đơn): 38 px mỗi móc đơn → ô 6/8 rộng như ô 3/4 (3 × 76).
+ */
+function defaultPxPerBeat(bpm: number, unit = 1): number {
+  if (unit !== 1) return 38;
   return bpm === 3 ? 76 : bpm === 2 ? 124 : 62;
 }
 
@@ -107,6 +120,11 @@ export class StaffView {
   private page = -1;
   private readonly o: Required<StaffOptions>;
   private readonly height: number;
+  /** Cấp 4 — nốt đen mỗi phách (x/8: 0.5) — hình nốt vẽ theo beats × unit */
+  private readonly unit: number;
+  /** Cấp 4 — y hàng chữ tốc độ / "rit." và y vạch pedal (0 = bài không có) */
+  private readonly topRowY: number;
+  private readonly pedY: number;
   private readonly spacing: Spacing;
   /** Bề ngang dành cho nốt (từ X0) của một trang đầy */
   private readonly avail: number;
@@ -133,19 +151,26 @@ export class StaffView {
     opts: StaffOptions = {},
   ) {
     const bpm = beatsPerMeasure(tune);
+    const unit = noteUnit(tune);
+    const compound = isCompound(tune);
+    this.unit = unit;
     this.o = {
       clef: opts.clef ?? (tune.hand === 'LH' ? 'bass' : 'treble'),
       names: opts.names ?? true,
       fingers: opts.fingers ?? true,
       mode: opts.mode ?? 'page',
       measuresPerPage: opts.measuresPerPage ?? 4,
-      pxPerBeat: opts.pxPerBeat ?? defaultPxPerBeat(bpm),
+      pxPerBeat: opts.pxPerBeat ?? defaultPxPerBeat(bpm, unit),
       dimHand: opts.dimHand ?? null,
     };
     // Bài có sắc thái: chừa một hàng dưới khuông (khuông kép: giữa hai khuông, như bản nhạc piano thật)
-    const pad = expressionUsed(tune).dyn ? DYN_PAD : 0;
+    const used = expressionUsed(tune);
+    const pad = used.dyn || used.hairpin ? DYN_PAD : 0;
+    // Cấp 4: chữ tốc độ / "rit." → một hàng trên cùng (mọi toạ độ y dời xuống T); pedal → một hàng dưới cùng
+    const T = tune.tempoTerm || [...tune.notes, ...(tune.lh ?? [])].some((n) => n.rit) ? TOP_PAD : 0;
+    this.topRowY = T ? 20 : 0;
     const voice = (notes: TimedNote[]) => {
-      const groups = beamGroups(notes, bpm).map((g) => g.map((i) => notes[i]));
+      const groups = beamGroupsIn(notes, bpm, unit, compound).map((g) => g.map((i) => notes[i]));
       return { notes, beams: groups };
     };
     if (tune.lh) {
@@ -154,14 +179,18 @@ export class StaffView {
       const lhLow = Math.min(...lhNotes.flatMap(pitchesOf).map((p) => staffStep(p, 'treble')));
       const lhClef: Clef = Number.isFinite(lhLow) && lhLow >= -2 ? 'treble' : 'bass';
       this.staves = [
-        { clef: 'treble', bottomY: 116, ...voice(timeline(tune)), fingerY: 18, nameY: 152, dynY: 184 },
-        { clef: lhClef, bottomY: 240 + pad, ...voice(lhNotes), fingerY: 290 + pad, nameY: 270 + pad, dynY: 184 },
+        { clef: 'treble', bottomY: 116 + T, ...voice(timeline(tune)), fingerY: 18 + T, nameY: 152 + T, dynY: 184 + T },
+        { clef: lhClef, bottomY: 240 + pad + T, ...voice(lhNotes), fingerY: 290 + pad + T, nameY: 270 + pad + T, dynY: 184 + T },
       ];
-      this.height = 300 + pad;
+      this.height = 300 + pad + T;
     } else {
-      this.staves = [{ clef: this.o.clef, bottomY: 116, ...voice(timeline(tune)), fingerY: 18, nameY: 178 + pad, dynY: 180 }];
-      this.height = 186 + pad;
+      this.staves = [
+        { clef: this.o.clef, bottomY: 116 + T, ...voice(timeline(tune)), fingerY: 18 + T, nameY: 178 + pad + T, dynY: 180 + T },
+      ];
+      this.height = 186 + pad + T;
     }
+    this.pedY = used.ped ? this.height + 28 : 0;
+    if (used.ped) this.height += PED_PAD;
 
     // Giãn cách chung cho mọi khuông (nốt cùng lúc thẳng hàng dọc)
     const total = measureCount(tune);
@@ -241,7 +270,7 @@ export class StaffView {
       class: 'staff-over',
       'aria-hidden': 'true',
     });
-    top.append(el('line', { x1: X0, x2: X0, y1: 22, y2: this.height - 26, class: 'staff-playhead' }));
+    top.append(el('line', { x1: X0, x2: X0, y1: 22 + this.staves[0].bottomY - 116, y2: this.height - 26, class: 'staff-playhead' }));
     stage.append(this.svg, clip, top);
     this.el.append(stage);
     const vw = width;
@@ -357,6 +386,7 @@ export class StaffView {
       this.content.append(beamLayer);
       this.drawSlurs(s, from, to);
     }
+    this.drawLevel4(from, to);
     if (to >= measureCount(this.tune)) {
       const end = this.xOf(measureCount(this.tune) * bpm) - 14;
       const top = this.y(this.staves[0], 8);
@@ -373,7 +403,7 @@ export class StaffView {
     const steps = g.map((n) => pitchesOf(n).map((p) => staffStep(p, s.clef)));
     const up = groupStemUp(steps.flat());
     const sx = g.map((n) => this.xOf(n.start) + (up ? 7.6 : -7.6));
-    const levels = Math.max(...g.map((n) => flagCount(n.beats)));
+    const levels = Math.max(...g.map((n) => flagCount(n.beats * this.unit)));
     const len = BEAM_STEM + (levels - 1) * BEAM_GAP * 0.6;
     // Đầu đuôi "lý tưởng" của từng nốt
     const tip = steps.map((st) => (up ? this.y(s, Math.max(...st)) - len : this.y(s, Math.min(...st)) + len));
@@ -389,7 +419,8 @@ export class StaffView {
     const lineY = (x: number) => c + slope * (x - sx[0]);
     g.forEach((n, i) => stems.set(n.index, { up, tipY: lineY(sx[i]) }));
 
-    for (const seg of beamSegments(g)) {
+    const u = this.unit;
+    for (const seg of beamSegments(u === 1 ? g : g.map((n) => ({ start: n.start * u, beats: n.beats * u })))) {
       const off = (seg.level - 1) * BEAM_GAP * (up ? 1 : -1);
       let xa = sx[seg.from] - 1;
       let xb = sx[seg.to] + 1;
@@ -414,7 +445,7 @@ export class StaffView {
 
   private drawRest(s: Stave, n: TimedNote, x: number, g: SVGGElement): void {
     const bpm = beatsPerMeasure(this.tune);
-    const shape = noteShape(n.beats);
+    const shape = noteShape(n.beats * this.unit);
     // Lặng cả ô nhịp: dấu lặng tròn ở giữa ô (như bản in), mọi nhịp
     const wholeBar = Math.abs(n.beats - bpm) < 1e-6 && Math.abs(n.start / bpm - Math.round(n.start / bpm)) < 1e-6;
     if (wholeBar || shape.base >= 4) {
@@ -430,7 +461,7 @@ export class StaffView {
       g.append(el('path', { d: `M${x - 3},${y4 - 18} l7,9 l-7,7 l7,9 c-6,-3 -10,1 -5,6`, class: 'staff-rest-q' }));
     } else {
       // Lặng móc đơn / móc kép: chấm tròn + nét chéo (mỗi móc thêm một chấm)
-      const flags = flagCount(n.beats);
+      const flags = flagCount(n.beats * this.unit);
       const top = y5 - 2;
       const bottom = y5 + 20 + (flags - 1) * 9;
       const slope = 7 / (bottom - top); // nét chéo đi xuống sang trái
@@ -456,7 +487,7 @@ export class StaffView {
     }
     const pitches = pitchesOf(n);
     const steps = pitches.map((p) => staffStep(p, s.clef));
-    const shape = noteShape(n.beats);
+    const shape = noteShape(n.beats * this.unit);
     const hollow = shape.base >= 2;
     for (const [i, p] of pitches.entries()) {
       const step = steps[i];
@@ -499,7 +530,7 @@ export class StaffView {
     if (shape.base < 4) {
       const sx = up ? x + 7.6 : x - 7.6;
       const y1 = up ? this.y(s, lo) : this.y(s, hi);
-      const flags = beam ? 0 : flagCount(n.beats);
+      const flags = beam ? 0 : flagCount(n.beats * this.unit);
       // Nốt móc kép đứng riêng: đuôi dài thêm cho đủ chỗ hai móc
       const y2 = beam ? beam.tipY : up ? this.y(s, hi) - STEM - (flags - 1) * 4 : this.y(s, lo) + STEM + (flags - 1) * 4;
       g.append(el('line', { x1: sx, x2: sx, y1, y2, class: 'staff-stem' }));
@@ -564,6 +595,100 @@ export class StaffView {
           class: 'staff-slur',
         }),
       );
+    }
+  }
+
+  /** Cấp 4 — chữ tốc độ, "rit.", nêm to dần / nhỏ dần, pedal của đoạn ô nhịp [from, to). */
+  private drawLevel4(from: number, to: number): void {
+    const bpm = beatsPerMeasure(this.tune);
+    if (this.topRowY) {
+      if (from === 0 && this.tune.tempoTerm) {
+        const t = el('text', { x: X0 - 14, y: this.topRowY, class: 'staff-tempo' });
+        t.textContent = this.tune.tempoTerm;
+        this.content.append(t);
+      }
+      const ritAt = new Set<number>();
+      for (const s of this.staves) {
+        for (const n of s.notes) {
+          if (!n.rit || n.measure < from || n.measure >= to) continue;
+          const key = Math.round(n.start * 1000);
+          if (ritAt.has(key)) continue;
+          ritAt.add(key);
+          const t = el('text', { x: this.xOf(n.start) - 6, y: this.topRowY, class: 'staff-rit' });
+          t.textContent = 'rit.';
+          this.content.append(t);
+        }
+      }
+    }
+    this.drawHairpins(from, to, bpm);
+    if (this.pedY) for (const s of this.staves) this.drawPedals(s, from, to, bpm);
+  }
+
+  /**
+   * Cấp 4 — Nêm to dần (<) / nhỏ dần (>) ở hàng sắc thái của bè chính, từ nốt đầu tới hết nốt cuối.
+   * Nêm vắt qua trang: vẽ phần trong trang, độ mở theo tỉ lệ thời gian (nửa sau trang sau mở tiếp).
+   */
+  private drawHairpins(from: number, to: number, bpm: number): void {
+    const s = this.staves[0];
+    const by = new Map(s.notes.map((n) => [n.index, n]));
+    for (const hp of hairpinSpans(s.notes)) {
+      const na = by.get(hp.from)!;
+      const nb = by.get(hp.to)!;
+      if (nb.measure < from || na.measure >= to) continue;
+      const A = na.start;
+      const B = nb.start + nb.beats;
+      const aIn = na.measure >= from;
+      const bIn = nb.measure < to;
+      const x1 = aIn ? this.xOf(A) + (na.dyn ? 22 : -4) : X0 - 8;
+      const x2 = bIn ? Math.max(this.xOf(nb.start) + 12, this.xOf(B) - 22) : this.xOf(to * bpm) - 22;
+      if (x2 - x1 < 8) continue;
+      const open = (beat: number) => {
+        const f = B > A ? Math.min(1, Math.max(0, (beat - A) / (B - A))) : 1;
+        return hp.kind === 'cresc' ? f : 1 - f;
+      };
+      const H = 8;
+      const c = s.dynY - 10;
+      const h1 = H * open(aIn ? A : from * bpm);
+      const h2 = H * open(bIn ? B : to * bpm);
+      this.content.append(
+        el('path', {
+          d: `M${x1},${c - h1} L${x2},${c - h2} M${x1},${c + h1} L${x2},${c + h2}`,
+          class: `staff-hairpin ${hp.kind}`,
+        }),
+      );
+    }
+  }
+
+  /**
+   * Cấp 4 — Pedal (kiểu móc vuông): "Ped." ở nốt đạp, vạch ngang dọc theo đáy khuông thấp nhất, khấc ∧ ở mỗi lần thay pedal,
+   * móc đứng ở cuối nốt nhả. Vắt qua trang: vẽ tới mép trang / từ mép trang (không chữ, không móc).
+   */
+  private drawPedals(s: Stave, from: number, to: number, bpm: number): void {
+    const by = new Map(s.notes.map((n) => [n.index, n]));
+    const y = this.pedY;
+    for (const sp of pedalSpans(s.notes)) {
+      const na = by.get(sp.start)!;
+      const nb = by.get(sp.end)!;
+      if (nb.measure < from || na.measure >= to) continue;
+      const aIn = na.measure >= from;
+      const bIn = nb.measure < to;
+      const x1 = aIn ? this.xOf(na.start) - 8 : X0 - 10;
+      const x2 = bIn ? Math.max(this.xOf(nb.start) + 10, this.xOf(nb.start + nb.beats) - 18) : this.xOf(to * bpm) - 14;
+      let d = `M${x1},${y}`;
+      for (const ci of sp.changes) {
+        const nc = by.get(ci)!;
+        if (nc.measure < from || nc.measure >= to) continue;
+        const xc = this.xOf(nc.start);
+        d += ` L${xc - 6},${y} L${xc},${y - 11} L${xc + 6},${y}`;
+      }
+      d += ` L${x2},${y}`;
+      if (bIn) d += ` L${x2},${y - 13}`;
+      this.content.append(el('path', { d, class: 'staff-ped-line' }));
+      if (aIn) {
+        const t = el('text', { x: x1, y: y - 4, class: 'staff-ped' });
+        t.textContent = 'Ped.';
+        this.content.append(t);
+      }
     }
   }
 

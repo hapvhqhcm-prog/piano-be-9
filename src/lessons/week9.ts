@@ -6,6 +6,8 @@ import type { WeekPlan } from './types';
  * Mẫu nhịp 2 phách: "MỘT-hai" (phách 1 mạnh). Hai bài tự sáng tác 2/4 + hai bài dân ca (cùng kỹ năng: thế Đô, La duỗi).
  * Đọc nhạc: nốt mốc & quãng (giống/bước/nhảy) làm khởi động. Cuối Cấp 1: trò sáng tạo "Hỏi – Đáp".
  * Tiêu chí: chơi trọn "Inh lả ơi" theo nhịp — đạt ở 2 ngày khác nhau.
+ * (2026-10-08, OWNER duyệt) rút dần phím sáng: Trống trường theo nhịp chỉ nhìn khuông ('staff', bài thế Đô đã tập ở bài 1);
+ * "Đò qua sông" có dấu luyến.
  */
 export const WEEK9: WeekPlan = {
   week: 9,
@@ -28,7 +30,7 @@ export const WEEK9: WeekPlan = {
         {
           kind: 'rhythm',
           title: 'Nhịp 2',
-          intro: 'Mỗi ô nhịp chỉ có 2 phách: "MỘT-hai". Số 2/4 ở đầu bài nghĩa là: 2 phách mỗi ô, mỗi phách là một nốt đen. Vỗ MẠNH ở phách MỘT!',
+          intro: 'Mỗi ô 2 phách: "MỘT-hai". Vỗ MẠNH ở phách MỘT!',
           patterns: [
             ['walk', 'walk'],
             ['long'],
@@ -38,7 +40,7 @@ export const WEEK9: WeekPlan = {
             ['walk', 'rest'],
           ],
         },
-        { kind: 'song', songId: 'school_drum', mode: 'wait', hints: 'full', intro: 'Trống trường "TÙNG-tùng": mỗi ô nhịp 2 phách. Ô có nốt trắng = giữ cả ô!' },
+        { kind: 'song', songId: 'school_drum', mode: 'wait', hints: 'full', intro: 'Trống "TÙNG-tùng": nốt trắng giữ cả ô nhịp!' },
       ],
     },
     {
@@ -47,9 +49,16 @@ export const WEEK9: WeekPlan = {
       title: 'Trống trường & Inh lả ơi',
       emoji: '🥁',
       activities: [
-        { kind: 'song', songId: 'school_drum', mode: 'tempo', level: 2, hints: 'names' },
+        { kind: 'song', songId: 'school_drum', mode: 'tempo', level: 2, hints: 'staff', intro: 'Chỉ nhìn khuông — "TÙNG-tùng" theo nhịp!' },
         // Dân ca Việt Nam (OWNER yêu cầu 2026-10-05): chỉ Rê Mi Sol La — tay ở "thế nhích lên", Sol–La = 4-5. v5: dời từ tuần 7 cũ (sau bài nhịp 2/4)
-        { kind: 'song', songId: 'inh_la_oi', mode: 'wait', hints: 'full', intro: 'Tay nhích sang phải: ngón 1 ở Rê! Sol – La là ngón 4 – 5. Dân ca Thái Tây Bắc, nhịp 2/4 — câu cuối đàn NHỎ (p) như tiếng vọng núi rừng.' },
+        { kind: 'song', songId: 'inh_la_oi', mode: 'wait', hints: 'full', intro: 'Ngón 1 ở Rê! Sol – La ngón 4 – 5. Câu cuối NHỎ.' },
+        // (2026-10-08, OWNER duyệt) HÁT TRƯỚC KHI ĐÀN — cuối bài: nghe 2–3 nốt, hát lại từng nốt, rồi đàn
+        {
+          kind: 'sing',
+          title: 'Hát rồi đàn 🎤',
+          intro: 'Nghe thầy đàn, hát lại từng nốt, rồi đàn trên đàn. Hát chưa trúng cũng không sao — hát giúp tai nhớ nốt!',
+          rounds: [{ notes: ['D4', 'E4', 'G4'], fingers: [1, 2, 4] }, { notes: ['A4', 'G4', 'E4'], fingers: [5, 4, 2] }],
+        },
       ],
     },
     {
@@ -59,7 +68,7 @@ export const WEEK9: WeekPlan = {
       emoji: '⛴️',
       activities: [
         { kind: 'song', songId: 'inh_la_oi', mode: 'tempo', level: 2, hints: 'names' },
-        { kind: 'song', songId: 'ferry_song', mode: 'wait', hints: 'full', intro: 'Sol – La đi cùng nhau: ngón 4 – 5! Con đò lắc lư "MỘT-hai" — nhìn số ngón để biết lúc tay nhích sang phải.' },
+        { kind: 'song', songId: 'ferry_song', mode: 'wait', hints: 'full', intro: 'Đò lắc lư "MỘT-hai": đàn LIỀN theo dấu luyến!' },
       ],
     },
     {
@@ -69,11 +78,11 @@ export const WEEK9: WeekPlan = {
       emoji: '💃',
       activities: [
         // Dân ca Việt Nam (OWNER yêu cầu 2026-10-05) — v5: dời từ tuần 8 cũ (sau bài nhịp 2/4)
-        { kind: 'song', songId: 'xoe_hoa', mode: 'wait', hints: 'full', intro: 'Tay ngũ cung: Đô 1, Rê 2, Fa 3, Sol 4, La 5! Mỗi ngón một phím. Điệu múa xòe của người Thái, nhịp 2/4 — bài bắt đầu bằng một nốt Đô lấy đà.' },
+        { kind: 'song', songId: 'xoe_hoa', mode: 'wait', hints: 'full', intro: 'Tay ngũ cung: mỗi ngón một phím, Fa ngón 3!' },
         {
           kind: 'improv',
           title: 'Hỏi – Đáp 💬',
-          intro: 'App đàn một câu HỎI (2 ô nhịp). Con đàn câu TRẢ LỜI cũng 2 ô, bằng các nốt thế Đô — và kết thúc ở nhà Đô cho câu trả lời "chắc chắn"!',
+          intro: 'App hỏi 2 ô. Con đáp 2 ô, kết ở Đô!',
           mode: 'question-answer',
           position: 'C',
           bars: 2,

@@ -1,0 +1,105 @@
+{
+ "id": "scale_f_lh",
+ "title": "F major scale (left hand)",
+ "titleVi": "Gam Fa trưởng — tay trái",
+ "composer": "Bài tập (traditional)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Bài tự sáng tác cho app (piano-be-9)",
+ "attributionRequired": false,
+ "hand": "LH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 33,
+ "position": "free",
+ "phrases": [
+  0,
+  2
+ ],
+ "notes": [
+  {
+   "pitch": "F2",
+   "beats": 1,
+   "finger": 5,
+   "dyn": "mf",
+   "slur": "start"
+  },
+  {
+   "pitch": "G2",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "A2",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "Bb2",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "C3",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E3",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "F3",
+   "beats": 1,
+   "finger": 1,
+   "slur": "end"
+  },
+  {
+   "pitch": "F3",
+   "beats": 1,
+   "finger": 1,
+   "slur": "start"
+  },
+  {
+   "pitch": "E3",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "D3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "C3",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "Bb2",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "A2",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G2",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "F2",
+   "beats": 1,
+   "finger": 5,
+   "slur": "end"
+  }
+ ]
+}

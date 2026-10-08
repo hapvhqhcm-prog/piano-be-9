@@ -1,0 +1,319 @@
+{
+ "id": "korobeiniki",
+ "title": "Korobeiniki (Russian folk song)",
+ "titleVi": "Korobeiniki (dân ca Nga)",
+ "composer": "Dân ca Nga (traditional)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Original simple arrangement for this app (Level 4: melody + left-hand accompaniment)",
+ "attributionRequired": false,
+ "hand": "BOTH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 41,
+ "position": "free",
+ "phrases": [
+  0,
+  4
+ ],
+ "notes": [
+  {
+   "pitch": "E5",
+   "beats": 1,
+   "finger": 5,
+   "dyn": "mf"
+  },
+  {
+   "pitch": "B4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "C5",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "D5",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "C5",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "B4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "C5",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "E5",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "D5",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "C5",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "B4",
+   "beats": 1.5,
+   "finger": 2
+  },
+  {
+   "pitch": "C5",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "D5",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "E5",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "C5",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "A4",
+   "beats": 2,
+   "finger": 1
+  },
+  {
+   "rest": true,
+   "beats": 0.5
+  },
+  {
+   "pitch": "D5",
+   "beats": 1,
+   "finger": 1,
+   "dyn": "f"
+  },
+  {
+   "pitch": "F5",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "A5",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "G5",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "F5",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "E5",
+   "beats": 1.5,
+   "finger": 2
+  },
+  {
+   "pitch": "C5",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "E5",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D5",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "C5",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "B4",
+   "beats": 1,
+   "finger": 2,
+   "dyn": "mf"
+  },
+  {
+   "pitch": "B4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "C5",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "D5",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "E5",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "C5",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "A4",
+   "beats": 2,
+   "finger": 1
+  }
+ ],
+ "lh": [
+  {
+   "pitch": "B2",
+   "beats": 4,
+   "finger": 4,
+   "also": [
+    {
+     "pitch": "E3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "A2",
+   "beats": 4,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "C3",
+     "finger": 3
+    },
+    {
+     "pitch": "E3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "B2",
+   "beats": 4,
+   "finger": 4,
+   "also": [
+    {
+     "pitch": "E3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "A2",
+   "beats": 4,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "C3",
+     "finger": 3
+    },
+    {
+     "pitch": "E3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "A2",
+   "beats": 4,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "D3",
+     "finger": 2
+    }
+   ]
+  },
+  {
+   "pitch": "A2",
+   "beats": 4,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "C3",
+     "finger": 3
+    },
+    {
+     "pitch": "E3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "B2",
+   "beats": 4,
+   "finger": 4,
+   "also": [
+    {
+     "pitch": "E3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "A2",
+   "beats": 4,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "C3",
+     "finger": 3
+    },
+    {
+     "pitch": "E3",
+     "finger": 1
+    }
+   ]
+  }
+ ],
+ "lhPosition": "free"
+}

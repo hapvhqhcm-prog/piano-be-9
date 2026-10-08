@@ -1,0 +1,106 @@
+{
+ "id": "hot_cross_buns_g",
+ "title": "Hot Cross Buns (G position)",
+ "titleVi": "Bánh nóng — thế Sol",
+ "composer": "Dân ca Anh (traditional)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Original simple arrangement for this app",
+ "attributionRequired": false,
+ "hand": "RH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 10,
+ "position": "G",
+ "phrases": [
+  0,
+  2
+ ],
+ "notes": [
+  {
+   "pitch": "B4",
+   "beats": 1,
+   "finger": 3,
+   "dyn": "mf"
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 2,
+   "finger": 1
+  },
+  {
+   "pitch": "B4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 2,
+   "finger": 1
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "B4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 2,
+   "finger": 1
+  }
+ ]
+}

@@ -4,6 +4,8 @@ import type { WeekPlan } from './types';
 /**
  * TUẦN 7 (tuần 6 cũ) — Tấm gương: tay trái = "tấm gương" của tay phải (ngón 5→1 trên C3–G3, §6).
  * Lặp bài tuần 2–3 bằng tay trái. v5: tay trái tự bật từ tuần 7 (lessonEngine.leftHandActive). Tiêu chí: như tuần 3 — tai nghe đúng ≥ 5/6 trong một buổi, ở 2 ngày (APP), dải tay trái.
+ * (2026-10-08, OWNER duyệt) Largo có dấu luyến (LIỀN, sau trò "Đàn liền" tuần 5); lượt theo nhịp chỉ tên nốt;
+ * ứng tấu 1 phút tay trái trên phím đen (bài 2).
  */
 export const WEEK7: WeekPlan = {
   week: 7,
@@ -16,7 +18,7 @@ export const WEEK7: WeekPlan = {
   teach: { emoji: '👨‍🏫', text: 'Con giơ hai tay lên và chỉ cho bố mẹ: ngón số 1 của tay trái và tay phải ở đâu?' },
   drills: ['hand-shape', 'five-finger'],
   criterion: { text: 'Tai nghe tay trái (có mốc Đô) đúng ít nhất 5/6 trong một buổi — ở 2 ngày khác nhau', who: 'APP' },
-  kidGoal: 'Tai giỏi tay trái: đoán đúng 5 nốt trầm trong 6 — 2 hôm nhé! 🫲',
+  kidGoal: 'Đoán đúng 5 nốt trầm trong 6 — 2 hôm nhé! 🫲',
   lessons: [
     {
       id: 'w7-l1',
@@ -28,14 +30,14 @@ export const WEEK7: WeekPlan = {
           id: 'w7-l1-a',
           step: 'Bài mới',
           title: 'Ngón 5 tay trái ở Đô',
-          intro: 'Tay trái đặt ngón 5 (ngón út) lên Đô trầm, ngón 1 (ngón cái) lên Sol.',
+          intro: 'Tay trái: ngón út (5) ở Đô trầm, ngón cái ở Sol.',
           targets: [lhNote('C3', 'Đô TRẦM — bên trái Đô giữa'), lhNote('D3'), lhNote('E3'), lhNote('F3'), lhNote('G3', 'Sol TRẦM — gần Đô giữa')],
         }),
         notes({
           id: 'w7-stairs',
           step: 'Bài mới',
           title: 'Leo cầu thang tay trái',
-          intro: 'Leo lên Đô → Sol bằng ngón 5 – 4 – 3 – 2 – 1, rồi leo xuống.',
+          intro: 'Leo lên Đô → Sol bằng ngón 5 → 1, rồi xuống.',
           targets: lhNotes(['C3', 'D3', 'E3', 'F3', 'G3', 'F3', 'E3', 'D3', 'C3']),
         }),
         notes({
@@ -53,8 +55,22 @@ export const WEEK7: WeekPlan = {
       title: 'Bánh nóng — tay trái',
       emoji: '🥐',
       activities: [
-        { kind: 'song', songId: 'hot_cross_buns_lh', mode: 'wait', hints: 'full', intro: 'Ô 1 đàn TO (f), ô 2 đàn NHỎ (p) — như tiếng vọng trong hang!' },
-        { kind: 'song', songId: 'hot_cross_buns_lh', mode: 'tempo', level: 2, hints: 'full' },
+        { kind: 'song', songId: 'hot_cross_buns_lh', mode: 'wait', hints: 'full', intro: 'Ô 1 TO, ô 2 NHỎ — như tiếng vọng trong hang!' },
+        { kind: 'song', songId: 'hot_cross_buns_lh', mode: 'tempo', level: 2, hints: 'names' },
+        // (2026-10-08, OWNER duyệt) ứng tấu 1 phút mỗi tuần — tay trái, NHỎ và LIỀN
+        {
+          kind: 'improv',
+          title: 'Tay trái trên phím đen 🎨',
+          intro: 'App đàn nền. Tay trái đàn phím đen thật NHỎ và LIỀN!',
+          mode: 'black-keys',
+        },
+        // (2026-10-08, OWNER duyệt) HÁT TRƯỚC KHI ĐÀN — cuối bài: nghe 2–3 nốt, hát lại từng nốt, rồi đàn
+        {
+          kind: 'sing',
+          title: 'Hát rồi đàn 🎤',
+          intro: 'Nghe thầy đàn, hát lại từng nốt, rồi đàn trên đàn. Hát chưa trúng cũng không sao — hát giúp tai nhớ nốt!',
+          rounds: [{ notes: ['C4', 'D4', 'E4'], fingers: [1, 2, 3] }, { notes: ['E4', 'D4', 'C4'], fingers: [3, 2, 1] }],
+        },
       ],
     },
     {
@@ -73,8 +89,8 @@ export const WEEK7: WeekPlan = {
       title: 'Khúc Largo (tay phải)',
       emoji: '🏡',
       activities: [
-        { kind: 'song', songId: 'largo_new_world', mode: 'wait', hints: 'full', intro: 'Dấu p = đàn NHỎ — chậm và êm nhé. Giai điệu rất hay của nhạc sĩ Dvořák.' },
-        { kind: 'song', songId: 'largo_new_world', mode: 'tempo', level: 3, hints: 'full' },
+        { kind: 'song', songId: 'largo_new_world', mode: 'wait', hints: 'full', intro: 'Đàn NHỎ (p) và LIỀN theo dấu luyến — thật êm!' },
+        { kind: 'song', songId: 'largo_new_world', mode: 'tempo', level: 3, hints: 'names', pulseDrop: true },
       ],
     },
   ],

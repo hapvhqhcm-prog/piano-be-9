@@ -26,10 +26,13 @@ self.addEventListener('message', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     (async () => {
+      // (+ 2026-10-08) GIỮ bản ngay trước (một bản): trang còn chạy mã cũ (tab khác, chưa kịp tải lại) nạp muộn
+      // chunk cũ vẫn có (lazy.ts) thay vì lỗi "Chưa mở được màn này". Bản cũ hơn nữa → xóa.
+      // caches.keys() trả về theo thứ tự tạo → bản cuối (khác CACHE) là bản ngay trước.
       const keys = await caches.keys();
-      await Promise.all(
-        keys.filter((k) => k.startsWith(PREFIX) && k !== CACHE).map((k) => caches.delete(k)),
-      );
+      const old = keys.filter((k) => k.startsWith(PREFIX) && k !== CACHE);
+      const keep = old[old.length - 1];
+      await Promise.all(old.filter((k) => k !== keep).map((k) => caches.delete(k)));
       await self.clients.claim();
     })(),
   );
@@ -55,7 +58,8 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     (async () => {
       const cache = await caches.open(CACHE);
-      const cached = await cache.match(req, MATCH);
+      // Không có trong bản hiện tại → thử bản cũ còn giữ (chunk của trang chưa tải lại), rồi mới ra mạng
+      const cached = (await cache.match(req, MATCH)) || (await caches.match(req, MATCH));
       return cached || fetch(req);
     })(),
   );

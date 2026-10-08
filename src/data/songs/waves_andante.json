@@ -1,0 +1,230 @@
+{
+ "id": "waves_andante",
+ "title": "Waves (Andante)",
+ "titleVi": "Sóng biển",
+ "composer": "Bài tự sáng tác cho app (piano-be-9)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Bài tự sáng tác cho app (piano-be-9)",
+ "attributionRequired": false,
+ "hand": "BOTH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 40,
+ "tempoTerm": "Andante",
+ "phrases": [
+  0,
+  4
+ ],
+ "notes": [
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1,
+   "dyn": "p",
+   "slur": "start",
+   "hairpin": "cresc"
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4,
+   "slur": "end"
+  },
+  {
+   "pitch": "G4",
+   "beats": 2,
+   "finger": 5,
+   "hairpin": "end"
+  },
+  {
+   "pitch": "E4",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4,
+   "dyn": "mf",
+   "slur": "start",
+   "hairpin": "dim"
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3,
+   "slur": "end"
+  },
+  {
+   "pitch": "C4",
+   "beats": 4,
+   "finger": 1,
+   "dyn": "p",
+   "hairpin": "end"
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3,
+   "slur": "start",
+   "hairpin": "cresc"
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4,
+   "slur": "end"
+  },
+  {
+   "pitch": "G4",
+   "beats": 4,
+   "finger": 5,
+   "dyn": "f",
+   "hairpin": "end"
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4,
+   "slur": "start",
+   "hairpin": "dim",
+   "rit": true
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3,
+   "slur": "end"
+  },
+  {
+   "pitch": "C4",
+   "beats": 4,
+   "finger": 1,
+   "dyn": "p",
+   "hairpin": "end"
+  }
+ ],
+ "lh": [
+  {
+   "pitch": "C3",
+   "beats": 2,
+   "finger": 5
+  },
+  {
+   "pitch": "G3",
+   "beats": 2,
+   "finger": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 2,
+   "finger": 5
+  },
+  {
+   "pitch": "G3",
+   "beats": 2,
+   "finger": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 2,
+   "finger": 4
+  },
+  {
+   "pitch": "G3",
+   "beats": 2,
+   "finger": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 2,
+   "finger": 5
+  },
+  {
+   "pitch": "G3",
+   "beats": 2,
+   "finger": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 2,
+   "finger": 5
+  },
+  {
+   "pitch": "G3",
+   "beats": 2,
+   "finger": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 2,
+   "finger": 5
+  },
+  {
+   "pitch": "G3",
+   "beats": 2,
+   "finger": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 2,
+   "finger": 4
+  },
+  {
+   "pitch": "G3",
+   "beats": 2,
+   "finger": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 4,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  }
+ ]
+}

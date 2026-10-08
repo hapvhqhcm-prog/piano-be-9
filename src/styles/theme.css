@@ -833,6 +833,42 @@ h3,
   stroke-width: 1.2;
   stroke-linejoin: round;
 }
+/* ---- Cấp 4: chữ tốc độ, "rit.", nêm to dần / nhỏ dần, pedal trên khuông ---- */
+.staff-tempo {
+  font-family: 'Times New Roman', Georgia, serif;
+  font-weight: 900;
+  font-size: 22px;
+  text-anchor: start;
+  fill: #2b2a33;
+}
+.staff-rit {
+  font-family: 'Times New Roman', Georgia, serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: 20px;
+  text-anchor: start;
+  fill: #2b2a33;
+}
+.staff-hairpin {
+  fill: none;
+  stroke: #8a2be2;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+}
+.staff-ped {
+  font-family: 'Times New Roman', Georgia, serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: 17px;
+  text-anchor: start;
+  fill: #2b2a33;
+}
+.staff-ped-line {
+  fill: none;
+  stroke: #2b2a33;
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+}
 .song-legend {
   display: flex;
   flex-wrap: wrap;

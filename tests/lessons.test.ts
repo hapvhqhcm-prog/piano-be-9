@@ -22,11 +22,12 @@ function runIn(st: ProgressStore, lessonId: string, r: Omit<SongRun, 'ts'>): voi
 }
 
 describe('lessonEngine', () => {
-  it('buổi tuần 1 (chơi thử 2026-10-06): Tư thế 1 thẻ (+ khởi động tay) → Bài mới trên đàn thật → Khởi động "Lên hay xuống?" 3 lượt → Màn kết', () => {
+  it('buổi tuần 1: Mở đầu (khởi động bằng nhạc + tư thế đầy đủ + khởi động tay) → Bài mới trên đàn thật → Khởi động "Lên hay xuống?" 3 lượt → Màn kết', () => {
     const plan = buildSessionPlan(findLesson('w1-l1')!);
     expect(plan.map((s) => s.kind)).toEqual(['posture', 'activity', 'activity', 'quiz', 'closing']);
-    // buổi ĐẦU TIÊN: tư thế rút gọn 1 thẻ → màn thứ 3 (tư thế · khởi động tay · lời dẫn) đã là tìm sinh đôi trên đàn thật
-    expect(plan[0].kind === 'posture' && plan[0].short).toBe(true);
+    // v5.2 (OWNER 2026-10-08): tuần 1 luôn có thẻ tư thế ĐẦY ĐỦ; chưa có dữ liệu → khởi động "thầy đàn — con đàn lại"
+    expect(plan[0].kind === 'posture' && plan[0].full).toBe(true);
+    expect(plan[0].kind === 'posture' && plan[0].warmup.kind).toBe('riff');
     const first = plan[1];
     expect(first.kind === 'activity' && first.activity.kind === 'notes' && first.activity.segment.id).toBe('w1-b1');
     const q = plan[3];
@@ -35,19 +36,28 @@ describe('lessonEngine', () => {
     expect(last.kind === 'closing' && last.teach?.text).toBe(WEEKS[0].teach.text);
   });
 
-  it('tư thế: buổi đầu 1 thẻ, buổi 2–3 đủ 3 thẻ, từ buổi 4 lại 1 thẻ', () => {
-    const st = store();
-    const short = () => {
-      const p = buildSessionPlan(findLesson('w1-l2')!, st.get())[0];
-      return p.kind === 'posture' && p.short;
+  it('v5.2 — tư thế ĐẦY ĐỦ: mọi bài tuần 1; từ tuần 2 chỉ buổi đầu tuần giáo trình / tuần lịch, hoặc khi bố mẹ bật', () => {
+    const { st, day } = clock(5); // 5/10/2026 = thứ 2
+    const full = (id: string, now = new Date(2026, 9, 5, 18).getTime()) => {
+      const p = buildSessionPlan(findLesson(id)!, st.get(), { now })[0];
+      return p.kind === 'posture' && p.full;
     };
-    expect(short()).toBe(true);
-    st.finishSession(st.startSession('w1-l1').id);
-    expect(short()).toBe(false);
-    st.finishSession(st.startSession('w1-l1').id);
-    expect(short()).toBe(false);
-    st.finishSession(st.startSession('w1-l1').id);
-    expect(short()).toBe(true);
+    expect(full('w1-l2')).toBe(true);
+    for (let i = 0; i < 4; i++) st.finishSession(st.startSession('w1-l1').id);
+    expect(full('w1-l2')).toBe(true); // tuần 1: luôn đầy đủ
+    st.setCurrentWeek(2);
+    expect(full('w2-l1')).toBe(true); // buổi đầu của tuần 2 (giáo trình)
+    st.finishSession(st.startSession('w2-l1').id);
+    expect(full('w2-l2')).toBe(false); // cùng tuần giáo trình, cùng tuần lịch → chỉ câu nhắc một dòng
+    day(3); // thứ 5 cùng tuần lịch
+    expect(full('w2-l2', new Date(2026, 9, 8, 18).getTime())).toBe(false);
+    day(7); // thứ 2 tuần sau: buổi đầu tuần lịch → đầy đủ
+    expect(full('w2-l2', new Date(2026, 9, 12, 18).getTime())).toBe(true);
+    st.finishSession(st.startSession('w2-l2').id);
+    expect(full('w2-l2', new Date(2026, 9, 12, 19).getTime())).toBe(false);
+    // 👪 bố mẹ bật "nhắc tư thế đầy đủ"
+    st.updateSettings({ postureFull: true } as never);
+    expect(full('w2-l2', new Date(2026, 9, 12, 19).getTime())).toBe(true);
   });
 
   it('từ tuần 2 có "Ôn nhanh" (nốt cũ); "Chơi lại" chỉ còn bài + tổng kết', () => {
@@ -69,11 +79,11 @@ describe('lessonEngine', () => {
     expect(replay[replay.length - 1]).toEqual({ kind: 'closing', teach: null });
   });
 
-  it('tư thế rút gọn sau 3 buổi; buổi Sân khấu không có tư thế/khởi động', () => {
+  it('buổi Sân khấu không có tư thế/khởi động', () => {
     const st = store();
     for (let i = 0; i < 3; i++) st.finishSession(st.startSession('w1-l1').id);
     const p = buildSessionPlan(findLesson('w1-l2')!, st.get())[0];
-    expect(p.kind === 'posture' && p.short).toBe(true);
+    expect(p.kind).toBe('posture');
     expect(buildSessionPlan(findLesson('w10-stage')!, st.get()).map((s) => s.kind)).toEqual(['activity', 'closing']);
   });
 
@@ -85,9 +95,10 @@ describe('lessonEngine', () => {
   });
 
   it('31 tuần (v5.1: 10 + 11 + 10), mỗi tuần có bài, "con làm thầy", tiêu chí và mục tiêu cho bé; bài hát trong bài học đều tồn tại', () => {
-    expect(WEEKS).toHaveLength(31);
-    expect(MAX_WEEK).toBe(31);
-    expect(WEEKS.map((w) => w.week)).toEqual(Array.from({ length: 31 }, (_, i) => i + 1));
+    // Cấp 4 (2026-10-08): + 12 tuần (32–43) ở cuối
+    expect(WEEKS).toHaveLength(43);
+    expect(MAX_WEEK).toBe(43);
+    expect(WEEKS.map((w) => w.week)).toEqual(Array.from({ length: 43 }, (_, i) => i + 1));
     const ids = new Set<string>();
     for (const w of WEEKS) {
       expect(w.lessons.length).toBeGreaterThan(0);
@@ -403,7 +414,7 @@ describe('Cấp 2–3 & luyện tập mỗi ngày', () => {
     expect(weekPassed(29, st.get())).toBe(true);
   });
 
-  it('bài đã thuộc = trọn bài theo nhịp ≥ 60; sau tuần 31 "Học tiếp" là luyện tập mỗi ngày', () => {
+  it('bài đã thuộc = trọn bài theo nhịp ≥ 60; xong tuần 31 (chưa sang Cấp 4) / xong tuần cuối → "Học tiếp" là luyện tập mỗi ngày', () => {
     const st = store();
     st.setCurrentWeek(31);
     const s = st.startSession('w31-stage');
@@ -439,7 +450,10 @@ describe('Cấp 2–3 & luyện tập mỗi ngày', () => {
     expect(levelOf(21).level).toBe(2);
     expect(levelOf(22).level).toBe(3);
     expect(levelOf(31).level).toBe(3);
-    expect(LEVELS.map((l) => l.weeks)).toEqual([[1, 10], [11, 21], [22, 31]]);
+    expect(levelOf(32).level).toBe(4);
+    expect(levelOf(43).level).toBe(4);
+    expect(LEVELS.map((l) => l.weeks)).toEqual([[1, 10], [11, 21], [22, 31], [32, 43]]);
+    expect(LEVELS[3].goal).toContain('ABRSM');
     expect(LEVELS[2].goal).toContain('Faber cấp 1');
   });
 });
@@ -486,7 +500,7 @@ describe('tự phản biện: buổi gọn, mục tiêu tuần, mẹo bố mẹ'
   });
 
   it('đủ mẹo cho bố mẹ cả 31 tuần', () => {
-    for (let w = 1; w <= 31; w++) expect(PARENT_TIPS[w]?.length, `tuần ${w}`).toBeGreaterThan(20);
+    for (let w = 1; w <= 43; w++) expect(PARENT_TIPS[w]?.length, `tuần ${w}`).toBeGreaterThan(20);
   });
 });
 
@@ -511,9 +525,14 @@ describe('sửa lỗi từ rà soát', () => {
 describe('sắc thái & kiểu đàn trong giáo trình (OWNER duyệt 2026-10-05)', () => {
   const dyn = WEEKS.flatMap((w) => w.lessons.flatMap((l) => l.activities.flatMap((a) => (a.kind === 'dynamics' ? [{ w: w.week, l, a }] : []))));
 
-  it('To/nhỏ ở Cấp 1 (tuần 6–7), ngắt/liền ở Cấp 2 (tuần 12–13)', () => {
+  it('To/nhỏ ở Cấp 1 (tuần 6–7), ngắt/liền ở Cấp 2 (tuần 12–13); (2026-10-08) chỉ LIỀN sớm ở tuần 5–6', () => {
     const ls = dyn.filter((d) => d.a.mode === 'loud-soft');
-    const sl = dyn.filter((d) => d.a.mode === 'stac-leg');
+    // trò có lượt NGẮT chỉ từ tuần 12; trò chỉ LIỀN ("Đàn liền") được dạy sớm ở tuần 5–6
+    const sl = dyn.filter((d) => d.a.mode === 'stac-leg' && d.a.rounds.some((r) => r.want === 'stac'));
+    const legOnly = dyn.filter((d) => d.a.mode === 'stac-leg' && d.a.rounds.every((r) => r.want === 'leg'));
+    expect(legOnly.length).toBeGreaterThan(0);
+    expect(Math.min(...legOnly.map((d) => d.w))).toBeGreaterThanOrEqual(5);
+    expect(Math.min(...legOnly.map((d) => d.w))).toBeLessThanOrEqual(6);
     expect(ls.length).toBeGreaterThan(0);
     expect(sl.length).toBeGreaterThan(0);
     expect(Math.min(...ls.map((d) => d.w))).toBeGreaterThanOrEqual(6);

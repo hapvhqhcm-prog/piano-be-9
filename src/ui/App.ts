@@ -3,9 +3,10 @@ import { MicListener } from '../audio/MicListener';
 import { saveAutoSens } from '../audio/micLogStore';
 import { SENS_NAME } from '../audio/micTune';
 import { speechBusy } from '../audio/voice';
-import { toast } from './components/dom';
+import { button, h, toast } from './components/dom';
 import { requestPersistentStorage } from '../progress/backup';
 import { markSafePoint } from '../pwa/updater';
+import { logError, setScreenProbe } from '../pwa/errorLog';
 import type { ProgressStore } from '../progress/ProgressStore';
 
 /** Một màn hình: vẽ vào root, trả về hàm dọn dẹp (tùy chọn). */
@@ -30,6 +31,8 @@ export class App {
     readonly store: ProgressStore,
   ) {
     this.mic = new MicListener(audio);
+    // Nhật ký lỗi ghi kèm màn đang mở
+    setScreenProbe(() => this.root.firstElementChild?.className || undefined);
     // Micro được bật trong Cài đặt → giữ phiên 'play-and-record' suốt (đổi qua lại làm iOS nhỏ tiếng / lẹt xẹt)
     audio.recordSessionWanted = () => this.micWanted;
     // iOS cắt micro ngầm (cuộc gọi, khóa màn hình…) → micro báo 'off' + needsRestart → bật lại ở lần chạm sau
@@ -107,6 +110,54 @@ export class App {
     this.root.replaceChildren();
     this.root.scrollTop = 0;
     markSafePoint(false); // màn Bắt đầu / màn chính tự đánh dấu an toàn
-    this.cleanup = screen(this.root) || null;
+    try {
+      this.cleanup = screen(this.root) || null;
+    } catch (e) {
+      // (+ 2026-10-08) Màn lỗi khi vẽ → trước đây màn trắng, bé kẹt. Giờ: ghi nhật ký + màn "Ối" có nút về màn chính.
+      console.error('screen', e);
+      logError('screen', e);
+      this.showRecovery();
+    }
+  }
+
+  /** Màn "Ối, có trục trặc nhỏ" — luôn vẽ được (không phụ thuộc dữ liệu). */
+  private showRecovery(): void {
+    try {
+      this.audio.stopAll();
+    } catch {
+      /* bỏ qua */
+    }
+    this.root.replaceChildren(
+      h(
+        'div',
+        { class: 'screen' },
+        h(
+          'div',
+          {
+            class: 'stage app-recovery',
+            role: 'alert',
+            style: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '18px', textAlign: 'center', padding: '32px', minHeight: '100%' },
+          },
+          h('h2', {}, '🙈 Ối, có trục trặc nhỏ'),
+          h('p', {}, 'Tiến độ của con vẫn được giữ. Mình về màn chính rồi học tiếp nhé!'),
+          button({
+            icon: '🏠',
+            label: 'Về màn chính',
+            kind: 'primary',
+            big: true,
+            onTap: () =>
+              void (this._started ? import('./screens/home').then((m) => this.show(m.homeScreen(this))) : import('./screens/start').then((m) => this.show(m.startScreen(this)))).catch(
+                () => window.location.reload(),
+              ),
+          }),
+          button({
+            icon: '🩺',
+            label: 'Kiểm tra iPad',
+            onTap: () => void import('./screens/diagnostics').then((m) => this.show(m.diagnosticsScreen(this))).catch(() => window.location.reload()),
+          }),
+        ),
+      ),
+    );
+    markSafePoint(true); // có bản mới (có thể đã sửa lỗi này) → cập nhật luôn
   }
 }

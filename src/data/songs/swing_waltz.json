@@ -1,0 +1,114 @@
+{
+ "id": "swing_waltz",
+ "title": "Swing Waltz",
+ "titleVi": "Xích đu",
+ "composer": "Bài tự sáng tác cho app (piano-be-9)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Bài tự sáng tác cho app (piano-be-9)",
+ "attributionRequired": false,
+ "hand": "RH",
+ "bpm": 60,
+ "timeSignature": "3/4",
+ "week": 11,
+ "phrases": [
+  0,
+  4
+ ],
+ "notes": [
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1,
+   "dyn": "mf",
+   "slur": "start"
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 3,
+   "finger": 5,
+   "slur": "end"
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4,
+   "slur": "start"
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 3,
+   "finger": 3,
+   "slur": "end"
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1,
+   "dyn": "p",
+   "slur": "start"
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 2,
+   "finger": 5
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3,
+   "slur": "end"
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4,
+   "slur": "start"
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 3,
+   "finger": 1,
+   "slur": "end"
+  }
+ ]
+}

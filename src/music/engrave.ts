@@ -40,9 +40,12 @@ export interface BeamNote {
 /**
  * Nhóm gạch nối của MỘT bè: trả về các nhóm (≥ 2 nốt) chỉ số trong mảng `notes` (theo thứ tự thời gian).
  * Nốt đứng một mình giữ móc (không có trong kết quả).
+ * `start`/`beats` tính theo NỐT ĐEN. Cấp 4 — `compoundGroup` (nhịp ghép, vd 6/8 → 1.5 = đen chấm):
+ * gom các nốt có móc liền nhau trong cùng một nhịp lớn (3 móc đơn); bỏ qua thì như cũ (2/4, 3/4, 4/4).
  */
-export function beamGroups(notes: BeamNote[], beatsPerMeasure: number): number[][] {
-  // 1) Theo phách: nốt có móc, liền nhau, bắt đầu trong cùng một phách
+export function beamGroups(notes: BeamNote[], beatsPerMeasure: number, compoundGroup?: number): number[][] {
+  // 1) Theo phách: nốt có móc, liền nhau, bắt đầu trong cùng một phách (nhịp ghép: cùng một nhịp lớn)
+  const pulse = compoundGroup && compoundGroup > 0 ? compoundGroup : 1;
   const byBeat: Array<{ beat: number; idx: number[] }> = [];
   let cur: { beat: number; idx: number[] } | null = null;
   const flush = () => {
@@ -51,12 +54,13 @@ export function beamGroups(notes: BeamNote[], beatsPerMeasure: number): number[]
   };
   notes.forEach((n, i) => {
     if (n.rest || flagCount(n.beats) === 0) return flush();
-    const beat = Math.floor(n.start + EPS);
+    const beat = Math.floor(n.start / pulse + EPS);
     if (cur && cur.beat !== beat) flush();
     if (!cur) cur = { beat, idx: [] };
     cur.idx.push(i);
   });
   flush();
+  if (pulse !== 1) return byBeat.map((g) => g.idx).filter((g) => g.length >= 2);
 
   // 2) Nối chung các phách "hai móc đơn tròn phách" liền nhau (4/4: trong nửa ô; 3/4: trong cả ô)
   const plainPair = (g: { beat: number; idx: number[] }) =>
@@ -88,6 +92,15 @@ export function beamGroups(notes: BeamNote[], beatsPerMeasure: number): number[]
     else out.push([...g.idx]);
   }
   return out.filter((g) => g.length >= 2);
+}
+
+/**
+ * Cấp 4 — Gạch nối cho bè tính phách theo `unit` nốt đen (x/4: 1; x/8: 0.5 — phách = móc đơn): đổi sang nốt đen rồi
+ * gọi beamGroups. `compound` (6/8, 9/8, 12/8) → nhóm theo đen chấm. unit = 1 và không ghép → y hệt beamGroups(notes, bpm).
+ */
+export function beamGroupsIn(notes: BeamNote[], beatsPerMeasure: number, unit = 1, compound = false): number[][] {
+  const q = unit === 1 ? notes : notes.map((n) => ({ start: n.start * unit, beats: n.beats * unit, rest: n.rest }));
+  return beamGroups(q, beatsPerMeasure * unit, compound ? 1.5 : undefined);
 }
 
 export interface BeamSegment {

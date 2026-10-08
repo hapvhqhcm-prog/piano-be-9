@@ -204,7 +204,11 @@ describe('v5.1 — buổi ngắn: ≤ 7 màn, ≤ 12 phút', () => {
 
   it('chơi thử 2026-10-06: tách tay chỉ trên MỘT câu khó (nhiều nốt + bước nhảy nhất), hai tay thì cả bài', () => {
     const lessonsWithHands = WEEKS.flatMap((w) => w.lessons).filter((l) => l.activities.some((a) => a.kind === 'song' && a.hand));
-    expect(lessonsWithHands.map((l) => l.id).sort()).toEqual(['w12-l1', 'w13-l1', 'w22-l2', 'w23-l4', 'w27-l2', 'w28-l1']);
+    expect(lessonsWithHands.map((l) => l.id).sort()).toEqual([
+      'w12-l1', 'w13-l1', 'w22-l2', 'w23-l4', 'w27-l2', 'w28-l1',
+      // Cấp 4 (2026-10-08)
+      'w32-l3', 'w33-l3', 'w34-l2', 'w36-l2', 'w37-l1', 'w38-l2', 'w39-l2', 'w41-l2', 'w42-l1',
+    ].sort());
     /** Độ khó một câu: số nốt hai tay + số bước nhảy (≥ quãng 3 thứ) mỗi tay */
     const hardness = (songId: string, [a, b]: [number, number]) => {
       const t = slice(findTune(songId)!, a, b);

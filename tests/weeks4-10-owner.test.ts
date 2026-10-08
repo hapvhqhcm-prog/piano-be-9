@@ -60,10 +60,10 @@ describe('tiến độ tuần 4 đã lưu vẫn đúng sau rà soát 2026-10-08'
     const d = st2.get();
     expect(d.progress.currentWeek).toBe(4);
     expect(d.progress.lessonsCompleted).toEqual(W4_DONE);
-    // Bài đã xong vẫn xong; bài dở chỉ còn hoạt động 1–2 (không bắt làm lại hoạt động 0)
+    // Bài đã xong vẫn xong; bài dở chỉ còn hoạt động 1–2 (+ 3: ứng tấu thêm vào CUỐI ngày 2026-10-08) — không làm lại hoạt động 0
     expect(nextLesson(d).id).toBe('w4-l4');
     const acts = buildSessionPlan(findLesson('w4-l4')!, d).flatMap((s) => (s.kind === 'activity' ? [s.index] : []));
-    expect(acts).toEqual([1, 2]);
+    expect(acts).toEqual([1, 2, 3]);
     // Bài 3 đã xong: không bị "mở lại" vì có thêm bước (Chơi lại / tiêu chí vẫn làm đủ bài)
     expect(d.progress.lessonsCompleted).toContain('w4-l3');
   });
@@ -109,7 +109,8 @@ describe('tuần 5 & 10 (rà soát 2026-10-08)', () => {
   });
 
   it('tuần 10: tách bài 2 → bài 3 "Nốt Si & Gà gáy"; thẻ dạy Si (vạch 3) đứng trước Gà gáy', () => {
-    expect(weekPlan(10).lessons.map((l) => l.id)).toEqual(['w10-l1', 'w10-l2', 'w10-l3', 'w10-stage']);
+    // (2026-10-08) + "w10-g": Bánh nóng thế Sol (xem trước tuần 14), trước buổi biểu diễn
+    expect(weekPlan(10).lessons.map((l) => l.id)).toEqual(['w10-l1', 'w10-l2', 'w10-l3', 'w10-g', 'w10-stage']);
     expect(findLesson('w10-l2')!.activities.map((_, i) => songOf('w10-l2', i))).toEqual(['old_macdonald@wait', 'oh_susanna@wait']);
     const l3 = findLesson('w10-l3')!;
     const [card, song] = l3.activities;

@@ -1,0 +1,283 @@
+/* (+ 2026-10-08) Màn chính gọn hơn · 🎵 Con chơi được N bài · 👋 Mừng con quay lại · 🎁 Quà mở khóa · ⏰ Đặt giờ tập */
+
+/* ---------- Màn chính: hàng chấm ngày + số bài ---------- */
+.goal-panel.simple {
+  gap: 8px;
+}
+.songs-stat {
+  appearance: none;
+  border: none;
+  margin-left: auto;
+  padding: 4px 14px;
+  min-height: 44px;
+  border-radius: var(--r-pill);
+  background: var(--violet-50);
+  box-shadow: inset 0 0 0 2px var(--violet-200);
+  color: var(--violet-700);
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.songs-stat:active {
+  transform: scale(0.98);
+  background: var(--violet-100);
+}
+
+/* Hàng gộp "Mục tiêu & thử thách" — chạm để mở */
+.home-more {
+  appearance: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 46px;
+  padding: 4px 12px;
+  border-radius: var(--r-md);
+  background: var(--sun-50);
+  color: var(--ink-2);
+  font-family: var(--font-body);
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+  text-align: left;
+}
+.home-more:active {
+  background: var(--sun-100);
+}
+.more-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.more-goal,
+.more-chal {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.more-goal.met {
+  color: var(--mint-700);
+}
+.mini-dots {
+  display: inline-flex;
+  gap: 3px;
+}
+.mini-dots .md {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--violet-50);
+  box-shadow: inset 0 0 0 2px var(--violet-200);
+}
+.mini-dots .md.on {
+  background: var(--sun-400);
+  box-shadow: none;
+}
+.more-caret {
+  flex: none;
+  font-size: 26px;
+  line-height: 1;
+  color: var(--ink-3);
+  transition: transform 0.2s var(--ease-out);
+}
+.home-more.open .more-caret {
+  transform: rotate(90deg);
+}
+.more-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: pop-in 0.25s var(--ease-out);
+}
+.more-body[hidden] {
+  display: none;
+}
+
+/* 👋 Bé Nốt nhớ con */
+.quest-card .story.bubble.welcome-back {
+  background: var(--sun-50);
+  font-style: normal;
+  font-weight: 700;
+}
+.quest-card .story.bubble.welcome-back::before {
+  border-right-color: var(--sun-50);
+}
+.quest-card > .btn-sun {
+  align-self: flex-start;
+  min-height: 56px;
+  font-size: 22px;
+}
+
+/* ---------- 🎁 Màn mừng quà mới ---------- */
+.unlock-card {
+  max-width: 520px;
+  text-align: center;
+}
+.unlock-hero {
+  display: flex;
+  justify-content: center;
+  animation: bob 2.6s ease-in-out infinite;
+}
+.unlock-list {
+  list-style: none;
+  margin: 8px 0 4px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+}
+.unlock-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 12px;
+  border-radius: var(--r-md);
+  background: var(--violet-50);
+}
+.unlock-icon {
+  font-size: 34px;
+  line-height: 1;
+}
+.unlock-text {
+  display: flex;
+  flex-direction: column;
+  font-size: 20px;
+  line-height: 1.2;
+}
+.unlock-text small {
+  font-size: 15px;
+  color: var(--ink-2);
+  font-weight: 600;
+}
+
+/* ---------- 🎁 Quà của các đảo (Sổ sticker) ---------- */
+.unlock-help {
+  margin: 0 0 8px 4px;
+  font-size: 17px;
+  color: var(--ink-2);
+}
+.unlock-cell {
+  position: relative;
+}
+.unlock-pic {
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 50px;
+  line-height: 1;
+  background: radial-gradient(circle at 35% 30%, #fff 0%, var(--sun-100) 70%);
+  box-shadow:
+    0 0 0 5px #fff,
+    0 4px 8px rgba(44, 39, 82, 0.16);
+}
+.unlock-cell.kind-timbre .unlock-pic {
+  background: radial-gradient(circle at 35% 30%, #fff 0%, var(--mint-100) 70%);
+}
+.unlock-cell.kind-backing .unlock-pic {
+  background: radial-gradient(circle at 35% 30%, #fff 0%, var(--sky-100) 70%);
+}
+.unlock-cell.locked .unlock-pic {
+  background: #f6f4fd;
+  box-shadow: inset 0 0 0 3px #d6d0ee;
+  filter: grayscale(1);
+  opacity: 0.6;
+  font-size: 40px;
+}
+.unlock-cell.using .unlock-pic {
+  box-shadow:
+    0 0 0 5px var(--mint-400),
+    0 4px 10px rgba(47, 191, 113, 0.35);
+}
+.unlock-using {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--mint-700);
+}
+
+/* ---------- 🎹 Đàn tự do: chọn tiếng ---------- */
+.timbre-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+.timbre-chip {
+  appearance: none;
+  border: none;
+  min-height: 44px;
+  padding: 4px 14px;
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 2px var(--line);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.timbre-chip.on {
+  background: var(--mint-50);
+  box-shadow: inset 0 0 0 3px var(--mint-500);
+  color: var(--mint-800);
+}
+
+/* ---------- ⏰ Đặt giờ tập (màn Phụ huynh) ---------- */
+.reminder-card .rem-days {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0;
+}
+.rem-day {
+  appearance: none;
+  border: none;
+  min-width: 54px;
+  min-height: 48px;
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 2px var(--line);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+.rem-day.on {
+  background: var(--violet-500);
+  box-shadow: none;
+  color: #fff;
+}
+.rem-time-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 700;
+}
+.rem-time {
+  font-size: 20px;
+  min-height: 44px;
+  padding: 4px 10px;
+  border-radius: var(--r-sm);
+  border: 2px solid var(--line-strong);
+}
+.rem-sum {
+  font-weight: 700;
+}
+.rem-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.rem-hint {
+  font-size: 15px;
+}

@@ -25,6 +25,7 @@ import {
   type DiagSnapshot,
 } from '../../pwa/diagnostics';
 import { APP_VERSION, isUpdateReady } from '../../pwa/updater';
+import { readErrors } from '../../pwa/errorLog';
 import type { App, Screen } from '../App';
 import { actionBar, backButton, button, h, toast } from '../components/dom';
 import { lazy, lazyScreen } from '../lazy';
@@ -197,6 +198,7 @@ export function diagnosticsScreen(app: App) {
         cores: safe(() => navigator.hardwareConcurrency || null, null),
         memoryGB: safe(() => (navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? null, null),
       },
+      errors: safe(() => readErrors(), []), // (+ 2026-10-08) nhật ký lỗi gần đây → vào bản kết quả gửi người hỗ trợ
     };
     const s: DiagSnapshot = snap;
 
@@ -224,6 +226,7 @@ export function diagnosticsScreen(app: App) {
       s.audio = audioInfo();
       s.mic = micInfo();
       s.storage = storageInfo();
+      s.errors = safe(() => readErrors(), s.errors ?? []);
       s.offline.online = safe(() => navigator.onLine !== false, true);
       s.offline.controller = safe(() => !!navigator.serviceWorker?.controller, false);
       const sections = diagSections(s);

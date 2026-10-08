@@ -1,5 +1,19 @@
 import { describe, expect, it } from 'vitest';
-import { PASS_SCORE, countInBeats, countInLabel, gradeTiming, score, starsFor } from '../src/music/timing';
+import {
+  COUNT_BRIDGE,
+  PASS_SCORE,
+  countBridgeFor,
+  countInBeats,
+  countInLabel,
+  countLine,
+  countWords,
+  gradePulseDrop,
+  gradeTiming,
+  pulseDropWindow,
+  pulseMessage,
+  score,
+  starsFor,
+} from '../src/music/timing';
 import { findSong, onsets } from '../src/music/tune';
 import { pitchToMidi } from '../src/piano/pitchTable';
 
@@ -95,5 +109,64 @@ describe('nhịp 2/4 & móc kép', () => {
       const heard = input.map((n) => ({ beat: n.start + lag, midi: n.midi[0] }));
       expect(score(gradeTiming(input, heard))).toBe(1);
     }
+  });
+});
+
+describe('Cầu nối vần → đếm số (OWNER duyệt 2026-10-08)', () => {
+  it('rút vần dần theo tuần: 4–5 vần + số · 6–8 số đậm, vần mờ · 9+ chỉ số', () => {
+    expect(countBridgeFor(4)).toMatchObject({ syllables: 'full', counts: 'normal', say: 'syllables' });
+    expect(countBridgeFor(5)).toMatchObject({ syllables: 'full', say: 'syllables' });
+    for (const w of [6, 7, 8]) expect(countBridgeFor(w)).toMatchObject({ syllables: 'faint', counts: 'strong', say: 'counts' });
+    for (const w of [9, 12, 31]) expect(countBridgeFor(w)).toMatchObject({ syllables: 'none', counts: 'strong', say: 'counts' });
+    // Bảng là dữ liệu: đổi bảng là đổi luật
+    expect(countBridgeFor(3, [{ fromWeek: 1, syllables: 'none', counts: 'strong', say: 'counts' }]).syllables).toBe('none');
+    expect(COUNT_BRIDGE.map((s) => s.fromWeek)).toEqual([...COUNT_BRIDGE.map((s) => s.fromWeek)].sort((a, b) => a - b));
+  });
+
+  it('dòng đếm gọn kiểu "1 2 3-và 4"', () => {
+    const words = countWords([
+      { start: 0, beats: 1, hits: [0] },
+      { start: 1, beats: 1, hits: [0] },
+      { start: 2, beats: 1, hits: [0, 0.5] },
+      { start: 3, beats: 1, hits: [0] },
+    ]);
+    expect(words.map(countLine).join(' ')).toBe('1 2 3-và 4');
+    expect(countLine('4 – 1')).toBe('4 1');
+    expect(countLine('(2)')).toBe('(2)');
+  });
+});
+
+describe('Giữ nhịp trong đầu — máy im 2 ô giữa bài (OWNER duyệt 2026-10-08)', () => {
+  it('2 ô ở giữa, trước và sau còn tiếng tích; bài ngắn quá thì không thử', () => {
+    expect(pulseDropWindow(32, 4)).toEqual([12, 20]); // 8 ô → ô 4–5 (đếm từ 1)
+    expect(pulseDropWindow(16, 4)).toEqual([4, 12]); // 4 ô → ô 2–3
+    expect(pulseDropWindow(24, 3)).toEqual([9, 15]); // 3/4, 8 ô
+    expect(pulseDropWindow(12, 4)).toBeNull(); // 3 ô: quá ngắn
+    const w = pulseDropWindow(40, 4)!;
+    expect(w[0]).toBeGreaterThanOrEqual(4);
+    expect(40 - w[1]).toBeGreaterThanOrEqual(4);
+    expect(w[1] - w[0]).toBe(8);
+  });
+
+  it('chấm riêng các nốt trong ô im: giữ đúng nhịp → khen; trôi nhịp → động viên (không chê)', () => {
+    const ns = Array.from({ length: 16 }, (_, k) => ({ index: k, start: k, midi: 60 + (k % 5) * 2 }));
+    const win = pulseDropWindow(16, 4)!; // [4, 12)
+    // Bé đàn đều, kể cả lúc máy im
+    const steady = ns.map((n) => ({ beat: n.start + 0.05, midi: n.midi }));
+    const v1 = gradeTiming(ns, steady);
+    const p1 = gradePulseDrop(ns, v1, win);
+    expect(p1).toMatchObject({ total: 8, hits: 8, held: true, outsideScore: 1 });
+    expect(pulseMessage(p1)).toBe('Con giữ nhịp trong đầu giỏi lắm! 🧠🥁');
+    // Lúc máy im bé chạy nhanh dần (mỗi phách sớm thêm 0,15) rồi bắt lại khi tiếng tích trở lại
+    const drift = ns.map((n) => ({ beat: n.start >= 4 && n.start < 12 ? n.start - 0.15 * (n.start - 3) : n.start, midi: n.midi }));
+    const v2 = gradeTiming(ns, drift);
+    const p2 = gradePulseDrop(ns, v2, win);
+    expect(p2.held).toBe(false);
+    expect(p2.outsideScore).toBe(1);
+    expect(pulseMessage(p2, 3)).toMatch(/1 2 3/);
+    expect(pulseMessage(p2)).not.toMatch(/sai|kém|tệ/i);
+    // Không có nốt trong ô im → không chấm
+    expect(gradePulseDrop([{ index: 0, start: 0 }], [{ index: 0, hit: true }], [4, 12]).held).toBeNull();
+    expect(pulseMessage({ held: null, hits: 0, total: 0 })).toBe('');
   });
 });

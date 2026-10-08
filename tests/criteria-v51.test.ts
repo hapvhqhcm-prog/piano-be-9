@@ -113,13 +113,13 @@ describe('tiêu chí APP theo 2 ngày (tuần 3, 7, 23, 25, 26)', () => {
 describe('criterionProgress — tiến độ theo ngày cho màn chính', () => {
   it('null cho tiêu chí không theo ngày: tuần 1 (một buổi), tuần huy chương 10 / 21 / 31', () => {
     const st = new ProgressStore(new MemoryStorage(), () => new Date(2026, 9, 10));
-    for (const w of [1, 10, 21, 31, 99]) expect(criterionProgress(w, st.get()), `tuần ${w}`).toBeNull();
+    for (const w of [1, 10, 21, 31, 43, 99]) expect(criterionProgress(w, st.get()), `tuần ${w}`).toBeNull();
   });
 
   it('mọi tuần còn lại (2–30 trừ 10, 21): { days: 0, needDays: 2 } khi chưa có dữ liệu', () => {
     const st = new ProgressStore(new MemoryStorage(), () => new Date(2026, 9, 10));
     for (const w of WEEKS) {
-      if ([1, 10, 21, 31].includes(w.week)) continue;
+      if ([1, 10, 21, 31, 43].includes(w.week)) continue;
       expect(criterionProgress(w.week, st.get()), `tuần ${w.week}`).toEqual({ days: 0, needDays: CRITERION_DAYS });
     }
   });
@@ -130,7 +130,7 @@ describe('criterionProgress — tiến độ theo ngày cho màn chính', () => 
     const songOf = (week: number) =>
       WEEKS[week - 1].lessons.flatMap((l) => l.activities.flatMap((a) => (a.kind === 'song' && !a.hand ? [{ l: l.id, s: a.songId }] : [])));
     for (const w of WEEKS) {
-      if ([1, 10, 21, 31].includes(w.week)) continue;
+      if ([1, 10, 21, 31, 43].includes(w.week)) continue;
       const { st, day } = clock();
       for (let i = 0; i < 6; i++) {
         day(Math.floor(rng() * 3));

@@ -1,8 +1,8 @@
 import { SONGS } from '../music/tune';
 import type { AppData } from '../progress/schema';
-import { completedDates, dayKey, hist, memo, mondayKey, weekdayIndex } from '../progress/history';
-import { LEVELS, WEEKS, masteredSongs, weekComplete, weekPassed } from './lessonEngine';
+import { completedDates, dayKey, hist, memo, mondayKey, weekdayIndex } from '../progress/history';import { LEVELS, WEEKS, masteredSongs, weekComplete, weekPassed } from './lessonEngine';
 import { completedChallengeWeeks } from './challenges';
+import { concertStickers } from './concert';
 
 /**
  * SỔ STICKER — động lực cho bé: mỗi sticker được TÍNH LẠI hoàn toàn từ dữ liệu sẵn có
@@ -20,7 +20,21 @@ import { completedChallengeWeeks } from './challenges';
  * EFFORT_BY_DAYS_FROM vẫn được tính theo quy tắc cũ (≥ 4 buổi/tuần).
  * Sticker chuỗi ngày CŨ mà bé đã nhận trước ngày đổi vẫn được giữ (tính trên các buổi trước STREAK_RETIRED_AFTER).
  */
-export type StickerKind = 'island' | 'songs' | 'streak' | 'week' | 'mic' | 'folk' | 'dynamics' | 'medal' | 'challenge';
+export type StickerKind =
+  | 'island'
+  | 'songs'
+  | 'streak'
+  | 'week'
+  | 'mic'
+  | 'folk'
+  | 'dynamics'
+  | 'medal'
+  | 'challenge'
+  | 'concert'
+  /** (+ 2026-10-08) "N ngày tập" — cộng dồn số NGÀY có học (không phải chuỗi liền) */
+  | 'days'
+  /** (+ 2026-10-08) "N tuần có tập" — cộng dồn số tuần lịch có ít nhất một ngày học */
+  | 'activeWeeks';
 
 export interface Sticker {
   id: string;
@@ -51,6 +65,26 @@ export const BUSY_WEEK_MILESTONES = [1, 3, 6, 10] as const;
 export const BUSY_WEEK_DAYS = 4;
 /** v5.1 — ngày bắt đầu tính "tuần chăm chỉ" theo NGÀY; buổi trước ngày này giữ quy tắc cũ (≥ 4 BUỔI) để không mất sticker. */
 export const EFFORT_BY_DAYS_FROM = '2026-10-06';
+/**
+ * (+ 2026-10-08, OWNER duyệt "ngày tập thay cho chuỗi") Mốc "N ngày tập": tổng số NGÀY khác nhau có buổi hoàn thành —
+ * chỉ tăng, nghỉ bao lâu cũng không mất. Sticker "N ngày liền" cũ (id streak-N) được GIỮ id và đổi tên thành "N ngày tập".
+ */
+export const PRACTICE_DAY_MILESTONES = [5, 10, 20, 40, 80, 120] as const;
+/** (+ 2026-10-08) Mốc "N tuần có tập": số tuần lịch (thứ 2 → CN) có ít nhất một ngày học. */
+export const ACTIVE_WEEK_MILESTONES = [4, 8, 12, 20, 30, 40, 52] as const;
+
+/** (+ 2026-10-08) Tổng số ngày có học (buổi hoàn thành) từ trước tới nay — gồm cả ngày đã gộp lịch sử. */
+export function practiceDayCount(data: Readonly<AppData>): number {
+  return completedDates(data).size;
+}
+
+/** (+ 2026-10-08) Số tuần lịch có ít nhất một ngày học (buổi hoàn thành) — gồm cả tuần đã gộp lịch sử. */
+export function activeWeekCount(data: Readonly<AppData>): number {
+  const weeks = new Set<string>();
+  for (const d of completedDates(data)) weeks.add(mondayKey(d));
+  return weeks.size;
+}
+
 /** Số lượt đúng tối thiểu (các lượt khác nhau, trong một buổi) để tính là "chơi xong" trò to/nhỏ – ngắt/liền. */
 export const DYNAMICS_ROUNDS = 3;
 
@@ -196,11 +230,28 @@ function computeStickers(data: Readonly<AppData>): Sticker[] {
       n,
     });
   }
-  // Sticker chuỗi ngày cũ: chỉ hiện nếu bé ĐÃ nhận (trước ngày đổi) — không mất, không còn mốc mới
+  // (+ 2026-10-08) Ngày tập / tuần có tập — cộng dồn, không bao giờ "đứt"
+  const days = practiceDayCount(data);
+  for (const n of PRACTICE_DAY_MILESTONES) {
+    out.push({ id: `days-${n}`, kind: 'days', title: `${n} ngày tập`, hint: `Tập đàn ${n} ngày (nghỉ xen kẽ cũng được)`, earned: days >= n, n });
+  }
+  const activeWeeks = activeWeekCount(data);
+  for (const n of ACTIVE_WEEK_MILESTONES) {
+    out.push({
+      id: `wk-${n}`,
+      kind: 'activeWeeks',
+      title: `${n} tuần có tập`,
+      hint: `${n} tuần, tuần nào cũng có ngày tập đàn`,
+      earned: activeWeeks >= n,
+      n,
+    });
+  }
+  // Sticker chuỗi ngày cũ: chỉ hiện nếu bé ĐÃ nhận (trước ngày đổi) — không mất, không còn mốc mới.
+  // (+ 2026-10-08) GIỮ id `streak-N` (sticker đã nhận vẫn còn) nhưng hiện là "N ngày tập" — không nói "liền" nữa.
   const streak = bestStreak(data, STREAK_RETIRED_AFTER);
   for (const n of STREAK_MILESTONES) {
     if (streak < n) continue;
-    out.push({ id: `streak-${n}`, kind: 'streak', title: `${n} ngày liền`, hint: `Học ${n} ngày liền nhau`, earned: true, n });
+    out.push({ id: `streak-${n}`, kind: 'days', title: `${n} ngày tập`, hint: `Tập đàn ${n} ngày`, earned: true, n });
   }
   out.push({
     id: 'folk',
@@ -245,6 +296,8 @@ function computeStickers(data: Readonly<AppData>): Sticker[] {
       monday,
     });
   }
+  // (+ 2026-10-08) 🎤 Buổi diễn cho cả nhà: một sticker cho mỗi tuần giáo trình có buổi diễn (AppData.concerts — lưu riêng)
+  out.push(...concertStickers(data));
   return out;
 }
 

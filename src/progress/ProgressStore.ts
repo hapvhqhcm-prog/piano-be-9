@@ -2,7 +2,8 @@ import { isFutureData, migrate } from './migrations';
 import { isValidPitch, samePitch } from '../piano/pitchTable';
 import { COMPACT_WINDOW_DAYS, EMERGENCY_WINDOW_DAYS, compactData, recordMonotonicStickers } from './compaction';
 import { RATING_STARS, bumpDataRev, hist, sessionCount } from './history';
-import { recordChallenges } from '../lessons/challenges';
+import { confirmSelfChallenge, recordChallenges } from '../lessons/challenges';
+import { upsertConcert } from '../lessons/concert';
 import {
   defaultData,
   localDateStr,
@@ -10,6 +11,7 @@ import {
   type AppData,
   type ChecklistKey,
   type Composition,
+  type ConcertEntry,
   type GameScore,
   type ParentSong,
   type ParentResult,
@@ -35,6 +37,11 @@ export const STORAGE_KEY = 'piano-be-9';
  * đầy sau ~1,3 năm). Bản cất là dữ liệu ĐÃ GỘP (compaction.ts) nên nhỏ.
  */
 export const MAX_ARCHIVES = 1;
+/**
+ * (+ 2026-10-08) Giữ tối đa bao nhiêu bản "corrupt-*" KHÔNG đọc được. Mỗi lần mở app mà dữ liệu chính hỏng lại thêm
+ * một bản → không dọn thì localStorage đầy dần. Giữ bản mới nhất (chờ bản sửa lỗi sau), bỏ các bản cũ hơn.
+ */
+export const MAX_UNREADABLE_CORRUPT = 1;
 /** Ước lượng dung lượng localStorage của Safari theo KÝ TỰ (~5 MiB, mỗi ký tự UTF-16 = 2 byte). */
 export const QUOTA_ESTIMATE_CHARS = 2_621_440;
 /** Ghi xuống localStorage sau ngần này ms kể từ lần đổi cuối (gộp nhiều lần bấm thành một lần ghi). */
@@ -99,6 +106,11 @@ export interface StoreOptions {
   compactWindowDays?: number;
   /** Ghi ngay khi trang bị ẩn / đóng (visibilitychange, pagehide). Mặc định bật trong trình duyệt. */
   pageEvents?: boolean;
+  /**
+   * (+ 2026-10-08) Bản sao thứ hai (IndexedDB — mirror.ts): nhận chuỗi JSON sau MỖI lần ghi localStorage thành công.
+   * Phải tự nuốt lỗi, không chặn giao diện.
+   */
+  mirror?: { save(json: string): void; flush?(): void };
 }
 
 export function isEmptySession(s: Session): boolean {
@@ -170,6 +182,8 @@ export class ProgressStore {
   recoveredFromCorrupt = false;
   /** Đã tự khôi phục tiến độ từ bản sao lưu nội bộ khi khởi động */
   recoveredFromBackup = false;
+  /** (+ 2026-10-08) Đã khôi phục từ bản sao IndexedDB (mirror.ts) lúc mở app — main.ts đặt */
+  recoveredFromMirror = false;
   /**
    * (+ 2026-10-06) Dữ liệu trong máy do bản app MỚI HƠN ghi: KHÔNG đặt lại, KHÔNG ghi đè (mọi lần lưu bị bỏ qua).
    * App chạy với dữ liệu tạm trống — giao diện phải hiện FUTURE_VERSION_MESSAGE.
@@ -184,6 +198,7 @@ export class ProgressStore {
   private readonly autoCompact: boolean;
   private readonly windowDays: number;
   private detach: (() => void) | null = null;
+  private readonly mirror: StoreOptions['mirror'] | null;
 
   constructor(
     private readonly kv: KeyValueStorage,
@@ -193,9 +208,13 @@ export class ProgressStore {
     this.saveDelayMs = opts.saveDelayMs ?? (inBrowser() ? SAVE_DEBOUNCE_MS : 0);
     this.autoCompact = opts.autoCompact ?? true;
     this.windowDays = opts.compactWindowDays ?? COMPACT_WINDOW_DAYS;
+    this.mirror = opts.mirror ?? null;
     this.data = this.load();
+    this.pruneUnreadableCorrupt();
     bumpDataRev(this.data);
     if (this.compact()) this.writeNow();
+    // Bản sao IndexedDB có ngay từ lần mở đầu (không chờ tới lần đổi đầu tiên)
+    if (!this.recoveredFromCorrupt && !this.futureVersion) this.mirrorNow();
     activeStore = this;
     if (opts.pageEvents ?? inBrowser()) this.listenPageEvents();
   }
@@ -203,9 +222,14 @@ export class ProgressStore {
   private listenPageEvents(): void {
     try {
       const onHide = () => {
-        if (document.visibilityState === 'hidden') this.flush();
+        if (document.visibilityState !== 'hidden') return;
+        this.flush();
+        this.flushMirror();
       };
-      const onPageHide = () => this.flush();
+      const onPageHide = () => {
+        this.flush();
+        this.flushMirror();
+      };
       document.addEventListener('visibilitychange', onHide);
       window.addEventListener('pagehide', onPageHide);
       this.detach = () => {
@@ -214,6 +238,25 @@ export class ProgressStore {
       };
     } catch {
       /* môi trường không có DOM */
+    }
+  }
+
+  /** Gửi dữ liệu hiện tại sang bản sao IndexedDB. Không bao giờ ném lỗi. */
+  private mirrorNow(): void {
+    if (!this.mirror) return;
+    try {
+      this.mirror.save(JSON.stringify(this.data));
+    } catch {
+      /* bỏ qua */
+    }
+  }
+
+  /** Đẩy bản sao IndexedDB đang chờ (trang sắp ẩn / đóng). Không bao giờ ném lỗi. */
+  private flushMirror(): void {
+    try {
+      this.mirror?.flush?.();
+    } catch {
+      /* bản sao phụ — lỗi không ảnh hưởng gì */
     }
   }
 
@@ -254,6 +297,40 @@ export class ProgressStore {
       if (k && k.startsWith(`${STORAGE_KEY}:corrupt-`)) keys.push(k);
     }
     return keys;
+  }
+
+  /**
+   * (+ 2026-10-08) Dọn các bản "corrupt-*" KHÔNG đọc được: giữ `keep` bản mới nhất, bỏ phần còn lại (để bộ nhớ không
+   * đầy dần). Bản đọc được không đụng tới (load() lo). Trả về true nếu có bỏ bản nào.
+   */
+  private pruneUnreadableCorrupt(keep: number = MAX_UNREADABLE_CORRUPT): boolean {
+    const ts = (k: string) => Number(k.split('-').pop()) || 0;
+    let bad: string[];
+    try {
+      bad = this.corruptKeys()
+        .filter((k) => {
+          const raw = this.kv.getItem(k);
+          if (this.parse(raw)) return false;
+          try {
+            return !isFutureData(JSON.parse(raw ?? '')); // dữ liệu của bản app mới hơn → không phải rác, giữ
+          } catch {
+            return true;
+          }
+        })
+        .sort((a, b) => ts(b) - ts(a));
+    } catch {
+      return false;
+    }
+    let dropped = false;
+    for (const k of bad.slice(Math.max(0, keep))) {
+      try {
+        this.kv.removeItem(k);
+        dropped = true;
+      } catch {
+        /* bỏ qua */
+      }
+    }
+    return dropped;
   }
 
   /**
@@ -401,10 +478,15 @@ export class ProgressStore {
     }
   }
 
+  /** Chuỗi JSON vừa ghi thành công (cho bản sao IndexedDB) */
+  private lastWritten: string | null = null;
+
   /** Thử ghi một lần. null = thành công, ngược lại là lỗi. */
   private tryWrite(): unknown {
     try {
-      this.kv.setItem(STORAGE_KEY, JSON.stringify(this.data));
+      const json = JSON.stringify(this.data);
+      this.kv.setItem(STORAGE_KEY, json);
+      this.lastWritten = json;
       return null;
     } catch (e) {
       return e ?? new Error('setItem');
@@ -412,7 +494,7 @@ export class ProgressStore {
   }
 
   /**
-   * Ghi xuống localStorage NGAY. Hết chỗ → gộp lịch sử & thử lại → gộp mạnh hơn (4 tuần) & thử lại → bỏ dần bản cất
+   * Ghi xuống localStorage NGAY. Hết chỗ → gộp lịch sử & thử lại → gộp mạnh hơn (4 tuần) & thử lại → bỏ bản "corrupt-*" rác → bỏ dần bản cất
    * (cũ nhất trước) & thử lại → vẫn lỗi: storageFull (giao diện hiện băng chặn). Trả về tình trạng.
    */
   private writeNow(): StorageStatus {
@@ -427,11 +509,22 @@ export class ProgressStore {
     if (err !== null && isQuotaError(err)) {
       if (this.compact()) err = this.tryWrite();
       if (err !== null && this.compact(Math.min(this.windowDays, EMERGENCY_WINDOW_DAYS))) err = this.tryWrite();
+      // (+ 2026-10-08) Vẫn đầy → bỏ các bản "corrupt-*" không đọc được TRƯỚC (rác, không cứu được gì), rồi mới tới bản cất
+      if (err !== null && isQuotaError(err) && this.pruneUnreadableCorrupt(0)) err = this.tryWrite();
       while (err !== null && isQuotaError(err) && this.dropOldestArchive()) err = this.tryWrite();
     }
     if (err === null) {
       this.lastSaveError = null;
       this.storageFull = false;
+      // Dữ liệu chính vừa hỏng (recoveredFromCorrupt) → KHÔNG ghi đè bản sao IndexedDB (có thể là bản tốt duy nhất)
+      if (this.mirror && this.lastWritten !== null && !this.recoveredFromCorrupt) {
+        try {
+          this.mirror.save(this.lastWritten); // bản sao thứ hai (IndexedDB) — ngầm, không chặn
+        } catch {
+          /* bỏ qua */
+        }
+      }
+      this.lastWritten = null;
     } else {
       this.lastSaveError = errText(err);
       this.storageFull = isQuotaError(err);
@@ -757,6 +850,17 @@ export class ProgressStore {
   }
 
   /**
+   * (+ 2026-10-08) 🎤 Lưu (thêm / cập nhật cùng id) một buổi "Biểu diễn cho cả nhà" — mỗi tuần giáo trình tối đa MỘT buổi.
+   * Lưu riêng ở AppData.concerts (không trong sessions) → gộp lịch sử không đụng tới. Trả về false nếu không lưu.
+   */
+  saveConcert(c: ConcertEntry): boolean {
+    if (!upsertConcert(this.data, c)) return false;
+    this.save();
+    this.flush();
+    return true;
+  }
+
+  /**
    * (+ 2026-10-07) 🏆 Lưu thử thách tuần đã xong / chụp mốc kỷ lục trò chơi khi sang tuần mới (màn chính gọi).
    * Chỉ ghi khi có đổi.
    */
@@ -766,6 +870,15 @@ export class ProgressStore {
       this.save();
       this.flush();
     }
+  }
+
+  /** (+ 2026-10-08) 👪 Bố mẹ xác nhận thử thách "ngoài đời" của tuần này (chỉ thêm). true = đã ghi. */
+  confirmChallenge(id: string): boolean {
+    if (this.futureVersion) return false;
+    if (!confirmSelfChallenge(this.data, this.today(), id, this.now().getTime())) return false;
+    this.save();
+    this.flush();
+    return true;
   }
 
   /** Đánh dấu xong bài / xong một hoạt động ("<bài>#<i>") — cuối hoạt động → ghi ngay. */
@@ -820,15 +933,39 @@ export class ProgressStore {
       return { ok: false, error: 'Không cất được bản dữ liệu hiện tại (bộ nhớ đầy) — hãy xuất JSON sao lưu trước.', archiveFailed: true };
     }
     this.lastArchiveKey = arch.key;
-    this.futureVersion = false;
+    const prev = this.beginReplace();
     this.data = d;
     this.recomputePracticeDays();
     this.compact();
     this.archiveCorrupt(); // dữ liệu nhập là ý muốn của phụ huynh → bản sao lưu cũ không được đè lên
     this.pruneArchives();
+    return this.commitReplace(prev);
+  }
+
+  /** Giữ dữ liệu đang dùng trước khi thay (để trả lại nếu không ghi được). */
+  private beginReplace(): { data: AppData; futureVersion: boolean; recoveredFromCorrupt: boolean } {
+    const prev = { data: this.data, futureVersion: this.futureVersion, recoveredFromCorrupt: this.recoveredFromCorrupt };
+    this.futureVersion = false;
+    this.recoveredFromCorrupt = false; // dữ liệu mới là ý muốn của phụ huynh → bản sao IndexedDB theo nó
+    return prev;
+  }
+
+  /**
+   * (+ 2026-10-08) Ghi dữ liệu vừa thay. Ghi KHÔNG được (hết chỗ…) → trả lỗi (trước đây vẫn báo { ok: true } trong khi
+   * localStorage còn dữ liệu cũ → mở lại app thấy "mất" dữ liệu vừa nhập) và dùng lại dữ liệu cũ cho khớp với bộ nhớ.
+   */
+  private commitReplace(prev: { data: AppData; futureVersion: boolean; recoveredFromCorrupt: boolean }): ReplaceResult {
     this.save();
-    this.flush();
-    return { ok: true };
+    const st = this.flush();
+    if (st.ok) return { ok: true };
+    const why = st.full ? 'bộ nhớ của iPad cho app đã đầy' : st.lastError ?? 'lỗi ghi';
+    this.data = prev.data;
+    this.futureVersion = prev.futureVersion;
+    this.recoveredFromCorrupt = prev.recoveredFromCorrupt;
+    bumpDataRev(this.data);
+    this.dirty = true; // bộ nhớ vẫn giữ bản cũ; lần ghi sau (ẩn trang…) thử ghi lại cho chắc
+    this.listeners.forEach((fn) => fn());
+    return { ok: false, error: `Chưa lưu được (${why}) — dữ liệu cũ vẫn giữ nguyên.` };
   }
 
   /**
@@ -840,12 +977,10 @@ export class ProgressStore {
       return { ok: false, error: 'Không cất được bản dữ liệu hiện tại (bộ nhớ đầy) — hãy xuất JSON sao lưu trước.', archiveFailed: true };
     }
     this.lastArchiveKey = arch.key;
-    this.futureVersion = false;
+    const prev = this.beginReplace();
     this.data = defaultData(this.now());
     this.archiveCorrupt(); // đặt lại có chủ ý → lần mở sau không được tự khôi phục bản cũ
     this.pruneArchives();
-    this.save();
-    this.flush();
-    return { ok: true };
+    return this.commitReplace(prev);
   }
 }

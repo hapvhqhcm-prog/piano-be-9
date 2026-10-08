@@ -55,7 +55,8 @@ function features(t: Tune) {
 describe('cấu trúc 30 tuần', () => {
   it('tổng số tuần 28–32; 3 cấp, mỗi cấp ~10 tuần, liền nhau', () => {
     expect(WEEKS.length).toBeGreaterThanOrEqual(28);
-    expect(WEEKS.length).toBeLessThanOrEqual(32);
+    // Cấp 4 (2026-10-08): + 12 tuần sau tuần 31
+    expect(WEEKS.length).toBeLessThanOrEqual(44);
     expect(LEVELS[0].weeks[0]).toBe(1);
     for (let i = 1; i < LEVELS.length; i++) expect(LEVELS[i].weeks[0]).toBe(LEVELS[i - 1].weeks[1] + 1);
     expect(LEVELS[LEVELS.length - 1].weeks[1]).toBe(WEEKS.length);
@@ -109,7 +110,11 @@ describe('cấu trúc 30 tuần', () => {
     // Bài tự sáng tác bổ sung đưa vào bài học ở tuần chỉ có 1–2 bài
     for (const [id, week] of [['snail_stroll', 3], ['sparrow_minuet', 29], ['summer_shower', 30]] as const)
       expect(songUses(id).map((u) => u.week), id).toContain(week);
-    expect(SONGS.length).toBe(56 + NEW.length + 12 + EXTRA.length);
+    // + 2 bài (2026-10-08, OWNER duyệt): xem trước thế Sol (tuần 10) và bài 3/4 đầu tiên (tuần 11)
+    const EARLY = ['hot_cross_buns_g', 'swing_waltz'];
+    for (const id of EARLY) expect(songUses(id).length, id).toBeGreaterThan(0);
+    // + Cấp 4 (2026-10-08): bài tuần ≥ 32 (tests/level4.test.ts kiểm riêng)
+    expect(SONGS.filter((s) => (s.week ?? 0) <= 31).length).toBe(56 + NEW.length + 12 + EXTRA.length + EARLY.length);
   });
 
   it('mục tiêu cuối nói thật: ≈ Faber cấp 1 / đầu cấp 2', () => {
@@ -355,6 +360,8 @@ describe('TIÊU CHÍ TUẦN cần 2 NGÀY (bài hát)', () => {
     const s = st.startSession(w.lessons[0].id);
     const songs = new Set(w.lessons.flatMap((l) => l.activities.flatMap((a) => (a.kind === 'song' ? [a.songId] : []))));
     for (const id of songs) st.addSongRun(s.id, run(id));
+    // Cấp 4: thẻ bố mẹ xác nhận (phiếu xem tay, pedal sạch…) — chạm "Đúng rồi"
+    for (const l of w.lessons) for (const a of l.activities) if (a.kind === 'notes') for (const t of a.segment.targets) if (!t.keys.length) st.addParentAssessment(s.id, t.noteId, 'correct');
     for (let i = 0; i < 5; i++) st.addSongRun(s.id, run('sight:C:RH', { mode: 'wait' }));
   }
 

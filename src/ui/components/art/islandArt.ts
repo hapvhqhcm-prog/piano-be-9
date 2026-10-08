@@ -401,6 +401,9 @@ const NEW_PROPS: Record<number, { base: Base; art: string }> = {
 const ART_OF_WEEK: Record<number, number> = {
   1: 1, 2: 2, 3: 3, 4: 4, 6: 5, 7: 6, 8: 7, 10: 8, 11: 9, 12: 10, 14: 11, 15: 12, 16: 13, 17: 14,
   20: 15, 21: 16, 22: 17, 24: 18, 25: 19, 26: 20, 27: 23, 28: 24, 29: 21, 30: 22, 31: 25,
+  // Cấp 4 (2026-10-08): dùng lại tranh có sẵn theo chủ đề — 32 núi Sol · 33 hang phím đen · 34 thung lũng song ca · 35 cầu thang
+  // cầu vồng · 36 lâu đài · 37 làng · 38 hồ soi bóng (ngân vang) · 39 thuyền buồm · 40 mặt trời · 41 vũ hội · 42 đỉnh núi · 43 nhà hát
+  32: 11, 33: 13, 34: 10, 35: 3, 36: 8, 37: 2, 38: 6, 39: 18, 40: 19, 41: 12, 42: 24, 43: 16,
 };
 
 const FALLBACK = { base: 'grass' as Base, art: beamedNotes(40, 46, 4, P.violet) };
@@ -435,12 +438,12 @@ export function islandIcon(week: number, state: IslandState): SVGElement {
   return svg;
 }
 
-/** Bảng xem thử toàn bộ 31 đảo × 3 trạng thái (chỉ để phát triển / chụp màn hình). */
+/** Bảng xem thử toàn bộ 43 đảo × 3 trạng thái (chỉ để phát triển / chụp màn hình). */
 export function islandArtPreview(): HTMLElement {
   const wrap = document.createElement('div');
   wrap.setAttribute('style', 'display:grid;grid-template-columns:repeat(8,1fr);gap:6px;padding:8px;background:#fff8ee');
   const states: IslandState[] = ['current', 'done', 'locked'];
-  for (let w = 1; w <= 31; w++) {
+  for (let w = 1; w <= 43; w++) {
     const cell = document.createElement('div');
     cell.setAttribute('style', 'display:flex;flex-direction:column;align-items:center;font:12px sans-serif;color:#3d3466');
     const icon = islandIcon(w, states[w % 3]);

@@ -10,6 +10,12 @@ import { songScreen, type SongOptions } from './song';
 import { shortTitle, songEmoji } from '../components/songArt';
 import '../../styles/parentSongs.css';
 import '../../styles/kidux.css';
+import { button } from '../components/dom';
+import { albumStore } from '../../progress/albumStore';
+import { lazy, lazyScreen } from '../lazy';
+
+// (+ 2026-10-08) 🎧 Album của con — chunk riêng
+const albumMod = lazy(() => import('./album'));
 
 /** Bộ lọc Thư viện (giữ trong lúc mở app): tất cả · 🇻🇳 Bài Việt Nam */
 let libFilter: 'all' | 'vn' = 'all';
@@ -177,6 +183,19 @@ export function libraryScreen(app: App, filter?: 'all' | 'vn') {
           'div',
           { class: 'library-wrap scrollable' },
           h('p', { class: 'muted lib-note' }, `⭐ Đã thuộc ${SONGS.filter((x) => songMastered(data, x.id)).length}/${SONGS.length} bài — thuộc = đàn trọn bài theo nhịp, tốc độ từ 60 trở lên.`),
+          // (+ 2026-10-08) 🎧 Album của con: bản thu hay nhất của mỗi bài (chỉ trên iPad này)
+          albumStore()
+            ? h(
+                'div',
+                { class: 'lib-album-row' },
+                button({
+                  icon: '🎧',
+                  label: 'Album của con',
+                  kind: 'sun',
+                  onTap: () => app.show(lazyScreen(albumMod, (m) => m.albumScreen(app, () => app.show(libraryScreen(app))))),
+                }),
+              )
+            : null,
           filterBar,
           ...(libFilter === 'vn' ? vnSections : [mineSection, parentSection, ...levelSections]),
         ),

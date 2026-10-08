@@ -7,7 +7,8 @@ import { stickerArt } from '../components/art/stickerArt';
 import { actionBar, backButton, h, toast } from '../components/dom';
 import { mascot } from '../components/mascot';
 import { homeScreen } from './home';
-import { CHALLENGE_INFO, challengeStreak, weeklyChallenge } from '../../lessons/challenges';
+import { CHALLENGE_INFO, weeklyChallenge } from '../../lessons/challenges';
+import { applyCosmetics, unlockSection } from '../components/unlocksUi';
 import '../../styles/challenges.css';
 
 /** Một ô sticker: đã nhận = tranh màu + tên; chưa nhận = bóng xám + gợi ý cách nhận. */
@@ -57,18 +58,42 @@ function bonusCell(d: BonusDef, count: number): HTMLElement {
   return cell;
 }
 
+/**
+ * (+ 2026-10-08) 🎤 Buổi diễn: mỗi tuần có "Biểu diễn cho cả nhà" một sticker (mới nhất trước) + tên bài, số lượt khán giả
+ * thả tim. Chưa diễn lần nào → một ô khóa gợi ý.
+ */
+function concertSection(all: readonly Sticker[]): HTMLElement {
+  const list = all.filter((s) => s.kind === 'concert').reverse();
+  const cells = list.map((s) => {
+    const c = stickerCell(s);
+    if (s.n) c.setAttribute('title', `👏❤️🌟 ${s.n}`);
+    return c;
+  });
+  if (!cells.length) {
+    cells.push(
+      stickerCell({ id: 'concert-next', kind: 'concert', title: 'Buổi diễn', hint: 'Qua tuần rồi biểu diễn cho cả nhà nghe', earned: false }),
+    );
+  }
+  return h(
+    'section',
+    { class: 'sticker-section' },
+    h('h2', { class: 'sticker-kicker' }, '🎤 Buổi diễn', h('span', { class: 'sticker-count' }, `${list.length} buổi`)),
+    h('div', { class: 'sticker-grid' }, ...cells),
+  );
+}
+
 /** SỔ STICKER — bé xem các sticker đã sưu tầm (tính từ tiến độ, không lưu thêm). */
 export function stickersScreen(app: App) {
   return (root: HTMLElement) => {
+    applyCosmetics(app.store.get());
     const all = allStickers(app.store.get());
     const got = all.filter((s) => s.earned).length;
     const islands = all.filter((s) => s.kind === 'island');
-    const others = all.filter((s) => s.kind !== 'island' && s.kind !== 'challenge');
+    const others = all.filter((s) => s.kind !== 'island' && s.kind !== 'challenge' && s.kind !== 'concert');
     // (+ 2026-10-07) 🏆 Cúp tuần: mỗi tuần hoàn thành thử thách một cúp (mới nhất trước) + ô khóa của tuần này nếu chưa xong
     const cups = all.filter((s) => s.kind === 'challenge').reverse();
     const today = app.store.today();
     const wc = weeklyChallenge(app.store.get(), today);
-    const streak = challengeStreak(app.store.get(), today);
     const cupCells = cups.map((s) => {
       const c = stickerCell(s);
       const info = s.challenge ? CHALLENGE_INFO[s.challenge as keyof typeof CHALLENGE_INFO] : undefined;
@@ -94,8 +119,8 @@ export function stickersScreen(app: App) {
         'h2',
         { class: 'sticker-kicker' },
         '🏆 Thử thách',
+        // (+ 2026-10-08) chỉ đếm cộng dồn — không còn "🔥 N tuần liền" (chuỗi đứt làm trẻ nản)
         h('span', { class: 'sticker-count' }, `${cups.length} cúp`),
-        streak >= 2 ? h('span', { class: 'chal-streak' }, `🔥 ${streak} tuần liền`) : null,
       ),
       h('div', { class: 'sticker-grid' }, ...cupCells),
     );
@@ -147,7 +172,20 @@ export function stickersScreen(app: App) {
             ),
           ),
           section('🏆 Thành tích', others),
+          // (+ 2026-10-08) 🎁 Quà của các đảo — chạm để dùng; đổi món thì vẽ lại mục này + Bé Nốt (trang phục)
+          (() => {
+            let el: HTMLElement;
+            const refresh = () => {
+              const fresh = unlockSection(app, refresh);
+              el.replaceWith(fresh);
+              el = fresh;
+              root.querySelector('.sticker-intro .mascot')?.replaceWith(mascot(got ? 'love' : 'wave', 64));
+            };
+            el = unlockSection(app, refresh);
+            return el;
+          })(),
           challengeSection,
+          concertSection(all),
           bonusSection,
           section('🏝️ Các đảo', islands),
         ),

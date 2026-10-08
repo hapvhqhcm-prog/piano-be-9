@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { WEEKS } from '../src/lessons/lessonEngine';
+import { LEVELS, WEEKS } from '../src/lessons/lessonEngine';
 import {
   FOLK_SONG_IDS,
   allStickers,
@@ -55,8 +55,9 @@ describe('sổ sticker', () => {
       expect(s.hint.length).toBeGreaterThan(3);
     }
     // 1 đảo / tuần + 3 huy chương + 5 mốc bài + 4 mốc tuần chăm chỉ + dân ca + micro + 2 trò sắc thái
+    // + (2026-10-08) 6 mốc "N ngày tập" + 7 mốc "N tuần có tập"
     // (sticker chuỗi ngày cũ chỉ xuất hiện khi bé đã nhận)
-    expect(all).toHaveLength(WEEKS.length + 3 + 5 + 4 + 1 + 1 + 2);
+    expect(all).toHaveLength(WEEKS.length + LEVELS.length + 5 + 4 + 1 + 1 + 2 + 6 + 7);
   });
 
   it('đảo: các tuần trước tuần hiện tại đã qua; gợi ý ghi tên đảo', () => {

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { MicListener, MIC_MUTE_GRACE_MS, MIC_STALE_MS, type MicState } from '../src/audio/MicListener';
+import { MicListener, MIC_MUTE_GRACE_MS, MIC_RESUME_TIMEOUT_MS, MIC_STALE_MS, type MicState } from '../src/audio/MicListener';
 import { MicAnalyzer } from '../src/audio/micAnalyzer';
 import type { AudioEngine, EngineState } from '../src/audio/AudioEngine';
 
@@ -150,6 +150,36 @@ describe('MicListener: iOS làm micro "điếc" → báo tắt, cần bật lạ
     ctx.state = 'suspended';
     expect(await mic.start()).toBe('on');
     expect(ctx.resume).toHaveBeenCalled();
+  });
+
+  it('(+ 2026-10-08) ctx.resume() treo mãi (iOS sau cuộc gọi/Siri) → không kẹt "starting": tắt micro, lần chạm sau thử lại được', async () => {
+    const { mic, ctx, tracks, getUserMedia, states } = setup();
+    ctx.state = 'interrupted';
+    ctx.resume.mockImplementation(() => new Promise<void>(() => undefined)); // không bao giờ xong
+    const p = mic.start();
+    expect(mic.state).toBe('starting');
+    expect(await mic.start()).toBe('starting'); // chạm trong lúc chờ → bỏ qua
+    await vi.advanceTimersByTimeAsync(MIC_RESUME_TIMEOUT_MS + 50);
+    expect(await p).toBe('off');
+    expect(mic.needsRestart).toBe(true);
+    expect(tracks[0].readyState).toBe('ended'); // đã nhả micro
+    expect(states[states.length - 1]).toBe('off');
+    // iOS chạy lại âm thanh → lần chạm sau bật được
+    ctx.resume.mockImplementation(async () => {
+      ctx.state = 'running';
+    });
+    expect(await mic.start()).toBe('on');
+    expect(getUserMedia).toHaveBeenCalledTimes(2);
+  });
+
+  it('ctx.resume() bị từ chối và context vẫn không chạy → báo off (không "on" giả)', async () => {
+    const { mic, ctx, tracks } = setup();
+    ctx.state = 'suspended';
+    ctx.resume.mockImplementation(async () => {
+      throw new Error('nope');
+    });
+    expect(await mic.start()).toBe('off');
+    expect(tracks[0].readyState).toBe('ended');
   });
 
   it('quay lại app: track đã bị mute / context không chạy → tắt; còn khỏe → giữ nguyên', async () => {

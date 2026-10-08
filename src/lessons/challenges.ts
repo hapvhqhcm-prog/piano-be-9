@@ -17,7 +17,21 @@ import { hashStr } from './bonusStickers';
  * - Thưởng: mỗi tuần xong = một sticker "Cúp tuần" (stickers.ts, kind 'challenge').
  */
 
-export type ChallengeId = 'faster' | 'perfect' | 'days4' | 'review3' | 'vn' | 'ear' | 'record';
+export type ChallengeId =
+  | 'faster'
+  | 'perfect'
+  | 'days4'
+  | 'review3'
+  | 'vn'
+  | 'ear'
+  | 'record'
+  // (+ 2026-10-08) 6 thử thách "ngoài đời" — bố mẹ xác nhận (xem SELF_CHALLENGES)
+  | 'audience'
+  | 'compose'
+  | 'findC'
+  | 'softSong'
+  | 'singPlay'
+  | 'teach';
 
 /** Việc nút "Làm ngay" mở ra. */
 export type ChallengeAction =
@@ -25,7 +39,11 @@ export type ChallengeAction =
   | { kind: 'library'; filter?: 'vn' }
   | { kind: 'lesson' }
   /** 🎮 Trò chơi (không có màn trò chơi → Học tiếp) */
-  | { kind: 'games' };
+  | { kind: 'games' }
+  /** (+ 2026-10-08) 🎹 Đàn tự do */
+  | { kind: 'freeplay' }
+  /** (+ 2026-10-08) Làm trên đàn thật, không cần mở màn nào — chỉ có nút bố mẹ xác nhận */
+  | { kind: 'none' };
 
 export interface WeeklyChallenge {
   id: ChallengeId;
@@ -50,10 +68,36 @@ export interface WeeklyChallenge {
   text: string;
   done: boolean;
   action: ChallengeAction;
+  /** (+ 2026-10-08) Thử thách "ngoài đời": hoàn thành khi bố mẹ bấm xác nhận (ProgressStore.confirmChallenge) */
+  selfReport: boolean;
 }
 
 /** Thứ tự CỐ ĐỊNH của kho thử thách (chỉ thêm vào cuối — thứ tự quyết định thử thách của từng tuần). */
-export const CHALLENGE_ORDER: readonly ChallengeId[] = ['days4', 'faster', 'perfect', 'review3', 'vn', 'ear', 'record'];
+export const CHALLENGE_ORDER: readonly ChallengeId[] = [
+  'days4',
+  'faster',
+  'perfect',
+  'review3',
+  'vn',
+  'ear',
+  'record',
+  // (+ 2026-10-08) chỉ vào kho từ tuần lịch NEW_CHALLENGES_FROM — tuần cũ giữ nguyên thử thách
+  'audience',
+  'compose',
+  'findC',
+  'softSong',
+  'singPlay',
+  'teach',
+];
+
+/**
+ * (+ 2026-10-08) Thứ 2 đầu tiên có 6 thử thách mới trong kho. Tuần lịch TRƯỚC ngày này (kể cả tuần đang học khi phát hành)
+ * chọn từ đúng kho cũ → thử thách của mọi tuần đã qua không đổi (test: tests/longTermUnlocks.test.ts).
+ */
+export const NEW_CHALLENGES_FROM = '2026-10-12';
+
+/** (+ 2026-10-08) Thử thách bé làm trên đàn thật / với gia đình — app không tự chấm được, bố mẹ bấm xác nhận. */
+export const SELF_CHALLENGES: ReadonlySet<ChallengeId> = new Set(['audience', 'compose', 'findC', 'softSong', 'singPlay', 'teach']);
 
 export const CHALLENGE_INFO: Readonly<Record<ChallengeId, { icon: string; title: string }>> = {
   faster: { icon: '🐇', title: 'Nhanh hơn' },
@@ -63,6 +107,12 @@ export const CHALLENGE_INFO: Readonly<Record<ChallengeId, { icon: string; title:
   vn: { icon: '🇻🇳', title: 'Bài quê hương' },
   ear: { icon: '👂', title: 'Tai thính' },
   record: { icon: '🎮', title: 'Phá kỷ lục' },
+  audience: { icon: '👨‍👩‍👦', title: 'Đàn cho 2 người nghe' },
+  compose: { icon: '✍️', title: 'Sáng tác 1 câu' },
+  findC: { icon: '🙈', title: 'Nhắm mắt tìm Đô' },
+  softSong: { icon: '🤫', title: 'Đàn thật nhỏ cả bài' },
+  singPlay: { icon: '🎤', title: 'Hát rồi đàn' },
+  teach: { icon: '🧑‍🏫', title: 'Dạy bố mẹ 1 bài' },
 };
 
 /** Thang tốc độ của màn bài hát (songShared.TEMPOS) — chép lại để module thuần không phụ thuộc UI. */
@@ -242,6 +292,16 @@ export function eligibleChallenges(data: Readonly<AppData>, monday: string, curW
       case 'record':
         if (gameBaseOf(data, monday).size > 0) out.push({ id });
         break;
+      default: {
+        // (+ 2026-10-08) thử thách mới: chỉ từ tuần lịch NEW_CHALLENGES_FROM (tuần cũ giữ đúng kho cũ)
+        if (monday < NEW_CHALLENGES_FROM) break;
+        if (id === 'findC' || id === 'compose') {
+          if (curWeek >= (id === 'compose' ? 3 : 2)) out.push({ id });
+        } else if (id === 'softSong') {
+          if (curWeek >= 6 && mastered.length >= 1) out.push({ id });
+        } else if (mastered.length >= 1) out.push({ id }); // audience / singPlay / teach: cần một bài đã thuộc
+        break;
+      }
     }
   }
   return out;
@@ -311,8 +371,52 @@ function measure(data: Readonly<AppData>, monday: string, pick: Pick): { have: n
       }
       return { have: beat ? 1 : 0, need: 1 };
     }
+    case 'compose': {
+      // Bé lưu một bài sáng tác trong tuần (trò Sáng tác) → tự xong; không thì bố mẹ xác nhận
+      const t0 = dayStartMs(monday);
+      const t1 = dayStartMs(sunday) + 86_400_000;
+      const made = (data.compositions ?? []).some((c) => c.createdAt >= t0 && c.createdAt < t1);
+      return { have: made ? 1 : 0, need: 1 };
+    }
+    default:
+      // Thử thách "ngoài đời": chỉ xong khi bố mẹ xác nhận (progress.challenges — challengeOfWeek đọc bản đã lưu)
+      return { have: 0, need: 1 };
   }
 }
+
+/** Lời cho 6 thử thách "ngoài đời" (+ 2026-10-08). */
+const SELF_TEXT: Record<'audience' | 'compose' | 'findC' | 'softSong' | 'singPlay' | 'teach', { desc: string; howTo: string; action: ChallengeAction }> = {
+  audience: {
+    desc: 'Đàn một bài con thích cho 2 người nghe',
+    howTo: 'Mời 2 người (bố, mẹ, ông bà, anh chị…) ngồi nghe. Con giới thiệu tên bài, cúi chào, đàn trọn bài rồi cúi chào lần nữa nhé!',
+    action: { kind: 'library' },
+  },
+  compose: {
+    desc: 'Tự nghĩ một câu nhạc ngắn và đàn cho bố mẹ nghe',
+    howTo: 'Dùng 5 nốt Đô Rê Mi Fa Sol, nghĩ một câu nhạc 4 ô nhịp (kết thúc ở nốt Đô nghe sẽ "xong"). Đặt tên cho câu nhạc rồi đàn cho bố mẹ nghe.',
+    action: { kind: 'freeplay' },
+  },
+  findC: {
+    desc: 'Nhắm mắt, dùng tay tìm nốt Đô trên đàn thật',
+    howTo: 'Nhắm mắt, sờ nhóm 2 phím đen — phím trắng ngay bên trái nhóm đó là Đô! Bố mẹ đố con tìm Đô 3 lần ở 3 chỗ khác nhau.',
+    action: { kind: 'none' },
+  },
+  softSong: {
+    desc: 'Đàn trọn một bài thật nhỏ (p) mà vẫn đều',
+    howTo: 'Chọn một bài con đã thuộc. Đàn thật nhỏ như sợ đánh thức em bé — ngón vẫn cong, nhịp vẫn đều từ đầu đến cuối.',
+    action: { kind: 'library' },
+  },
+  singPlay: {
+    desc: 'Hát một bài bằng tên nốt, rồi đàn bài đó',
+    howTo: 'Chọn một bài con đã thuộc. Hát to tên nốt (Đô Rê Mi…) cả bài trước, rồi mới đàn. Hát đúng thì đàn sẽ dễ hơn!',
+    action: { kind: 'library' },
+  },
+  teach: {
+    desc: 'Làm thầy: dạy bố hoặc mẹ đàn một bài',
+    howTo: 'Con chỉ cho bố mẹ ngồi đúng, đặt tay đúng ngón và đàn một bài con đã thuộc (hoặc một câu). Bố mẹ đàn được là con dạy giỏi!',
+    action: { kind: 'library' },
+  },
+};
 
 function describe(pick: Pick): { desc: string; howTo: string; action: ChallengeAction; unit: string } {
   switch (pick.id) {
@@ -368,6 +472,8 @@ function describe(pick: Pick): { desc: string; howTo: string; action: ChallengeA
         action: { kind: 'games' },
         unit: 'lần',
       };
+    default:
+      return { ...SELF_TEXT[pick.id], unit: 'lần' };
   }
 }
 
@@ -412,7 +518,22 @@ function challengeOfWeek(data: Readonly<AppData>, monday: string): WeeklyChallen
     text: done ? 'Xong!' : m.need === 1 ? 'chưa xong' : `${have}/${m.need} ${d.unit}`,
     done,
     action: d.action,
+    selfReport: SELF_CHALLENGES.has(pick.id),
   };
+}
+
+/**
+ * (+ 2026-10-08) Bố mẹ xác nhận bé đã làm thử thách "ngoài đời" của tuần chứa `today` (SỬA TẠI CHỖ — chỉ thêm).
+ * Chỉ ghi khi thử thách của tuần đúng là `id` và chưa xong. Trả về true nếu có đổi.
+ */
+export function confirmSelfChallenge(data: AppData, today: string, id: string, now: number): boolean {
+  const c = weeklyChallenge(data, today);
+  if (c.id !== id || c.done || !c.selfReport) return false;
+  const prog = data.progress;
+  const store: Record<string, ChallengeRecord> = isObj(prog.challenges) ? prog.challenges : (prog.challenges = {});
+  store[c.monday] = { id: c.id, doneAt: now };
+  bumpDataRev(data);
+  return true;
 }
 
 /** Tuần lịch còn ĐỦ buổi (chưa gộp lịch sử): thứ 2 ≥ history.compactedThrough. */

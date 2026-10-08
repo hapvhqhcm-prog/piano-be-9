@@ -2,7 +2,9 @@ import type { AudioEngine } from './AudioEngine';
 
 /**
  * v5.1 — "NGHE LẠI CON ĐÀN" (OWNER duyệt 2026-10-06): ghi âm TẠM vài chục giây khi bé đàn để bé nghe lại, tự nhận xét.
- * Chỉ giữ trong BỘ NHỚ (Blob/ObjectURL), không lưu xuống máy, không gửi đi; rời màn / tắt app là mất.
+ * Mặc định chỉ giữ trong BỘ NHỚ (Blob/ObjectURL), không gửi đi; rời màn / tắt app là mất.
+ * (+ 2026-10-08, OWNER đổi quyết định) bản HAY NHẤT của mỗi bài có thể được giữ lại trong "🎧 Album của con" — CHỈ trên
+ * iPad này (IndexedDB, src/progress/albumStore.ts; bố mẹ tắt được). Recorder chỉ đưa ra Blob (clip.blob()).
  *
  * HỢP ĐỒNG (agent âm thanh hiện thực; agent giao diện dùng trong song.ts):
  *   const rec = takeRecorder(app.mic)        // null nếu không hỗ trợ / micro chưa bật
@@ -26,6 +28,8 @@ export interface TakeClip {
   play(): Promise<void>;
   stopPlayback(): void;
   dispose(): void;
+  /** (+ Album) Dữ liệu đã ghi (đúng định dạng MediaRecorder — iPad: audio/mp4). null sau dispose(). */
+  blob?(): Blob | null;
 }
 
 export interface TakeRecorder {
@@ -35,8 +39,8 @@ export interface TakeRecorder {
   cancel(): void;
 }
 
-/** Ghi tối đa (giây) — đủ một bài ngắn; bộ nhớ ~0,5 MB. */
-export const MAX_TAKE_SECONDS = 60;
+/** Ghi tối đa (giây) — đủ một bài ở tốc độ chậm; bộ nhớ ~0,7 MB (64 kbps). Album giữ tối đa 90 s (albumStore). */
+export const MAX_TAKE_SECONDS = 90;
 /** Ngắn hơn mức này (giây) thì không giữ (bấm nhầm). */
 export const MIN_TAKE_SECONDS = 0.5;
 /** Thứ tự ưu tiên định dạng ghi (iPad Safari chỉ có audio/mp4). */
@@ -123,16 +127,16 @@ function decode(ctx: AudioContext, data: ArrayBuffer): Promise<AudioBuffer> {
   });
 }
 
-function defaults(d: RecorderDeps): Required<RecorderDeps> | null {
+function defaults(d: RecorderDeps, needRecorder = true): Required<RecorderDeps> | null {
   const g = globalThis as unknown as {
     MediaRecorder?: RecorderCtor;
     URL?: typeof URL;
     Audio?: new (src: string) => HTMLAudioElement;
   };
   const R = d.MediaRecorder ?? g.MediaRecorder;
-  if (typeof R !== 'function') return null;
+  if (needRecorder && typeof R !== 'function') return null;
   return {
-    MediaRecorder: R,
+    MediaRecorder: R as RecorderCtor,
     now: d.now ?? (() => Date.now()),
     setTimeout: d.setTimeout ?? ((fn, ms) => setTimeout(fn, ms)),
     clearTimeout: d.clearTimeout ?? ((id) => clearTimeout(id as ReturnType<typeof setTimeout>)),
@@ -149,7 +153,7 @@ class Clip implements TakeClip {
   private disposed = false;
 
   constructor(
-    private blob: Blob | null,
+    private data: Blob | null,
     readonly seconds: number,
     private readonly engine: AudioEngine | null,
     private readonly deps: Required<RecorderDeps>,
@@ -157,12 +161,12 @@ class Clip implements TakeClip {
 
   async play(): Promise<void> {
     this.stopPlayback();
-    if (this.disposed || !this.blob) return;
+    if (this.disposed || !this.data) return;
     const ctx = this.engine?.context ?? null;
     if (ctx && typeof ctx.decodeAudioData === 'function') {
       if (!this.buffer) {
         try {
-          this.buffer = await decode(ctx, await this.blob.arrayBuffer());
+          this.buffer = await decode(ctx, await this.data.arrayBuffer());
         } catch {
           this.buffer = null;
         }
@@ -215,8 +219,8 @@ class Clip implements TakeClip {
   }
 
   private playElement(): Promise<void> {
-    if (!this.blob) return Promise.resolve();
-    if (!this.url) this.url = this.deps.createObjectURL(this.blob);
+    if (!this.data) return Promise.resolve();
+    if (!this.url) this.url = this.deps.createObjectURL(this.data);
     const el = this.deps.createAudio(this.url);
     return new Promise<void>((resolve) => {
       let release: () => void = () => undefined;
@@ -251,13 +255,17 @@ class Clip implements TakeClip {
     this.stopCur?.();
   }
 
+  blob(): Blob | null {
+    return this.data;
+  }
+
   dispose(): void {
     this.stopPlayback();
     this.disposed = true;
     if (this.url) this.deps.revokeObjectURL(this.url);
     this.url = null;
     this.buffer = null;
-    this.blob = null;
+    this.data = null;
   }
 }
 
@@ -376,4 +384,12 @@ export function takeRecorder(mic: RecorderMic | null | undefined, deps: Recorder
   const d = defaults(deps);
   if (!d) return null;
   return new Recorder(mic, d, pickMimeType(d.MediaRecorder));
+}
+
+/**
+ * (+ Album) Phát lại một bản thu đã lưu (Blob) giống "Nghe lại": chuẩn hóa âm lượng, đánh dấu "app đang phát".
+ * Không cần MediaRecorder (chỉ phát).
+ */
+export function clipFromBlob(blob: Blob, seconds: number, engine: AudioEngine | null, deps: RecorderDeps = {}): TakeClip {
+  return new Clip(blob, seconds, engine, defaults(deps, false)!);
 }

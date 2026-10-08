@@ -1,0 +1,192 @@
+{
+ "id": "scale_g_both",
+ "title": "G major scale (hands together)",
+ "titleVi": "Gam Sol trưởng — hai tay",
+ "composer": "Bài tập (traditional)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Bài tự sáng tác cho app (piano-be-9)",
+ "attributionRequired": false,
+ "hand": "BOTH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 34,
+ "position": "free",
+ "phrases": [
+  0,
+  2
+ ],
+ "notes": [
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 1,
+   "dyn": "mf",
+   "slur": "start"
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "B4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "C5",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "D5",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E5",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "F#5",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "G5",
+   "beats": 1,
+   "finger": 5,
+   "slur": "end"
+  },
+  {
+   "pitch": "G5",
+   "beats": 1,
+   "finger": 5,
+   "slur": "start"
+  },
+  {
+   "pitch": "F#5",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "E5",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D5",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "C5",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "B4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 1,
+   "slur": "end"
+  }
+ ],
+ "lh": [
+  {
+   "pitch": "G2",
+   "beats": 1,
+   "finger": 5,
+   "slur": "start"
+  },
+  {
+   "pitch": "A2",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "B2",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "C3",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "D3",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "E3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "F#3",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "G3",
+   "beats": 1,
+   "finger": 1,
+   "slur": "end"
+  },
+  {
+   "pitch": "G3",
+   "beats": 1,
+   "finger": 1,
+   "slur": "start"
+  },
+  {
+   "pitch": "F#3",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D3",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "B2",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "A2",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "G2",
+   "beats": 1,
+   "finger": 5,
+   "slur": "end"
+  }
+ ],
+ "lhPosition": "free"
+}

@@ -15,19 +15,20 @@ function coachBox(): HTMLElement {
   );
 }
 
-const SHORT = { emoji: '🧘', part: 'all' as PosturePart, text: 'Ngồi thẳng · chân vững · tay tròn', sub: 'Kiểm tra nhanh tư thế nhé!' };
-
 const ALL_CARDS = [
   { emoji: '🪑', part: 'back' as PosturePart, text: 'Ngồi thẳng lưng', sub: 'Ngồi nửa trước ghế' },
   { emoji: '🦶', part: 'feet' as PosturePart, text: 'Hai bàn chân đặt vững', sub: 'Chạm sàn hoặc ghế kê chân' },
   { emoji: '⚽', part: 'hands' as PosturePart, text: 'Tay tròn như ôm quả bóng', sub: 'Cổ tay thẳng, không gập' },
 ];
 
-/** Tư thế (1') — mỗi màn một việc (§4). */
-export function postureScreen(_app: App, hooks: { short?: boolean; onDone(): void; onBack(): void }) {
+/**
+ * Tư thế ĐẦY ĐỦ (3 thẻ, ~1') — mỗi màn một việc (§4).
+ * v5.2 (OWNER duyệt 2026-10-08): chỉ hiện ở bài tuần 1, buổi đầu mỗi tuần, hoặc khi bố mẹ bật "nhắc tư thế đầy đủ"
+ * (lessonEngine.postureFull); các buổi khác chỉ có câu nhắc một dòng (POSTURE_CUE) trên màn khởi động bằng nhạc.
+ */
+export function postureScreen(_app: App, hooks: { onDone(): void; onBack(): void }) {
   return (root: HTMLElement) => {
-    // Bé đã quen (sau 3 buổi) → rút gọn còn 1 thẻ (v2)
-    const CARDS = hooks.short ? [SHORT] : ALL_CARDS;
+    const CARDS = ALL_CARDS;
     let i = 0;
     const stage = h('div', { class: 'stage scrollable' });
     const bar = h('div', { class: 'actions' });

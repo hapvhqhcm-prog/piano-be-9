@@ -109,3 +109,95 @@ export function countWords(cells: Array<{ start: number; beats: number; hits: nu
     return c.hits.length ? s : `(${s})`;
   });
 }
+
+/* ---------- Cầu nối "đọc vần → đếm số" (OWNER duyệt 2026-10-08) ---------- */
+
+/**
+ * Cách hiện chữ dưới mỗi hình nhịp, rút dần theo tuần (dữ liệu — sửa bảng, không sửa màn):
+ * - syllables: 'full' = vần to rõ (Đi / Chạy-chạy) · 'faint' = vần nhỏ mờ (chỉ để nhắc) · 'none' = không hiện vần
+ * - counts: 'normal' = dòng đếm số cỡ thường dưới vần · 'strong' = dòng đếm số to, đậm (đọc chính)
+ * - say: bé đọc to cái gì ('syllables' = vần, 'counts' = đếm số) — lời nhắc & giọng đọc theo đây.
+ * Bảng xếp theo `fromWeek` tăng dần; tuần nhận dòng cuối cùng có fromWeek ≤ tuần.
+ */
+export interface CountBridgeStage {
+  fromWeek: number;
+  syllables: 'full' | 'faint' | 'none';
+  counts: 'normal' | 'strong';
+  say: 'syllables' | 'counts';
+}
+
+export const COUNT_BRIDGE: readonly CountBridgeStage[] = [
+  // Tuần 1–5: vần + dòng đếm số bên dưới (đọc vần, NHÌN số)
+  { fromWeek: 1, syllables: 'full', counts: 'normal', say: 'syllables' },
+  // Tuần 6–8: đếm số là chính (to, đậm), vần nhỏ mờ để nhắc
+  { fromWeek: 6, syllables: 'faint', counts: 'strong', say: 'counts' },
+  // Tuần 9+: chỉ đếm số
+  { fromWeek: 9, syllables: 'none', counts: 'strong', say: 'counts' },
+];
+
+export function countBridgeFor(week: number, table: readonly CountBridgeStage[] = COUNT_BRIDGE): CountBridgeStage {
+  let cur = table[0];
+  for (const s of table) if (s.fromWeek <= week) cur = s;
+  return cur;
+}
+
+/** Dòng đếm gọn cho một ô (từ countWords): "3 và" → "3-và", "4 – 1" → "4 1" — đọc như "1 2 3-và 4". */
+export function countLine(word: string): string {
+  return word.replace(/ và/g, '-và').replace(/\s*–\s*/g, ' ');
+}
+
+/* ---------- Giữ nhịp trong đầu: máy gõ nhịp im 2 ô giữa bài (OWNER duyệt 2026-10-08) ---------- */
+
+/** Số ô máy gõ nhịp im lặng giữa bài */
+export const PULSE_DROP_BARS = 2;
+
+/**
+ * Khoảng phách [đầu, cuối) máy gõ nhịp im: `bars` ô ở GIỮA bài, trước và sau còn ≥ 1 ô có tiếng tích
+ * (bài < bars + 2 ô → null: quá ngắn, không thử).
+ */
+export function pulseDropWindow(totalBeats: number, beatsPerMeasure: number, bars = PULSE_DROP_BARS): [number, number] | null {
+  const bpm = Math.max(1, beatsPerMeasure);
+  const measures = Math.floor(totalBeats / bpm + 1e-9);
+  if (measures < bars + 2) return null;
+  const startBar = Math.max(1, Math.floor((measures - bars) / 2));
+  return [startBar * bpm, (startBar + bars) * bpm];
+}
+
+export interface PulseVerdict {
+  /** Số nốt (nhóm) bắt đầu trong các ô im */
+  total: number;
+  /** Số nốt trong các ô im được nghe đúng lúc (trong cửa sổ chấm nhịp) */
+  hits: number;
+  /** Giữ nhịp trong đầu đạt (≥ PASS_SCORE nốt trong ô im đúng lúc); null = không có nốt nào để chấm */
+  held: boolean | null;
+  /** Điểm các nốt NGOÀI ô im (để lượt chơi không bị trượt chỉ vì thử thách thêm) */
+  outsideScore: number;
+}
+
+/** Chấm riêng các nốt trong ô im (đã chấm bằng gradeTiming — `verdicts` cùng thứ tự với `notes`). */
+export function gradePulseDrop(
+  notes: Array<{ index: number; start: number }>,
+  verdicts: NoteVerdict[],
+  window: [number, number],
+): PulseVerdict {
+  const hitOf = new Map(verdicts.map((v) => [v.index, v.hit]));
+  const inside = notes.filter((n) => n.start >= window[0] - 1e-6 && n.start < window[1] - 1e-6);
+  const outside = notes.filter((n) => !(n.start >= window[0] - 1e-6 && n.start < window[1] - 1e-6));
+  const hits = inside.filter((n) => hitOf.get(n.index)).length;
+  const outHits = outside.filter((n) => hitOf.get(n.index)).length;
+  return {
+    total: inside.length,
+    hits,
+    held: inside.length ? hits / inside.length >= PASS_SCORE : null,
+    outsideScore: outside.length ? outHits / outside.length : 1,
+  };
+}
+
+/** Lời nhắn kết quả "giữ nhịp trong đầu" — luôn khen hoặc động viên, không chê. */
+export function pulseMessage(v: Pick<PulseVerdict, 'held' | 'hits' | 'total'>, beatsPerMeasure = 4): string {
+  if (v.held === null) return '';
+  const count = Array.from({ length: Math.max(2, beatsPerMeasure) }, (_, k) => k + 1).join(' ');
+  return v.held
+    ? 'Con giữ nhịp trong đầu giỏi lắm! 🧠🥁'
+    : `Lúc máy im, con đúng nhịp ${v.hits}/${v.total} nốt — lần sau đếm thầm "${count}" trong đầu nhé, con sắp làm được rồi!`;
+}

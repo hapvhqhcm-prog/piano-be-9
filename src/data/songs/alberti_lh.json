@@ -1,0 +1,304 @@
+{
+ "id": "alberti_lh",
+ "title": "Alberti bass (left hand)",
+ "titleVi": "Bass Alberti — tay trái",
+ "composer": "Bài tập (traditional)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Bài tự sáng tác cho app (piano-be-9)",
+ "attributionRequired": false,
+ "hand": "LH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 36,
+ "position": "free",
+ "phrases": [
+  0,
+  4
+ ],
+ "notes": [
+  {
+   "pitch": "C3",
+   "beats": 0.5,
+   "finger": 5,
+   "dyn": "mf",
+   "slur": "start"
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "E3",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "E3",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 1,
+   "slur": "end"
+  },
+  {
+   "pitch": "C3",
+   "beats": 0.5,
+   "finger": 5,
+   "slur": "start"
+  },
+  {
+   "pitch": "A3",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "F3",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "A3",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "A3",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "F3",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "A3",
+   "beats": 0.5,
+   "finger": 1,
+   "slur": "end"
+  },
+  {
+   "pitch": "B2",
+   "beats": 0.5,
+   "finger": 5,
+   "slur": "start"
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "B2",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 1,
+   "slur": "end"
+  },
+  {
+   "pitch": "C3",
+   "beats": 4,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "E3",
+     "finger": 3
+    },
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  },
+  {
+   "pitch": "C3",
+   "beats": 0.5,
+   "finger": 5,
+   "dyn": "p",
+   "slur": "start"
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "E3",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "E3",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 1,
+   "slur": "end"
+  },
+  {
+   "pitch": "C3",
+   "beats": 0.5,
+   "finger": 5,
+   "slur": "start"
+  },
+  {
+   "pitch": "A3",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "F3",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "A3",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "A3",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "F3",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "A3",
+   "beats": 0.5,
+   "finger": 1,
+   "slur": "end"
+  },
+  {
+   "pitch": "B2",
+   "beats": 0.5,
+   "finger": 5,
+   "slur": "start"
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "B2",
+   "beats": 0.5,
+   "finger": 5
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "G3",
+   "beats": 0.5,
+   "finger": 1,
+   "slur": "end"
+  },
+  {
+   "pitch": "C3",
+   "beats": 4,
+   "finger": 5,
+   "also": [
+    {
+     "pitch": "E3",
+     "finger": 3
+    },
+    {
+     "pitch": "G3",
+     "finger": 1
+    }
+   ]
+  }
+ ]
+}

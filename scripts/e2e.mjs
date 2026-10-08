@@ -404,10 +404,16 @@ const screenKind = () => {
   if (q('.closing-teach') && q('.rating-options')) return 'closing';
   if (q('.rating-options') || title.startsWith('Hôm nay con thấy')) return 'rating';
   if (txt(q('.step-tag')) === 'Con làm thầy') return 'teach';
+  // v5.2: mở đầu buổi bằng nhạc (bài đã thuộc theo nhịp, hoặc "thầy đàn — con đàn lại") — có nút "Bỏ qua ⏭"
+  if (q('.warmup-bar')) return 'warmup';
+  // v5.2: đọc nhạc 1 phút mỗi ngày (từ tuần 8)
+  if (q('.sight-daily-tag')) return 'sight-daily';
   if (txt(q('.step-tag')).startsWith('Tư thế')) return 'posture';
   if (q('.iv-stage')) return 'improv:' + ((q('.iv-stage').className.match(/iv-(black-keys|question-answer|compose)/) || [])[1] || '?');
   if (q('.tq-art-box, .tq-list, .tq-timer')) return 'technique';
   if (q('.dyn-pair, .dyn-card')) return 'dynamics';
+  // (2026-10-08) Hát trước khi đàn: nút "Bắt đầu" → "Đúng rồi" (hát, micro tắt) → "Đúng rồi" (đàn) → "Tiếp" — đã có trong ORDER
+  if (q('.sing-stage')) return 'sing';
   if (q('.rh-how')) return 'rhythm';
   if (q('.song-head') && /Ôn bài cũ/.test(txt(q('.song-status')))) return 'review-song';
   if (q('.song-head')) return q('.song-head .song-title') && /\(\d+\/\d+\)/.test(txt(q('.song-title'))) ? 'sight' : 'song';
@@ -531,10 +537,25 @@ async function doAction(a) {
   await tapXY(a.x, a.y);
 }
 
+/**
+ * (2026-10-08) Màn mừng "🎁 Quà mới" (màn chính, hiện ~0,45 s sau khi vẽ nếu bé vừa qua đảo) che các nút → bấm "Tuyệt!" để đóng.
+ * Trả về true nếu đã đóng.
+ */
+async function dismissUnlock() {
+  const a = await evaluate(
+    inPage(`const w = document.querySelector('.unlock-backdrop'); const b = w && [...w.querySelectorAll('button')].find((x) => label(x).includes('Tuyệt')); return b ? target(b, 'Tuyệt!') : null;`),
+  ).catch(() => null);
+  if (!a) return false;
+  await doAction(a);
+  await sleep(300);
+  return true;
+}
+
 /** Tìm phần tử bằng JS (trong LIB) rồi chạm. `finder` là biểu thức trả về Element. */
 async function tapBy(finder, what, timeoutMs = 15_000) {
   const end = Date.now() + timeoutMs;
   for (;;) {
+    if (await dismissUnlock()) continue;
     const a = await evaluate(inPage(`const el = (${finder}); return el && vis(el) && !el.disabled ? target(el, ${JSON.stringify(what)}) : null;`));
     if (a) {
       await doAction(a);
@@ -883,7 +904,9 @@ async function main() {
     }
     const kinds = [...allKinds].filter((k) => !['home', 'other'].includes(k)).sort();
     notes.push(`Các loại màn đã chạy hết: ${kinds.join(', ')}`);
-    const want = ['posture', 'notes', 'technique', 'song', 'review-song', 'closing', 'session-end', 'quiz:read'];
+    // v0.18: 'review-song' có thể bị gộp vào phần khởi động bằng nhạc (buổi đủ 7 màn) → không bắt buộc
+    const want = ['warmup', 'posture', 'notes', 'technique', 'song', 'closing', 'session-end', 'quiz:read'];
+    if (B_WEEKS.some((w) => w >= 8)) want.push('sight-daily'); // v5.2: đọc nhạc 1 phút mỗi ngày
     if (B_WEEKS.some((w) => [15, 17, 18, 19].includes(w))) want.push('rhythm'); // nhịp: bài đầu các tuần này
     if (!QUICK) want.push('quiz:interval', 'improv:black-keys', 'improv:question-answer', 'improv:compose', 'quiz:landmark', 'dynamics', 'sight');
     const missing = want.filter((k) => !allKinds.has(k));
@@ -1036,7 +1059,7 @@ async function main() {
     }
     await toHome().catch(() => undefined);
     await waitFor(`screenKind() === 'home'`, 'màn chính');
-    // Vào giữa buổi học (màn Tư thế / ôn nhanh — KHÔNG phải điểm an toàn)
+    // Vào giữa buổi học (màn khởi động bằng nhạc / tư thế — KHÔNG phải điểm an toàn)
     await tapTextStarts('Học tiếp:');
     await waitFor(`!['home', 'start'].includes(screenKind())`, 'đã vào buổi học');
     await evaluate(`window.__e2eMarker = 'v1-page'; true`);
@@ -1087,7 +1110,8 @@ async function main() {
     for (let i = 0; i < 12; i++) {
       const k = await kindNow();
       if (k === 'home' || k === 'loading') break;
-      const back = await evaluate(inPage(`const b = btn('Quay lại'); return b ? target(b, 'Quay lại') : null;`)).catch(() => null);
+      // Khởi động bằng nhạc (theo nhịp) đang chơi: chỉ có nút "Dừng" → dừng trước rồi mới "Quay lại"
+      const back = await evaluate(inPage(`const b = btn('Quay lại') || btn('Dừng'); return b ? target(b, label(b)) : null;`)).catch(() => null);
       if (!back) break;
       await doAction(back);
       await sleep(600);
@@ -1103,7 +1127,8 @@ async function main() {
     const cacheKeys = await evaluate(`caches.keys().then((k) => k.join(','))`);
     notes.push(`Sau khi về điểm an toàn: đã tải lại sang v2 (${reloaded ? 'meta e2e-build có' : '?'}); cache: ${cacheKeys}`);
     assert(/-e2e2/.test(cacheKeys), 'Cache của bản mới chưa được dùng');
-    assert(!cacheKeys.split(',').some((k) => k && !k.endsWith('-e2e2')), 'Cache bản cũ chưa được dọn');
+    // v0.18: service worker GIỮ cache của đúng MỘT bản trước (trang cũ còn mở vẫn tải được màn lười) — chỉ được dư tối đa 1
+    assert(cacheKeys.split(',').filter((k) => k && !k.endsWith('-e2e2')).length <= 1, 'Cache bản cũ chưa được dọn (dư > 1 bản)');
     await toHome();
     const dataAfter = await appData();
     const title = await homeTitle();

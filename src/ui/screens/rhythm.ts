@@ -4,7 +4,8 @@ import type { App } from '../App';
 import { backButton, button, h } from '../components/dom';
 import { confetti } from '../components/celebrate';
 import { RHYTHM_CHECKS, parentChecklist } from '../components/parentCheck';
-import { TIMING_WINDOWS, countWords, gradeTiming } from '../../music/timing';
+import { TIMING_WINDOWS, countBridgeFor, countLine, countWords, gradeTiming, type CountBridgeStage } from '../../music/timing';
+import { cancelSpeech, speak } from '../../audio/voice';
 
 /** Từ vựng nhịp: độ dài (phách) và các tiếng vỗ (phách, tính từ đầu ô) — dùng cả để vẽ, đếm số và chấm micro. */
 export const SYMBOL: Record<RhythmSymbol, { label: string; emoji: string; beats: number; hits: number[] }> = {
@@ -35,7 +36,24 @@ export function rhythmCell(sym: RhythmSymbol, text: string = SYMBOL[sym].label, 
   );
 }
 
+/**
+ * (OWNER duyệt 2026-10-08) CẦU NỐI ĐẾM SỐ: ô nhịp có vần (Đi / Chạy-chạy) VÀ dòng đếm số bên dưới ("3-và").
+ * Vần rút dần theo tuần (timing.ts COUNT_BRIDGE): tuần 1–5 vần + số · 6–8 số to đậm, vần mờ · 9+ chỉ số.
+ */
+export function rhythmBridgeCell(sym: RhythmSymbol, count: string, stage: CountBridgeStage): HTMLElement {
+  const s = SYMBOL[sym];
+  return h(
+    'div',
+    { class: `rh-cell rh-${sym} rh-bridge`, style: { flexGrow: String(s.beats) } },
+    h('div', { class: 'rh-emoji' }, s.emoji),
+    stage.syllables === 'none' ? null : h('div', { class: `rh-label${stage.syllables === 'faint' ? ' rh-faint' : ''}` }, s.label),
+    h('div', { class: `rh-countline${stage.counts === 'strong' ? ' rh-strong' : ''}` }, count),
+  );
+}
+
 export interface RhythmHooks {
+  /** Tuần của bài học (quyết định cách hiện vần/đếm số — COUNT_BRIDGE); không có → tuần hiện tại */
+  week?: number;
   title: string;
   intro: string;
   patterns: RhythmSymbol[][];
@@ -74,10 +92,13 @@ export function rhythmScreen(app: App, hooks: RhythmHooks) {
     let spb = 1;
 
     /**
-     * v5 (sư phạm): xen kẽ hai cách đọc theo mẫu — mẫu lẻ "đọc vần" (Đi / Chạy-chạy), mẫu chẵn "đếm số" (1 – 2 – 3 – 4).
-     * Bé quen cả hai: vần dễ nhớ hình nốt, đếm số chuẩn bị cho đọc nhạc thật.
+     * (OWNER duyệt 2026-10-08) Cầu nối vần → đếm số, theo TUẦN (thay cho xen kẽ mẫu vần / mẫu số của v5):
+     * mọi ô đều có dòng đếm số; vần to (tuần 1–5) → mờ (6–8) → không còn (9+). Lời nhắc & giọng đọc theo `bridge.say`.
      */
-    const counting = () => i % 2 === 1;
+    const bridge = countBridgeFor(hooks.week ?? app.store.get().progress.currentWeek);
+    const counting = () => bridge.say === 'counts';
+    /** Mẫu đã đọc to lời nhắc (đọc một lần mỗi mẫu) */
+    let spokenFor = -1;
 
     function cells(p: RhythmSymbol[]): { row: HTMLElement; els: HTMLElement[]; starts: number[] } {
       const els: HTMLElement[] = [];
@@ -88,21 +109,20 @@ export function rhythmScreen(app: App, hooks: RhythmHooks) {
         starts.push(b);
         b += SYMBOL[sym].beats;
       }
-      const words = counting()
-        ? countWords(
-            seq.map((sym, k) => ({ start: starts[k], beats: SYMBOL[sym].beats, hits: SYMBOL[sym].hits })),
-            meterOf(p),
-          )
-        : null;
-      seq.forEach((sym, k) => els.push(words ? rhythmCell(sym, words[k], true) : rhythmCell(sym)));
+      const words = countWords(
+        seq.map((sym, k) => ({ start: starts[k], beats: SYMBOL[sym].beats, hits: SYMBOL[sym].hits })),
+        meterOf(p),
+      );
+      seq.forEach((sym, k) => els.push(rhythmBridgeCell(sym, countLine(words[k]), bridge)));
       return { row: h('div', { class: 'rh-row' }, ...els), els, starts };
     }
 
-    /** Lời nhắc theo cách đọc của mẫu hiện tại */
-    const sayHow = () =>
-      counting()
-        ? `Vỗ tay và đếm to: ${Array.from({ length: meterOf(hooks.patterns[i]) }, (_, k) => k + 1).join(' – ')}`
-        : 'Vỗ tay và đọc to chữ dưới mỗi hình!';
+    /** Lời nhắc theo cách đọc của tuần (vần → đếm số) */
+    const sayHow = () => {
+      const count = Array.from({ length: meterOf(hooks.patterns[i]) }, (_, k) => k + 1).join(' – ');
+      if (!counting()) return 'Vỗ tay và đọc to chữ — nhìn cả số đếm bên dưới nhé!';
+      return bridge.syllables === 'faint' ? `Vỗ tay và đếm to: ${count} (chữ nhỏ để nhắc thôi)` : `Vỗ tay và đếm to: ${count}`;
+    };
 
     function intro(): void {
       token++;
@@ -127,6 +147,11 @@ export function rhythmScreen(app: App, hooks: RhythmHooks) {
         row,
         h('div', { class: 'countin' }, ' '),
       );
+      // Đọc to lời nhắc một lần mỗi mẫu (giọng theo cách đọc của tuần)
+      if (spokenFor !== i) {
+        spokenFor = i;
+        void speak(app, sayHow());
+      }
       setBar(
         backButton(() => (i > 0 ? ((i -= 1), show()) : intro())),
         button({ icon: '🔊', label: 'Nghe mẫu', onTap: () => void play(true) }),
@@ -139,6 +164,7 @@ export function rhythmScreen(app: App, hooks: RhythmHooks) {
      * (sau 4 tiếng đếm vào thì tắt tiếng tích, chỉ còn nhịp nháy trên màn để micro nghe rõ tiếng vỗ).
      */
     async function play(demo: boolean): Promise<void> {
+      cancelSpeech(); // giọng đọc không được lẫn vào tiếng vỗ / tiếng mẫu
       if (!demo) {
         // Lần đầu iPad hỏi quyền micro: chờ xong mà bé đã rời màn / bấm nút khác thì thôi
         const tk0 = ++token;
@@ -267,6 +293,7 @@ export function rhythmScreen(app: App, hooks: RhythmHooks) {
     intro();
     return () => {
       token++;
+      cancelSpeech();
       cancelAnimationFrame(raf);
       unOnsetCur();
     };

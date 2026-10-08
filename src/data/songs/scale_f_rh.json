@@ -1,0 +1,105 @@
+{
+ "id": "scale_f_rh",
+ "title": "F major scale (right hand)",
+ "titleVi": "Gam Fa trưởng — tay phải",
+ "composer": "Bài tập (traditional)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Bài tự sáng tác cho app (piano-be-9)",
+ "attributionRequired": false,
+ "hand": "RH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 33,
+ "position": "free",
+ "phrases": [
+  0,
+  2
+ ],
+ "notes": [
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 1,
+   "dyn": "mf",
+   "slur": "start"
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "Bb4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "C5",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "D5",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E5",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "F5",
+   "beats": 1,
+   "finger": 4,
+   "slur": "end"
+  },
+  {
+   "pitch": "F5",
+   "beats": 1,
+   "finger": 4,
+   "slur": "start"
+  },
+  {
+   "pitch": "E5",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D5",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "C5",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "Bb4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 1,
+   "slur": "end"
+  }
+ ]
+}

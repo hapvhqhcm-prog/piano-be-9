@@ -1,4 +1,4 @@
-import { LEFT_HAND_WEEK, MAX_WEEK, WEEKS, criterionProgress, findLesson, levelOf, masteredSongs, weekPassed, weekPlan } from '../../lessons/lessonEngine';
+import { LEFT_HAND_WEEK, MAX_WEEK, POSTURE_CUE, WEEKS, criterionProgress, findLesson, levelOf, masteredSongs, weekPassed, weekPlan, type PostureSettings } from '../../lessons/lessonEngine';
 import { SONGS } from '../../music/tune';
 import { parentTip } from '../../lessons/parentTips';
 import { findTune } from '../../music/exercises';
@@ -28,6 +28,8 @@ import { PRIVACY_NOTE, customTuneTitle, parentSongToTune } from '../../practice/
 import { measureCount } from '../../music/tune';
 import { playSong } from './library';
 import { lazy, lazyScreen, prefetchLater } from '../lazy';
+import { albumParentCard } from './albumParent';
+import { reminderCard } from '../components/reminderCard';
 
 // Màn con ít dùng của Phụ huynh → chunk riêng (nạp ngầm khi màn Phụ huynh đã vẽ xong).
 const micTestMod = lazy(() => import('./micTest'));
@@ -45,7 +47,8 @@ const diagnosticsScreen = (app: App): Screen => lazyScreen(diagnosticsMod, (m) =
 
 /** Settings thêm (cộng dồn, không cần migration) của màn Phụ huynh. */
 type ParentUxSettings = Settings &
-  HoldSettings & {
+  HoldSettings &
+  PostureSettings & {
     /** Bố mẹ bấm "Để sau" ở thẻ Cài micro → không hiện thẻ đầu trang nữa (vẫn cài được ở Nâng cao) */
     micSetupHidden?: boolean;
     /** Lần cuối hỏi "Sao lưu luôn?" sau khi xem Báo cáo (ms) — hỏi tối đa mỗi tuần một lần */
@@ -498,9 +501,11 @@ export function parentScreen(app: App) {
         ),
         backupLine,
         message ? h('div', { class: 'banner' }, message) : null,
-        store.recoveredFromBackup
-          ? h('div', { class: 'banner' }, '✅ App đã tự khôi phục tiến độ của bé từ bản sao lưu trong máy (do lỗi cũ khi lên tuần 9).')
-          : null,
+        store.recoveredFromMirror
+          ? h('div', { class: 'banner' }, '✅ Dữ liệu chính bị trống / hỏng — app đã tự khôi phục tiến độ của bé từ bản sao thứ hai trong máy.')
+          : store.recoveredFromBackup
+            ? h('div', { class: 'banner' }, '✅ App đã tự khôi phục tiến độ của bé từ bản sao lưu trong máy (do lỗi cũ khi lên tuần 9).')
+            : null,
         store.lastSaveError ? h('div', { class: 'banner warn' }, `Lỗi lưu dữ liệu: ${store.lastSaveError}`) : null,
         micSetupCard(),
         tonightCard(d, now, runPractice),
@@ -514,6 +519,8 @@ export function parentScreen(app: App) {
         ),
         quickTipsCard(),
         installCard(),
+        // (+ 2026-10-08) ⏰ Đặt giờ tập — lời nhắc .ics lặp hằng tuần trong Lịch của iPad
+        reminderCard(app),
 
         h(
           'section',
@@ -758,6 +765,17 @@ export function parentScreen(app: App) {
                   : toast('iPad chưa có giọng đọc tiếng Việt'),
             }),
           ),
+          // v5.2 (OWNER duyệt 2026-10-08): mặc định thẻ tư thế đầy đủ chỉ đầu tuần; bật → mọi buổi
+          h('h3', {}, '🧘 Nhắc tư thế đầy đủ mỗi buổi'),
+          h('p', { class: 'muted' }, `Tắt (mặc định): mỗi buổi chỉ nhắc một dòng "${POSTURE_CUE}"; 3 thẻ tư thế đầy đủ hiện ở buổi đầu mỗi tuần.`),
+          segmented(
+            [
+              { value: 'off', label: 'Tắt' },
+              { value: 'on', label: 'Bật' },
+            ],
+            (s as ParentUxSettings).postureFull ? 'on' : 'off',
+            (v) => set({ postureFull: v === 'on' }),
+          ),
           h('h3', {}, 'Độ dài buổi'),
           segmented(
             [10, 15, 20].map((m) => ({ value: m as 10 | 15 | 20, label: `${m} phút` })),
@@ -819,7 +837,7 @@ export function parentScreen(app: App) {
           h(
             'p',
             { class: 'muted' },
-            '🎧 "Nghe lại con đàn": khi micro bật, app giữ TẠM tiếng đàn của lượt vừa chơi để bé bấm nghe lại và tự nhận xét. Bản ghi chỉ nằm trong bộ nhớ — không lưu vào máy, không gửi đi; chơi lượt mới hoặc rời màn là xóa. Micro tắt thì không ghi gì.',
+            '🎧 "Nghe lại con đàn": khi micro bật, app giữ TẠM tiếng đàn của lượt vừa chơi để bé bấm nghe lại và tự nhận xét. Không gửi đi đâu; chơi lượt mới hoặc rời màn là xóa — TRỪ bản hay nhất của mỗi bài được giữ trong "🎧 Album của con" (chỉ trên iPad này; tắt / xoá ở mục Nâng cao). Micro tắt thì không ghi gì.',
           ),
           h(
             'div',
@@ -924,9 +942,13 @@ export function parentScreen(app: App) {
         }
         const wk = typeof incoming?.progress?.currentWeek === 'number' ? incoming.progress.currentWeek : '?';
         const ns = Array.isArray(incoming?.sessions) ? incoming.sessions.length : '?';
+        // (+ 2026-10-08) Ngày học gần nhất trong bản nhập — để bố mẹ biết bản sao lưu cũ hay mới
+        const lastDate = Array.isArray(incoming?.sessions)
+          ? (incoming.sessions as Array<{ date?: unknown }>).reduce((m, x) => (typeof x?.date === 'string' && x.date > m ? x.date : m), '')
+          : '';
         confirmDialog({
           title: 'Thay dữ liệu?',
-          text: `Thay dữ liệu hiện tại (tuần ${d.progress.currentWeek}, ${sessionCount(d)} buổi) bằng dữ liệu nhập (tuần ${wk}, ${ns} buổi)?`,
+          text: `Thay dữ liệu hiện tại (tuần ${d.progress.currentWeek}, ${sessionCount(d)} buổi) bằng dữ liệu nhập (tuần ${wk}, ${ns} buổi${lastDate ? `, học gần nhất ${fmtDate(lastDate)}` : ''})?`,
           okIcon: '⬆',
           okLabel: 'Thay dữ liệu',
           danger: true,
@@ -944,6 +966,8 @@ export function parentScreen(app: App) {
       const paste = h('textarea', { class: 'text-in paste', placeholder: 'Hoặc dán nội dung JSON vào đây…' });
       const confirmIn = h('input', { class: 'text-in', type: 'text', placeholder: 'Gõ XOA' });
 
+      // (+ 2026-10-08) 🎧 Album của con: bật/tắt lưu, xoá (KHÔNG nằm trong bản sao lưu)
+      adv.push(albumParentCard());
       adv.push(
         h(
           'section',
@@ -1016,11 +1040,13 @@ export function parentScreen(app: App) {
                           okIcon: '🗑️',
                           okLabel: 'Vẫn xóa',
                           onOk: () => {
-                            store.resetAll({ force: true });
+                            const f = store.resetAll({ force: true });
+                            if (!f.ok) return say(`❌ Chưa xóa được: ${f.error}`);
                             app.show(startScreen(app));
                           },
                         });
                       }
+                      if (!r.ok) return say(`❌ Chưa xóa được: ${r.error}`); // (+ 2026-10-08) ghi lỗi → báo, không giả vờ đã xóa
                       app.show(startScreen(app));
                     },
                   }),

@@ -7,9 +7,46 @@
  */
 import type { Screen } from './App';
 import { button, h, toast } from './components/dom';
+import { isAtSafePoint } from '../pwa/updater';
 import '../styles/lazy.css';
 
 const SHOW_AFTER_MS = 150;
+
+/**
+ * (+ 2026-10-08) Nạp chunk lỗi ngay sau khi app cập nhật (trang còn chạy mã cũ, chunk cũ không còn) → tải lại trang
+ * MỘT lần để chạy bản mới. Cờ + thời điểm trong sessionStorage chặn vòng lặp tải lại (lỗi thật / mất mạng).
+ */
+export const LAZY_RELOAD_KEY = 'piano-be-9-lazy-reload';
+/** Trong ngần này ms kể từ lần tải lại trước → không tải lại nữa (hiện lỗi như cũ). */
+export const LAZY_RELOAD_WINDOW_MS = 120_000;
+/** Chờ chút để bé kịp đọc "Đang cập nhật app…" */
+const RELOAD_DELAY_MS = 900;
+
+export interface ReloadEnv {
+  storage?: Pick<Storage, 'getItem' | 'setItem'> | null;
+  now?: () => number;
+  reload?: () => void;
+  notify?: (text: string) => void;
+  delayMs?: number;
+}
+
+/** Tải lại trang một lần (có chặn vòng lặp). Trả về true nếu sẽ tải lại. Không bao giờ ném lỗi. */
+export function reloadOnceForUpdate(env: ReloadEnv = {}): boolean {
+  try {
+    const storage = env.storage !== undefined ? env.storage : globalThis.sessionStorage;
+    if (!storage) return false; // không chặn được vòng lặp → không tự tải lại
+    const now = (env.now ?? Date.now)();
+    const last = Number(storage.getItem(LAZY_RELOAD_KEY));
+    if (last && now - last >= 0 && now - last < LAZY_RELOAD_WINDOW_MS) return false;
+    storage.setItem(LAZY_RELOAD_KEY, String(now));
+    (env.notify ?? ((t: string) => toast(t, 3000)))('Đang cập nhật app…');
+    const reload = env.reload ?? (() => window.location.reload());
+    setTimeout(reload, env.delayMs ?? RELOAD_DELAY_MS);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export interface LazyModule<T> {
   /** Module đã nạp (undefined = chưa) */
@@ -90,6 +127,8 @@ export function lazyScreen<T>(mod: LazyModule<T>, make: (m: T) => Screen): Scree
           hide();
           if (!alive) return;
           console.warn('lazy screen', e);
+          // Màn cũ đã rời (không giữa hoạt động nào) → thử tải lại một lần để chạy bản app mới
+          if (reloadOnceForUpdate()) return;
           const box = h(
             'div',
             { class: 'lazy-loading lazy-error' },
@@ -134,6 +173,8 @@ export function withLazy<T>(mod: LazyModule<T>, use: (m: T) => void): void {
       hide();
       busy = false;
       console.warn('lazy', e);
+      // Chỉ tự tải lại khi ở điểm an toàn (màn chính…) — giữa buổi học thì không làm mất màn hiện tại
+      if (isAtSafePoint() && reloadOnceForUpdate()) return;
       toast('Chưa mở được — thử lại nhé.');
     },
   );

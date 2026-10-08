@@ -7,7 +7,9 @@
 #               p / mf / f  = token riêng: sắc thái từ nốt KẾ TIẾP trở đi (giữ tới khi đổi) → "dyn"
 #               E4'       = ngắt tiếng (staccato) → "stac": true         (E4:0.5/2' cũng được)
 #               (E4 … C4) = luyến: "(" trước nốt đầu, ")" sau nốt cuối → "slur": "start" / "end"
-#   Quy ước (giáo trình v5, 30 tuần): p/mf/f từ tuần 6 (trò "To hay nhỏ?"); ngắt/luyến từ tuần 12 (trò "Ngắt hay liền?").
+#   Quy ước (giáo trình v5, 30 tuần): p/mf/f từ tuần 6 (trò "To hay nhỏ?"); ngắt từ tuần 12 (trò "Ngắt hay liền?").
+#   (2026-10-08, OWNER duyệt) LIỀN dạy sớm: trò "Đàn liền" tuần 5 → dấu luyến được dùng từ tuần 6 (Largo, Kìa con bướm vàng, Đò qua sông).
+#   (2026-10-08, OWNER duyệt) nhịp 3/4 dạy sớm ở tuần 11 ("MỘT-hai-ba" + "Xích đu"); tuần 15 Vũ hội Valse đào sâu.
 # Nhịp (v5): móc đơn từ tuần 4, 2/4 từ tuần 9, móc kép / nghịch phách từ tuần 18 — bài chỉ được đặt SAU tuần dạy nhịp đó
 # (tests/curriculum-v5.test.ts kiểm).
 # Tất cả giai điệu thuộc PUBLIC DOMAIN hoặc do dự án tự sáng tác; bản phối 5 ngón tự soạn.
@@ -25,6 +27,8 @@ POS = {
  ("C5","RH"): {"C5":1,"D5":2,"E5":3,"F5":4,"G5":5},   # thế Đô cao (tuần 25)
 }
 DYN = {"p", "mf", "f"}
+# Cấp 4 (2026-10-08, OWNER duyệt): tuần dạy pedal / 6/8 / hairpin & thuật ngữ tốc độ (src/lessons/level4.ts)
+L4_PED = 38; L4_68 = 39; L4_HAIRPIN = 40; L4_TEMPO = 40
 E = "Original simple arrangement for this app"
 
 def num(x):
@@ -34,22 +38,40 @@ def num(x):
 def voice(seq, hand, pos):
     out = []
     dyn = None; cur = None; in_slur = False
+    # Cấp 4 (2026-10-08): hairpin / rit. / pedal — token & hậu tố MỚI, bài cũ không dùng → JSON cũ không đổi
+    hp = None; rit = False; in_hp = False; in_ped = False
     for tok in seq.split():
         if tok in DYN:
             assert tok != cur, ("sắc thái lặp", seq[:30], tok)
             dyn = cur = tok; continue
+        if tok in ("cresc", "dim"):
+            assert not in_hp and hp is None, ("hairpin lồng nhau", seq[:30]); hp = tok; continue
+        if tok == "rit":
+            rit = True; continue
         slur_start = tok.startswith("(")
         if slur_start: tok = tok[1:]
         stac = slur_end = False
+        hp_end = False; ped = None
         while tok[-1] in ")'":
             if tok[-1] == ")": slur_end = True
             else: stac = True
             tok = tok[:-1]
+        # Hậu tố Cấp 4: "]" = hết hairpin · "^" = nhấn pedal (sau nốt) · "%" = đổi pedal · "*" = nhả pedal (cuối nốt)
+        while tok[-1] in "]^%*":
+            c = tok[-1]
+            if c == "]": hp_end = True
+            else:
+                assert ped is None, ("hai dấu pedal một nốt", tok); ped = {"^": "start", "%": "change", "*": "end"}[c]
+            tok = tok[:-1]
+            while tok[-1] in ")'":
+                if tok[-1] == ")": slur_end = True
+                else: stac = True
+                tok = tok[:-1]
         body, _, fing = tok.partition("/")
         main, _, beats = body.partition(":")
         beats = num(beats) if beats else 1
         if main == "R":
-            assert not (slur_start or slur_end or stac), ("dấu lặng không có ngắt/luyến", tok)
+            assert not (slur_start or slur_end or stac or hp_end or ped), ("dấu lặng không có ngắt/luyến/hairpin/pedal", tok)
             out.append({"rest": True, "beats": beats}); continue
         pitches = main.split("+")
         fingers = [int(f) for f in fing.split("+")] if fing else [POS[(pos, hand)][p] for p in pitches]
@@ -65,9 +87,23 @@ def voice(seq, hand, pos):
             assert not in_slur, ("nốt ngắt nằm trong dấu luyến", tok); n["stac"] = True
         if slur_end:
             assert in_slur and not slur_start, ("luyến thiếu mở / chỉ một nốt", tok); in_slur = False; n["slur"] = "end"
+        if hp:
+            n["hairpin"] = hp; hp = None; in_hp = True
+        elif hp_end:
+            assert in_hp, ("hết hairpin khi chưa mở", tok)
+        if hp_end:
+            assert in_hp and n.get("hairpin") is None, ("hairpin một nốt", tok); n["hairpin"] = "end"; in_hp = False
+        if rit: n["rit"] = True; rit = False
+        if ped:
+            if ped == "start": assert not in_ped, ("pedal nhấn hai lần", tok); in_ped = True
+            else: assert in_ped, ("đổi/nhả pedal khi chưa nhấn", tok)
+            if ped == "end": in_ped = False
+            n["ped"] = ped
         out.append(n)
     assert not in_slur, ("luyến chưa đóng", seq[:30])
     assert dyn is None, ("sắc thái ở cuối bè", seq[:30])
+    assert not in_hp and hp is None and not rit, ("hairpin / rit. chưa đóng", seq[:30])
+    assert not in_ped, ("pedal chưa nhả", seq[:30])
     return out
 
 # ---- Bài có La (A4) ở thế Đô: tránh ngón 5 lặp lại trên Sol–La–Sol.
@@ -123,9 +159,12 @@ def extension_fingers(notes):
         s = best[k][s][1]
 
 def song(id, title, titleVi, composer, week, hand, seq, phrases=None, ext=None, pos="C",
-         lh=None, lhpos="C", ts="4/4", arr=E):
+         lh=None, lhpos="C", ts="4/4", arr=E, tempo=None):
     d = {"id": id, "title": title, "titleVi": titleVi, "composer": composer, "sourceStatus": "public-domain",
          "arrangementBy": arr, "attributionRequired": False, "hand": hand, "bpm": 60, "timeSignature": ts, "week": week}
+    # Cấp 4 (2026-10-08): thuật ngữ tốc độ (Andante, Allegro…) — chỉ hiện trên khuông, không đổi tốc độ chấm
+    if tempo:
+        assert week >= L4_TEMPO, (id, "thuật ngữ tốc độ chỉ từ tuần", L4_TEMPO); d["tempoTerm"] = tempo
     if ext: d["extension"] = ext
     main_hand = "LH" if hand == "LH" else "RH"
     notes = voice(seq, main_hand, pos)
@@ -140,13 +179,20 @@ def song(id, title, titleVi, composer, week, hand, seq, phrases=None, ext=None, 
         if lhpos != "C": d["lhPosition"] = lhpos
     allv = notes + d.get("lh", [])
     if any("dyn" in n for n in allv): assert week >= 6, (id, "p/mf/f chỉ từ tuần 6")
-    if any("stac" in n or "slur" in n for n in allv): assert week >= 12, (id, "ngắt/luyến chỉ từ tuần 12")
+    if any("stac" in n for n in allv): assert week >= 12, (id, "ngắt chỉ từ tuần 12")
+    if any("slur" in n for n in allv): assert week >= 6, (id, "luyến chỉ từ tuần 6 (sau trò \"Đàn liền\" tuần 5)")
     # Nhịp (v5): móc kép (< nửa phách) chỉ từ tuần 18, nhịp 2/4 chỉ từ tuần 9
     if any(n["beats"] < 0.5 for n in allv): assert week >= 18, (id, "móc kép chỉ từ tuần 18")
     if ts == "2/4": assert week >= 9, (id, "nhịp 2/4 chỉ từ tuần 9")
-    # (2026-10-06) Các nhịp / phím khác — đúng tuần dạy (tests/curriculum-v5.test.ts): 3/4 tuần 15, phím đen tuần 16,
+    # (2026-10-06) Các nhịp / phím khác — đúng tuần dạy (tests/curriculum-v5.test.ts): 3/4 tuần 11 (2026-10-08; trước: 15), phím đen tuần 16,
     # đen chấm dôi tuần 17, "Tập-tễnh" (móc đơn chấm) tuần 18, nghịch phách tuần 19
-    if ts == "3/4": assert week >= 15, (id, "nhịp 3/4 chỉ từ tuần 15")
+    if ts == "3/4": assert week >= 11, (id, "nhịp 3/4 chỉ từ tuần 11")
+    # Cấp 4 (2026-10-08): 6/8 (phách = MÓC ĐƠN — "beats" đếm theo móc đơn), pedal, hairpin, rit. — chỉ từ tuần dạy
+    assert ts in ("4/4", "3/4", "2/4", "6/8"), (id, ts)
+    if ts == "6/8": assert week >= L4_68, (id, "nhịp 6/8 chỉ từ tuần", L4_68)
+    if any("ped" in n for n in allv): assert week >= L4_PED, (id, "pedal chỉ từ tuần", L4_PED)
+    if any("hairpin" in n for n in allv): assert week >= L4_HAIRPIN, (id, "hairpin chỉ từ tuần", L4_HAIRPIN)
+    if any("rit" in n for n in allv): assert week >= L4_TEMPO, (id, "rit. chỉ từ tuần", L4_TEMPO)
     if any(p[1:-1] for n in allv if not n.get("rest") for p in [n["pitch"]] + [a["pitch"] for a in n.get("also", [])]):
         assert week >= 16, (id, "phím đen chỉ từ tuần 16")
     for v in [notes] + ([d["lh"]] if lh else []):
@@ -204,7 +250,8 @@ S += [
  song("saints","When the Saints Go Marching In","Các thánh tiến bước","Thánh ca Mỹ (spiritual, traditional)",6,"RH",
   "mf R C4 E4 F4  G4:4  R C4 E4 F4  G4:4  R C4 E4 F4  G4:2 E4:2  C4:2 E4:2  D4:4  f R E4 E4 D4  C4:3 C4  E4:2 G4 G4  F4:4  E4 F4 G4:2  E4:2 C4:2  D4:4  C4:4",[0,4,8,12]),
  song("largo_new_world","Largo — New World Symphony","Khúc Largo (Thế giới mới)","Antonín Dvořák (1893)",7,"RH",
-  "p E4 G4 G4:2  E4 D4 C4:2  D4 E4 G4 E4  D4:4  E4 G4 G4:2  E4 D4 C4:2  D4 E4 D4 C4  C4:4",[0,4]),
+  # (2026-10-08) dấu luyến theo câu — bài LIỀN đầu tiên sau trò "Đàn liền" tuần 5
+  "p E4 G4 G4:2  (E4 D4 C4:2)  (D4 E4 G4 E4  D4:4)  E4 G4 G4:2  (E4 D4 C4:2)  (D4 E4 D4 C4)  C4:4",[0,4]),
  song("hot_cross_buns_lh","Hot Cross Buns (left hand)","Bánh nóng — tay trái","Dân ca Anh (traditional)",7,"LH",
   "f E3 D3 C3:2  p E3 D3 C3:2  mf C3:0.5 C3:0.5 C3:0.5 C3:0.5 D3:0.5 D3:0.5 D3:0.5 D3:0.5  f E3 D3 C3:2",[0,2]),
  song("mary_lamb_lh","Mary Had a Little Lamb (left hand)","Chú cừu nhỏ — tay trái","Dân ca Mỹ (traditional)",7,"LH",
@@ -212,7 +259,7 @@ S += [
  song("au_clair_lh","Au clair de la lune (left hand)","Dưới ánh trăng — tay trái","Dân ca Pháp (traditional)",7,"LH",
   "C3 C3 C3 D3  E3:2 D3:2  C3 E3 D3 D3  C3:4  C3 C3 C3 D3  E3:2 D3:2  C3 E3 D3 D3  C3:4",[0,4]),
  song("frere_jacques_easy","Frère Jacques","Kìa con bướm vàng","Dân ca Pháp (traditional)",8,"RH",
-  "f C4 D4 E4 C4  p C4 D4 E4 C4  f E4 F4 G4:2  p E4/3 F4/4 G4:2/5  f G4:0.5 A4:0.5 G4:0.5 F4:0.5 E4 C4  p G4:0.5 A4:0.5 G4:0.5 F4:0.5 E4 C4  f C4/2 G3/1 C4:2/2  p C4/2 G3/1 C4:2/2",[0,2,4,6],"A4"),
+  "f C4 D4 E4 C4  p C4 D4 E4 C4  f (E4 F4 G4:2)  p (E4/3 F4/4 G4:2/5)  f G4:0.5 A4:0.5 G4:0.5 F4:0.5 E4 C4  p G4:0.5 A4:0.5 G4:0.5 F4:0.5 E4 C4  f C4/2 G3/1 C4:2/2  p C4/2 G3/1 C4:2/2",[0,2,4,6],"A4"),
  song("london_bridge","London Bridge","Cầu London","Dân ca Anh (traditional)",8,"RH",
   "G4 A4 G4 F4  E4 F4 G4:2  D4 E4 F4:2  E4 F4 G4:2  G4 A4 G4 F4  E4 F4 G4:2  D4:2 G4:2  E4 C4:3",[0,4],"A4"),
  song("twinkle_easy","Twinkle Twinkle Little Star","Ngôi sao nhỏ","Dân ca Pháp \"Ah! vous dirai-je, maman\" (traditional)",8,"RH",
@@ -257,7 +304,16 @@ S += [
  song("school_drum","School Drum","Trống trường",ORIG,9,"RH",
   "mf C4 C4  G4:2  E4 E4  G4:2  F4 E4  D4 C4  D4:0.5 D4:0.5 E4  C4:2",[0,4],ts="2/4",arr=ORIG),
  song("ferry_song","Ferry Song","Đò qua sông",ORIG,9,"RH",
-  "p E4:0.5 F4:0.5 G4  E4:0.5 D4:0.5 C4  D4 E4  D4:2  E4:0.5 F4:0.5 G4  A4 G4  F4:0.5 E4:0.5 D4  C4:2",[0,4],"A4",ts="2/4",arr=ORIG),
+  "p (E4:0.5 F4:0.5 G4)  (E4:0.5 D4:0.5 C4)  D4 E4  D4:2  (E4:0.5 F4:0.5 G4  A4 G4)  (F4:0.5 E4:0.5 D4  C4:2)",[0,4],"A4",ts="2/4",arr=ORIG),
+]
+# ---- (2026-10-08, OWNER duyệt sau rà soát chuyên gia) xem trước THẾ SOL và NHỊP 3/4 sớm hơn
+S += [
+ # Tuần 10 — bài quen "Bánh nóng" ở THẾ SOL (chỉ Sol La Si = ngón 1 2 3), sau thẻ nốt Si: chuẩn bị tuần 14
+ song("hot_cross_buns_g","Hot Cross Buns (G position)","Bánh nóng — thế Sol","Dân ca Anh (traditional)",10,"RH",
+  "mf B4 A4 G4:2  B4 A4 G4:2  G4:0.5 G4:0.5 G4:0.5 G4:0.5 A4:0.5 A4:0.5 A4:0.5 A4:0.5  B4 A4 G4:2",[0,2],pos="G"),
+ # Tuần 11 — bài 3/4 ĐẦU TIÊN (thế Đô, chỉ nốt đen / trắng / trắng chấm): xích đu đung đưa "MỘT-hai-ba", LIỀN theo câu
+ song("swing_waltz","Swing Waltz","Xích đu",ORIG,11,"RH",
+  "mf (C4 D4 E4  G4:3)  (F4 E4 D4  E4:3)  p (C4 D4 E4  G4:2 E4)  (F4 E4 D4  C4:3)",[0,4],ts="3/4",arr=ORIG),
 ]
 # ---------------------------------------------------------------- CẤP 2 (tuần 11–21): hai tay, thế mới, phím đen, nhịp
 S += [
@@ -680,6 +736,185 @@ S += [
   "mf E5 D#5 E5  (C5:0.5 B4:0.5 A4:0.5 B4:0.5) C5  p (C5:0.5 B4:0.5 C5:0.5 B4:0.5) E5  A4:2 R",MUA_RAO),[0,4],pos="free",ts="3/4",arr=ORIG),
 ]
 
+# ---------------------------------------------------------------- CẤP 4 (tuần 32–43, OWNER duyệt 2026-10-08): gam Sol/Fa/Rê trưởng
+# & La thứ (luồn ngón cái / vắt ngón 3), hợp âm rải I–IV–V, bass Alberti, PEDAL (tuần 38), NHỊP 6/8 (tuần 39 — "beats" đếm theo
+# MÓC ĐƠN: móc đơn = 1, đen = 2, đen chấm = 3, trắng chấm = 6), HAIRPIN cresc/dim + thuật ngữ tốc độ & rit. (tuần 40).
+# Chỉ bài tự sáng tác (ghi rõ "phong cách …", KHÔNG gán cho nhạc sĩ) hoặc giai điệu public domain (dân ca Anh/Mỹ/Nga, Gruber, Dvořák).
+# Token mới: "cresc"/"dim" (hairpin mở ở nốt kế), hậu tố "]" (hết hairpin), "rit" (rit. ở nốt kế),
+# hậu tố "^" nhấn pedal · "%" đổi pedal ("nhả trước — nhấn sau") · "*" nhả pedal. Ngón ghi rõ ("/n") ở mọi bài gam / đổi thế.
+L4 = "Bài tự sáng tác cho app (piano-be-9)"
+CZERNY = "Bài tự sáng tác cho app (piano-be-9) — bài luyện ngón phong cách Czerny"
+CLEMENTI = "Bài tự sáng tác cho app (piano-be-9) — phong cách sonatina cổ điển (Clementi)"
+ARR4 = "Original simple arrangement for this app (Level 4: melody + left-hand accompaniment)"
+
+def scale(up, fu, fd):
+    """Gam một quãng tám đi lên rồi xuống (nốt đen, hai dấu luyến) — `fu`/`fd`: ngón lên / xuống."""
+    down = list(reversed(up))
+    a = " ".join(f"{p}/{f}" for p, f in zip(up, fu))
+    b = " ".join(f"{p}/{f}" for p, f in zip(down, fd))
+    return f"({a})  ({b})"
+
+G_RH = scale(["G4", "A4", "B4", "C5", "D5", "E5", "F#5", "G5"], [1, 2, 3, 1, 2, 3, 4, 5], [5, 4, 3, 2, 1, 3, 2, 1])
+G_LH = scale(["G2", "A2", "B2", "C3", "D3", "E3", "F#3", "G3"], [5, 4, 3, 2, 1, 3, 2, 1], [1, 2, 3, 1, 2, 3, 4, 5])
+F_RH = scale(["F4", "G4", "A4", "Bb4", "C5", "D5", "E5", "F5"], [1, 2, 3, 4, 1, 2, 3, 4], [4, 3, 2, 1, 4, 3, 2, 1])
+F_LH = scale(["F2", "G2", "A2", "Bb2", "C3", "D3", "E3", "F3"], [5, 4, 3, 2, 1, 3, 2, 1], [1, 2, 3, 1, 2, 3, 4, 5])
+D_RH = scale(["D4", "E4", "F#4", "G4", "A4", "B4", "C#5", "D5"], [1, 2, 3, 1, 2, 3, 4, 5], [5, 4, 3, 2, 1, 3, 2, 1])
+D_LH = scale(["D3", "E3", "F#3", "G3", "A3", "B3", "C#4", "D4"], [5, 4, 3, 2, 1, 3, 2, 1], [1, 2, 3, 1, 2, 3, 4, 5])
+AM_RH = scale(["A4", "B4", "C5", "D5", "E5", "F5", "G5", "A5"], [1, 2, 3, 1, 2, 3, 4, 5], [5, 4, 3, 2, 1, 3, 2, 1])
+AMH_RH = scale(["A4", "B4", "C5", "D5", "E5", "F5", "G#5", "A5"], [1, 2, 3, 1, 2, 3, 4, 5], [5, 4, 3, 2, 1, 3, 2, 1])
+AM_LH = scale(["A2", "B2", "C3", "D3", "E3", "F3", "G3", "A3"], [5, 4, 3, 2, 1, 3, 2, 1], [1, 2, 3, 1, 2, 3, 4, 5])
+AMH_LH = scale(["A2", "B2", "C3", "D3", "E3", "F3", "G#3", "A3"], [5, 4, 3, 2, 1, 3, 2, 1], [1, 2, 3, 1, 2, 3, 4, 5])
+
+# Bass Alberti (thế Đô tay trái mở rộng tới La3 — quãng 6): I · IV · V, mỗi ô 8 móc đơn LIỀN
+AL_I = "(C3:0.5/5 G3:0.5/1 E3:0.5/3 G3:0.5/1 C3:0.5/5 G3:0.5/1 E3:0.5/3 G3:0.5/1)"
+AL_IV = "(C3:0.5/5 A3:0.5/1 F3:0.5/2 A3:0.5/1 C3:0.5/5 A3:0.5/1 F3:0.5/2 A3:0.5/1)"
+AL_V = "(B2:0.5/5 G3:0.5/1 D3:0.5/3 G3:0.5/1 B2:0.5/5 G3:0.5/1 D3:0.5/3 G3:0.5/1)"
+# Hợp âm rải (broken chords) trong một thế tay: I – IV – V – I, mỗi ô "rải lên–xuống" rồi nốt trắng
+ARP_C = ("(C4:0.5/1 E4:0.5/3 G4:0.5/5 E4:0.5/3) C4:2/1  (C4:0.5/1 F4:0.5/3 A4:0.5/5 F4:0.5/3) C4:2/1  "
+         "(B3:0.5/1 D4:0.5/2 G4:0.5/5 D4:0.5/2) B3:2/1  (C4:0.5/1 E4:0.5/3 G4:0.5/5 E4:0.5/3) C4:2/1")
+ARP_G = ("(G4:0.5/1 B4:0.5/3 D5:0.5/5 B4:0.5/3) G4:2/1  (G4:0.5/1 C5:0.5/3 E5:0.5/5 C5:0.5/3) G4:2/1  "
+         "(F#4:0.5/1 A4:0.5/2 D5:0.5/5 A4:0.5/2) F#4:2/1  (G4:0.5/1 B4:0.5/3 D5:0.5/5 B4:0.5/3) G4:2/1")
+ARP_F = ("(F4:0.5/1 A4:0.5/3 C5:0.5/5 A4:0.5/3) F4:2/1  (F4:0.5/1 Bb4:0.5/3 D5:0.5/5 Bb4:0.5/3) F4:2/1  "
+         "(E4:0.5/1 G4:0.5/2 C5:0.5/5 G4:0.5/2) E4:2/1  (F4:0.5/1 A4:0.5/3 C5:0.5/5 A4:0.5/3) F4:2/1")
+
+def ped_bars(chords, shapes, beats):
+    """Bè tay trái mỗi ô MỘT hợp âm, ĐỔI PEDAL mỗi ô (nhả trước — nhấn sau): ô đầu nhấn, ô cuối nhả."""
+    out = []
+    for k, c in enumerate(chords):
+        mark = "^" if k == 0 else "*" if k == len(chords) - 1 else "%"
+        out.append(f"{shapes[c]}:{beats}{mark}")
+    return "  ".join(out)
+
+PED_SHAPES = {"C": I, "F": IV, "G": V}   # hợp âm I · IV · V tay trái của tuần 22 (thế Đô)
+# "Đêm thánh vô cùng" — giai điệu y hệt bài tuần 24 (Gruber 1818); 23 ô: I I I I V V I I IV IV I I IV IV I I V V I I I V I
+SILENT_RH = ("p (G4:1.5/2 A4:0.5/3 G4/2)  E4:3/1  (G4:1.5/2 A4:0.5/3 G4/2)  E4:3/1  D5:2/5 D5/5  B4:3/3  C5:2/4 C5/4  G4:3/1  "
+  "mf A4:2/3 A4/3  C5:1.5/5 B4:0.5/4 A4/3  G4:1.5/2 A4:0.5/3 G4/2  E4:3/1  A4:2/3 A4/3  C5:1.5/5 B4:0.5/4 A4/3  G4:1.5/2 A4:0.5/3 G4/2  E4:3/1  "
+  "p D5:2/3 D5/3  F5:1.5/5 D5:0.5/3 B4/1  C5:3/2  E5:3/4  C5:1.5/4 G4:0.5/1 E4/3  G4:1.5/5 F4:0.5/4 D4/2  C4:3/1")
+# Khúc Largo — giai điệu y hệt bài tuần 7 (Dvořák 1893); 8 ô: I I V V I I V I
+LARGO_RH = "p E4 G4 G4:2  (E4 D4 C4:2)  (D4 E4 G4 E4  D4:4)  E4 G4 G4:2  (E4 D4 C4:2)  (D4 E4 D4 C4)  C4:4"
+
+S += [
+ # Tuần 32 — gam Sol trưởng (Fa♯), luồn ngón cái / vắt ngón 3; bài luyện ngón chạy gam trên hợp âm I – IV – V thế Sol tay trái
+ song("scale_g_rh","G major scale (right hand)","Gam Sol trưởng — tay phải","Bài tập (traditional)",32,"RH","mf " + G_RH,[0,2],pos="free",arr=L4),
+ song("scale_g_lh","G major scale (left hand)","Gam Sol trưởng — tay trái","Bài tập (traditional)",32,"LH","mf " + G_LH,[0,2],pos="free",arr=L4),
+ song("etude_g","Etude in G (Czerny-style)","Bài luyện ngón Sol trưởng",L4,32,"BOTH",
+  "mf (G4:0.5/1 A4:0.5/2 B4:0.5/3 C5:0.5/1 D5:0.5/2 E5:0.5/3 F#5:0.5/4 G5:0.5/5)  (F#5:0.5/4 E5:0.5/3 D5:0.5/2 C5:0.5/1 B4:2/3)  "
+  "(C5/4 B4/3 A4/2 D5/5)  B4:2/3 G4:2/1  "
+  "p (G4:0.5/1 A4:0.5/2 B4:0.5/3 C5:0.5/1 D5:0.5/2 E5:0.5/3 F#5:0.5/4 G5:0.5/5)  (F#5:0.5/4 E5:0.5/3 D5:0.5/2 C5:0.5/1 B4:2/3)  "
+  "mf (A4/2 C5/4 B4/3 A4/2)  G4:4/1",[0,4],pos="free",
+  lh="G2+B2+D3:4/5+3+1  G2+B2+D3:4/5+3+1  G2+C3:2/5+2 A2+D3:2/4+1  G2+B2+D3:4/5+3+1  "
+     "G2+B2+D3:4/5+3+1  G2+B2+D3:4/5+3+1  G2+C3:2/5+2 A2+D3:2/4+1  G2+B2+D3:4/5+3+1",lhpos="free",arr=CZERNY),
+ # Tuần 33 — gam Fa trưởng (Si♭ — ngón 4 tay phải), bài Fa trưởng thế Fa (Fa1 Sol2 La3 Si♭4 Đô5) + hợp âm I – IV – V thế Fa tay trái
+ song("scale_f_rh","F major scale (right hand)","Gam Fa trưởng — tay phải","Bài tập (traditional)",33,"RH","mf " + F_RH,[0,2],pos="free",arr=L4),
+ song("scale_f_lh","F major scale (left hand)","Gam Fa trưởng — tay trái","Bài tập (traditional)",33,"LH","mf " + F_LH,[0,2],pos="free",arr=L4),
+ song("falling_leaves","Falling Leaves","Lá vàng rơi",L4,33,"BOTH",
+  "mf (F4/1 G4/2 A4/3 Bb4/4)  C5:2/5 A4:2/3  Bb4/4 G4/2 C5/5 Bb4/4  A4:4/3  p (Bb4/4 C5/5 Bb4/4 A4/3)  A4:2/3 F4:2/1  mf (G4/2 A4/3 Bb4/4 G4/2)  F4:4/1",
+  [0,4],pos="free",
+  lh="F2+A2+C3:4/5+3+1  F2+A2+C3:4/5+3+1  G2+C3:4/4+1  F2+A2+C3:4/5+3+1  F2+Bb2:4/5+2  F2+A2+C3:4/5+3+1  G2+C3:4/4+1  F2+A2+C3:4/5+3+1",
+  lhpos="free",arr=L4),
+ # Tuần 34 — gam Rê trưởng (Fa♯, Đô♯) từng tay; gam Sol trưởng HAI TAY CÙNG LÚC (luồn ngón ở hai chỗ khác nhau!); hành khúc thế Rê
+ song("scale_d_rh","D major scale (right hand)","Gam Rê trưởng — tay phải","Bài tập (traditional)",34,"RH","mf " + D_RH,[0,2],pos="free",arr=L4),
+ song("scale_d_lh","D major scale (left hand)","Gam Rê trưởng — tay trái","Bài tập (traditional)",34,"LH","mf " + D_LH,[0,2],pos="free",arr=L4),
+ song("scale_g_both","G major scale (hands together)","Gam Sol trưởng — hai tay","Bài tập (traditional)",34,"BOTH","mf " + G_RH,[0,2],pos="free",
+  lh=G_LH,lhpos="free",arr=L4),
+ song("march_d","March in D","Hành khúc Rê trưởng",L4,34,"BOTH",
+  "f D4 F#4 A4:2  G4 E4 A4:2  F#4 D4 E4 F#4  E4:4  mf D4 F#4 A4:2  G4 E4 F#4 G4  f A4 G4 F#4 E4  D4:4",[0,4],pos="D",
+  lh="D3+F#3+A3:4/5+3+1  E3+A3:4/4+1  D3+F#3+A3:4/5+3+1  E3+A3:4/4+1  D3+F#3+A3:4/5+3+1  D3+G3:4/5+2  E3+A3:4/4+1  D3+F#3+A3:4/5+3+1",
+  lhpos="free",arr=L4),
+ # Tuần 35 — hợp âm rải I – IV – V ở Đô, Sol, Fa trưởng (tay phải rải trong một thế, tay trái giữ nốt gốc)
+ song("arpeggio_c","Broken chords in C (I–IV–V)","Hợp âm rải Đô trưởng","Bài tập (traditional)",35,"BOTH","mf " + ARP_C + "  p " + ARP_C,[0,4],pos="free",
+  lh="C3:4 F3:4 G3:4 C3:4  C3:4 F3:4 G3:4 C3:4",arr=L4),
+ song("arpeggio_g","Broken chords in G (I–IV–V)","Hợp âm rải Sol trưởng","Bài tập (traditional)",35,"BOTH","mf " + ARP_G + "  p " + ARP_G,[0,4],pos="free",
+  lh="G2:4 C3:4 D3:4 G2:4  G2:4 C3:4 D3:4 G2:4",lhpos="G",arr=L4),
+ song("arpeggio_f","Broken chords in F (I–IV–V)","Hợp âm rải Fa trưởng","Bài tập (traditional)",35,"BOTH","mf " + ARP_F + "  p " + ARP_F,[0,4],pos="free",
+  lh="F2:4/5 Bb2:4/2 C3:4/1 F2:4/5  F2:4/5 Bb2:4/2 C3:4/1 F2:4/5",lhpos="free",arr=L4),
+ # Tuần 36 — bass Alberti (Đô–Sol–Mi–Sol): bài tập tay trái + sonatina nhỏ phong cách cổ điển (tay phải dời thế ở ô 5 và ô 7)
+ song("alberti_lh","Alberti bass (left hand)","Bass Alberti — tay trái","Bài tập (traditional)",36,"LH",
+  f"mf {AL_I}  {AL_IV}  {AL_V}  C3+E3+G3:4/5+3+1  p {AL_I}  {AL_IV}  {AL_V}  C3+E3+G3:4/5+3+1",[0,4],pos="free",arr=L4),
+ song("sonatina_c","Little Sonatina in C (Clementi-style)","Sonatina nhỏ (phong cách Clementi)",L4,36,"BOTH",
+  "f (C4/1 E4/3 G4:2/5)  G4/5 E4/3 C4/1 E4/3  D4/2 G4/5 F4/4 D4/2  E4:2/3 C4:2/1  p (F4/3 A4/5 G4/4 F4/3)  E4/2 G4/4 E4/2 C4/1  mf D4/2 E4/3 F4/4 D4/2  C4:4/1",
+  [0,4],pos="free",lh=f"{AL_I}  {AL_I}  {AL_V}  {AL_I}  {AL_IV}  {AL_I}  {AL_V}  C3+E3+G3:4/5+3+1",lhpos="free",arr=CLEMENTI),
+ # Tuần 37 — CỦNG CỐ: gam Fa hai tay, Minuet nhỏ Fa trưởng (3/4, thế Fa, tay trái quãng 5)
+ song("scale_f_both","F major scale (hands together)","Gam Fa trưởng — hai tay","Bài tập (traditional)",37,"BOTH","mf " + F_RH,[0,2],pos="free",
+  lh=F_LH,lhpos="free",arr=L4),
+ song("minuet_f","Little Minuet in F","Minuet nhỏ Fa trưởng",L4,37,"BOTH",
+  "mf (F4/1 A4/3 C5/5)  (Bb4/4 A4/3 G4/2)  (A4/3 F4/1 C5/5)  G4:3/2  p (F4/1 A4/3 C5/5)  (Bb4/4 C5/5 Bb4/4)  mf (C5/5 Bb4/4 G4/2)  F4:3/1",
+  [0,4],pos="free",
+  lh="F2+C3:3/5+1  G2+C3:3/4+1  F2+C3:3/5+1  G2+C3:3/4+1  F2+C3:3/5+1  F2+Bb2:3/5+2  G2+C3:3/4+1  F2+C3:3/5+1",lhpos="free",ts="3/4",arr=L4),
+ # Tuần 38 — PEDAL: giai điệu quen (tuần 24 / tuần 7) + tay trái hợp âm I · IV · V (tuần 22), ĐỔI PEDAL MỖI Ô
+ song("silent_night_ped","Silent Night (hands together, with pedal)","Đêm thánh vô cùng — hai tay, pedal","Franz Xaver Gruber (1818)",38,"BOTH",
+  SILENT_RH,[0,4,8,12,16,20],pos="free",lh=ped_bars("CCCCGGCCFFCCFFCCGGCCCGC",PED_SHAPES,3),ts="3/4",arr=ARR4),
+ song("largo_ped","Largo — New World Symphony (hands together, with pedal)","Khúc Largo — hai tay, pedal","Antonín Dvořák (1893)",38,"BOTH",
+  LARGO_RH,[0,4],lh=ped_bars("CCGGCCGC",PED_SHAPES,4),arr=ARR4),
+ # Tuần 39 — NHỊP 6/8 ("MỘT-hai-ba BỐN-năm-sáu"; phách = móc đơn): thuyền đưa (thế Đô, tay trái đưa Đô–Sol) · Row your boat
+ song("boat_song_68","Boat Song (6/8)","Thuyền đưa — nhịp 6/8",L4,39,"BOTH",
+  "mf (E4:2 F4 G4:3)  (G4:2 F4 E4:3)  D4:2 E4 F4:2 D4  E4:3 D4:3  p (E4:2 F4 G4:3)  (G4:2 F4 E4:2 D4)  E4:3 D4:3  C4:6",[0,4],
+  lh="C3:3 G3:3  C3:3 G3:3  D3:3 G3:3  D3:3 G3:3  C3:3 G3:3  C3:3 G3:3  D3:3 G3:3  C3+G3:6",ts="6/8",arr=L4),
+ song("row_boat","Row, Row, Row Your Boat","Chèo thuyền (Row, row, row your boat)","Bài hát thiếu nhi Mỹ (traditional, thế kỷ 19)",39,"RH",
+  "mf C4:3/1 C4:3/1  C4:2/1 D4/2 E4:3/3  E4:2/3 D4/2 E4:2/3 F4/4  G4:6/5  f C5/4 C5/4 C5/4 G4/1 G4/1 G4/1  E4/3 E4/3 E4/3 C4/1 C4/1 C4/1  "
+  "mf G4:2/5 F4/4 E4:2/3 D4/2  C4:6/1",[0,4],pos="free",ts="6/8",arr=E),
+ # Tuần 40 — TO DẦN / NHỎ DẦN (hairpin) + thuật ngữ tốc độ (Andante, Allegro) + rit.
+ song("waves_andante","Waves (Andante)","Sóng biển",L4,40,"BOTH",
+  "p cresc (C4 D4 E4 F4)  G4:2] E4:2  mf dim (F4 E4 D4 E4)  p C4:4]  cresc (E4 F4 G4 F4)  f G4:4]  dim rit (F4 E4 D4 E4)  p C4:4]",[0,4],
+  lh="C3:2 G3:2  C3:2 G3:2  D3:2 G3:2  C3:2 G3:2  C3:2 G3:2  C3:2 G3:2  D3:2 G3:2  C3+G3:4",arr=L4,tempo="Andante"),
+ song("gallop_allegro","Galloping Pony (Allegro)","Ngựa con phi nước kiệu",L4,40,"RH",
+  "mf G4:0.5' A4:0.5' B4' G4' D5'  C5' B4' A4:2  B4:0.5' C5:0.5' D5' C5' B4'  A4' G4' A4:2  "
+  "cresc G4:0.5' A4:0.5' B4' G4' D5'  C5' D5' f B4:2]  rit B4' A4' G4' A4'  G4:4",[0,4],pos="G",arr=L4,tempo="Allegro"),
+ # Tuần 41 — gam La thứ tự nhiên (ô 1–4) rồi HÒA ÂM (Sol♯, ô 5–8); Korobeiniki (dân ca Nga, giai điệu "Tetris") giọng La thứ
+ song("scale_am_rh","A minor scale, natural & harmonic (right hand)","Gam La thứ — tay phải","Bài tập (traditional)",41,"RH",
+  "mf " + AM_RH + "  p " + AMH_RH,[0,2,4,6],pos="free",arr=L4),
+ song("scale_am_lh","A minor scale, natural & harmonic (left hand)","Gam La thứ — tay trái","Bài tập (traditional)",41,"LH",
+  "mf " + AM_LH + "  p " + AMH_LH,[0,2,4,6],pos="free",arr=L4),
+ # Tay phải: thế La (La1 Si2 Đô3 Rê4 Mi5) → ô 5 thế Rê cao (Rê1 … La5, dời tay trong dấu lặng) → ô 6 ngón cái duỗi xuống Đô cao
+ # (trong nốt Mi dài) → ô 7 ngón 2 vắt qua về thế La
+ song("korobeiniki","Korobeiniki (Russian folk song)","Korobeiniki (dân ca Nga)","Dân ca Nga (traditional)",41,"BOTH",
+  "mf E5/5 B4:0.5/2 C5:0.5/3 D5/4 C5:0.5/3 B4:0.5/2  A4/1 A4:0.5/1 C5:0.5/3 E5/5 D5:0.5/4 C5:0.5/3  B4:1.5/2 C5:0.5/3 D5/4 E5/5  C5/3 A4/1 A4:2/1  "
+  "f R:0.5 D5/1 F5:0.5/3 A5/5 G5:0.5/4 F5:0.5/3  E5:1.5/2 C5:0.5/1 E5/3 D5:0.5/2 C5:0.5/1  mf B4/2 B4:0.5/2 C5:0.5/3 D5/4 E5/5  C5/3 A4/1 A4:2/1",
+  [0,4],pos="free",
+  lh="B2+E3:4/4+1  A2+C3+E3:4/5+3+1  B2+E3:4/4+1  A2+C3+E3:4/5+3+1  A2+D3:4/5+2  A2+C3+E3:4/5+3+1  B2+E3:4/4+1  A2+C3+E3:4/5+3+1",
+  lhpos="free",arr=ARR4),
+ # Tuần 42 — CỦNG CỐ: Greensleeves (dân ca Anh, 6/8, La thứ có Sol♯/Fa♯) — nhịp lấy đà 1 móc đơn; hairpin, rit.
+ song("greensleeves","Greensleeves (English folk song)","Greensleeves (dân ca Anh)","Dân ca Anh (traditional, thế kỷ 16)",42,"BOTH",
+  "mf R:5 A4/1  C5:2/2 D5/3 E5:1.5/4 F5:0.5/5 E5/4  D5:2/5 B4/3 G4:1.5/1 A4:0.5/2 B4/3  C5:2/4 A4/2 A4:1.5/2 G#4:0.5/1 A4/2  B4:2/5 G#4/3 E4:2/1 A4/4  "
+  "p cresc C5:2/2 D5/3 E5:1.5/4 F5:0.5/5 E5/4]  dim D5:2/5 B4/3 G4:1.5/1 A4:0.5/2 B4/3]  rit C5:1.5/5 B4:0.5/4 A4/3 G#4:1.5/2 F#4:0.5/1 G#4/2  A4:6/3",
+  [0,5],pos="free",
+  lh="R:6  A2+E3:6/5+1  G2+D3:6/5+1  A2+E3:6/5+1  B2+E3:6/4+1  A2+E3:6/5+1  G2+D3:6/5+1  A2+E3:3/5+1 B2+E3:3/4+1  A2+E3:6/5+1",
+  lhpos="free",ts="6/8",arr=ARR4,tempo="Andante"),
+]
+
+# Cấp 4 — DÂN CA VIỆT NAM có ĐỆM TAY TRÁI (2026-10-08): giai điệu tay phải ĐÚNG TỪNG NỐT như bản ký âm (≥ 2 nguồn độc lập,
+# bỏ nốt hoa mỹ như các bản ký âm; dây nối → đàn lại nốt như các bài dân ca khác), tay trái đệm quãng 5 (âm hưởng trống / đàn bầu).
+# Đối chiếu tự động: tests/level4.test.ts (RESEARCH_L4).
+# · Đi cấy (dân ca Thanh Hóa, "Tổ khúc múa đèn"): SGK Âm nhạc & Mĩ thuật 6 (Tiết 12) = SGK Âm nhạc 7 Cánh Diều (tr. 10), khớp ô 1–19;
+#   ô cuối theo SGK6 (kết ở Sol). Tay phải: bàn tay ngũ cung Rê1 Mi2 Sol3 La4 Si5 (Fa♯ ngón 2 ở ô 7–8) → ô 9 (trong dấu lặng)
+#   thế Sol (Sol1 La2 Si3 Rê cao5) → ô 19 (sau nốt Si dài) về bàn tay ngũ cung.
+# · Hò ba lí (dân ca Quảng Nam): SGK Âm nhạc & Mĩ thuật 8 (Tiết 11) = SGK Âm nhạc 6 Chân trời sáng tạo (trừ ô 23: theo SGK8 + bản
+#   vnguitar — Sol). Tay phải hai bàn tay ngũ cung: Sol1 La2 Đô3 Rê4 Mi5 và Rê1 Fa2 Sol3 La4 Đô5 (đổi ở nốt dài / dấu lặng).
+FOLK_L4 = "Ký âm đơn giản cho app từ các bản ký âm dân ca phổ biến; tay phải giai điệu, tay trái đệm quãng 5 (Cấp 4)"
+S += [
+ song("di_cay","Di Cay (Vietnamese folk song)","Đi cấy (dân ca Thanh Hóa)","Dân ca Thanh Hóa",37,"BOTH",
+  "mf R:1 G4/3  D4:0.5/1 D4:0.25/1 E4:0.25/2 D4:0.5/1 D4:0.5/1  G4/3 G4/3  D4:0.5/1 D4:0.25/1 E4:0.25/2 D4:0.5/1 D4:0.5/1  "
+  "G4:0.5/3 G4:0.5/3 G4:0.5/3 D4:0.5/1  D4:0.5/1 G4:0.25/3 A4:0.25/4 B4:0.5/5 B4:0.25/5 A4:0.25/4  G4/3 G4:0.5/3 A4:0.5/4  "
+  "G4:0.5/3 A4:0.5/4 F#4:0.5/2 F#4:0.5/2  G4:0.5/3 A4:0.5/4 F#4:0.25/2 G4:0.25/3 F#4:0.5/2  G4:0.5/3 R:0.5 B4:0.75/3 A4:0.25/2  "
+  "p G4/1 B4:0.5/3 A4:0.25/2 B4:0.25/3  D5/5 B4:0.5/3 D5:0.5/5  B4/3 A4:0.5/2 B4:0.25/3 A4:0.25/2  G4:0.5/1 R:0.5 B4:0.5/3 D5:0.5/5  "
+  "B4/3 A4:0.5/2 B4:0.25/3 A4:0.25/2  G4:0.75/1 B4:0.25/3 G4:0.5/1 G4:0.5/1  A4:2/2  "
+  "mf R:0.5 G4:0.5/1 A4:0.5/2 A4:0.5/2  D5:0.5/5 B4:1.5/3  A4/4 A4:0.25/4 G4:0.25/3 E4:0.25/2 G4:0.25/3  E4:0.5/2 G4:1.5/3",
+  [0,5,9,13,17],pos="free",
+  lh="R:2  " + "  ".join(["G2+D3:2"] * 6) + "  A2+D3:2  A2+D3:2  " + "  ".join(["G2+D3:2"] * 7) + "  A2+D3:2  " + "  ".join(["G2+D3:2"] * 4),
+  lhpos="G",ts="2/4",arr=FOLK_L4),
+ song("ho_ba_li","Ho Ba Li (Vietnamese folk song)","Hò ba lí (dân ca Quảng Nam)","Dân ca Quảng Nam",42,"BOTH",
+  "mf R:1 R:0.5 C5:0.5/3  D5:0.5/4 E5:0.5/5 D5:0.5/4 C5:0.5/3  G4/1 A4:0.5/2 G4:0.25/1 A4:0.25/2  C5:1.5/3 G4:0.5/3  "
+  "D4:1.5/1 A4:0.5/4  A4:0.5/4 C5:0.5/5 F4/2  G4/3 A4/4  A4:0.5/4 C5:0.5/5 F4/2  G4:2/3  G4:0.5/3 R:0.5 C5/3  "
+  "p D5/4 D5:0.5/4 C5:0.5/3  C5:0.5/3 E5:0.5/5 D5:0.5/4 C5:0.5/3  D5/4 R:0.5 C5:0.5/3  D5:0.5/4 E5:0.5/5 D5:0.5/4 C5:0.5/3  "
+  "G4:1.5/1 A4:0.5/2  C5:1.5/3 G4:0.5/3  D4/1 R:0.5 A4:0.5/4  A4:0.5/4 C5:0.5/5 F4/2  G4/3 A4/4  A4:0.5/4 C5:0.5/5 F4/2  G4:2/3  "
+  "f G4:0.5/3 R:0.5 C5:0.5/3 E5:0.5/5  D5:0.5/4 C5:0.5/3 D5/4  G4:0.5/1 R:0.5 C5:0.5/3 D5:0.5/4  E5:0.5/5 R:0.5 D5:0.5/4 C5:0.5/3  "
+  "mf A4/2 C5:0.5/3 E5:0.5/5  D5:0.5/4 D5/4 E5:0.5/5  D5/4 C5:0.5/3 D5:0.5/4  E5:0.5/5 D5:0.5/4 G4:0.5/1 A4:0.5/2  C5:2/3  C5/3 R",
+  [0,4,10,16,21,25],pos="free",
+  lh="R:2  " + "  ".join(["C3+G3:2"] * 3) + "  " + "  ".join(["D3+G3:2"] * 5) + "  " + "  ".join(["C3+G3:2"] * 7) + "  "
+     + "  ".join(["D3+G3:2"] * 5) + "  " + "  ".join(["C3+G3:2"] * 10),
+  ts="2/4",arr=FOLK_L4),
+]
+
 # Bài Việt Nam (OWNER 2026-10-06) — mục "🇻🇳 Bài Việt Nam" của Thư viện:
 #   vn = "folk"   : dân ca Việt Nam
 #   vn = "lyrics" : giai điệu nước ngoài (public domain) mà trẻ em Việt Nam quen hát lời Việt
@@ -687,7 +922,8 @@ S += [
 #   aka           : tên Việt quen gọi khác (CHỈ tên — không có lời bài hát)
 VN_FOLK = {"bac_kim_thang", "inh_la_oi", "ly_cay_bong", "ly_cay_da", "ly_ngua_o", "xoe_hoa",
            "co_la", "trong_com", "beo_dat_may_troi", "nguoi_oi_nguoi_o_dung_ve", "ly_cay_xanh", "ly_con_sao",
-           "mua_roi", "ngay_mua_vui", "ga_gay"}
+           "mua_roi", "ngay_mua_vui", "ga_gay",
+           "di_cay", "ho_ba_li"}  # Cấp 4 (2026-10-08)
 VN_COMPOSED = {"xuan_va_tuoi_tre", "dem_thu", "con_thuyen_khong_ben"}
 VN_LYRICS = {
  "frere_jacques_easy": None, "frere_jacques_minor": None,          # "Kìa con bướm vàng" (đã là tên chính)
