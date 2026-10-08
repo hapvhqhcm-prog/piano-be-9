@@ -39,3 +39,34 @@ export function loadMicLog(store: KV | null = kv()): Record<string, unknown> | n
     return null;
   }
 }
+
+/** Nhật ký "micro tự tăng độ nhạy" trong buổi học (micAutoSens.ts) — vài lần gần nhất, cho phụ huynh / người hỗ trợ xem. */
+export const MIC_AUTO_KEY = 'piano-be-9:mic-auto';
+const KEEP_AUTO = 5;
+
+export interface AutoSensEntry {
+  at: string;
+  from: string;
+  to: string;
+  heard: number;
+  missed: number;
+}
+
+export function saveAutoSens(e: AutoSensEntry, store: KV | null = kv()): void {
+  if (!store) return;
+  try {
+    store.setItem(MIC_AUTO_KEY, JSON.stringify([...loadAutoSens(store), e].slice(-KEEP_AUTO)));
+  } catch {
+    /* đầy / bị chặn — bỏ qua */
+  }
+}
+
+export function loadAutoSens(store: KV | null = kv()): AutoSensEntry[] {
+  if (!store) return [];
+  try {
+    const v = JSON.parse(store.getItem(MIC_AUTO_KEY) ?? '[]') as unknown;
+    return Array.isArray(v) ? v.filter((x): x is AutoSensEntry => !!x && typeof x === 'object' && typeof (x as AutoSensEntry).to === 'string') : [];
+  } catch {
+    return [];
+  }
+}

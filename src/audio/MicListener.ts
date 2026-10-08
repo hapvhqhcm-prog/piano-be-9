@@ -1,6 +1,7 @@
 import type { AudioEngine, EngineState } from './AudioEngine';
 import { analyzeChord, CHORD_FRAME, CHORD_READY_AFTER, type ChordResult } from './chordVerify';
 import { MicAnalyzer, type AppSound, type Sensitivity } from './micAnalyzer';
+import { SensitivityAdvisor, type AutoSensChange } from './micAutoSens';
 import type { HeardNote, PitchResult } from './pitchDetect';
 
 /**
@@ -60,6 +61,8 @@ export interface MicStats {
   notes: number;
   /** Số khung bỏ qua vì app đang phát tiếng */
   appFrames: number;
+  /** Số lần "suýt nghe" (tiếng có cao độ rõ nhưng dưới ngưỡng — đàn khẽ quá với độ nhạy đang dùng) */
+  nearMisses: number;
 }
 
 /** Tùy chọn xin micro: tắt mọi xử lý giọng nói (giữ nguyên tiếng đàn). voiceIsolation: Safari/Chrome mới. */
@@ -129,6 +132,15 @@ export class MicListener {
   private onsetListeners = new Set<(atCtxTime: number) => void>();
   private frameListeners = new Set<(f: MicFrame) => void>();
   private stateListeners = new Set<(s: MicState) => void>();
+  private autoSensListeners = new Set<(c: AutoSensChange) => void>();
+  private advisor = new SensitivityAdvisor();
+  /**
+   * Tự tăng độ nhạy MỘT bậc khi bé đàn khẽ nhiều lần không nghe được (micAutoSens.ts). Màn "Cài micro" tắt đi
+   * trong lúc kiểm tra (phụ huynh chỉnh tay / bài 5 nốt tự chỉnh).
+   */
+  autoSensitivity = true;
+  /** App đang đọc to (giọng đọc không đi qua AudioEngine) → không tính "suýt nghe". App gán = speechBusy. */
+  externalBusy: () => boolean = () => false;
   private _state: MicState = 'off';
   /** Tăng mỗi lần dừng — để start() đang chờ getUserMedia / hẹn giờ cũ biết là đã bị hủy */
   private gen = 0;
@@ -172,7 +184,7 @@ export class MicListener {
   }
 
   private static emptyStats(): MicStats {
-    return { frames: 0, maxGapMs: 0, slowGaps: 0, onsets: 0, notes: 0, appFrames: 0 };
+    return { frames: 0, maxGapMs: 0, slowGaps: 0, onsets: 0, notes: 0, appFrames: 0, nearMisses: 0 };
   }
 
   /** Luồng micro đang mở (null khi tắt) — recorder.ts ghi "Nghe lại con đàn" từ đây (cùng luồng, không ảnh hưởng nhận nốt). */
@@ -189,6 +201,12 @@ export class MicListener {
   trackInfo(): MicTrackInfo | null {
     const tr = this.stream?.getAudioTracks()[0];
     return tr ? readTrackInfo(tr, this.usedFallback) : null;
+  }
+
+  /** Micro vừa TỰ tăng độ nhạy (một bậc) — App lưu Cài đặt, ghi nhật ký, báo phụ huynh. */
+  onAutoSensitivity(fn: (c: AutoSensChange) => void): () => void {
+    this.autoSensListeners.add(fn);
+    return () => this.autoSensListeners.delete(fn);
   }
 
   /** Thống kê từ lần bật micro gần nhất. */
@@ -392,6 +410,7 @@ export class MicListener {
     // KHÔNG nối ra loa → không có tiếng hú
     this.source.connect(this.analyser);
     this.analyzer.reset(false);
+    this.advisor.reset();
     this._stats = MicListener.emptyStats();
     this.lastTickAt = -1;
     this.lastOnsetAt = -1;
@@ -497,6 +516,18 @@ export class MicListener {
       const n = f.note;
       st.notes++;
       this.noteListeners.forEach((fn) => fn(n));
+    }
+    // Chỉ lúc có màn đang chờ nghe nốt, app im, không đọc to
+    if (this.noteListeners.size && app === 'quiet' && (f.note || f.nearMiss) && !this.externalBusy()) {
+      if (f.nearMiss) {
+        st.nearMisses++;
+        this.advisor.nearMiss();
+      } else this.advisor.heard();
+      const c = this.autoSensitivity ? this.advisor.advise(this.sensitivity) : null;
+      if (c) {
+        this.sensitivity = c.to;
+        this.autoSensListeners.forEach((fn) => fn(c));
+      }
     }
   }
 

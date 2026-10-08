@@ -592,3 +592,17 @@ Phụ huynh → Nâng cao (hoặc thẻ Cài micro) → 🩺 Kiểm tra iPad. B�
   - Sổ sticker có mục "🏆 Thử thách": cúp từng tuần và chuỗi tuần liền. Vẫn giữ nguyên sau khi gộp dữ liệu.
 - Buổi học được tải sẵn sớm hơn (300 ms sau khi màn chính hiện).
 - 1359 test; compat iPadOS 15+; e2e A–E qua.
+
+## 30. Micro nhạy hơn với tiếng đàn nhẹ (iPad thật, 2026-10-08)
+- Phụ huynh báo: "phải đánh thật to mới nghe được (ví dụ nốt đô)". Chẩn đoán từ iPad thật: iPadOS 26.6, 48 kHz, chưa từng chạy Kiểm tra 5 nốt.
+- Nguyên nhân chính: ngưỡng tối thiểu cố định 0.0008 (≈ −62 dBFS) áp cho mọi mức độ nhạy. Tiếng đàn nhẹ thu được trên iPad (mic thô, đã tắt xử lý giọng) chỉ khoảng −60…−66 dBFS nên bị chặn, và chọn "Vừa" hay "Cao" đều không đổi gì.
+- Đã sửa:
+  - Ngưỡng tối thiểu theo từng mức độ nhạy. Hệ số đổi từ 5/3/2 thành 5/2.2/1.6.
+  - Thêm cách nhận nốt mới theo cao độ, không cần tiếng to dần lên.
+  - Không còn báo nhầm nốt Đô2 khi đánh nhẹ lúc nốt trước còn ngân.
+  - Không còn báo trùng một nốt khi tiếng đàn lơ lửng sát ngưỡng.
+  - Khi app tự đo tiếng ồn phòng lúc mở micro, tiếng ồn đột ngột không làm việc đo dừng sớm.
+  - Trong buổi học, app tự tăng độ nhạy từng nấc khi thấy nhiều nốt nhẹ bị hụt.
+  - Màn "Cài micro" nhắc chạy Kiểm tra 5 nốt.
+- Bench: 14 kịch bản "NHẸ" mới, gồm cả giả lập bộ lọc ồn của iOS. Tổng từ 74% lên khoảng 99%. 21 kịch bản cũ đạt 100%. 0 nốt ma ở phòng im lặng, quạt hoặc tiếng nói. Độ trễ giữ nguyên, trung vị 68 ms. Hợp âm 160/160.
+- 1384 test; compat iPadOS 15+; e2e nhanh qua.

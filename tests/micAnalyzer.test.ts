@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MicAnalyzer, type AppSound } from '../src/audio/micAnalyzer';
+import { MicAnalyzer, type AppSound, type Sensitivity } from '../src/audio/micAnalyzer';
 import { meterPct } from '../src/audio/MicListener';
 import { renderPiano, SIM_RATE, type SimNote, type SimOptions } from './pianoSim';
 
@@ -56,6 +56,43 @@ describe('MicAnalyzer — tình huống thật', () => {
     let n = 0;
     for (let i = 2048; i < sig.length; i += hop) if (a.process(sig.subarray(i - 2048, i), SIM_RATE, i / SIM_RATE).note) n++;
     expect(n).toBe(0);
+  });
+
+  // OWNER 2026-10-08 ("phải đánh thật to mới nghe"): ngưỡng tối thiểu hạ nhiều cho micro "thô" của iPad →
+  // kiểm tra kỹ KHÔNG có nốt ma ở mức thu rất nhỏ, độ nhạy Cao, đủ loại tiếng ồn.
+  const ghosts = (sig: Float32Array, sens: Sensitivity = 'high'): number => {
+    const a = new MicAnalyzer();
+    a.sensitivity = sens;
+    const hop = Math.round(0.025 * SIM_RATE);
+    let n = 0;
+    for (let i = 2048; i < sig.length; i += hop) if (a.process(sig.subarray(i - 2048, i), SIM_RATE, i / SIM_RATE).note) n++;
+    return n;
+  };
+  it('micro iPad "thô", phòng rất yên (−80 dBFS), 20 s: không nốt ma', { timeout: 30000 }, () => {
+    expect(ghosts(renderPiano([], 20, { noise: 0.00025, hum: 0.0001 }))).toBe(0);
+    expect(ghosts(renderPiano([], 20, { noise: 0.00008, hum: 0.00003, seed: 5 }))).toBe(0);
+  });
+  it('iOS lọc ồn (NS) làm tiếng quạt "lục bục": không nốt ma', { timeout: 30000 }, () => {
+    expect(ghosts(renderPiano([], 15, { noise: 0.0008, hum: 0.0003, ns: 12 }))).toBe(0);
+    expect(ghosts(renderPiano([], 15, { noise: 0.0008, hum: 0.0003, ns: 12, agc: 4, seed: 9 }))).toBe(0);
+  });
+  it('tiếng nói rì rầm (không rõ cao độ), tiếng gõ bàn/bước chân: không nốt ma', { timeout: 30000 }, () => {
+    const base = renderPiano([], 15, { noise: 0.0003, hum: 0.0001, seed: 11 });
+    let s = 77;
+    const r = () => ((s = (s * 1664525 + 1013904223) >>> 0) / 0xffffffff) * 2 - 1;
+    let lp = 0;
+    for (let i = 0; i < base.length; i++) {
+      const t = i / SIM_RATE;
+      // "âm tiết" ~4 Hz, có lúc ngừng; phổ nghiêng về tần số thấp như giọng nói
+      const syl = Math.max(0, Math.sin(2 * Math.PI * 4.3 * t)) ** 2 * (Math.sin(2 * Math.PI * 0.37 * t) > -0.3 ? 1 : 0);
+      lp += (r() - lp) * 0.08;
+      base[i] += 0.02 * syl * lp;
+      // gõ bàn / bước chân mỗi ~0,9 s: tiếng "bịch" ngắn
+      const k = t % 0.9;
+      if (k < 0.012) base[i] += 0.01 * r() * (1 - k / 0.012);
+    }
+    expect(ghosts(base)).toBe(0);
+    expect(ghosts(base, 'normal')).toBe(0);
   });
 
   it('ước lúc GÕ PHÍM chính xác (±30 ms) — để chấm nhịp không lệch', { timeout: 30000 }, () => {

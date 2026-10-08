@@ -1,5 +1,9 @@
 import type { AudioEngine } from '../audio/AudioEngine';
 import { MicListener } from '../audio/MicListener';
+import { saveAutoSens } from '../audio/micLogStore';
+import { SENS_NAME } from '../audio/micTune';
+import { speechBusy } from '../audio/voice';
+import { toast } from './components/dom';
 import { requestPersistentStorage } from '../progress/backup';
 import { markSafePoint } from '../pwa/updater';
 import type { ProgressStore } from '../progress/ProgressStore';
@@ -31,6 +35,14 @@ export class App {
     // iOS cắt micro ngầm (cuộc gọi, khóa màn hình…) → micro báo 'off' + needsRestart → bật lại ở lần chạm sau
     this.mic.onState((s) => {
       if (s === 'off' && this.mic.needsRestart) this.armMicRestart();
+    });
+    // Giọng đọc hướng dẫn không đi qua AudioEngine → micro hỏi ở đây để không tính tiếng đọc là "bé đàn khẽ"
+    this.mic.externalBusy = () => speechBusy();
+    // Bé đàn khẽ nhiều lần không nghe được → micro tự tăng độ nhạy MỘT bậc: lưu, ghi nhật ký, báo phụ huynh
+    this.mic.onAutoSensitivity((c) => {
+      this.store.updateSettings({ micSensitivity: c.to });
+      saveAutoSens({ at: new Date().toISOString(), ...c });
+      toast(`🎤 Micro chưa nghe rõ tiếng đàn khẽ → đã tăng độ nhạy: ${SENS_NAME[c.from]} → ${SENS_NAME[c.to]}`, 4500);
     });
   }
 

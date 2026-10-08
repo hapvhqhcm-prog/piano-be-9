@@ -1,4 +1,4 @@
-import { SENSITIVITY, type Sensitivity } from './micAnalyzer';
+import { gateFor, MIN_GATE, type Sensitivity } from './micAnalyzer';
 import { nearestNote } from './pitchDetect';
 
 /**
@@ -6,9 +6,12 @@ import { nearestNote } from './pitchDetect';
  * Hàm THUẦN — màn "Thử micro" đưa số đo từng nốt vào, nhận lại độ nhạy nên dùng + lý do + lời khuyên.
  *
  * Cách nghĩ: một nốt chỉ được nhận khi tiếng đàn (RMS sau lọc) vượt NGƯỠNG × 1,5 (để bắt được lần gõ phím),
- * NGƯỠNG = mức ồn nền × hệ số độ nhạy (Thấp 5 / Vừa 3 / Cao 2). Với mỗi độ nhạy tính "độ dư" = tiếng to nhất ÷
- * (1,5 × ngưỡng) của từng nốt; chọn độ nhạy ÍT nhạy nhất mà vẫn dư ≥ 1,3 lần (bớt nghe nhầm tiếng ồn), trừ khi
- * phòng yên tĩnh thì giữ "Vừa".
+ * NGƯỠNG = mức ồn nền × hệ số độ nhạy (SENSITIVITY: Thấp 5 / Vừa 2,2 / Cao 1,6), không dưới MIN_GATE của độ nhạy đó.
+ * Với mỗi độ nhạy tính "độ dư" = tiếng to nhất ÷ (1,5 × ngưỡng) của từng nốt; chọn độ nhạy ÍT nhạy nhất mà vẫn
+ * dư ≥ SAFE_MARGIN (bớt nghe nhầm tiếng ồn), trừ khi phòng yên tĩnh thì giữ "Vừa".
+ *
+ * 2026-10-08 (OWNER: "phải đánh thật to mới nghe"): lúc kiểm tra bé thường đàn rõ hơn lúc học → độ dư cần ≥ 1,5
+ * (trước 1,3); nghe ĐÚNG cả 5 nốt nhưng độ dư mỏng (= phải đàn to mới nghe) cũng chuyển sang nhạy hơn.
  */
 
 export interface NoteCheck {
@@ -51,21 +54,15 @@ export interface TuneAdvice {
 
 export const SENS_NAME: Record<Sensitivity, string> = { low: 'Thấp', normal: 'Vừa', high: 'Cao' };
 /** Độ dư tối thiểu để coi là "chắc ăn" ở một độ nhạy. */
-export const SAFE_MARGIN = 1.3;
+export const SAFE_MARGIN = 1.5;
 /** Mức ồn nền (RMS sau lọc) từ đây trở lên coi là phòng ồn → ưu tiên độ nhạy Thấp nếu tiếng đàn đủ to. */
 export const NOISY_FLOOR = 0.004;
 /** Thứ tự độ nhạy (Thấp < Vừa < Cao). */
 const RANK: Record<Sensitivity, number> = { low: 0, normal: 1, high: 2 };
-/** Ngưỡng tối thiểu (giống MicAnalyzer.gate) */
-const MIN_GATE = 0.0008;
-
-function gateFor(floor: number, s: Sensitivity): number {
-  return Math.max(MIN_GATE, Math.max(0, floor) * SENSITIVITY[s]);
-}
 
 /** Độ dư của một nốt ở độ nhạy `s`. */
 export function noteMargin(c: Pick<NoteCheck, 'maxRms' | 'floor'>, s: Sensitivity): number {
-  return c.maxRms / (1.5 * gateFor(c.floor, s));
+  return c.maxRms / (1.5 * gateFor(Math.max(0, c.floor), s));
 }
 
 function median(xs: number[]): number {
@@ -88,7 +85,7 @@ export function chooseSensitivity(checks: NoteCheck[], current: Sensitivity): Tu
   };
   const tips: TuneTip[] = [];
   // Nốt bị sót/nghe sai dù tiếng ĐỦ TO → không phải do độ nhạy: đàn lệch dây hoặc phòng ồn
-  const loudMiss = checks.filter((c) => c.result !== 'ok' && c.maxRms > 0 && c.maxRms >= 1.5 * Math.max(MIN_GATE, c.gate));
+  const loudMiss = checks.filter((c) => c.result !== 'ok' && c.maxRms > 0 && c.maxRms >= 1.5 * Math.max(MIN_GATE.high, c.gate));
   if (loudMiss.length >= 2) {
     const semitone = loudMiss.some(
       (c) =>

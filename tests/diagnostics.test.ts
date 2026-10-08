@@ -199,9 +199,18 @@ describe('diagSections — chấm ✅/⚠️/❌', () => {
     expect(row(s, 'mic', 'perm').status).toBe('wait');
     s.mic = { ...s.mic, lastCheck: { ok: 2, total: 5, at: '' } };
     expect(row(s, 'mic', 'check').status).toBe('bad');
-    s.mic = { ...s.mic, lastCheck: null, secure: false };
+    s.mic = { ...s.mic, lastCheck: null, secure: false, enabled: false };
     expect(row(s, 'mic', 'check').status).toBe('info');
     expect(row(s, 'mic', 'api').status).toBe('bad');
+  });
+
+  it('micro đang BẬT mà chưa từng kiểm tra 5 nốt → ⚠️ nhắc kiểm tra; micro tự tăng độ nhạy → có dòng ghi lại', () => {
+    const s = snap();
+    s.mic = { ...s.mic, lastCheck: null, enabled: true };
+    expect(row(s, 'mic', 'check').status).toBe('warn');
+    expect(row(s, 'mic', 'check').tip).toMatch(/Kiểm tra 5 nốt|kiểm tra 5 nốt/);
+    s.mic = { ...s.mic, autoSens: { at: '2026-10-08T09:00:00Z', from: 'normal', to: 'high', missed: 5 } };
+    expect(row(s, 'mic', 'auto').value).toMatch(/^Vừa → Cao/);
   });
 
   it('lưu trữ: chưa sao lưu sau ≥ 3 buổi → ⚠️; không bền → ⚠️; đầy → ❌', () => {

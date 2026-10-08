@@ -114,6 +114,53 @@ describe('NoteTracker — nốt cũ còn ngân', () => {
   });
 });
 
+describe('NoteTracker — đàn khẽ khi nốt cũ còn ngân (OWNER 2026-10-08)', () => {
+  const n = (freq: number, rms = 0.1, clarity = 0.95) => ({ freq, clarity, rms });
+  it('"gõ theo cao độ": nốt KHÁC nốt bé vừa đàn, rõ & ổn định 3 khung → báo dù âm lượng không bật lên', () => {
+    const tr = new NoteTracker(2);
+    tr.push(n(261.6), 0, true, 0.1, 0.01);
+    expect(tr.push(n(261.6), 0, false, 0.1, 0.01)?.midi).toBe(60);
+    tr.reset(true); // app sang nốt sau, Đô còn ngân
+    expect(tr.push(n(261.6), 0, false, 0.08, 0.01)).toBeNull();
+    expect(tr.push(n(293.7), 0, false, 0.08, 0.01)).toBeNull();
+    expect(tr.push(n(293.7), 0, false, 0.08, 0.01)).toBeNull();
+    expect(tr.push(n(293.7), 0, false, 0.08, 0.01)?.midi).toBe(62);
+  });
+  it('không "gõ theo cao độ" cho: cùng nốt, quãng 8, cao độ mờ, hay sau tiếng APP (không biết nốt nào đang ngân)', () => {
+    const run = (freq: number, clarity = 0.95, app = false) => {
+      const tr = new NoteTracker(2);
+      tr.push(n(261.6), 0, true, 0.1, 0.01);
+      tr.push(n(261.6), 0, false, 0.1, 0.01);
+      tr.reset(true);
+      if (app) tr.forgetRinging();
+      const out = [];
+      for (let i = 0; i < 6; i++) out.push(tr.push(n(freq, 0.08, clarity), 0, false, 0.08, 0.01));
+      return out.filter(Boolean).length;
+    };
+    expect(run(261.6)).toBe(0);
+    expect(run(523.2)).toBe(0);
+    expect(run(130.8)).toBe(0);
+    expect(run(293.7, 0.7)).toBe(0);
+    expect(run(293.7, 0.95, true)).toBe(0);
+    expect(run(293.7)).toBe(1);
+  });
+  it('chu kỳ chung với nốt còn ngân (Sol4 + Mi4 → Đô2) không bị báo là nốt sai, kể cả có lần gõ', () => {
+    const tr = new NoteTracker(2);
+    tr.push(n(392), 0, true, 0.1, 0.01);
+    expect(tr.push(n(392), 0, false, 0.1, 0.01)?.midi).toBe(67);
+    tr.reset(true);
+    tr.push(n(329.6), 0, true, 0.12, 0.01);
+    for (let i = 0; i < 5; i++) expect(tr.push(n(65.4), 0, false, 0.1, 0.01)).toBeNull();
+    // Đô3 (tay trái) sau Sol4 vẫn được nhận
+    const t2 = new NoteTracker(2);
+    t2.push(n(392), 0, true, 0.1, 0.01);
+    t2.push(n(392), 0, false, 0.1, 0.01);
+    t2.reset(true);
+    t2.push(n(130.8), 0, true, 0.12, 0.01);
+    expect(t2.push(n(130.8), 0, false, 0.12, 0.01)?.midi).toBe(48);
+  });
+});
+
 describe('dải nghe mở rộng (Cấp 2–3)', () => {
   it.each(['C2', 'G2', 'D5', 'G5', 'E5'])('nhận đúng %s', (p) => {
     const f = midiToFreq(pitchToMidi(p));

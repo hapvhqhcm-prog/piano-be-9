@@ -52,6 +52,14 @@ export interface SimOptions {
    * gặp tiếng to thì giảm nhanh (tiếng gõ phím bị "nén"). Giá trị = khuếch đại tối đa (vd 4 = +12 dB).
    */
   agc?: number;
+  /**
+   * iOS "lọc ồn" (noise suppression của chế độ thoại — Safari có thể vẫn bật dù app xin tắt): bộ trừ phổ theo
+   * từng dải tần, ước lượng "ồn" bám CHẬM theo năng lượng của dải (τ ≈ nsTau) → tiếng búa/đầu nốt đi qua,
+   * phần NGÂN (ổn định) bị giảm dần tới `ns` dB sau ~150–300 ms; ồn nền đứng yên cũng bị giảm.
+   */
+  ns?: number;
+  /** Thời gian bộ lọc ồn "học" một âm đứng yên (giây, mặc định 0,2) */
+  nsTau?: number;
 }
 
 export function renderPiano(notes: SimNote[], seconds: number, o: SimOptions = {}): Float32Array {
@@ -119,6 +127,7 @@ export function renderPiano(notes: SimNote[], seconds: number, o: SimOptions = {
   const noise = o.noise ?? 0.004;
   const hum = o.hum ?? 0.002;
   for (let i = 0; i < n; i++) out[i] += noise * (r() * 2 - 1) + hum * Math.sin((2 * Math.PI * 50 * i) / SR);
+  if (o.ns) applyNoiseSuppression(out, SR, o.ns, o.nsTau ?? 0.2);
   if (o.agc) applyAgc(out, SR, o.agc);
   if (o.warmup) out.fill(0, 0, Math.min(n, Math.floor(o.warmup * SR)));
   return out;
@@ -144,6 +153,90 @@ function applyAgc(out: Float32Array, SR: number, maxGain: number): void {
     g += (want - g) * (want < g ? aAtt : aRel);
     for (let i = b; i < end; i++) out[i] *= g0 + ((g - g0) * (i - b)) / (end - b);
   }
+}
+
+/** FFT phức tại chỗ (radix-2) — chỉ dùng trong giả lập. */
+function fft(re: Float64Array, im: Float64Array, inverse: boolean): void {
+  const n = re.length;
+  for (let i = 1, j = 0; i < n; i++) {
+    let bit = n >> 1;
+    for (; j & bit; bit >>= 1) j ^= bit;
+    j ^= bit;
+    if (i < j) {
+      [re[i], re[j]] = [re[j], re[i]];
+      [im[i], im[j]] = [im[j], im[i]];
+    }
+  }
+  for (let len = 2; len <= n; len <<= 1) {
+    const ang = ((inverse ? 2 : -2) * Math.PI) / len;
+    const wr = Math.cos(ang);
+    const wi = Math.sin(ang);
+    for (let i = 0; i < n; i += len) {
+      let cr = 1;
+      let ci = 0;
+      for (let k = 0; k < len / 2; k++) {
+        const a = i + k;
+        const b = a + len / 2;
+        const tr = re[b] * cr - im[b] * ci;
+        const ti = re[b] * ci + im[b] * cr;
+        re[b] = re[a] - tr;
+        im[b] = im[a] - ti;
+        re[a] += tr;
+        im[a] += ti;
+        const nr = cr * wr - ci * wi;
+        ci = cr * wi + ci * wr;
+        cr = nr;
+      }
+    }
+  }
+  if (inverse) for (let i = 0; i < n; i++) (re[i] /= n), (im[i] /= n);
+}
+
+/**
+ * Lọc ồn kiểu thoại (giả lập): STFT 1024 mẫu, bước 256 (cửa sổ Hann căn bậc hai, chồng-cộng). Mỗi dải tần:
+ * ước lượng ồn N bám LÊN chậm (τ = tau) và XUỐNG nhanh (τ 30 ms) theo công suất P; hệ số = max(gmin, √(1 − N/P)).
+ * → âm ngân đều (nốt đàn đang ngân, ù điện, quạt) bị giảm tới −dB sau vài trăm ms; đầu nốt (búa gõ) đi qua.
+ */
+function applyNoiseSuppression(out: Float32Array, SR: number, dB: number, tau: number): void {
+  const N = 1024;
+  const hop = 256;
+  const gmin = Math.pow(10, -dB / 20);
+  const dt = hop / SR;
+  const aUp = 1 - Math.exp(-dt / tau);
+  const aDown = 1 - Math.exp(-dt / 0.03);
+  const win = new Float64Array(N);
+  for (let i = 0; i < N; i++) win[i] = Math.sqrt(0.5 - 0.5 * Math.cos((2 * Math.PI * i) / N));
+  const noise = new Float64Array(N / 2 + 1).fill(-1);
+  const res = new Float64Array(out.length + N);
+  const re = new Float64Array(N);
+  const im = new Float64Array(N);
+  // Hann căn bậc 2 hai lần, bước N/4 → tổng cửa sổ = 2 → chia 2
+  for (let s = -N + hop; s < out.length; s += hop) {
+    for (let i = 0; i < N; i++) {
+      const k = s + i;
+      re[i] = k >= 0 && k < out.length ? out[k] * win[i] : 0;
+      im[i] = 0;
+    }
+    fft(re, im, false);
+    for (let k = 0; k <= N / 2; k++) {
+      const p = re[k] * re[k] + im[k] * im[k];
+      if (noise[k] < 0) noise[k] = p;
+      else noise[k] += (p - noise[k]) * (p > noise[k] ? aUp : aDown);
+      const g = p > 0 ? Math.max(gmin, Math.sqrt(Math.max(0, 1 - noise[k] / p))) : gmin;
+      re[k] *= g;
+      im[k] *= g;
+      if (k > 0 && k < N / 2) {
+        re[N - k] = re[k];
+        im[N - k] = -im[k];
+      }
+    }
+    fft(re, im, true);
+    for (let i = 0; i < N; i++) {
+      const k = s + i;
+      if (k >= 0 && k < out.length) res[k] += (re[i] * win[i]) / 2;
+    }
+  }
+  for (let i = 0; i < out.length; i++) out[i] = res[i];
 }
 
 export { SIM_RATE_DEFAULT as SIM_RATE };

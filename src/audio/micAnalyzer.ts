@@ -50,17 +50,39 @@ export interface FrameResult {
   onset: boolean;
   /** Thời điểm ước tính của lần gõ (cùng đồng hồ với `t`); −1 nếu khung này không có lần gõ */
   onsetAt: number;
+  /**
+   * "Suýt nghe được": tiếng có cao độ RÕ vừa bật lên nhưng dưới ngưỡng hiện tại, trên ngưỡng của độ nhạy kế tiếp
+   * (đàn khẽ quá với độ nhạy này). Mỗi lần đàn báo tối đa 1 lần — cho bộ tự tăng độ nhạy (micAutoSens).
+   */
+  nearMiss: boolean;
 }
 
 /** Độ nhạy: hệ số nhân với mức ồn nền (thấp = cần tiếng to hơn mới nhận). */
-export const SENSITIVITY = { low: 5, normal: 3, high: 2 } as const;
+export const SENSITIVITY = { low: 5, normal: 2.2, high: 1.6 } as const;
 export type Sensitivity = keyof typeof SENSITIVITY;
+/**
+ * Ngưỡng TUYỆT ĐỐI tối thiểu (RMS sau lọc) theo độ nhạy. Trước 2026-10-08 là 0,0008 (−62 dBFS) cho mọi độ nhạy
+ * → iPad thật (Safari tắt xử lý giọng nói → micro "thô", mức thu nhỏ) ở phòng yên: tiếng ồn ≈ 0,0001, đàn nhẹ
+ * ≈ 0,0005–0,001 → ngưỡng cố định này nuốt mọi nốt nhẹ, và chỉnh độ nhạy Vừa/Cao KHÔNG có tác dụng gì.
+ */
+export const MIN_GATE: Record<Sensitivity, number> = { low: 0.0008, normal: 0.00025, high: 0.00012 };
+
+/** Ngưỡng "có tiếng đàn" cho một mức ồn nền & độ nhạy (micTune dùng chung). */
+export function gateFor(floor: number, s: Sensitivity): number {
+  return Math.max(MIN_GATE[s], (floor < 0 ? 0.002 : floor) * SENSITIVITY[s]);
+}
 
 /** Tần số cắt của MỖI tầng lọc (2 tầng nối tiếp → −6 dB ở đây, −3,3 dB ở Mi6 = 1319 Hz). */
 export const LOWPASS_HZ = 1600;
 /** Hệ số giảm mẫu trước YIN. */
 export const DECIMATE = 2;
 const ONSET_RATIO = 1.5;
+/** Độ nhạy kế tiếp (nhạy hơn một bậc) — để biết "suýt nghe" so với bậc nào. */
+const NEXT_SENS: Record<Sensitivity, Sensitivity | null> = { low: 'normal', normal: 'high', high: null };
+const NEAR_RISE = 1.3;
+const NEAR_CLARITY = 0.8;
+/** Dưới (hệ số × ngưỡng) mới coi là im — trễ để nốt khẽ quanh ngưỡng không bị báo hai lần. */
+const SILENCE_HYST = 0.8;
 /** Mức ồn nền tăng tối đa bao nhiêu mỗi khung (tỉ lệ), và trần tuyệt đối. */
 const FLOOR_RISE = 0.002;
 export const FLOOR_MAX = 0.03;
@@ -140,6 +162,9 @@ export class MicAnalyzer {
   private decimated = new Float32Array(0);
   private energies = new Float32Array(0);
   private pendingOnset = false;
+  /** "Suýt nghe": còn bao nhiêu khung để xem tiếng vừa bật lên có cao độ rõ không; đã báo cho lần đàn này chưa */
+  private nearLeft = 0;
+  private nearLatched = false;
   /** Lúc bắt đầu chuỗi khung có tiếng tích (−1 = không có) */
   private clickFrom = -1;
   /** Tùy chọn YIN cho tín hiệu đã lọc (minRms = 0 vì đã có ngưỡng thích nghi) — tính lại khi `detect` đổi */
@@ -152,7 +177,7 @@ export class MicAnalyzer {
 
   /** Ngưỡng "có tiếng đàn" hiện tại. */
   gate(): number {
-    return Math.max(0.0008, (this.floor < 0 ? 0.002 : this.floor) * SENSITIVITY[this.sensitivity]);
+    return gateFor(this.floor, this.sensitivity);
   }
 
   private result(
@@ -164,7 +189,7 @@ export class MicAnalyzer {
     onset: boolean,
     onsetAt: number,
   ): FrameResult {
-    return { pitch, level, rms, floor: this.floor, gate, note, onset, onsetAt };
+    return { pitch, level, rms, floor: this.floor, gate, note, onset, onsetAt, nearMiss: false };
   }
 
   /**
@@ -233,7 +258,9 @@ export class MicAnalyzer {
     let onsetAt = -1;
     if (onset) {
       this.lastOnsetFrame = t;
-      this.warm = false; // bé đã đàn → thôi "làm quen phòng"
+      // Chỉ chấm vỗ nhịp: lần gõ = bé đã đàn/vỗ → thôi "làm quen phòng". Cần cao độ thì chờ tới khi nghe ra NỐT
+      // (quạt bật / tiếng động đột ngột cũng là "lần gõ" — không được làm mức ồn nền ngừng bắt kịp phòng).
+      if (!needPitch) this.warm = false;
       // Gõ phím trùng lúc micro bị bịt tai (app === 'click') chỉ lộ ra sau đó → lấy mốc lúc bắt đầu bịt
       const clickFrom = this.clickFrom;
       onsetAt = clickFrom >= 0 && t - clickFrom < 0.2 ? clickFrom + 0.01 : this.locateOnset(x, sampleRate, t);
@@ -247,6 +274,7 @@ export class MicAnalyzer {
     if (app !== 'quiet') {
       this.updateFloor(r, false);
       this.tracker.reset(true);
+      this.tracker.forgetRinging();
       // Gõ phím trong lúc tiếng app đang tắt dần = bé đã đàn → nhớ lại; lúc app đang phát thì không tin
       this.pendingOnset = app === 'tail' && (this.pendingOnset || onset);
       return this.result(null, level, r, gate, null, onset, onsetAt);
@@ -261,32 +289,77 @@ export class MicAnalyzer {
       return this.result(null, level, r, gate, null, onset, onsetAt);
     }
     let pitch: PitchResult | null = null;
+    let nearMiss = false;
     if (r >= gate) {
-      // Sau lọc bậc 4 hầu như không còn gì trên ~4 kHz → giảm mẫu ×2 rồi mới chạy YIN (nhanh ~4 lần)
-      const n = Math.floor(x.length / DECIMATE);
-      if (this.decimated.length !== n) this.decimated = new Float32Array(n);
-      const d = this.decimated;
-      for (let i = 0, j = DECIMATE - 1; i < n; i++, j += DECIMATE) d[i] = x[j];
-      if (this.detectFor !== this.detect) {
-        this.detectFor = this.detect;
-        this.detectNoGate = { ...this.detect, minRms: 0 };
-      }
-      pitch = detectPitch(d, sampleRate / DECIMATE, this.detectNoGate);
-      // rms của khung đã lọc (giống trước khi giảm mẫu)
-      if (pitch) pitch.rms = r;
+      pitch = this.pitchOf(x, sampleRate, r);
+      this.nearLeft = 0;
+    } else {
+      nearMiss = this.checkNearMiss(x, sampleRate, r, base);
     }
     // Khung có cao độ rõ hoặc có lần gõ = tiếng đàn → KHÔNG được coi là ồn nền
     this.updateFloor(r, !onset && !(pitch && pitch.clarity >= 0.5));
-    const note = this.tracker.push(pitch, this.tuningCents, onset, r, gate);
+    // "Im" khi dưới 0,8 × ngưỡng (trễ): nốt khẽ dao động quanh ngưỡng không bị coi là im rồi báo lại lần nữa
+    const note = this.tracker.push(pitch, this.tuningCents, onset, r, gate * SILENCE_HYST);
+    if (note) this.warm = false; // bé đã đàn → thôi "làm quen phòng"
     if (note) note.at = this.lastOnsetAt >= 0 && t - this.lastOnsetAt < 0.5 ? this.lastOnsetAt : t - 0.07;
-    return this.result(pitch, level, r, gate, note, onset, onsetAt);
+    const res = this.result(pitch, level, r, gate, note, onset, onsetAt);
+    res.nearMiss = nearMiss;
+    return res;
   }
 
-  /** Mức ồn nền: theo xuống NHANH khi phòng im; lên RẤT CHẬM và chỉ ở khung không có tiếng đàn; có trần. */
+  /** YIN trên tín hiệu đã lọc: sau lọc bậc 4 hầu như không còn gì trên ~4 kHz → giảm mẫu ×2 (nhanh ~4 lần). */
+  private pitchOf(x: Float32Array, sampleRate: number, r: number): PitchResult | null {
+    const n = Math.floor(x.length / DECIMATE);
+    if (this.decimated.length !== n) this.decimated = new Float32Array(n);
+    const d = this.decimated;
+    for (let i = 0, j = DECIMATE - 1; i < n; i++, j += DECIMATE) d[i] = x[j];
+    if (this.detectFor !== this.detect) {
+      this.detectFor = this.detect;
+      this.detectNoGate = { ...this.detect, minRms: 0 };
+    }
+    const pitch = detectPitch(d, sampleRate / DECIMATE, this.detectNoGate);
+    // rms của khung đã lọc (giống trước khi giảm mẫu)
+    if (pitch) pitch.rms = r;
+    return pitch;
+  }
+
+  /**
+   * "Suýt nghe" (khung dưới ngưỡng): tiếng BẬT LÊN (×1,3 so với ~3 khung trước) vào khoảng [ngưỡng của độ nhạy kế
+   * tiếp, ngưỡng hiện tại) → xem tối đa 3 khung, có cao độ rõ (≥ 0,8) thì báo một lần. Chỉ chạy YIN trong lúc đó.
+   */
+  private checkNearMiss(x: Float32Array, sampleRate: number, r: number, base: number): boolean {
+    const next = NEXT_SENS[this.sensitivity];
+    if (!next || this.floor < 0) return false;
+    const lo = gateFor(this.floor, next);
+    if (r < lo * 0.8) {
+      this.nearLatched = false;
+      this.nearLeft = 0;
+      return false;
+    }
+    if (r < lo || this.nearLatched) return false;
+    if (this.nearLeft === 0 && r > base * NEAR_RISE) this.nearLeft = 3;
+    if (this.nearLeft === 0) return false;
+    this.nearLeft--;
+    const p = this.pitchOf(x, sampleRate, r);
+    if (!p || p.clarity < NEAR_CLARITY) return false;
+    this.nearLeft = 0;
+    this.nearLatched = true;
+    return true;
+  }
+
+  /**
+   * Mức ồn nền: theo xuống NHANH khi phòng im; lên RẤT CHẬM và chỉ ở khung không có tiếng đàn; có trần.
+   * 2026-10-08: khung to hơn ngưỡng chỉ được tính BẰNG ngưỡng — đuôi nốt đàn / tiếng vang (không rõ cao độ) to gấp
+   * 10 lần ồn nền từng đẩy mức ồn nền lên ~2 %/khung → buổi tập dài thì ngưỡng "leo" dần, nốt nhẹ bị nuốt.
+   * Phòng ồn lên thật (quạt bật) vẫn bắt kịp (từng bước ≤ hệ số độ nhạy).
+   */
   private updateFloor(r: number, mayRise: boolean): void {
     if (this.floor < 0) return; // micro chưa chạy (toàn 0) → chưa có mức ồn nền
     if (r < this.floor) this.floor += (r - this.floor) * 0.5;
-    else if (mayRise) this.floor = Math.min(FLOOR_MAX, this.floor + (r - this.floor) * (this.warm ? FLOOR_RISE_WARM : FLOOR_RISE));
+    else if (mayRise) {
+      const target = Math.min(r, this.gate());
+      if (target > this.floor) this.floor = Math.min(FLOOR_MAX, this.floor + (target - this.floor) * (this.warm ? FLOOR_RISE_WARM : FLOOR_RISE));
+    }
   }
 
   /** Đang trong 2 giây đầu "làm quen phòng" (để nhật ký chẩn đoán). */
@@ -305,6 +378,7 @@ export class MicAnalyzer {
       this.warm = false;
     }
     this.pendingOnset = false;
+    this.nearLeft = 0;
     this.tracker.reset(requireOnset);
   }
 }

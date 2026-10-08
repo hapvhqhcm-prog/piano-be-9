@@ -145,6 +145,8 @@ export interface DiagSnapshot {
     tuningCents: number;
     latencyMs: number;
     lastCheck: { ok: number; total: number; at: string } | null;
+    /** Lần gần nhất micro TỰ tăng độ nhạy trong buổi học (micAutoSens.ts) */
+    autoSens?: { at: string; from: string; to: string; missed: number } | null;
   };
   storage: {
     text: string;
@@ -410,7 +412,16 @@ function micRows(s: DiagSnapshot): DiagRow[] {
     explain: 'Số liệu cho người hỗ trợ (bài kiểm tra 5 nốt tự chỉnh).',
   });
   const c = m.lastCheck;
-  if (!c) rows.push({ id: 'check', label: 'Kiểm tra 5 nốt gần nhất', status: 'info', value: 'Chưa có', explain: 'Làm trong “Cài micro (3 bước)” → bước 2.' });
+  if (!c)
+    rows.push({
+      id: 'check',
+      label: 'Kiểm tra 5 nốt gần nhất',
+      // Đang dùng micro mà chưa từng kiểm tra → độ nhạy mặc định, đàn khẽ có thể không được nghe (OWNER 2026-10-08)
+      status: m.enabled ? 'warn' : 'info',
+      value: 'Chưa có',
+      explain: 'Làm trong “Cài micro (3 bước)” → bước 2.',
+      tip: m.enabled ? 'Micro đang bật mà chưa kiểm tra 5 nốt: làm ngay để app tự chỉnh độ nhạy (bé đàn khẽ mới được nghe).' : undefined,
+    });
   else {
     const good = c.ok >= 4;
     rows.push({
@@ -420,6 +431,17 @@ function micRows(s: DiagSnapshot): DiagRow[] {
       value: `nghe đúng ${c.ok}/${c.total} nốt${c.at ? ` · ${c.at}` : ''}`,
       explain: 'Micro nghe đúng ít nhất 4/5 nốt là đủ dùng cho buổi học.',
       tip: good ? undefined : 'Đặt iPad trên giá nhạc, tắt TV/quạt, bé đàn rõ từng nốt; làm lại bài kiểm tra 5 nốt.',
+    });
+  }
+  const a = m.autoSens;
+  if (a) {
+    const t = Date.parse(a.at);
+    rows.push({
+      id: 'auto',
+      label: 'Micro tự tăng độ nhạy',
+      status: 'info',
+      value: `${SENS_TEXT[a.from] ?? a.from} → ${SENS_TEXT[a.to] ?? a.to}${isNaN(t) ? '' : ` · ${fmtDay(t)}`}`,
+      explain: `Trong buổi học có ${a.missed} lần bé đàn khẽ micro chưa nghe được → app tự tăng một bậc (mỗi lần bật micro tối đa một lần).`,
     });
   }
   return rows;

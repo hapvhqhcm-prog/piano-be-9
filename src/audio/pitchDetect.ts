@@ -139,6 +139,19 @@ export function nearestNote(freq: number, tuningCents = 0): HeardNote {
  */
 /** Khoảng (nửa cung) từ nốt thật xuống "nốt ảo" chu kỳ chung: quãng 8, quãng 12, 2 quãng 8. */
 const SUBHARMONIC_STEPS = [12, 19, 24];
+/**
+ * Nốt vừa báo vẫn được "nhớ" ~1,5 s (60 khung × 25 ms) — kể cả qua reset(true), lần gõ mới, quãng nghỉ ngắn:
+ * dây cũ còn ngân + nốt mới đàn khẽ → YIN thấy chu kỳ chung (Đô4 + Mi4 → Đô2, Đô4 + Fa4 → Fa2, Sol4 + Mi4 → Đô2)
+ * = "nốt sai" oan. Chỉ chặn "nốt" thấp hơn nốt đang ngân ≥ 19 nửa cung VÀ dưới La2 (45) — Sol4 rồi Đô3 (tay trái)
+ * hay Đô4 rồi Đô3 vẫn là chuyện bình thường.
+ */
+const RING_MIN_STEP = 19;
+const RING_BELOW = 45;
+const RING_FRAMES = 60;
+/** "Gõ theo cao độ" (lúc đang chặn chờ lần gõ): số khung ổn định, độ rõ & độ lệch tối đa để tin nốt MỚI. */
+const PITCH_ONSET_FRAMES = 3;
+const PITCH_ONSET_CLARITY = 0.85;
+const PITCH_ONSET_CENTS = 35;
 
 export class NoteTracker {
   private candidate: number | null = null;
@@ -147,6 +160,9 @@ export class NoteTracker {
   private lastRms = 0;
   /** Chặn báo nốt cho tới khi có lần gõ phím mới hoặc im lặng. */
   private blocked = false;
+  /** Nốt bé vừa đàn (còn ngân) — giữ qua reset(true); null = không biết (vd tiếng app) */
+  private ringing: number | null = null;
+  private ringLeft = 0;
 
   constructor(
     private readonly stableFrames = 2,
@@ -164,7 +180,20 @@ export class NoteTracker {
     this.count = 0;
     this.emitted = null;
     this.blocked = requireOnset;
-    if (!requireOnset) this.lastRms = 0;
+    if (!requireOnset) {
+      this.lastRms = 0;
+      this.ringing = null;
+      this.ringLeft = 0;
+    }
+  }
+
+  /**
+   * Tiếng của APP (âm mẫu) đang phát / vừa phát: không biết nốt nào đang ngân → bỏ "nốt đang ngân" đã nhớ
+   * (để "gõ theo cao độ" không bao giờ nhận nhầm tiếng app là bé đàn).
+   */
+  forgetRinging(): void {
+    this.ringing = null;
+    this.ringLeft = 0;
   }
 
   /** Đưa vào kết quả 1 khung; trả về nốt khi có nốt mới được đánh. */
@@ -172,6 +201,7 @@ export class NoteTracker {
     const r = frameRms ?? result?.rms ?? 0;
     const onset = onsetIn ?? (!!result && this.lastRms > 0 && result.rms > this.lastRms * this.onsetRatio);
     if (onsetIn !== undefined || result) this.lastRms = r;
+    if (this.ringLeft > 0 && --this.ringLeft === 0) this.ringing = null;
     if (onset) {
       // Lần nhấn mới: đếm ổn định lại từ đầu
       this.emitted = null;
@@ -190,12 +220,13 @@ export class NoteTracker {
       this.count = 0;
       return null;
     }
-    if (this.blocked) return null;
-
     const note = nearestNote(result.freq, tuningCents);
     // Chưa có lần gõ mới mà "nốt" nhảy xuống quãng 8 / quãng 12 / 2 quãng 8 của nốt vừa báo = chu kỳ chung
     // của nốt mới + đuôi nốt cũ còn ngân (vd Fa4 + Đô4 → Fa2), không phải bé đàn thêm → không báo.
-    if (this.emitted !== null && SUBHARMONIC_STEPS.includes(this.emitted - note.midi)) {
+    if (
+      (this.emitted !== null && SUBHARMONIC_STEPS.includes(this.emitted - note.midi)) ||
+      (this.ringing !== null && this.ringing - note.midi >= RING_MIN_STEP && note.midi < RING_BELOW)
+    ) {
       this.candidate = null;
       this.count = 0;
       return null;
@@ -205,8 +236,24 @@ export class NoteTracker {
       this.candidate = note.midi;
       this.count = 1;
     }
+    if (this.blocked) {
+      // Đang chờ lần gõ mới (nốt cũ còn ngân). Bé đàn KHẼ thì âm lượng có khi không bật đủ để thành "lần gõ" →
+      // "gõ theo cao độ": một nốt KHÁC hẳn nốt đang ngân (biết rõ là nốt bé vừa đàn), rõ & ổn định ≥ 3 khung = nốt mới.
+      const r0 = this.ringing;
+      const fresh =
+        r0 !== null &&
+        note.midi !== r0 &&
+        Math.abs(note.midi - r0) !== 12 &&
+        !SUBHARMONIC_STEPS.includes(r0 - note.midi) &&
+        result.clarity >= PITCH_ONSET_CLARITY &&
+        Math.abs(note.cents) <= PITCH_ONSET_CENTS;
+      if (!fresh || this.count < Math.max(this.stableFrames, PITCH_ONSET_FRAMES)) return null;
+      this.blocked = false;
+    }
     if (this.count >= this.stableFrames && this.emitted !== note.midi) {
       this.emitted = note.midi;
+      this.ringing = note.midi;
+      this.ringLeft = RING_FRAMES;
       return note;
     }
     return null;

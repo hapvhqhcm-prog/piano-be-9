@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { nearestNote, type PitchResult, type HeardNote } from '../src/audio/pitchDetect';
-import { MicAnalyzer } from '../src/audio/micAnalyzer';
+import { MicAnalyzer, type Sensitivity } from '../src/audio/micAnalyzer';
 import { renderPiano, SIM_RATE, type SimNote, type SimOptions } from './pianoSim';
 
 /**
@@ -78,13 +78,39 @@ class OldTracker {
 }
 
 type Pipeline = (buf: Float32Array, t: number, sr: number) => HeardNote | null;
+/**
+ * Cách app dùng micro (ngoài chạy liên tục):
+ * - wait: chế độ CHỜ NỐT (song.ts / practice.ts) — nghe đúng nốt cần đàn là gọi resetTracker() (= reset(true))
+ * - resets: các thời điểm app gọi resetTracker() (vd 450 ms sau khi giọng đọc "Đô, ngón 1" dứt — bé đã đàn trong lúc đọc)
+ * - pre: nốt bé đàn nhưng KHÔNG chấm (vd đàn trong lúc app đang đọc tên nốt)
+ */
+interface Usage {
+  wait?: boolean;
+  resets?: number[];
+  pre?: SimNote[];
+  sens?: Sensitivity;
+}
 const oldPipeline = (): Pipeline => {
   const tr = new OldTracker();
   return (buf, _t, sr) => tr.push(oldDetect(buf, sr));
 };
-const newPipeline = (): Pipeline => {
+const newPipeline = (notes: SimNote[] = [], u: Usage = {}): Pipeline => {
   const a = new MicAnalyzer();
-  return (buf, t, sr) => a.process(buf, sr, t).note;
+  if (u.sens) a.sensitivity = u.sens;
+  const resets = [...(u.resets ?? [])].sort((x, y) => x - y);
+  return (buf, t, sr) => {
+    while (resets.length && resets[0] <= t) {
+      resets.shift();
+      a.reset(true);
+    }
+    const n = a.process(buf, sr, t).note;
+    // Chế độ chờ: nốt nghe được ĐÚNG nốt đang chờ → app sang nốt sau và "xóa trí nhớ" micro
+    if (n && u.wait) {
+      const want = notes.find((m) => m.start <= t + 0.01 && t < m.start + 0.45);
+      if (want && want.midi === n.midi) a.reset(true);
+    }
+    return n;
+  };
 };
 
 interface Score {
@@ -97,9 +123,9 @@ interface Score {
   latency: number[];
 }
 
-async function run(notes: SimNote[], pipe: Pipeline, hopMs: number, o: SimOptions = {}): Promise<Score> {
+async function run(notes: SimNote[], pipe: Pipeline, hopMs: number, o: SimOptions & Usage = {}): Promise<Score> {
   const end = Math.max(...notes.map((n) => n.start + n.dur)) + 1.5;
-  const sig = renderPiano(notes, end, o);
+  const sig = renderPiano([...notes, ...(o.pre ?? [])], end, o);
   const sr = o.sampleRate ?? SIM_RATE;
   const hop = Math.round((hopMs / 1000) * sr);
   const heard: Array<{ t: number; midi: number }> = [];
@@ -149,7 +175,30 @@ const C_POS = [60, 62, 64, 65, 67];
 // Điều kiện "đàn cơ thật trong phòng": nhiều dây lệch, vang phòng, chưa nhả phím, tiếng nhỏ
 const REAL: SimOptions = { strings: true, reverb: 0.6, legato: 0.25, gain: 0.08, noise: 0.006 };
 
-const SCENARIOS: Array<{ name: string; notes: SimNote[] } & SimOptions> = [
+/**
+ * iPad THẬT (OWNER 2026-10-08: "phải đánh thật to mới nghe được, ví dụ nốt Đô"): Safari tắt xử lý giọng nói
+ * → micro "thô", mức thu rất nhỏ: đàn nhẹ/vừa (mp/p) ở giá nhạc ≈ −60…−66 dBFS (RMS 0,0005–0,001),
+ * tiếng ồn phòng thấp hơn ~20 dB (SNR 15–25 dB). gain 0,004 + vel 0,25–0,5 ≈ đúng mức đó.
+ */
+const RAW: SimOptions = { strings: true, reverb: 0.6, legato: 0.25, gain: 0.004, noise: 0.00025, hum: 0.0001 };
+const SOFT: [number, number] = [0.25, 0.5];
+/** Bài tập tuần 4: bé đàn nốt TRONG LÚC app đọc "Đô, ngón 1" (bị bỏ qua), app xóa trí nhớ micro, bé đàn lại khẽ. */
+const speechPractice = (pool: number[], seed: number): { notes: SimNote[]; pre: SimNote[]; resets: number[] } => {
+  const r = rnd(seed);
+  const notes: SimNote[] = [];
+  const pre: SimNote[] = [];
+  const resets: number[] = [];
+  for (let i = 0; i < 10; i++) {
+    const t0 = 0.3 + i * 2.4;
+    const midi = pool[Math.floor(r() * pool.length)];
+    pre.push({ midi, start: t0, dur: 0.6, vel: 0.3 + r() * 0.2 }); // đàn lúc app đang đọc
+    resets.push(t0 + 0.6); // giọng đọc dứt + 450 ms → resetTracker()
+    notes.push({ midi, start: t0 + 1.0, dur: 0.9, vel: 0.25 + r() * 0.25 }); // nhả phím rồi đàn lại, khẽ hơn
+  }
+  return { notes, pre, resets };
+};
+
+const SCENARIOS: Array<{ name: string; notes: SimNote[]; min?: number } & SimOptions & Usage> = [
   { name: 'Giai điệu tay phải (Đô–Sol)', notes: melody(C_POS, 24, 0.6, 0.45, 3) },
   {
     name: 'Nốt lặp (Mi Mi Mi Rê Rê Rê)',
@@ -188,6 +237,54 @@ const SCENARIOS: Array<{ name: string; notes: SimNote[] } & SimOptions> = [
     clicks: Array.from({ length: 32 }, (_, i) => ({ t: 0.3 + i * 0.3, accent: i % 4 === 0 })),
     clickLevel: 0.4,
   },
+  // ---- iPad thô, ĐÀN NHẸ (OWNER 2026-10-08) — yêu cầu ≥ 90% ----
+  { name: 'NHẸ: Đô–Sol tay phải (−62 dBFS)', notes: melody(C_POS, 20, 0.7, 0.55, 61, SOFT), ...RAW, min: 0.9 },
+  { name: 'NHẸ: Đô3–Sol3 tay trái', notes: melody([48, 50, 52, 53, 55], 16, 0.8, 0.6, 63, SOFT), ...RAW, min: 0.9 },
+  { name: 'NHẸ: Đô4/Đô3 ngân dài', notes: [60, 48, 60, 64, 48, 60, 55, 60, 48, 60].map((m, i) => ({ midi: m, start: 0.3 + i * 1.3, dur: 1.2, vel: 0.25 + (i % 3) * 0.1 })), ...RAW, min: 0.9 },
+  { name: 'NHẸ: chờ nốt (reset mỗi nốt), legato', notes: melody(C_POS, 20, 0.6, 0.55, 65, SOFT), ...RAW, legato: 0.35, wait: true, min: 0.9 },
+  {
+    name: 'NHẸ: nốt lặp khi chờ (Đô Đô Đô Rê Rê)',
+    notes: [60, 60, 60, 62, 62, 60, 60, 64, 64, 60].map((m, i) => ({ midi: m, start: 0.3 + i * 0.6, dur: 0.5, vel: 0.3 + (i % 2) * 0.1 })),
+    ...RAW,
+    wait: true,
+    min: 0.9,
+  },
+  { name: 'NHẸ: đọc tên nốt rồi đàn lại', ...speechPractice(C_POS, 67), ...RAW, min: 0.9 },
+  {
+    name: 'NHẸ sau TO: chờ nốt, legato',
+    notes: melody(C_POS, 20, 0.6, 0.55, 77).map((n, i) => ({ ...n, vel: i % 2 ? 0.25 : 0.9 })),
+    ...RAW,
+    legato: 0.4,
+    wait: true,
+    min: 0.9,
+  },
+  {
+    name: 'NHẸ sau TO: giữ phím cũ 1 s (chờ nốt)',
+    notes: melody(C_POS, 16, 0.8, 0.7, 79).map((n, i) => ({ ...n, vel: i % 2 ? 0.3 : 0.9 })),
+    ...RAW,
+    legato: 1.0,
+    wait: true,
+    min: 0.9,
+  },
+  {
+    name: 'NHẸ: Đô lặp to→nhẹ (chờ nốt)',
+    notes: Array.from({ length: 12 }, (_, i) => ({ midi: i % 4 < 2 ? 60 : 48, start: 0.3 + i * 0.7, dur: 0.62, vel: i % 2 ? 0.28 : 0.85 })),
+    ...RAW,
+    wait: true,
+    min: 0.9,
+  },
+  { name: 'NHẸ: iOS lọc ồn (NS −12 dB)', notes: melody(C_POS, 20, 0.7, 0.55, 69, SOFT), ...RAW, ns: 12, min: 0.9 },
+  { name: 'NHẸ: NS + AGC, Đô3/Đô4 ngân', notes: [60, 48, 60, 62, 48, 64, 60, 55, 48, 60, 67, 60].map((m, i) => ({ midi: m, start: 0.3 + i * 1.1, dur: 1.0, vel: 0.25 + (i % 3) * 0.12 })), ...RAW, ns: 12, agc: 3, min: 0.9 },
+  { name: 'NHẸ: NS + chờ nốt + legato', notes: melody([48, 52, 55, 60, 62, 64, 65, 67], 20, 0.65, 0.6, 71, SOFT), ...RAW, ns: 10, legato: 0.3, wait: true, min: 0.9 },
+  { name: 'NHẸ: 44,1k, SNR 15 dB', notes: melody(C_POS, 16, 0.7, 0.55, 73, SOFT), ...RAW, noise: 0.0005, hum: 0.0002, sampleRate: 44100, min: 0.9 },
+  // Buổi tập dài (40 s đàn liên tục, vang nhiều): mức ồn nền không được "leo" lên theo đuôi nốt rồi nuốt nốt nhẹ
+  {
+    name: 'NHẸ: buổi tập dài 40 s, vang nhiều',
+    notes: melody(C_POS, 60, 0.65, 0.6, 75).map((n, i) => (i >= 40 ? { ...n, vel: 0.25 + (n.vel ?? 0.5) * 0.3 } : n)),
+    ...RAW,
+    reverb: 0.9,
+    min: 0.9,
+  },
 ];
 
 function pct(a: number, b: number) {
@@ -203,12 +300,13 @@ describe('đo micro trên giả lập đàn cơ', () => {
   const rows: string[] = [];
   const totals = { old: { ok: 0, n: 0 }, neu: { ok: 0, n: 0 } };
   const newScores: Record<string, Score> = {};
+  const mins: Record<string, number> = Object.fromEntries(SCENARIOS.map((sc) => [sc.name, sc.min ?? 0.85]));
 
   // So với bộ cũ chỉ khi cần (MIC_BENCH_OLD=1) — kết quả đã ghi ở TEST_REPORT §14; chạy cả hai thì rất lâu
   const withOld = !!(globalThis as { process?: { env: Record<string, string | undefined> } }).process?.env.MIC_BENCH_OLD;
   it.each(SCENARIOS)('$name', { timeout: 120000 }, async (sc) => {
     const a = withOld ? await run(sc.notes, oldPipeline(), 40, sc) : null;
-    const b = await run(sc.notes, newPipeline(), 25, sc);
+    const b = await run(sc.notes, newPipeline(sc.notes, sc), 25, sc);
     newScores[sc.name] = b;
     totals.old.ok += a?.ok ?? 0;
     totals.old.n += a?.played ?? 0;
@@ -225,7 +323,7 @@ describe('đo micro trên giả lập đàn cơ', () => {
   it('in bảng kết quả & yêu cầu tối thiểu cho bộ mới', () => {
     console.log('\n' + rows.join('\n') + `\nTỔNG: ${withOld ? `CŨ ${pct(totals.old.ok, totals.old.n)} — ` : ''}MỚI ${pct(totals.neu.ok, totals.neu.n)}\n`);
     for (const [name, s] of Object.entries(newScores)) {
-      expect(s.ok / s.played, name).toBeGreaterThanOrEqual(0.85);
+      expect(s.ok / s.played, name).toBeGreaterThanOrEqual(mins[name]);
       expect(s.wrong + s.octave, name).toBeLessThanOrEqual(Math.ceil(s.played * 0.08));
     }
   });

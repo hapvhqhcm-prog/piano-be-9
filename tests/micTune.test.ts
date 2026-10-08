@@ -108,7 +108,7 @@ describe('tự chỉnh độ nhạy (thuần)', () => {
 
 describe('tự chỉnh độ nhạy trên giả lập đàn cơ', { timeout: 120000 }, () => {
   it('đàn nhỏ / iPad xa: Vừa sót nốt → chọn Cao → nghe được', () => {
-    const o = { ...REAL, gain: 0.03, noise: 0.006 };
+    const o = { ...REAL, gain: 0.015, noise: 0.006 };
     const before = wizard(o, 'normal', 0, 0.4);
     expect(okCount(before)).toBeLessThan(5);
     const adv = chooseSensitivity(before, 'normal');

@@ -7,7 +7,8 @@ import { midiToPitch, noteLabel, pitchFreq, pitchToMidi, type Pitch } from '../.
 import type { App } from '../App';
 import { actionBar, backButton, button, h, toast } from '../components/dom';
 import { parentScreen } from './parent';
-import { loadMicLog, saveMicLog } from '../../audio/micLogStore';
+import { loadAutoSens, loadMicLog, saveMicLog } from '../../audio/micLogStore';
+import { SENS_NAME } from '../../audio/micTune';
 import { lazy, lazyScreen } from '../lazy';
 
 const diagnosticsMod = lazy(() => import('./diagnostics'));
@@ -114,6 +115,8 @@ export function buildMicLog(app: App, { steps, freeLog, lastFrame, autoTune }: M
     // Bộ lọc iOS THẬT SỰ áp dụng (getSettings) — forced = bị ép bật dù app xin tắt
     track: app.mic.trackInfo(),
     stats: app.mic.stats,
+    // Những lần micro TỰ tăng độ nhạy trong buổi học (micAutoSens.ts)
+    autoSens: loadAutoSens(),
     warmingUp: app.mic.warmingUp,
     lastFrame: lastFrame && {
       rms: +lastFrame.rms.toFixed(5),
@@ -179,6 +182,28 @@ export function micTestScreen(app: App) {
     const helper = h('details', { class: 'mic-help' });
     /** Kết quả lần kiểm tra 5 nốt gần nhất (số nốt nghe đúng); null = chưa kiểm tra */
     let lastOk: number | null = null;
+    /**
+     * Đã từng làm "Kiểm tra 5 nốt" chưa (kể cả lần mở màn trước). OWNER 2026-10-08: bật micro mà CHƯA kiểm tra →
+     * độ nhạy mặc định, app chưa biết tiếng đàn nhà tới micro to/nhỏ thế nào → nhắc thật rõ.
+     */
+    let everChecked = (() => {
+      const prev = loadMicLog();
+      return !!prev && Array.isArray(prev.steps) && prev.steps.length > 0;
+    })();
+    // Trong màn này phụ huynh chỉnh tay / bài 5 nốt tự chỉnh → tắt "tự tăng độ nhạy" của buổi học
+    app.mic.autoSensitivity = false;
+    const autoNote = h('p', { class: 'muted small' });
+    const showAutoNote = () => {
+      const last = loadAutoSens().slice(-1)[0];
+      if (!last) return void (autoNote.hidden = true);
+      const t = Date.parse(last.at);
+      const day = isNaN(t) ? '' : ` (${new Date(t).toLocaleDateString('vi-VN')})`;
+      autoNote.hidden = false;
+      autoNote.textContent =
+        `🎤 Trong buổi học, micro đã tự tăng độ nhạy ${SENS_NAME[last.from as Sensitivity] ?? last.from} → ` +
+        `${SENS_NAME[last.to as Sensitivity] ?? last.to}${day} vì ${last.missed} lần bé đàn khẽ chưa nghe được. ` +
+        'Nên làm lại “Kiểm tra 5 nốt” cho chắc.';
+    };
 
     let calibrating = false;
     let samples: number[] = [];
@@ -287,7 +312,7 @@ export function micTestScreen(app: App) {
       kb.clear();
       kb.setTargets([{ pitch: want, hand: 'RH', finger: checking + 1 }]);
       app.mic.resetTracker();
-      calib.textContent = `Kiểm tra ${checking + 1}/${CHECK_NOTES.length}: đàn phím ${noteLabel(want)} (${want}) một lần, vừa tay.`;
+      calib.textContent = `Kiểm tra ${checking + 1}/${CHECK_NOTES.length}: đàn phím ${noteLabel(want)} (${want}) một lần, NHẸ TAY như lúc con tập bình thường (đừng đàn thật to).`;
       stepTimer = window.setTimeout(() => {
         checking++;
         askStep();
@@ -360,6 +385,7 @@ export function micTestScreen(app: App) {
         h('div', { class: 'row' }, button({ icon: '🔁', label: 'Kiểm tra lại', onTap: () => void runCheck() })),
       );
       lastOk = ok;
+      everChecked = true;
       saveMicLog(buildMicLog(app, { steps, freeLog, lastFrame, autoTune })); // cho "🩺 Kiểm tra iPad"
       calib.textContent =
         ok >= MIC_GOOD
@@ -372,7 +398,9 @@ export function micTestScreen(app: App) {
 
     /** Bước nào đang làm: 1 cho phép micro · 2 kiểm tra 5 nốt · 3 dùng micro cho buổi học */
     function stepNow(): 1 | 2 | 3 {
-      if (store.settings.micEnabled || (lastOk !== null && lastOk >= MIC_GOOD)) return 3;
+      // Đã bật micro cho buổi học nhưng CHƯA từng kiểm tra 5 nốt → vẫn ở bước 2
+      if ((store.settings.micEnabled && everChecked) || (lastOk !== null && lastOk >= MIC_GOOD)) return 3;
+      if (store.settings.micEnabled) return 2;
       return app.mic.state === 'on' ? 2 : 1;
     }
 
@@ -383,12 +411,29 @@ export function micTestScreen(app: App) {
       wizard.replaceChildren(
         ...labels.map((t, i) => {
           const k = i + 1;
-          const done = k < now || (k === 3 && enabled);
+          const done = k < now || (k === 3 && enabled && everChecked);
           return h('li', { class: done ? 'done' : k === now ? 'now' : '' }, h('b', {}, done ? '✓' : String(k)), t);
         }),
       );
+      const notChecked =
+        !everChecked && checking < 0
+          ? [
+              h(
+                'div',
+                { class: 'mic-warn' },
+                h(
+                  'p',
+                  { class: 'lead' },
+                  '⚠️ Chưa làm “Kiểm tra 5 nốt”: app chưa biết tiếng đàn nhà tới micro to hay nhỏ, đang dùng độ nhạy mặc định ' +
+                    '→ bé đàn khẽ có thể không được nghe. Làm ngay (khoảng 1 phút) để app tự chỉnh độ nhạy:',
+                ),
+                button({ icon: '🩺', label: 'Kiểm tra 5 nốt ngay', kind: 'good', big: true, onTap: () => void runCheck() }),
+              ),
+            ]
+          : [];
       if (enabled) {
         useBox.replaceChildren(
+          ...notChecked,
           h('p', { class: 'lead' }, '✅ Micro đang được dùng cho các buổi học — app tự nghe và chấm nốt.'),
           button({
             icon: '🔇',
@@ -417,7 +462,7 @@ export function micTestScreen(app: App) {
               })
             : h('p', { class: 'muted' }, 'Micro mới nghe đúng ' + lastOk + '/5 nốt — chưa nên dùng. Bố mẹ vẫn chấm bằng nút “Đúng rồi” như thường.'),
         );
-      } else useBox.replaceChildren();
+      } else useBox.replaceChildren(...notChecked);
     }
 
     /** Bàn phím chỉ hiện khi cần (đang kiểm tra 5 nốt / chỉnh theo đàn nhà) — không che chữ của màn. */
@@ -541,6 +586,7 @@ export function micTestScreen(app: App) {
       report.replaceChildren();
       checking = 0;
       showKb();
+      renderSteps();
       askStep();
     }
 
@@ -651,6 +697,7 @@ export function micTestScreen(app: App) {
           calib,
           report,
           useBox,
+          autoNote,
           h(
             'p',
             { class: 'muted small' },
@@ -683,9 +730,11 @@ export function micTestScreen(app: App) {
     showFree();
     renderSteps();
     showKb();
+    showAutoNote();
 
     return () => {
       disposed = true;
+      app.mic.autoSensitivity = true;
       // Rời màn: lưu nhật ký mới nhất (đàn tự do chưa sao chép); không có bài 5 nốt lần này → giữ kết quả 5 nốt lần trước
       if (steps.length || freeLog.length) {
         const log = buildMicLog(app, { steps, freeLog, lastFrame, autoTune });
