@@ -9,7 +9,7 @@
  * Mọi phép đo đều bọc try/catch + kiểm tra tính năng (iPadOS 15: không có permissions 'microphone',
  * outputLatency; danh sách giọng nạp ngầm — chờ tối đa 1,5 giây). Logic thuần: src/pwa/diagnostics.ts.
  */
-import { loadAutoSens, loadMicLog } from '../../audio/micLogStore';
+import { loadAutoSens, loadMicLog, loadMicReport } from '../../audio/micLogStore';
 import { cancelSpeech } from '../../audio/voice';
 import { buildSessionPlan, weekPlan } from '../../lessons/lessonEngine';
 import { isStandalone } from '../../progress/backup';
@@ -143,6 +143,10 @@ export function diagnosticsScreen(app: App) {
         latencyMs: st.micLatencyMs,
         lastCheck: safe(() => micCheckFromLog(loadMicLog()), null),
         autoSens: safe(() => loadAutoSens().slice(-1)[0] ?? null, null),
+        lastReport: safe(() => {
+          const r = loadMicReport();
+          return r ? { at: r.at, summary: r.summary } : null;
+        }, null),
       };
     };
     const storageInfo = (): DiagSnapshot['storage'] => {

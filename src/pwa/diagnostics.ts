@@ -149,6 +149,8 @@ export interface DiagSnapshot {
     lastCheck: { ok: number; total: number; at: string } | null;
     /** Lần gần nhất micro TỰ tăng độ nhạy trong buổi học (micAutoSens.ts) */
     autoSens?: { at: string; from: string; to: string; missed: number } | null;
+    /** (+ 2026-10-09) Báo cáo "🎙️ Đo micro & tạo báo cáo" gần nhất (micLogStore.loadMicReport) */
+    lastReport?: { at: string; summary: string[] } | null;
   };
   storage: {
     text: string;
@@ -464,6 +466,17 @@ function micRows(s: DiagSnapshot): DiagRow[] {
       explain: `Trong buổi học có ${a.missed} lần bé đàn khẽ micro chưa nghe được → app tự tăng một bậc (mỗi lần bật micro tối đa một lần).`,
     });
   }
+  const rep = m.lastReport;
+  if (rep) {
+    const t = Date.parse(rep.at);
+    rows.push({
+      id: 'report',
+      label: 'Báo cáo micro gần nhất',
+      status: 'info',
+      value: isNaN(t) ? 'có' : fmtTime(t),
+      explain: rep.summary.join(' ') || 'Bài “🎙️ Đo micro & tạo báo cáo” trong Cài micro.',
+    });
+  }
   return rows;
 }
 
@@ -685,6 +698,14 @@ export function composeReport(s: DiagSnapshot, opts: ReportOptions = {}): string
       lines.push(`${STATUS_ICON[r.status]} ${r.label}: ${r.value}`);
       if ((r.status === 'warn' || r.status === 'bad') && r.tip) lines.push(`   → ${r.tip}`);
     }
+  }
+  // (+ 2026-10-09) Tóm tắt báo cáo micro gần nhất (bản đầy đủ: "📋 Sao chép báo cáo" trong Cài micro)
+  const rep = s.mic.lastReport;
+  if (rep?.summary.length) {
+    const t = Date.parse(rep.at);
+    lines.push('');
+    lines.push(`[🎙️ Báo cáo micro gần nhất${isNaN(t) ? '' : ` ${fmtTime(t)}`}]`);
+    for (const x of rep.summary) lines.push(x);
   }
   // (+ 2026-10-08) Lỗi gần đây (tối đa 5, mới nhất trước) — đầy đủ trong phần JSON
   if (s.errors?.length) {

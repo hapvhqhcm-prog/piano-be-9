@@ -92,6 +92,32 @@ export const SCENES = [
   { name: 'freeplay', js: `const m = await import('/src/ui/screens/freePlay.ts'); app.show(m.freePlayScreen(app));` },
   { name: 'parent', js: `const m = await import('/src/ui/screens/parent.ts'); app.show(m.parentScreen(app));` },
   { name: 'mictest', js: `const m = await import('/src/ui/screens/micTest.ts'); app.show(m.micTestScreen(app));` },
+  // 🎙️ Đo micro & tạo báo cáo (2026-10-09): thẻ đầu màn, đang đo (bài giả), báo cáo xong (bài giả, hook DEV __micAuto)
+  { name: 'micauto-card', js: `const m = await import('/src/ui/screens/micTest.ts'); app.show(m.micTestScreen(app));` },
+  {
+    name: 'micauto-run',
+    js: `const m = await import('/src/ui/screens/micTest.ts'); app.show(m.micTestScreen(app));
+         await new Promise((r) => setTimeout(r, 300));
+         const s = await import('/tests/micReportSynth.ts');
+         const plan = { stopAt: 3 };
+         s.synthSession(plan, 0); const off = performance.now() - s.synthLastNow + 1200;
+         window.__micAuto.show(s.synthSession(plan, off));`,
+  },
+  {
+    name: 'micauto-report',
+    js: `const m = await import('/src/ui/screens/micTest.ts'); app.show(m.micTestScreen(app));
+         await new Promise((r) => setTimeout(r, 300));
+         const s = await import('/tests/micReportSynth.ts');
+         window.__micAuto.show(s.synthSession({ floor: 0.0001, notes: [{}, {}, { peak: 0.0003, midi: null, nearMiss: true }], defaultNote: { cents: 8 } }));`,
+  },
+  {
+    name: 'micauto-report-text',
+    js: `const m = await import('/src/ui/screens/micTest.ts'); app.show(m.micTestScreen(app));
+         await new Promise((r) => setTimeout(r, 300));
+         const s = await import('/tests/micReportSynth.ts');
+         window.__micAuto.show(s.synthSession({ floor: 0.0001, notes: [{}, {}, { peak: 0.0003, midi: null, nearMiss: true }], defaultNote: { cents: 8 } }));
+         document.querySelector('.mic-auto-text').scrollIntoView({ block: 'end' });`,
+  },
   {
     name: 'practice-note',
     js: `const e = await import('/src/lessons/lessonEngine.ts'); const m = await import('/src/ui/screens/practice.ts');

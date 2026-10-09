@@ -28,6 +28,8 @@ export interface MicFrame {
   gate: number;
   onset: boolean;
   app: AppSound;
+  /** "Suýt nghe" (MicAnalyzer.nearMiss) — cho bài "Đo micro & tạo báo cáo" */
+  nearMiss?: boolean;
 }
 
 /** Bộ đệm micro đứng yên (toàn 0 hoặc y hệt khung trước) bao lâu thì coi là micro đã "điếc". */
@@ -530,7 +532,7 @@ export class MicListener {
     }
     this.serveChords();
     if (this.frameListeners.size) {
-      const frame: MicFrame = { pitch: f.pitch, level: f.level, rms: f.rms, floor: f.floor, gate: f.gate, onset: f.onset, app };
+      const frame: MicFrame = { pitch: f.pitch, level: f.level, rms: f.rms, floor: f.floor, gate: f.gate, onset: f.onset, app, nearMiss: f.nearMiss };
       this.frameListeners.forEach((fn) => fn(frame));
     }
     if (f.note) {

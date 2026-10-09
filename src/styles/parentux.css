@@ -333,3 +333,86 @@
 .mic-help h3 {
   margin: 10px 0 4px;
 }
+
+/* ---------- 🎙️ Đo micro & tạo báo cáo (micReport) ---------- */
+.mic-auto {
+  width: 100%;
+  max-width: 820px;
+  align-items: center;
+  text-align: center;
+  border: 3px solid var(--violet-500);
+  box-shadow: var(--e1);
+}
+.mic-auto h2 {
+  font-size: 28px;
+}
+.mic-auto .lead {
+  margin: 0;
+}
+.mic-auto-say {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 40px;
+  font-weight: 800;
+  line-height: 1.15;
+  color: var(--ink);
+}
+.mic-auto-step {
+  margin: 0;
+  font-weight: 700;
+}
+.mic-auto-track {
+  width: 100%;
+  max-width: 560px;
+  height: 14px;
+  border-radius: 7px;
+  background: var(--line);
+  overflow: hidden;
+}
+.mic-auto-bar {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--violet-500);
+  transition: width 0.2s linear;
+}
+.mic-auto-count {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--ink-2);
+}
+.mic-auto-sum {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+}
+.mic-auto .row {
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.mic-auto .linklike {
+  background: none;
+  border: 0;
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 18px;
+  color: var(--ink-2);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.mic-auto-text {
+  width: 100%;
+  box-sizing: border-box;
+  height: 14rem;
+  border: 2px solid var(--line-strong);
+  border-radius: 14px;
+  padding: 10px 12px;
+  background: var(--surface);
+  color: var(--ink);
+  font: 12px/1.35 ui-monospace, Menlo, monospace;
+  white-space: pre;
+  overflow: auto;
+  text-align: left;
+}

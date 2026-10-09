@@ -662,3 +662,17 @@ Có ba chuyên gia đánh giá: sư phạm, động lực cho trẻ và kỹ thu
   - Micro không nghe ra nốt thì báo "không phải lỗi của con", kèm nút để bố mẹ chấm giúp.
 - **Giữ tiến độ:** tuần 1–4 chỉ thêm hoạt động vào cuối bài. curriculumRev vẫn là 4. Có golden test cho thử thách, trứng và sticker của các tuần đã qua.
 - **Kiểm tra:** 1891 test đạt; compat iPadOS 15+ đạt; e2e A–E.
+
+## 33. Đo micro & tạo báo cáo một chạm (OWNER 2026-10-09)
+- Màn "Cài micro" có thẻ "🎙️ Đo micro & tạo báo cáo (≈1 phút)". App tự nghe qua 13 bước:
+  - yên lặng 5 giây;
+  - 5 nốt đàn nhẹ, 3 nốt đàn vừa;
+  - Đô trầm và Đô cao;
+  - một hợp âm;
+  - một nốt ngân dài.
+- Báo cáo dạng chữ, khoảng 30 dòng, kèm một dòng DATA cuối. Báo cáo có:
+  - cài đặt micro thực tế của iPad, tiếng ồn nền, độ dư so với ngưỡng nghe của từng nốt;
+  - mô phỏng kết quả ở độ nhạy Thấp/Vừa/Cao, độ lệch dây đàn;
+  - thống kê micro trong các buổi học gần đây, cùng đề xuất của app.
+- Có nút sao chép, chia sẻ và đo lại. Đổi độ nhạy theo đề xuất phải bấm nút; app không tự đổi.
+- Báo cáo gần nhất cũng hiện trong 🩺. Logic nằm ở `src/audio/micReport.ts`, test ở `tests/micReport.test.ts`.

@@ -70,3 +70,34 @@ export function loadAutoSens(store: KV | null = kv()): AutoSensEntry[] {
     return [];
   }
 }
+
+/**
+ * (+ 2026-10-09) BÁO CÁO MICRO gần nhất ("🎙️ Đo micro & tạo báo cáo", micReport.ts) — màn "🩺 Kiểm tra iPad" hiện
+ * "Báo cáo micro gần nhất: <ngày>" và chép câu tóm tắt vào bản kết quả. Không phải tiến độ học của bé.
+ */
+export const MIC_REPORT_KEY = 'piano-be-9:mic-report';
+
+export interface SavedMicReport {
+  at: string;
+  summary: string[];
+  text: string;
+}
+
+export function saveMicReport(r: SavedMicReport, store: KV | null = kv()): void {
+  if (!store) return;
+  try {
+    store.setItem(MIC_REPORT_KEY, JSON.stringify(r));
+  } catch {
+    /* đầy / bị chặn — bỏ qua */
+  }
+}
+
+export function loadMicReport(store: KV | null = kv()): SavedMicReport | null {
+  if (!store) return null;
+  try {
+    const v = JSON.parse(store.getItem(MIC_REPORT_KEY) ?? 'null') as SavedMicReport | null;
+    return v && typeof v.at === 'string' && Array.isArray(v.summary) && typeof v.text === 'string' ? v : null;
+  } catch {
+    return null;
+  }
+}
