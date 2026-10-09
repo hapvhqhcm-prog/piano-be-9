@@ -44,7 +44,7 @@ Thêm từ lần này: gỡ bộ nghe tiếng vỗ khi rời màn giữa chừng
 
 1. **Thử với bé thật** là việc quan trọng nhất còn thiếu. Mọi tham số (độ trễ micro 0,18 s, ngưỡng tiếng vỗ, độ khó tuần 9–10)
    mới chỉ đúng trên lý thuyết.
-2. **Micro chỉ nghe một nốt mỗi lúc**: bài hai tay/hợp âm chấm "dễ" hơn thực tế — nên để bố mẹ xác nhận các bài này.
+2. **Micro chỉ nghe một nốt mỗi lúc**: bài hai tay/hợp âm chấm "dễ" hơn thực tế — nên để bố mẹ xác nhận các bài này. *(2026-10-09: micro đã chấm riêng từng tay ở bài hai tay — TEST_REPORT §35; còn yếu với hợp âm 3 nốt tay trái.)*
 3. **Nhịp độ 24 tuần là cố định theo tiêu chí** — bé nhanh có thể thấy chậm; bé chậm có thể ở lâu một tuần (bình thường).
    Bố mẹ đổi tuần thủ công được ở màn Phụ huynh.
 4. **Video quay thật** của bố mẹ/thầy cô (nhập vào app, lưu trên máy) — cần OWNER đồng ý vì tốn bộ nhớ.

@@ -28,11 +28,17 @@ export class TakeReplay {
   private slot: HTMLElement | null = null;
   /** Bản ghi của lượt vừa dừng (tới sau) — cho Album */
   private pending: Promise<TakeClip | null> | null = null;
+  /**
+   * (+ 2026-10-09) GIỮ bản ghi lượt vừa chơi trong lúc "🎯 Luyện ngay chỗ này" (các lượt luyện không ghi, không xoá
+   * bản này) → quay về màn kết quả vẫn "🎧 Nghe lại" được. Rời màn thì vẫn xoá như thường.
+   */
+  private held = false;
 
   constructor(private readonly d: TakeReplayDeps) {}
 
   /** Bắt đầu ghi lượt mới — KHÔNG BAO GIỜ ghi khi micro tắt */
   start(): void {
+    if (this.held) return;
     this.drop();
     if (!this.d.micOn()) return;
     this.rec = takeRecorder(this.d.mic);
@@ -41,6 +47,7 @@ export class TakeReplay {
 
   /** Hết lượt: dừng ghi; bản ghi tới sau (bất đồng bộ) thì hiện nút nếu vẫn đang ở màn kết quả lượt này */
   stop(): void {
+    if (this.held) return;
     const r = this.rec;
     this.rec = null;
     if (!r) return;
@@ -106,6 +113,7 @@ export class TakeReplay {
 
   /** Bỏ bản ghi (lượt mới / rời màn): dừng phát, giải phóng bộ nhớ */
   drop(): void {
+    if (this.held && !this.d.disposed()) return;
     this.gen++;
     this.rec?.cancel();
     this.rec = null;
@@ -114,6 +122,12 @@ export class TakeReplay {
     this.clip = null;
     this.slot = null;
     this.pending = null;
+  }
+
+  /** Giữ / thôi giữ bản ghi hiện có (xem `held`). Đang giữ: start/stop/drop không làm gì (trừ khi đã rời màn). */
+  hold(on: boolean): void {
+    this.held = on;
+    if (on) this.clip?.stopPlayback();
   }
 
   /** Ô trống cho màn kết quả; có bản ghi (ngay hoặc tới sau) thì điền nút + một câu hỏi nhẹ. */

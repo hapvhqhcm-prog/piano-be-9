@@ -1,0 +1,167 @@
+/* (+ 2026-10-09) "Nhận xét kiểu thầy giáo" — màu từng nốt sau lượt chơi (src/ui/screens/song.ts, staffView.setReview) */
+
+/* Đúng — xanh */
+.staff-note.rv-ok .staff-head {
+  fill: var(--good);
+  stroke: var(--good);
+}
+.staff-note.rv-ok .staff-head.hollow {
+  fill: #c9f0d8;
+}
+/* Nhầm nốt — đỏ (+ tên nốt con đàn nhầm phía trên khuông) */
+.staff-note.rv-wrong .staff-head {
+  fill: #e04848;
+  stroke: #e04848;
+}
+.staff-note.rv-wrong .staff-head.hollow {
+  fill: #fbd5d5;
+}
+.staff-note.rv-wrong .staff-name {
+  fill: #c62f2f;
+}
+/* Sót — xám, rỗng, viền đứt */
+.staff-note.rv-missed .staff-head,
+.staff-note.rv-missed .staff-head.hollow {
+  fill: #fff;
+  stroke: #9a98a6;
+  stroke-width: 2.4;
+  stroke-dasharray: 3.5 2.5;
+}
+.staff-note.rv-missed .staff-stem,
+.staff-note.rv-missed .staff-flag {
+  stroke: #b4b2bf;
+}
+/* Sớm / muộn ngoài cửa sổ nhịp — cam (+ mũi tên ← / →) */
+.staff-note.rv-early .staff-head,
+.staff-note.rv-late .staff-head {
+  fill: #f08c1a;
+  stroke: #f08c1a;
+}
+.staff-note.rv-early .staff-head.hollow,
+.staff-note.rv-late .staff-head.hollow {
+  fill: #fde3c3;
+}
+/* Bố mẹ bấm "tiếp" (app không xác nhận) — trung tính như dấu "parent" */
+.staff-note.rv-helped .staff-head {
+  fill: var(--violet-200, #ddd6fe);
+  stroke: var(--violet-400, #a78bfa);
+}
+.staff-rv-tag {
+  font-size: 17px;
+  font-weight: 800;
+  text-anchor: middle;
+  paint-order: stroke;
+  stroke: #fff;
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+.staff-rv-tag.rv-wrong {
+  fill: #c62f2f;
+}
+.staff-rv-tag.rv-early,
+.staff-rv-tag.rv-late {
+  fill: #d4730c;
+  font-size: 22px;
+}
+
+/* Hàng chú thích + lật trang dưới khuông (một dòng mảnh — không làm chật màn) */
+.staff.rv-on {
+  display: flex;
+  flex-direction: column;
+}
+.staff.rv-on > svg {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.rv-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex: 0 0 auto;
+  min-height: 30px;
+  padding: 0 6px;
+}
+.rv-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.rv-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+.rv-key i {
+  display: inline-block;
+  width: 13px;
+  height: 10px;
+  border-radius: 50%;
+  transform: rotate(-20deg);
+}
+.rv-key.rv-ok i {
+  background: var(--good);
+}
+.rv-key.rv-wrong i {
+  background: #e04848;
+}
+.rv-key.rv-missed i {
+  background: #fff;
+  border: 2px dashed #9a98a6;
+}
+.rv-key.rv-early i,
+.rv-key.rv-late i {
+  background: #f08c1a;
+}
+.rv-key.rv-helped i {
+  background: var(--violet-200, #ddd6fe);
+}
+.rv-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+.rv-page {
+  min-width: 34px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--muted);
+}
+.rv-turn {
+  width: 44px;
+  height: 34px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--violet-50, #f3f0ff);
+  color: var(--violet-700, #5b3fd1);
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.rv-turn:active {
+  transform: scale(0.94);
+}
+
+/* Lời nhắn của thầy trên màn kết quả */
+.song-result-next.teacher {
+  color: var(--violet-700, #5b3fd1);
+}
+
+/* Màn chờ của "🎯 Luyện ngay chỗ này" */
+.focus-lines b {
+  font-size: 22px;
+  color: var(--violet-700, #5b3fd1);
+}
+.focus-lines .focus-point {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink-2, #4a4759);
+}

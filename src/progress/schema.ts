@@ -82,6 +82,11 @@ export interface SongRun {
   checklist?: { notes: boolean; beat: boolean; fingers: boolean };
   total: number;
   hits: number;
+  /**
+   * (+ 2026-10-09) Micro chấm hai tay (bài hai tay, cả hai tay): số nhóm đúng / tổng của TỪNG tay. Không có = lượt
+   * chấm kiểu cũ (một cao độ / bố mẹ). Chi tiết từng nốt chỉ trong bộ nhớ (src/music/handGrade.ts TwoHandRun).
+   */
+  hands?: { RH: { hits: number; total: number }; LH: { hits: number; total: number } };
   source: 'mic' | 'parent';
   passed: boolean;
   ts: number;
@@ -148,6 +153,11 @@ export interface Settings {
    * kiểu nhạc đệm) + các món đã xem màn mừng (`seen`). Không có = chưa chọn gì. Đọc MỀM (mục hỏng bị bỏ qua).
    */
   cosmetics?: Cosmetics;
+  /**
+   * (+ 2026-10-09) "Micro chấm cả 2 tay (thử nghiệm)": bài hai tay — micro kiểm riêng tay phải / tay trái
+   * (src/audio/twoHand.ts). Không có = mặc định TWO_HAND_DEFAULT.
+   */
+  micTwoHand?: boolean;
   /** (+ 2026-10-08) ⏰ Giờ tập bố mẹ đặt gần nhất (màn Phụ huynh → tạo lịch nhắc .ics): thứ (0 = CN … 6 = T7) + "HH:MM" */
   reminder?: { days: number[]; time: string };
 }

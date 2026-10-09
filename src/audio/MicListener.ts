@@ -1,5 +1,6 @@
 import type { AudioEngine, EngineState } from './AudioEngine';
 import { analyzeChord, CHORD_FRAME, CHORD_READY_AFTER, type ChordResult } from './chordVerify';
+import { analyzeHands, HANDS_LATE_READY, HANDS_READY_AFTER, type HandsResult, type HandsSpec } from './twoHand';
 import { MicAnalyzer, type AppSound, type Sensitivity } from './micAnalyzer';
 import { SensitivityAdvisor, type AutoSensChange } from './micAutoSens';
 import type { HeardNote, PitchResult } from './pitchDetect';
@@ -113,10 +114,18 @@ const PROBES = 8;
 /** Khung phân tích cao độ / gõ phím (mẫu) — MicAnalyzer luôn nhận 2048 mẫu gần nhất. */
 export const ANALYSIS_FRAME = 2048;
 /**
- * Bộ đệm lấy từ AnalyserNode (mẫu): ~0,34 s ở 48 kHz — đủ để kiểm tra hợp âm (cần [gõ + 50 ms, gõ + 200 ms])
- * kể cả khi màn hình hỏi chậm vài khung. Chép 16384 số mỗi 25 ms là rất nhẹ.
+ * Bộ đệm lấy từ AnalyserNode (mẫu): ~0,68 s ở 48 kHz — đủ để kiểm tra hợp âm (cần [gõ + 50 ms, gõ + 200 ms]) và
+ * hai tay (cần [gõ − 300 ms, gõ + 280 ms], twoHand.ts) kể cả khi màn hình hỏi chậm vài khung. Chép 32768 số mỗi
+ * 25 ms vẫn rất nhẹ.
  */
-export const HISTORY_SIZE = 16384;
+export const HISTORY_SIZE = 32768;
+
+interface HandsRequest {
+  spec: HandsSpec;
+  onsetAt: number;
+  late: boolean;
+  resolve: (r: HandsResult | null) => void;
+}
 
 interface ChordRequest {
   midis: number[];
@@ -171,6 +180,7 @@ export class MicListener {
   /** Lần gõ phím gần nhất (đồng hồ AudioContext, giây); −1 = chưa có */
   private lastOnsetAt = -1;
   private chordRequests: ChordRequest[] = [];
+  private handsRequests: HandsRequest[] = [];
   /** Thời điểm (đồng hồ AudioContext) của mẫu cuối trong `buf` — lúc lấy bộ đệm gần nhất */
   private bufTime = 0;
   /** Đồng hồ (ms) cho watchdog — tiêm vào để test; KHÔNG dùng ctx.currentTime vì nó đứng yên khi bị ngắt. */
@@ -303,8 +313,47 @@ export class MicListener {
     });
   }
 
+  /**
+   * (+ 2026-10-09) KIỂM TRA HAI TAY (twoHand.ts): ở lần gõ `onsetAt`, tay phải / tay trái có đàn đủ nốt `spec` (vừa
+   * đàn, không phải nốt cũ còn ngân) không? `late = false` → trả lời ~160 ms sau lần gõ (chỉ khung sau);
+   * `late = true` → ~280 ms (thêm khung muộn: một tay đàn trễ ~0,1 s). null = không kiểm tra được (micro tắt / chưa có
+   * lần gõ); `conclusive = false` (tiếng nhỏ / ồn / app đang phát) → dùng cách cũ.
+   */
+  verifyHands(spec: HandsSpec, onsetAt = this.lastOnsetAt, late = true): Promise<HandsResult | null> {
+    if (this._state !== 'on' || !this.buf || onsetAt < 0) return Promise.resolve(null);
+    return new Promise((resolve) => {
+      this.handsRequests.push({ spec, onsetAt, late, resolve });
+      this.serveChords();
+    });
+  }
+
+  /** Trả lời các yêu cầu kiểm tra hai tay đã đủ dữ liệu. */
+  private serveHands(): void {
+    if (!this.handsRequests.length) return;
+    const buf = this.buf;
+    const ctx = this.audio.context;
+    if (!buf || !ctx) return;
+    const now = this.bufTime;
+    const sr = ctx.sampleRate;
+    this.handsRequests = this.handsRequests.filter((rq) => {
+      if (now < rq.onsetAt + (rq.late ? HANDS_LATE_READY : HANDS_READY_AFTER)) return true;
+      // Mẫu cuối bộ đệm ≈ `now` → vị trí lần gõ trong bộ đệm
+      const onsetIdx = buf.length - Math.round((now - rq.onsetAt) * sr);
+      let r: HandsResult | null = null;
+      try {
+        r = analyzeHands(buf, sr, onsetIdx, rq.spec, this.tuningCents, rq.late);
+        if (this.audio.isSounding) r.conclusive = false;
+      } catch {
+        r = null;
+      }
+      rq.resolve(r);
+      return false;
+    });
+  }
+
   /** Trả lời các yêu cầu kiểm tra hợp âm đã đủ dữ liệu (gọi sau mỗi khung). */
   private serveChords(): void {
+    this.serveHands();
     if (!this.chordRequests.length) return;
     const buf = this.buf;
     const ctx = this.audio.context;
@@ -590,6 +639,9 @@ export class MicListener {
     const pending = this.chordRequests;
     this.chordRequests = [];
     pending.forEach((rq) => rq.resolve(null));
+    const hp = this.handsRequests;
+    this.handsRequests = [];
+    hp.forEach((rq) => rq.resolve(null));
     if (this._state === 'on' || this._state === 'starting') {
       // Giữ 'play-and-record' nếu micro vẫn được bật trong Cài đặt (AudioEngine quyết định)
       this.audio.setMicActive(false);

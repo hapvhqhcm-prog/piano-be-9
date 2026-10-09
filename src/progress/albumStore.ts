@@ -218,6 +218,7 @@ export function memoryAlbumBackend(): AlbumBackend & { takes: Map<string, AlbumT
 
 const DB_NAME = 'piano-be-9-album';
 const STORE = 'takes';
+const META = 'meta';
 
 /** IndexedDB thật. null nếu trình duyệt không có (hoặc bị chặn). */
 export function idbAlbumBackend(idb: IDBFactory | undefined = globalThis.indexedDB): AlbumBackend | null {
@@ -229,9 +230,28 @@ export function idbAlbumBackend(idb: IDBFactory | undefined = globalThis.indexed
   let dbp: Promise<IDBDatabase> | null = null;
   const open = (): Promise<IDBDatabase> =>
     (dbp ??= new Promise<IDBDatabase>((resolve, reject) => {
-      const rq = idb.open(DB_NAME, 1);
+      // v2 (rà soát 2026-10-09): thêm kho META riêng — danh sách Album chỉ đọc thông tin, KHÔNG nạp cả chục MB âm thanh
+      // (trước đây duyệt con trỏ trên kho bản thu → iPad cũ có thể giật / văng tab khi Album gần đầy)
+      const rq = idb.open(DB_NAME, 2);
       rq.onupgradeneeded = () => {
-        if (!rq.result.objectStoreNames.contains(STORE)) rq.result.createObjectStore(STORE, { keyPath: 'songId' });
+        const db = rq.result;
+        if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE, { keyPath: 'songId' });
+        if (!db.objectStoreNames.contains(META)) {
+          db.createObjectStore(META, { keyPath: 'songId' });
+          // Chép thông tin các bản thu sẵn có (bản v1) sang kho meta — một lần, trong giao dịch nâng cấp
+          const tx = rq.transaction;
+          if (tx) {
+            const takes = tx.objectStore(STORE);
+            const metas = tx.objectStore(META);
+            const cur = takes.openCursor();
+            cur.onsuccess = () => {
+              const c = cur.result;
+              if (!c) return;
+              if (isTake(c.value)) metas.put(metaOf(c.value));
+              c.continue();
+            };
+          }
+        }
       };
       rq.onsuccess = () => {
         const db = rq.result;
@@ -247,13 +267,17 @@ export function idbAlbumBackend(idb: IDBFactory | undefined = globalThis.indexed
       dbp = null; // lần sau thử mở lại
       throw e;
     }));
-  const run = <T>(mode: IDBTransactionMode, fn: (s: IDBObjectStore, done: (v: T) => void) => void): Promise<T> =>
+  const run = <T>(
+    stores: string[],
+    mode: IDBTransactionMode,
+    fn: (tx: IDBTransaction, done: (v: T) => void) => void,
+  ): Promise<T> =>
     open().then(
       (db) =>
         new Promise<T>((resolve, reject) => {
-          const tx = db.transaction(STORE, mode);
+          const tx = db.transaction(stores, mode);
           let value: T = undefined as T;
-          fn(tx.objectStore(STORE), (v) => (value = v));
+          fn(tx, (v) => (value = v));
           tx.oncomplete = () => resolve(value);
           tx.onerror = () => reject(tx.error);
           tx.onabort = () => reject(tx.error ?? new Error('idb abort'));
@@ -263,36 +287,51 @@ export function idbAlbumBackend(idb: IDBFactory | undefined = globalThis.indexed
       dbp = null;
       throw e;
     });
-  const isTake = (v: unknown): v is AlbumTake =>
-    !!v && typeof v === 'object' && typeof (v as AlbumTake).songId === 'string' && (v as AlbumTake).data instanceof ArrayBuffer;
   return {
-    // Duyệt con trỏ, chỉ giữ phần thông tin (không giữ dữ liệu âm thanh trong danh sách)
+    // Chỉ đọc kho META (nhỏ) — không chạm dữ liệu âm thanh
     list: () =>
-      run<AlbumMeta[]>('readonly', (s, done) => {
-        const out: AlbumMeta[] = [];
-        done(out);
-        const rq = s.openCursor();
-        rq.onsuccess = () => {
-          const cur = rq.result;
-          if (!cur) return;
-          const v = cur.value as unknown;
-          if (isTake(v)) {
-            const { data: _d, ...m } = v;
-            out.push(m);
-          }
-          cur.continue();
-        };
+      run<AlbumMeta[]>([META], 'readonly', (tx, done) => {
+        done([]);
+        const rq = tx.objectStore(META).getAll();
+        rq.onsuccess = () => done((rq.result as unknown[]).filter(isMeta).map((m) => ({ ...m })));
       }),
     get: (songId) =>
-      run<AlbumTake | null>('readonly', (s, done) => {
+      run<AlbumTake | null>([STORE], 'readonly', (tx, done) => {
         done(null);
-        const rq = s.get(songId);
+        const rq = tx.objectStore(STORE).get(songId);
         rq.onsuccess = () => done(isTake(rq.result) ? rq.result : null);
       }),
-    put: (t) => run<void>('readwrite', (s) => void s.put(t)),
-    remove: (songId) => run<void>('readwrite', (s) => void s.delete(songId)),
-    clear: () => run<void>('readwrite', (s) => void s.clear()),
+    // Bản thu + thông tin ghi CÙNG một giao dịch (không lệch nhau)
+    put: (t) =>
+      run<void>([STORE, META], 'readwrite', (tx) => {
+        tx.objectStore(STORE).put(t);
+        tx.objectStore(META).put(metaOf(t));
+      }),
+    remove: (songId) =>
+      run<void>([STORE, META], 'readwrite', (tx) => {
+        tx.objectStore(STORE).delete(songId);
+        tx.objectStore(META).delete(songId);
+      }),
+    clear: () =>
+      run<void>([STORE, META], 'readwrite', (tx) => {
+        tx.objectStore(STORE).clear();
+        tx.objectStore(META).clear();
+      }),
   };
+}
+
+function isTake(v: unknown): v is AlbumTake {
+  return !!v && typeof v === 'object' && typeof (v as AlbumTake).songId === 'string' && (v as AlbumTake).data instanceof ArrayBuffer;
+}
+
+function isMeta(v: unknown): v is AlbumMeta {
+  return !!v && typeof v === 'object' && typeof (v as AlbumMeta).songId === 'string' && typeof (v as AlbumMeta).size === 'number';
+}
+
+/** Phần thông tin của một bản thu (bỏ dữ liệu âm thanh). */
+export function metaOf(t: AlbumTake): AlbumMeta {
+  const { data: _d, ...m } = t;
+  return m;
 }
 
 let shared: AlbumStore | null | undefined;

@@ -698,3 +698,35 @@ Có ba chuyên gia đánh giá: sư phạm, động lực cho trẻ và kỹ thu
   - Khung báo cáo micro tự xuống dòng.
 - **Tốc độ:** phần tải lúc mở app giảm từ 122 xuống 93 kB nén (màn chính và micro tải ngay sau màn bắt đầu).
 - **Nhịp 6/8:** máy gõ nhịp nhấn phụ ở phách 4.
+
+## 35. Micro chấm bài hai tay (OWNER duyệt "Chấm bài 2 tay bằng micro", 2026-10-09)
+- **Cách làm** (`src/audio/twoHand.ts`): app biết tay phải / tay trái phải đàn nốt nào. Ở mỗi lần gõ phím, trên tín hiệu micro THÔ (không qua lọc 1,6 kHz — nốt trầm Đô3–Sol3 cần họa âm 2–6):
+  - khung sau lần gõ (40–160 ms): NNLS khuôn họa âm (chordVerify.ts) → nốt nào có mặt;
+  - nốt "vừa đàn": họa âm riêng của nốt phải TĂNG so với trước lần gõ (nốt cũ còn ngân / tay trái giữ nốt trắng không được tính lại);
+  - nhầm phím bên cạnh: so họa âm riêng của nốt cần đàn với phím lệch ±1, ±2 (cùng bậc họa âm, có chặn quãng 8);
+  - không phải tiếng đàn: cao độ trượt (giọng nói) hoặc tiếng to dần → không tính;
+  - thiếu một tay → xem thêm khung muộn (160–280 ms): tay trái trễ ~0,1 s vẫn là "cùng lúc".
+- **Chế độ chờ:** chỉ đi tiếp khi đủ HAI tay; thiếu thì nói rõ: "🫲 Tay trái chưa nghe thấy Đô", "🫱 Tay phải đàn Fa — cần Mi". Ba lần chưa được → nút "👪 Bố mẹ: tiếp" nổi bật. Kết quả có ~160 ms sau lần gõ.
+- **Theo nhịp:** mỗi lần gõ kiểm tra các nhóm hai tay quanh đó; nhóm đúng khi cả hai tay đúng; màn kết quả có "tay phải x/y · tay trái a/b".
+- Không kết luận được (tiếng nhỏ / ồn / app đang phát) → cách cũ. Bài một tay, tập tách tay: không đổi.
+- **Cài đặt:** Phụ huynh → "Micro chấm cả 2 tay (thử nghiệm)", mặc định BẬT.
+- **Đo trên giả lập đàn cơ** (`tests/twoHandBench.test.ts`, `TWO_HAND_BENCH=full`): 8 bài hai tay tuần 12–23, 5 điều kiện (48k/44,1k, nhẹ/bình thường, lọc ồn iOS, giữ phím), bé đàn lệch nhịp ±60 ms, hai tay lệch nhau tới ±15 ms.
+
+| Bé đàn | Mới (chờ / theo nhịp) | Cũ (chờ / theo nhịp) |
+|---|---|---|
+| Đúng hai tay → tay phải / tay trái được ghi nhận | 99% / 100% | 80% (cả nhóm) |
+| Quên tay trái → phát hiện | 96% | 87% / 0% |
+| Quên tay phải → phát hiện | 93% | 81% / 20% |
+| Sai nốt tay trái → phát hiện (và gọi đúng phím) | 75% / 89% | 80% / 39% |
+| Sai nốt tay phải → phát hiện | 91% | 86% / 58% |
+| Tay trái trễ 120 ms → vẫn ghi nhận | 98% / 99% | 93% / 100% |
+
+  - Riêng các bài tuần 12–13 (Hot Cross Buns, Ode to Joy, Bell Tower, Two Friends): ghi nhận đúng 100%; phát hiện quên tay trái 92%, quên tay phải 100%, sai nốt 98–100%.
+  - Yếu nhất: hợp âm 3 nốt tay trái (Đô3–Mi3–Sol3) mà tay phải đàn đúng nốt của hợp âm (tuần 22+). Tay phải khi đó trùng họa âm của tay trái, nên sai / quên khó thấy (phát hiện 46–86%). Khi không chắc, app nghiêng về ghi nhận, nên bé không bị chấm oan.
+  - Không ghi nhận "ma": im lặng, quạt, giọng nói (3 giọng) → 0 lần cả hai tay. Ở 104 lần gõ (× 5 nhóm nốt): 2 lần một tay được tính (giọng nói đúng cao độ một nốt), 0 lần cả hai tay. Hỏi ở đầu âm tiết bất kỳ (khó hơn thực tế): 5/2400 lần cả hai tay.
+  - Độ trễ: trung vị 162 ms sau lần gõ (thêm ≤ 25 ms nhịp đọc micro).
+- Kết quả từng tay, từng nốt (`src/music/handGrade.ts` — `TwoHandRun`) dùng cho nhận xét sau bài. `SongRun.hands` lưu tổng hợp (trường tùy chọn).
+
+## 36. Nhận xét kiểu thầy giáo + Album nhẹ hơn (2026-10-09)
+- Sau mỗi bài: tô màu từng nốt trên khuông (xanh đúng / đỏ nhầm + tên nốt đã đàn / xám sót / cam sớm-muộn ←→, theo từng tay khi có); ONE nhận xét chính (`src/music/teacher.ts`, ≤ 15 chữ, đọc to: hoàn hảo, tiến bộ, gần đúng, hai tay, nhầm nốt, giữ đủ phách, vội, chậm, nhầm, sót); nút "🎯 Luyện ngay chỗ này" (chậm rồi đúng tốc độ, không tính sao).
+- Album: kho thông tin riêng trong IndexedDB (v2, chuyển tự động từ v1) — danh sách không nạp âm thanh (`tests/albumIdb.test.ts`).

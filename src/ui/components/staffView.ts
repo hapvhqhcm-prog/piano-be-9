@@ -67,6 +67,17 @@ export interface StaffOptions {
 /** hit = app NGHE/thấy đúng (xanh) · miss = trượt · parent = bố mẹ bấm "tiếp" (đã qua nhưng app không xác nhận — không tô xanh) */
 export type NoteMark = 'now' | 'hit' | 'miss' | 'parent' | null;
 
+/**
+ * (+ 2026-10-09) "Nhận xét kiểu thầy giáo" — màu từng nốt sau lượt chơi: ok xanh · wrong đỏ (+ tên nốt bé đàn nhầm) ·
+ * missed xám rỗng · early/late cam (+ mũi tên ←/→) · helped = bố mẹ bấm "tiếp" (trung tính).
+ */
+export interface ReviewMark {
+  kind: 'ok' | 'wrong' | 'missed' | 'early' | 'late' | 'helped';
+  /** Chữ nhỏ phía trên khuông (vd tên nốt bé đàn nhầm, "←" sớm, "→" muộn) */
+  tag?: string;
+}
+const RV_CLASSES = ['rv-ok', 'rv-wrong', 'rv-missed', 'rv-early', 'rv-late', 'rv-helped'];
+
 interface Stave {
   clef: Clef;
   bottomY: number;
@@ -145,6 +156,10 @@ export class StaffView {
   /** Phần lẻ (px) của vị trí khung cắt — cộng vào transform */
   private frac: [number, number] = [0, 0];
   private ro: ResizeObserver | null = null;
+  /** (+ 2026-10-09) Màu nhận xét từng nốt (giữ qua lật trang — vẽ lại trang thì tô lại) */
+  private review = new Map<number, ReviewMark>();
+  /** y hàng chữ nhận xét của từng nốt (phía trên khuông của nốt đó) */
+  private tagY = new Map<number, number>();
 
   constructor(
     private readonly tune: Tune,
@@ -485,6 +500,7 @@ export class StaffView {
       this.drawRest(s, n, x, g);
       return g;
     }
+    this.tagY.set(n.index, this.y(s, 8) - 12);
     const pitches = pitchesOf(n);
     const steps = pitches.map((p) => staffStep(p, s.clef));
     const shape = noteShape(n.beats * this.unit);
@@ -554,7 +570,53 @@ export class StaffView {
       t.textContent = viName(n.pitch!).replace(' thăng', '♯').replace(' giáng', '♭');
       g.append(t);
     }
+    this.drawReview(n.index, g);
     return g;
+  }
+
+  /** Tô màu nhận xét cho một nốt đã vẽ (và chữ nhỏ phía trên khuông: tên nốt nhầm / ← sớm / → muộn). */
+  private drawReview(index: number, g: SVGGElement): void {
+    g.classList.remove(...RV_CLASSES);
+    g.querySelectorAll('.staff-rv-tag').forEach((t) => t.remove());
+    const m = this.review.get(index);
+    if (!m) return;
+    g.classList.add(`rv-${m.kind}`);
+    if (!m.tag) return;
+    const heads = [...g.querySelectorAll('ellipse.staff-head')];
+    if (!heads.length) return;
+    const cx = Number(heads[0].getAttribute('cx'));
+    const top = Math.min(...heads.map((e) => Number(e.getAttribute('cy'))));
+    const t = el('text', { x: cx, y: Math.min(this.tagY.get(index) ?? top - 16, top - 16), class: `staff-rv-tag rv-${m.kind}` });
+    t.textContent = m.tag;
+    g.append(t);
+  }
+
+  /** (+ 2026-10-09) Màu nhận xét từng nốt sau lượt chơi (null = bỏ). Giữ qua lật trang. */
+  setReview(marks: ReadonlyMap<number, ReviewMark> | null): void {
+    this.review = new Map(marks ?? []);
+    this.noteEls.forEach((g, i) => this.drawReview(i, g));
+  }
+
+  /** Số trang (chế độ trang); băng chuyền = 1 */
+  pageCount(): number {
+    return this.o.mode === 'page' ? Math.max(1, Math.ceil(measureCount(this.tune) / this.o.measuresPerPage)) : 1;
+  }
+
+  /** Trang đang hiện (từ 0) */
+  currentPage(): number {
+    return Math.max(0, this.page);
+  }
+
+  /** Lật tới trang chứa ô nhịp `m` (chế độ trang) */
+  showMeasure(m: number): void {
+    if (this.o.mode !== 'page') return;
+    this.showPage(Math.max(0, Math.min(this.pageCount() - 1, Math.floor(m / this.o.measuresPerPage))));
+  }
+
+  /** Lật trang trước / sau (chế độ trang). Trả về trang mới. */
+  turnPage(delta: number): number {
+    if (this.o.mode === 'page') this.showPage(Math.max(0, Math.min(this.pageCount() - 1, this.currentPage() + delta)));
+    return this.currentPage();
   }
 
   /**
@@ -697,6 +759,7 @@ export class StaffView {
     this.content.replaceChildren();
     this.noteEls.clear();
     this.stemDir.clear();
+    this.tagY.clear();
   }
 
   private drawAll(): void {

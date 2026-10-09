@@ -26,6 +26,7 @@ import { installCard } from '../components/installCard';
 import { BACKUP_MESSAGE, exportBackup } from '../../progress/backup';
 import { PRIVACY_NOTE, customTuneTitle, parentSongToTune } from '../../practice/parentSongs';
 import { measureCount } from '../../music/tune';
+import { TWO_HAND_DEFAULT } from '../../audio/twoHand';
 import { playSong } from './library';
 import { lazy, lazyScreen, prefetchLater } from '../lazy';
 import { albumParentCard } from './albumParent';
@@ -876,6 +877,16 @@ export function parentScreen(app: App) {
             ],
             s.timing ?? 'easy',
             (v) => set({ timing: v }),
+          ),
+          h('h3', {}, 'Micro chấm cả 2 tay (thử nghiệm)'),
+          h('p', { class: 'muted' }, 'Bài hai tay: micro nghe riêng tay phải và tay trái (thiếu tay nào, nhầm phím nào). Tắt = micro chỉ nghe một nốt mỗi lúc như trước. Nút "👪 Bố mẹ: tiếp" luôn còn.'),
+          segmented(
+            [
+              { value: 'on', label: 'Bật' },
+              { value: 'off', label: 'Tắt' },
+            ],
+            (s.micTwoHand ?? TWO_HAND_DEFAULT) ? 'on' : 'off',
+            (v) => set({ micTwoHand: v === 'on' }),
           ),
           h('h3', {}, 'Nhạc đệm khi đàn theo nhịp ("bố mẹ đàn cùng")'),
           h('p', { class: 'muted' }, 'Khi micro đang bật, nhạc đệm tự tắt để micro nghe rõ tiếng đàn của bé.'),
