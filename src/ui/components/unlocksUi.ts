@@ -35,12 +35,16 @@ export function takeFreshUnlocks(app: App): UnlockDef[] {
   return fresh;
 }
 
-/** Màn mừng "🎁 Quà mới!" (nền mờ + thẻ giữa màn). */
-export function showUnlockCelebration(app: App, fresh: readonly UnlockDef[], openBook: () => void): void {
+/** Màn mừng "🎁 Quà mới!" (nền mờ + thẻ giữa màn). `onClose`: gọi một lần khi đóng (mọi cách đóng). */
+export function showUnlockCelebration(app: App, fresh: readonly UnlockDef[], openBook: () => void, onClose?: () => void): void {
   if (!fresh.length) return;
+  let closed = false;
   const close = () => {
+    if (closed) return;
+    closed = true;
     wrap.remove();
     document.removeEventListener('keydown', onKey);
+    onClose?.();
   };
   const onKey = (e: KeyboardEvent) => {
     if (e.key === 'Escape') close();

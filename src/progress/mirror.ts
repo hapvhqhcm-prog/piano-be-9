@@ -68,7 +68,12 @@ export function idbBackend(idb: IDBFactory | undefined = globalThis.indexedDB): 
           tx.onerror = () => reject(tx.error);
           tx.onabort = () => reject(tx.error ?? new Error('idb abort'));
         }),
-    );
+    ).catch((e: unknown) => {
+      // Safari có thể ngắt kết nối IndexedDB khi app nằm nền lâu ("Connection to Indexed Database server lost") —
+      // kết nối cũ hỏng vĩnh viễn → bỏ để lần ghi sau mở kết nối mới (không thì bản sao im lặng ngừng ghi tới khi mở lại app)
+      dbp = null;
+      throw e;
+    });
   return {
     read: () =>
       run<{ json?: unknown } | null>('readonly', (s) => s.get(KEY)).then((v) => (typeof v?.json === 'string' ? v.json : null)),
@@ -142,6 +147,13 @@ function isFuture(raw: string | null): boolean {
 }
 
 /**
+ * Kết quả khôi phục lúc mở app: 'restored' = đã chép bản sao vào localStorage; 'none' = không cần / bản sao không có gì;
+ * 'unknown' = dữ liệu chính trống / hỏng mà KHÔNG đọc được bản sao (IndexedDB chậm quá thời gian chờ hoặc lỗi) —
+ * bản sao có thể vẫn là bản tốt duy nhất → lần chạy này KHÔNG được ghi đè nó (main.ts không gắn SaveMirror).
+ */
+export type MirrorRestore = 'restored' | 'none' | 'unknown';
+
+/**
  * Mở app: dữ liệu chính trống / hỏng mà bản sao IndexedDB có tiến độ thật → chép vào localStorage.
  * Trả về true nếu đã khôi phục. Không bao giờ ném lỗi; chờ IndexedDB tối đa `timeoutMs`.
  */
@@ -150,20 +162,36 @@ export async function restoreFromMirror(
   backend: MirrorBackend | null,
   opts: { now?: () => number; timeoutMs?: number } = {},
 ): Promise<boolean> {
-  if (!backend) return false;
+  return (await restoreFromMirrorResult(kv, backend, opts)) === 'restored';
+}
+
+/** Như restoreFromMirror nhưng phân biệt "không đọc được bản sao" ('unknown') với "bản sao không có gì" ('none'). */
+export async function restoreFromMirrorResult(
+  kv: KeyValueStorage,
+  backend: MirrorBackend | null,
+  opts: { now?: () => number; timeoutMs?: number } = {},
+): Promise<MirrorRestore> {
+  if (!backend) return 'none';
   let raw: string | null;
   try {
     raw = kv.getItem(STORAGE_KEY);
   } catch {
-    return false;
+    return 'none';
   }
   // Dữ liệu chính đọc được (hoặc của bản app mới hơn) → luôn thắng, không đọc bản sao
-  if (readable(raw) || isFuture(raw)) return false;
+  if (readable(raw) || isFuture(raw)) return 'none';
   let copy: string | null = null;
+  let answered = false; // IndexedDB đã trả lời (có / không có bản sao) — false = hết giờ chờ hoặc lỗi
   let timer: ReturnType<typeof setTimeout> | undefined;
   try {
     copy = await Promise.race([
-      backend.read().catch(() => null),
+      backend.read().then(
+        (v) => {
+          answered = true;
+          return v;
+        },
+        () => null,
+      ),
       new Promise<null>((r) => (timer = setTimeout(() => r(null), opts.timeoutMs ?? MIRROR_READ_TIMEOUT_MS))),
     ]);
   } catch {
@@ -171,12 +199,13 @@ export async function restoreFromMirror(
   } finally {
     clearTimeout(timer);
   }
+  if (!answered) return 'unknown';
   const d = readable(copy);
-  if (!d || !copy || (sessionCount(d) === 0 && !d.learner.name)) return false;
+  if (!d || !copy || (sessionCount(d) === 0 && !d.learner.name)) return 'none';
   try {
     // Kiểm tra lại (tab khác có thể vừa ghi trong lúc chờ)
     const cur = kv.getItem(STORAGE_KEY);
-    if (readable(cur) || isFuture(cur)) return false;
+    if (readable(cur) || isFuture(cur)) return 'none';
     if (cur) {
       try {
         kv.setItem(`${STORAGE_KEY}:corrupt-${(opts.now ?? Date.now)()}`, cur); // bản hỏng vẫn được cất như cũ
@@ -185,8 +214,8 @@ export async function restoreFromMirror(
       }
     }
     kv.setItem(STORAGE_KEY, copy);
-    return true;
+    return 'restored';
   } catch {
-    return false;
+    return 'none';
   }
 }

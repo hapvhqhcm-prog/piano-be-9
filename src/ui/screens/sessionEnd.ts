@@ -16,6 +16,7 @@ import { weeklyChallenge, type WeeklyChallenge } from '../../lessons/challenges'
 import { concertOfferWeek } from '../../lessons/concert';
 import { lazy, lazyScreen } from '../lazy';
 import '../../styles/concert.css';
+import { celebrations } from '../celebrationQueue';
 
 // (+ 2026-10-08) 🎤 Biểu diễn cho cả nhà — chunk riêng (kéo theo sân khấu), nạp trước khi màn kết có lời mời
 const concertMod = lazy(() => import('./concert'));
@@ -165,6 +166,8 @@ export function sessionEndScreen(
     const from = o.weekBefore ?? (o.banner && /^(🏅|🎉)/u.test(o.banner) ? week - 1 : week);
     const advanced = from >= 1 && from < week;
     const rewards = fresh.length > 0 || !!bonus || cheer;
+    // (+ 2026-10-09) Lần mở app này đã có màn mừng → màn "🎁 Quà mới" ở màn chính để dành tới lần mở sau (celebrationQueue)
+    if (rewards || advanced) celebrations.mark();
     // (+ 2026-10-08) 🎤 Mời (không bắt buộc) biểu diễn cho cả nhà — mỗi tuần giáo trình một lần, sau khi đạt tiêu chí tuần
     const concertWeek = concertOfferWeek(data);
     if (concertWeek !== null) concertMod.prefetch();
@@ -191,19 +194,22 @@ export function sessionEndScreen(
                 bonus ? bonusCard(app, bonus) : null,
               )
             : null,
-          h(
-            'div',
-            { class: 'end-actions' },
-            button({ icon: '↻', label: 'Chơi lại bài vừa học', big: true, onTap: o.onReplay }),
-            button({ icon: '🌙', label: 'Để mai học tiếp', kind: 'primary', big: true, onTap: o.onHome }),
-          ),
+          // (+ 2026-10-09) Có lời mời biểu diễn → MỘT hàng 3 nút (trước đây hàng thứ hai tràn xuống dải phím trang trí
+          // trên iPad mini khi có nhiều phần thưởng); "Chơi lại" rút gọn chữ cho vừa
           concertWeek !== null
             ? h(
                 'div',
-                { class: 'concert-offer-row' },
+                { class: 'end-actions has-concert' },
+                button({ icon: '↻', label: 'Chơi lại', onTap: o.onReplay }),
                 button({ icon: '🎤', label: 'Biểu diễn cho cả nhà', kind: 'sun', onTap: () => openConcert(concertWeek) }),
+                button({ icon: '🌙', label: 'Để mai học tiếp', kind: 'primary', big: true, onTap: o.onHome }),
               )
-            : null,
+            : h(
+                'div',
+                { class: 'end-actions' },
+                button({ icon: '↻', label: 'Chơi lại bài vừa học', big: true, onTap: o.onReplay }),
+                button({ icon: '🌙', label: 'Để mai học tiếp', kind: 'primary', big: true, onTap: o.onHome }),
+              ),
         ),
       );
       // Bé đọc chậm → đọc to dòng tóm tắt

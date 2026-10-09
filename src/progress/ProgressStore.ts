@@ -213,8 +213,9 @@ export class ProgressStore {
     this.pruneUnreadableCorrupt();
     bumpDataRev(this.data);
     if (this.compact()) this.writeNow();
-    // Bản sao IndexedDB có ngay từ lần mở đầu (không chờ tới lần đổi đầu tiên)
-    if (!this.recoveredFromCorrupt && !this.futureVersion) this.mirrorNow();
+    // Bản sao IndexedDB có ngay từ lần mở đầu (không chờ tới lần đổi đầu tiên). Dữ liệu mới tinh (chưa học buổi nào,
+    // chưa có tên) thì KHÔNG gửi: không có gì để giữ, mà có thể đè mất bản sao tốt khi localStorage vừa bị xóa.
+    if (!this.recoveredFromCorrupt && !this.futureVersion && (sessionCount(this.data) > 0 || this.data.learner.name)) this.mirrorNow();
     activeStore = this;
     if (opts.pageEvents ?? inBrowser()) this.listenPageEvents();
   }
@@ -635,8 +636,12 @@ export class ProgressStore {
 
   startSession(lessonId: string): Session {
     const now = this.now();
+    // Mã buổi phải DUY NHẤT: addSongRun/finishSession… tìm buổi theo mã (find → buổi ĐẦU TIÊN trùng mã). Hai buổi mở cùng
+    // một mili-giây mà số ngẫu nhiên trùng (hoặc Math.random bị thay trong test) → lượt chơi ghi nhầm sang buổi cũ.
+    let id = `${now.getTime().toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}`;
+    for (let k = 1; this.data.sessions.some((x) => x.id === id); k++) id = `${now.getTime().toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}${k.toString(36)}`;
     const s: Session = {
-      id: `${now.getTime().toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}`,
+      id,
       date: localDateStr(now),
       lessonId,
       parentAssessments: [],

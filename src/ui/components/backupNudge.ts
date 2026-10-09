@@ -1,5 +1,5 @@
 /**
- * (+ 2026-10-08) Nhắc nhỏ ở màn chính của bé: "💾 Nhắc bố mẹ: sao lưu".
+ * (+ 2026-10-08) Nhắc nhỏ ở màn chính của bé: "💾 Nhắc bố mẹ sao lưu" (viên nhỏ trên thanh trên cùng).
  * Hiện khi lần sao lưu gần nhất ≥ 14 ngày (hoặc chưa lần nào mà đã học ≥ 10 buổi) — backup.ts backupNudgeDue.
  * Chạm → cổng phụ huynh (rồi bố mẹ bấm "💾 Sao lưu" ở đầu màn Phụ huynh). ✕ → ẩn 3 ngày (không làm phiền).
  */
@@ -17,21 +17,15 @@ export function backupNudge(app: App, openParent: () => void, now: number = Date
     due = false; // nhắc phụ — lỗi thì thôi, không làm hỏng màn chính
   }
   if (!due) return null;
+  // (+ 2026-10-09) Viên nhỏ trên thanh trên cùng (cạnh nút Phụ huynh) — kiểu ở src/styles/kidux.css (.backup-nudge)
   const el = h(
     'div',
-    {
-      class: 'banner backup-nudge',
-      style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', padding: '6px 12px', fontSize: '0.95em' },
-    },
+    { class: 'backup-nudge' },
     h(
       'button',
-      {
-        type: 'button',
-        class: 'backup-nudge-open',
-        style: { background: 'none', border: '0', font: 'inherit', color: 'inherit', padding: '6px 0', cursor: 'pointer', textAlign: 'left', flex: '1' },
-        onClick: openParent,
-      },
-      '💾 Nhắc bố mẹ: sao lưu tiến độ',
+      { type: 'button', class: 'backup-nudge-open', 'aria-label': 'Nhắc bố mẹ sao lưu tiến độ — mở màn Phụ huynh', onClick: openParent },
+      h('span', { 'aria-hidden': 'true' }, '💾'),
+      h('span', { class: 'backup-nudge-text' }, 'Nhắc bố mẹ sao lưu'),
     ),
     h(
       'button',
@@ -39,7 +33,6 @@ export function backupNudge(app: App, openParent: () => void, now: number = Date
         type: 'button',
         class: 'backup-nudge-hide',
         'aria-label': 'Ẩn nhắc sao lưu 3 ngày',
-        style: { background: 'none', border: '0', font: 'inherit', color: 'inherit', padding: '6px 10px', cursor: 'pointer', opacity: '0.7' },
         onClick: () => {
           el.remove();
           try {

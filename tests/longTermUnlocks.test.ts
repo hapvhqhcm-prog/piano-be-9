@@ -286,3 +286,11 @@ describe('🎵 Kiểu nhạc đệm', () => {
     setBackingStyle(null);
   });
 });
+
+describe('rà soát 2026-10-09: kho trứng lớn từ đúng ngày SAU bản phát hành v0.18.0 (8/10)', () => {
+  it('buổi 8/10 (bản cũ) bốc kho cũ; từ 9/10 bốc kho lớn — không đổi trứng bé đã thấy', () => {
+    expect(EGG_POOL_V2_FROM).toBe('2026-10-09');
+    expect(poolOn('2026-10-08')).toHaveLength(16);
+    expect(poolOn('2026-10-09')).toHaveLength(56);
+  });
+});

@@ -402,3 +402,10 @@ SCENES.push(
     js: `${tapAny} const m = await import('/src/ui/screens/onboarding.ts'); app.show(m.onboardingScreen(app, { onDone() {} })); await tapAny('Tiếp'); await tapAny('Tiếp'); await sleep(400);`,
   },
 );
+
+/** (2026-10-09) Bé thật tuần 4 (tests/fixtures/week4Child.ts): lần mở đầu sau cập nhật — MỘT màn mừng quà, nhắc sao lưu trên thanh trên. */
+const w4child = `const fx = await import('/tests/fixtures/week4Child.ts'); app.store.importJSON(JSON.stringify(fx.fixtureWeek4Child(new Date())), { force: true }); app.store.recoveredFromMirror = false;`;
+SCENES.push(
+  { name: 'w4child-first-open', wait: 1500, js: `${w4child} const st = await import('/src/ui/screens/start.ts'); app.show(st.startScreen(app)); ${tapAny} await tapAny('Bắt đầu');` },
+  { name: 'w4child-home', js: `${w4child} app.store.updateSettings({ cosmetics: { outfit: 'cap', seen: ['outfit:cap', 'timbre:musicbox', 'backing:march'] } }); const m = await import('/src/ui/screens/home.ts'); app.show(m.homeScreen(app));` },
+);

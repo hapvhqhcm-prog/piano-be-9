@@ -88,6 +88,18 @@ export function beatsPerMeasure(t: Tune): number {
   return Number(t.timeSignature.split('/')[0]) || 4;
 }
 
+/**
+ * (+ 2026-10-09) Tiếng tích máy đếm nhịp ở phách `b` (tính từ 0, có thể âm khi đếm vào): true = phách 1 (mạnh) ·
+ * 'secondary' = đầu nhóm 3 móc đơn khác của nhịp ghép x/8 (6/8: phách 4; 9/8: 4, 7; 12/8: 4, 7, 10) · false = thường.
+ */
+export function metronomeAccent(t: Tune, b: number): boolean | 'secondary' {
+  const n = beatsPerMeasure(t);
+  const pos = ((b % n) + n) % n;
+  if (pos === 0) return true;
+  const compound = noteUnit(t) === 0.5 && n > 3 && n % 3 === 0;
+  return compound && pos % 3 === 0 ? 'secondary' : false;
+}
+
 /** Cấp 4 — Số nốt đen trong một phách của bài: 1 với x/4, 0,5 với x/8 (phách = móc đơn). `beats × noteUnit` = trường độ tính theo nốt đen (để vẽ hình nốt). */
 export function noteUnit(t: Tune): number {
   const d = Number(t.timeSignature.split('/')[1]) || 4;

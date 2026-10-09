@@ -676,3 +676,25 @@ Có ba chuyên gia đánh giá: sư phạm, động lực cho trẻ và kỹ thu
   - thống kê micro trong các buổi học gần đây, cùng đề xuất của app.
 - Có nút sao chép, chia sẻ và đo lại. Đổi độ nhạy theo đề xuất phải bấm nút; app không tự đổi.
 - Báo cáo gần nhất cũng hiện trong 🩺. Logic nằm ở `src/audio/micReport.ts`, test ở `tests/micReport.test.ts`.
+
+## 34. Rà soát sau đợt lớn: lỗi, lần mở đầu tiên, tốc độ (2026-10-09)
+- **Lỗi đã sửa (mỗi lỗi có test):**
+  - Mã buổi học có thể trùng nhau, làm một test lúc đạt lúc không.
+  - Lúc mở app trống, dữ liệu rỗng có thể ghi đè bản sao IndexedDB.
+  - Kết nối IndexedDB bị iOS ngắt thì không tự kết nối lại (cả bản sao lẫn Album).
+  - Tải màn lười lỗi giữa buổi học thì tải lại trang; nay chỉ tải lại ở điểm an toàn.
+  - Màn lười lỗi khi vẽ thì màn trắng; nay hiện hộp "Ối…".
+  - Buổi diễn lưu nhầm kết quả của bài trước.
+  - Album chạm hai lần thì hai bản thu phát cùng lúc.
+  - Bấm "Bắt đầu đo" hai lần thì để lại một hẹn giờ chạy mãi.
+  - Ngày bắt đầu kho trứng lớn giữ là 9/10, khớp ngày phát hành v0.18.0 để trứng bé đã thấy không đổi.
+- **Lần mở đầu tiên sau cập nhật (dữ liệu giống bé tuần 4):**
+  - Mỗi lần mở app tối đa một màn chúc mừng (`celebrationQueue.ts`); lời kể chuyện tuần đọc sau khi đóng thẻ quà.
+  - Nút "Học tiếp" không còn bị lời nhắc sao lưu đẩy khuất (lời nhắc thành nhãn nhỏ cạnh nút Phụ huynh).
+  - Cuối buổi học: ba nút gộp thành một hàng.
+  - Chữ đếm nhịp to và rõ hơn.
+  - Hộp "micro nghe chưa rõ" tự cuộn vào khung nhìn.
+  - Màn Phụ huynh sắp lại thứ tự; thống nhất chính tả "Xóa".
+  - Khung báo cáo micro tự xuống dòng.
+- **Tốc độ:** phần tải lúc mở app giảm từ 122 xuống 93 kB nén (màn chính và micro tải ngay sau màn bắt đầu).
+- **Nhịp 6/8:** máy gõ nhịp nhấn phụ ở phách 4.

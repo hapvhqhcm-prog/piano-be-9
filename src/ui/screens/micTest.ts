@@ -670,6 +670,8 @@ export function micTestScreen(app: App) {
     let autoDemo = false;
     let autoTimer: number | undefined;
     let autoSeq = 0;
+    /** Lần bấm "Bắt đầu đo" gần nhất — chạm 2 lần khi đang chờ micro thì chỉ lần SAU CÙNG chạy tiếp (không 2 vòng đo) */
+    let autoStart = 0;
     let chordAsked = false;
     let autoReport: MicReport | null = null;
     let autoMsg = '';
@@ -753,6 +755,7 @@ export function micTestScreen(app: App) {
     const startAuto = async () => {
       if (measuring) return;
       stopAuto();
+      const my = ++autoStart;
       checking = -1;
       window.clearTimeout(stepTimer);
       calibrating = false;
@@ -766,13 +769,14 @@ export function micTestScreen(app: App) {
         renderAuto();
         return;
       }
-      if (disposed) return;
+      if (disposed || my !== autoStart) return;
       autoMsg = '';
       app.mic.resetTracker();
       chordAsked = false;
       autoSes = new MicReportSession(store.settings.micSensitivity, store.settings.micTuningCents);
       autoSes.start(performance.now());
       autoSeq = autoSes.seq;
+      window.clearInterval(autoTimer); // không bao giờ để vòng cũ chạy mãi
       autoTimer = window.setInterval(autoLoop, 200);
       renderAuto();
     };

@@ -2,12 +2,12 @@ import './styles/main.css';
 import './styles/theme.css';
 import { AudioEngine } from './audio/AudioEngine';
 import { ProgressStore, type KeyValueStorage } from './progress/ProgressStore';
-import { App } from './ui/App';
+import { App, micModule } from './ui/App';
 import { installAudioOverlay } from './ui/components/audioOverlay';
 import { startScreen } from './ui/screens/start';
 import { registerServiceWorker } from './pwa/updater';
 import { installErrorCapture } from './pwa/errorLog';
-import { SaveMirror, idbBackend, restoreFromMirror } from './progress/mirror';
+import { SaveMirror, idbBackend, restoreFromMirrorResult, type MirrorRestore } from './progress/mirror';
 
 // (+ 2026-10-08) Ghi lại mọi lỗi chưa xử lý (nhật ký nhỏ — màn 🩺 Kiểm tra iPad) — càng sớm càng tốt
 installErrorCapture();
@@ -58,9 +58,12 @@ async function boot(): Promise<void> {
   } catch {
     backend = null;
   }
-  const restored = await restoreFromMirror(kv, backend).catch(() => false);
-  const store = new ProgressStore(kv, undefined, backend ? { mirror: new SaveMirror(backend) } : {});
-  store.recoveredFromMirror = restored;
+  const restored = await restoreFromMirrorResult(kv, backend).catch((): MirrorRestore => 'unknown');
+  // Dữ liệu chính trống / hỏng mà chưa đọc được bản sao (IndexedDB chậm / lỗi) → lần chạy này KHÔNG gắn bản sao:
+  // dữ liệu trống của lần này không được ghi đè bản sao (có thể là tiến độ thật duy nhất — lần mở sau thử khôi phục lại).
+  const mirror = backend && restored !== 'unknown' ? new SaveMirror(backend) : null;
+  const store = new ProgressStore(kv, undefined, mirror ? { mirror } : {});
+  store.recoveredFromMirror = restored === 'restored';
   const root = document.getElementById('app') as HTMLElement;
   const app = new App(root, new AudioEngine(), store);
   installTouchGuards();
@@ -69,7 +72,8 @@ async function boot(): Promise<void> {
   app.show(startScreen(app));
 
   // Chỉ bản dev: cho phép kiểm thử tự động điều khiển app (không có trong bản build).
-  if (import.meta.env.DEV) (window as unknown as { __piano: App }).__piano = app;
+  // (Chờ chunk micro nạp xong: kịch bản chụp màn nhảy thẳng vào các màn dùng app.mic, không qua màn chính.)
+  if (import.meta.env.DEV) void micModule.load().then(() => ((window as unknown as { __piano: App }).__piano = app));
 }
 
 void boot();

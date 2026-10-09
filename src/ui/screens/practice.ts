@@ -752,6 +752,8 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
           micHint(PARENT_STEP_HINT);
         });
         stage.append(box);
+        // (2026-10-09) Hộp nằm cuối vùng cuộn — đưa vào tầm nhìn (trước đây bị bàn phím che, phải cuộn mới thấy nút)
+        box.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
         void say('Micro nghe chưa rõ. Không phải lỗi của con đâu.');
       },
     });

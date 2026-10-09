@@ -518,9 +518,8 @@ export function parentScreen(app: App) {
           whenCorrectBox(),
         ),
         quickTipsCard(),
+        // Chưa thêm vào Màn hình chính → iPad có thể xóa tiến độ: giữ ở phần đầu (an toàn dữ liệu)
         installCard(),
-        // (+ 2026-10-08) ⏰ Đặt giờ tập — lời nhắc .ics lặp hằng tuần trong Lịch của iPad
-        reminderCard(app),
 
         h(
           'section',
@@ -837,7 +836,7 @@ export function parentScreen(app: App) {
           h(
             'p',
             { class: 'muted' },
-            '🎧 "Nghe lại con đàn": khi micro bật, app giữ TẠM tiếng đàn của lượt vừa chơi để bé bấm nghe lại và tự nhận xét. Không gửi đi đâu; chơi lượt mới hoặc rời màn là xóa — TRỪ bản hay nhất của mỗi bài được giữ trong "🎧 Album của con" (chỉ trên iPad này; tắt / xoá ở mục Nâng cao). Micro tắt thì không ghi gì.',
+            '🎧 "Nghe lại con đàn": khi micro bật, app giữ TẠM tiếng đàn của lượt vừa chơi để bé bấm nghe lại và tự nhận xét. Không gửi đi đâu; chơi lượt mới hoặc rời màn là xóa — TRỪ bản hay nhất của mỗi bài được giữ trong "🎧 Album của con" (chỉ trên iPad này; tắt / xóa ở mục Nâng cao). Micro tắt thì không ghi gì.',
           ),
           h(
             'div',
@@ -1058,7 +1057,14 @@ export function parentScreen(app: App) {
       const details = h('details', { class: 'adv' }, h('summary', {}, '⚙️ Nâng cao: cài đặt · dữ liệu · phiên bản'), ...adv);
       details.open = advOpen;
       details.addEventListener('toggle', () => (advOpen = details.open));
-      sections.push(parentSongsCard(), details);
+      // (2026-10-09) Nhóm "thiết lập một lần" ở cuối (trước Nâng cao): ⏰ giờ tập · bài bố mẹ thêm —
+      // phần đầu màn dành cho việc hằng ngày (tối nay, sẵn sàng sang tuần, mẹo tuần) và tiến độ
+      sections.push(
+        // (+ 2026-10-08) ⏰ Đặt giờ tập — lời nhắc .ics lặp hằng tuần trong Lịch của iPad
+        reminderCard(app),
+        parentSongsCard(),
+        details,
+      );
       return sections.filter((x): x is HTMLElement => !!x);
     };
 

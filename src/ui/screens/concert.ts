@@ -113,6 +113,7 @@ export function concertScreen(app: App, hooks: ConcertHooks) {
     const perform = () => {
       if (!song) return pick();
       cancelSpeech();
+      passed = undefined; // kết quả của lượt diễn TRƯỚC (có thể là bài khác — "← Chọn bài khác") không được tính cho lượt này
       // Tốc độ: nhanh nhất bé từng đạt theo nhịp (không ép tốc độ gốc), chưa có thì chậm vừa
       const best = songStats(app.store.get())[song.id]?.b;
       const bpm = best && best >= 40 ? Math.min(best, song.bpm) : Math.min(song.bpm, 50);

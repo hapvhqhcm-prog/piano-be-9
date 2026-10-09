@@ -88,8 +88,11 @@ export const REVERB_GUARD_MS = 150;
 export const CLICK = {
   hz: 5000,
   accentHz: 6000,
+  /** (+ 2026-10-09) Phách nhấn PHỤ (vd phách 4 của nhịp 6/8): giữa phách thường và phách mạnh */
+  secondaryHz: 5500,
   normalGain: 0.3,
   accentGain: 0.5,
+  secondaryGain: 0.4,
   attack: 0.0015,
   tau: 0.01,
   length: 0.06,
@@ -414,8 +417,9 @@ export class AudioEngine {
    * Tiếng gõ nhịp (metronome): tiếng "ting" sin rất ngắn ở 5 kHz (phách mạnh: 6 kHz, to hơn) — rõ, không chói.
    * Cao hẳn trên dải micro nghe đàn: bộ lọc bậc 4 của micAnalyzer chặn > 40 dB → micro KHÔNG cần bỏ qua khung có tiếng tích,
    * bé gõ phím đúng phách vẫn được nghe & chấm giờ chính xác.
+   * `accent`: true = phách mạnh · 'secondary' = phách nhấn phụ (5,5 kHz, to vừa — vd phách 4 của 6/8) · false = phách thường.
    */
-  click(when: number, accent = false): void {
+  click(when: number, accent: boolean | 'secondary' = false): void {
     const ctx = this.ctx;
     const master = this.dry ?? this.master;
     if (!ctx || !master) return;
@@ -424,10 +428,10 @@ export class AudioEngine {
     this.clickTimes.push(t);
     const osc = ctx.createOscillator();
     osc.type = 'sine';
-    osc.frequency.value = accent ? CLICK.accentHz : CLICK.hz;
+    osc.frequency.value = accent === 'secondary' ? CLICK.secondaryHz : accent ? CLICK.accentHz : CLICK.hz;
     const g = ctx.createGain();
     g.gain.setValueAtTime(0, t);
-    g.gain.linearRampToValueAtTime(accent ? CLICK.accentGain : CLICK.normalGain, t + CLICK.attack);
+    g.gain.linearRampToValueAtTime(accent === 'secondary' ? CLICK.secondaryGain : accent ? CLICK.accentGain : CLICK.normalGain, t + CLICK.attack);
     g.gain.setTargetAtTime(0, t + CLICK.attack, CLICK.tau);
     osc.connect(g);
     g.connect(master);

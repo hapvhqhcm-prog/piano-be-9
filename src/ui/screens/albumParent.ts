@@ -53,18 +53,18 @@ export function albumParentCard(): HTMLElement {
           seg,
           button({
             icon: '🗑️',
-            label: 'Xoá Album',
+            label: 'Xóa Album',
             kind: 'danger',
             onTap: () =>
               confirmDialog({
-                title: 'Xoá Album?',
-                text: 'Mọi bản thu trong Album sẽ bị xoá khỏi iPad này (tiến độ học không bị ảnh hưởng). Xoá rồi không lấy lại được.',
+                title: 'Xóa Album?',
+                text: 'Mọi bản thu trong Album sẽ bị xóa khỏi iPad này (tiến độ học không bị ảnh hưởng). Xóa rồi không lấy lại được.',
                 okIcon: '🗑️',
-                okLabel: 'Xoá Album',
+                okLabel: 'Xóa Album',
                 danger: true,
                 onOk: () =>
                   void store.clear().then((ok) => {
-                    toast(ok ? 'Đã xoá Album' : 'Chưa xoá được — thử lại nhé');
+                    toast(ok ? 'Đã xóa Album' : 'Chưa xóa được — thử lại nhé');
                     refresh();
                   }),
               }),

@@ -51,6 +51,8 @@ export function albumScreen(app: App, onBack: () => void) {
     const store = albumStore();
     let disposed = false;
     let playing: { songId: string; clip: TakeClip } | null = null;
+    /** Số thứ tự lần chạm "Nghe" (chặn hai bản phát chồng nhau khi chạm nhanh trong lúc đọc tệp) */
+    let playSeq = 0;
     /** Tệp đã đọc sẵn (để chạm "Gửi" lần sau gọi bảng Chia sẻ ngay — Safari cần) */
     const files = new Map<string, File>();
     const list = h('ul', { class: 'album-list' });
@@ -97,9 +99,11 @@ export function albumScreen(app: App, onBack: () => void) {
         onTap: async () => {
           if (playing?.songId === m.songId) return stopPlaying();
           stopPlaying();
+          const my = ++playSeq; // chạm nhanh 2 lần / chạm bài khác trong lúc đang đọc tệp → chỉ lần chạm SAU CÙNG được phát
           const f = await loadFile(m);
-          if (disposed) return;
+          if (disposed || my !== playSeq) return;
           if (!f) return toast('Chưa mở được bản thu này');
+          stopPlaying(); // phòng còn bản đang phát
           const clip = clipFromBlob(f, m.seconds, app.audio);
           playing = { songId: m.songId, clip };
           li.classList.add('playing');

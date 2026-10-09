@@ -159,9 +159,10 @@
 .rh-countline {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--ink-2);
+  /* (2026-10-09) 18px xám nhạt khó đọc từ giá nhạc (~60 cm) — to hơn + màu tím (vẫn nhẹ hơn dòng chữ chính) */
+  font-size: 21px;
+  font-weight: 800;
+  color: var(--violet-600, var(--ink-2));
 }
 .rh-countline.rh-strong {
   font-family: var(--font-display);

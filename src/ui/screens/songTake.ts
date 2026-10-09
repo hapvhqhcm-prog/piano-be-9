@@ -75,7 +75,7 @@ export class TakeReplay {
       const v = await store.consider({ songId: a.songId, title: a.title, blob, seconds: c.seconds, ...score });
       if (my !== this.gen || this.d.disposed()) return;
       if (v.saved) this.showSaved(a.songId, v.previous);
-      else if (v.reason === 'full') this.note(h('span', { class: 'take-album-text' }, '📀 Album đầy — bố mẹ xoá bớt ở màn Phụ huynh nhé'));
+      else if (v.reason === 'full') this.note(h('span', { class: 'take-album-text' }, '📀 Album đầy — bố mẹ xóa bớt ở màn Phụ huynh nhé'));
     }).catch(() => undefined);
   }
 
@@ -96,7 +96,7 @@ export class TakeReplay {
           undo.remove();
           void albumStore()
             ?.undo(songId, previous)
-            .then((ok) => (text.textContent = ok ? 'Không lưu bản này.' : '📀 Chưa bỏ được — bố mẹ xoá ở Album nhé'));
+            .then((ok) => (text.textContent = ok ? 'Không lưu bản này.' : '📀 Chưa bỏ được — bố mẹ xóa ở Album nhé'));
         },
       },
       'Không lưu',

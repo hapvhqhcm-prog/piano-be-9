@@ -29,7 +29,8 @@ import { weeklyChallenge } from '../../lessons/challenges';
 import { markSafePoint } from '../../pwa/updater';
 import type { AppData } from '../../progress/schema';
 import { playableSongCount, welcomeBack } from '../../lessons/shortSession';
-import { showUnlockCelebration, takeFreshUnlocks } from '../components/unlocksUi';
+import { applyCosmetics, showUnlockCelebration, takeFreshUnlocks } from '../components/unlocksUi';
+import { celebrations } from '../celebrationQueue';
 import '../../styles/pedagogy.css';
 import '../../styles/longterm.css';
 import '../../styles/kidux.css';
@@ -306,8 +307,11 @@ export function homeScreen(app: App, banner?: string) {
     const missed = welcomeBack(data, now) && !overLimit;
     const greet = '👋 Bé Nốt nhớ con! Hôm nay mình chơi bài con thích nhé';
     const bubbleText = missed ? greet : plan.story;
-    // 🎁 Quà mở khóa theo đảo: món mới → mặc luôn trang phục mới (Bé Nốt vẽ bên dưới đã mặc), màn mừng hiện sau khi vẽ
-    const freshUnlocks = takeFreshUnlocks(app);
+    // 🎁 Quà mở khóa theo đảo: món mới → mặc luôn trang phục mới (Bé Nốt vẽ bên dưới đã mặc), màn mừng hiện sau khi vẽ.
+    // (+ 2026-10-09) Mỗi lần mở app tối đa MỘT màn mừng (celebrationQueue): lần mở này đã mừng (vd màn kết buổi có
+    // sticker / cập bến đảo mới) → để dành quà (vẫn "chưa xem") tới lần mở sau.
+    const freshUnlocks = celebrations.canShow() ? takeFreshUnlocks(app) : (applyCosmetics(app.store.get()), []);
+    if (freshUnlocks.length) celebrations.mark();
 
     root.append(
       h(
@@ -325,6 +329,8 @@ export function homeScreen(app: App, banner?: string) {
           h(
             'div',
             { class: 'topbar-side' },
+            // (+ 2026-10-09) Nhắc sao lưu: viên nhỏ cạnh nút Phụ huynh (trước đây là một hàng riêng đẩy nút "Học tiếp" xuống dưới mép màn)
+            backupNudge(app, () => app.show(parentGateScreen(app))),
             todayStars ? h('div', { class: 'today-stars', 'aria-label': `Hôm nay được ${todayStars} sao` }, `⭐ ${Math.min(todayStars, 99)}`) : null,
             parentButton(() => app.show(parentGateScreen(app))),
           ),
@@ -334,7 +340,6 @@ export function homeScreen(app: App, banner?: string) {
           'div',
           { class: 'home-main scrollable' },
           storageBanner(),
-          backupNudge(app, () => app.show(parentGateScreen(app))),
           banner ? h('div', { class: 'banner home-banner' }, banner) : null,
           h(
             'section',
@@ -406,10 +411,22 @@ export function homeScreen(app: App, banner?: string) {
     prefetchLater([sessionMod], 300);
     // Đọc to câu chuyện của tuần — mỗi ngày một lần (không phải mỗi lần về màn chính)
     // (hẹn giờ được gỡ khi rời màn — trước đây rời màn trong 0,6 s thì câu chuyện vẫn đọc đè lên màn kế tiếp)
-    const storyTimer = shouldTellStory(today, plan.week) ? window.setTimeout(() => void speak(app, bubbleText), 600) : 0;
+    // (+ 2026-10-09) Có màn mừng quà → đọc câu chuyện SAU khi bé đóng màn mừng (không đọc chồng lên tiếng chuông mừng)
+    const tell = shouldTellStory(today, plan.week);
+    const storyTimer = tell && !freshUnlocks.length ? window.setTimeout(() => void speak(app, bubbleText), 600) : 0;
     // 🎁 Màn mừng quà mới (sau khi màn chính đã vẽ — bé thấy Bé Nốt mặc đồ mới phía sau)
     const unlockTimer = freshUnlocks.length
-      ? window.setTimeout(() => root.isConnected && showUnlockCelebration(app, freshUnlocks, () => app.show(stickersScreen(app))), 450)
+      ? window.setTimeout(
+          () =>
+            root.isConnected &&
+            showUnlockCelebration(
+              app,
+              freshUnlocks,
+              () => app.show(stickersScreen(app)),
+              () => tell && root.isConnected && void speak(app, bubbleText),
+            ),
+          450,
+        )
       : 0;
     // Ghi hỏng khi đang ở màn chính → hiện băng chặn ngay (vẽ lại màn)
     const unStore = app.store.subscribe(() => {

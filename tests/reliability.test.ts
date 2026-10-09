@@ -13,7 +13,7 @@ import {
 } from '../src/progress/ProgressStore';
 import { defaultData } from '../src/progress/schema';
 import { sessionCount } from '../src/progress/history';
-import { SaveMirror, restoreFromMirror, type MirrorBackend } from '../src/progress/mirror';
+import { SaveMirror, idbBackend, restoreFromMirror, restoreFromMirrorResult, type MirrorBackend } from '../src/progress/mirror';
 import { BACKUP_NUDGE_SESSIONS, backupNudgeDue } from '../src/progress/backup';
 import { ERROR_LOG_KEY, ERROR_LOG_MAX, describeError, installErrorCapture, logError, readErrors } from '../src/pwa/errorLog';
 import { composeReport, diagSections, type DiagSnapshot } from '../src/pwa/diagnostics';
@@ -213,6 +213,88 @@ describe('bản sao IndexedDB: ghi ngầm sau mỗi lần lưu', () => {
     expect(st2.recoveredFromCorrupt).toBe(true);
     st2.setLearnerName('x');
     expect(be.value).toBe(good);
+  });
+});
+
+describe('rà soát 2026-10-09: bản sao IndexedDB không bị dữ liệu trống đè mất', () => {
+  it('localStorage trống (khóa bị xóa) mà IndexedDB chưa kịp trả lời → mở app trống KHÔNG ghi đè bản sao', () => {
+    const be = new MemBackend();
+    be.value = savedWith(4, 6);
+    const good = be.value;
+    // main.ts: hết giờ chờ → store vẫn được tạo; nếu có gắn bản sao thì lần mở đầu không được gửi dữ liệu trống
+    new ProgressStore(new MemoryStorage(), now, { pageEvents: false, mirror: new SaveMirror(be, 0) });
+    expect(be.writes).toBe(0);
+    expect(be.value).toBe(good);
+  });
+
+  it("phân biệt 'unknown' (hết giờ / lỗi đọc) với 'none' (bản sao trống) để main.ts không gắn bản sao khi chưa biết", async () => {
+    vi.useFakeTimers();
+    const be = new MemBackend();
+    be.value = savedWith(4, 3);
+    be.readDelay = 'never';
+    const p = restoreFromMirrorResult(new MemoryStorage(), be, { timeoutMs: 500 });
+    await vi.advanceTimersByTimeAsync(600);
+    expect(await p).toBe('unknown');
+    const bad: MirrorBackend = { read: () => Promise.reject(new Error('x')), write: () => Promise.resolve() };
+    expect(await restoreFromMirrorResult(new MemoryStorage(), bad)).toBe('unknown');
+    const empty = new MemBackend();
+    expect(await restoreFromMirrorResult(new MemoryStorage(), empty)).toBe('none');
+    be.readDelay = 0;
+    expect(await restoreFromMirrorResult(new MemoryStorage(), be)).toBe('restored');
+  });
+});
+
+describe('rà soát 2026-10-09: IndexedDB mất kết nối (Safari nằm nền lâu) → mở kết nối mới', () => {
+  /** IndexedDB giả tối thiểu: mỗi lần open() là một kết nối; kết nối `dead` thì transaction() ném lỗi. */
+  function fakeIdb() {
+    const store = new Map<string, unknown>();
+    const conns: Array<{ dead: boolean }> = [];
+    const factory = {
+      open() {
+        const conn = { dead: false };
+        conns.push(conn);
+        const db = {
+          objectStoreNames: { contains: () => true },
+          createObjectStore() {},
+          close() {},
+          onversionchange: null as unknown,
+          transaction() {
+            if (conn.dead) throw new Error('Connection to Indexed Database server lost');
+            const tx: Record<string, unknown> = {
+              objectStore: () => ({
+                get(k: string) {
+                  const rq = { result: store.get(k) };
+                  setTimeout(() => (tx.oncomplete as () => void)());
+                  return rq;
+                },
+                put(v: unknown, k: string) {
+                  store.set(k, v);
+                  setTimeout(() => (tx.oncomplete as () => void)());
+                  return { result: k };
+                },
+              }),
+            };
+            return tx;
+          },
+        };
+        const rq: Record<string, unknown> = { result: db };
+        setTimeout(() => (rq.onsuccess as () => void)());
+        return rq;
+      },
+    };
+    return { factory: factory as unknown as IDBFactory, conns };
+  }
+
+  it('kết nối cũ hỏng → lần ghi lỗi, lần sau tự mở lại và ghi được', async () => {
+    const { factory, conns } = fakeIdb();
+    const be = idbBackend(factory)!;
+    await be.write('a');
+    expect(await be.read()).toBe('a');
+    conns[0].dead = true;
+    await expect(be.write('b')).rejects.toThrow();
+    await be.write('c');
+    expect(await be.read()).toBe('c');
+    expect(conns.length).toBe(2);
   });
 });
 

@@ -25,6 +25,8 @@ export interface BonusDef {
 /**
  * (+ 2026-10-08) Ngày kho trứng lớn thêm (OWNER duyệt: trứng đủ cho 150+ buổi). Là ngày SAU bản phát hành để mọi buổi
  * bé đã học (đã thấy trứng) giữ đúng trứng cũ.
+ * (rà soát 2026-10-09) Giữ '2026-10-09': bản có kho lớn (v0.18.0) đã PHÁT HÀNH chiều 8/10 → buổi 8/10 (bản cũ) bốc từ
+ * kho cũ, buổi từ 9/10 đã bốc từ kho lớn trên máy bé — đổi ngày lúc này sẽ làm trứng bé ĐÃ THẤY đổi khác.
  */
 export const EGG_POOL_V2_FROM = '2026-10-09';
 

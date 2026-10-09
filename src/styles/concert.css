@@ -1,16 +1,25 @@
 /* (+ 2026-10-08) 🎤 Biểu diễn cho cả nhà — src/ui/screens/concert.ts */
 
-/* Lời mời ở màn kết buổi (sessionEnd.ts) — hàng riêng dưới hai nút chính (nút phụ, không bắt buộc) */
-.concert-offer-row {
-  display: flex;
-  justify-content: center;
-  margin-top: 4px;
+/* Lời mời ở màn kết buổi (sessionEnd.ts) — (2026-10-09) cùng MỘT hàng với "Chơi lại" và "Để mai học tiếp" */
+.end-actions.has-concert {
+  align-items: center;
+  gap: 16px;
+}
+.end-actions.has-concert .btn:not(.btn-big) {
+  padding-left: 22px;
+  padding-right: 22px;
 }
 
 .concert-audience {
   position: relative;
   overflow: hidden;
   gap: 14px;
+}
+/* (2026-10-09) Tiêu đề dài: gọn một dòng ở iPad mini, hai dòng cân đối ở iPad 10.2" (không để "nhé!" mồ côi) */
+.concert-audience .hero-title {
+  font-size: 40px;
+  max-width: 920px;
+  text-wrap: balance;
 }
 .concert-reactions {
   display: flex;

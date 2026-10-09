@@ -8,6 +8,7 @@
 import type { Screen } from './App';
 import { button, h, toast } from './components/dom';
 import { isAtSafePoint } from '../pwa/updater';
+import { logError } from '../pwa/errorLog';
 import '../styles/lazy.css';
 
 const SHOW_AFTER_MS = 150;
@@ -121,14 +122,30 @@ export function lazyScreen<T>(mod: LazyModule<T>, make: (m: T) => Screen): Scree
         (m) => {
           hide();
           if (!alive) return;
-          cleanup = make(m)(root);
+          try {
+            cleanup = make(m)(root);
+          } catch (e) {
+            // (rà soát 2026-10-09) Màn nạp muộn lỗi khi vẽ: App.show không bắt được (đã ra ngoài try của nó) → trước đây
+            // màn trắng không nút. Giờ ghi nhật ký + hộp có nút mở lại app.
+            console.error('lazy screen render', e);
+            logError('screen', e);
+            root.replaceChildren(
+              h(
+                'div',
+                { class: 'lazy-loading lazy-error', role: 'alert' },
+                h('p', {}, '🙈 Ối, có trục trặc nhỏ. Tiến độ của con vẫn được giữ.'),
+                button({ icon: '↻', label: 'Mở lại app', kind: 'primary', onTap: () => window.location.reload() }),
+              ),
+            );
+          }
         },
         (e: unknown) => {
           hide();
           if (!alive) return;
           console.warn('lazy screen', e);
-          // Màn cũ đã rời (không giữa hoạt động nào) → thử tải lại một lần để chạy bản app mới
-          if (reloadOnceForUpdate()) return;
+          // Chỉ tự tải lại ở điểm an toàn (như withLazy): màn nạp muộn GIỮA buổi học (hát, ứng tấu, sân khấu…) mà tải lại
+          // trang thì mất buổi đang học → hiện hộp "Thử lại" thay vào đó.
+          if (isAtSafePoint() && reloadOnceForUpdate()) return;
           const box = h(
             'div',
             { class: 'lazy-loading lazy-error' },

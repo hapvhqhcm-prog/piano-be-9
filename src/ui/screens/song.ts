@@ -21,6 +21,7 @@ import {
   beatsPerMeasure,
   dynAtBeat,
   handOnsets,
+  metronomeAccent,
   otherHandNotes,
   phraseRanges,
   pitchesOf,
@@ -595,8 +596,9 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
       const drop = pulseWindow();
       lastDrop = drop;
       const muted = (b: number) => !!drop && b >= drop[0] - 1e-6 && b < drop[1] - 1e-6;
-      // Tiếng "tích" nhấn mạnh ở phách 1 mỗi ô (2/4: mạnh–nhẹ, 3/4: mạnh–nhẹ–nhẹ, 4/4: mạnh–nhẹ–nhẹ–nhẹ)
-      for (let b = -lead; b < total; b++) if (!muted(b)) app.audio.click(t0 + b * spb, ((b % bpmM) + bpmM) % bpmM === 0);
+      // Tiếng "tích" nhấn mạnh ở phách 1 mỗi ô (2/4: mạnh–nhẹ, 3/4: mạnh–nhẹ–nhẹ, 4/4: mạnh–nhẹ–nhẹ–nhẹ;
+      // 6/8: mạnh–nhẹ–nhẹ–VỪA–nhẹ–nhẹ — phách 4 nhấn phụ)
+      for (let b = -lead; b < total; b++) if (!muted(b)) app.audio.click(t0 + b * spb, metronomeAccent(tune, b));
       scheduleAccomp(t0, spb, drop);
       // Tập tách tay: app đàn khẽ tay kia đúng nhịp
       if (solo()) playOther(0, Infinity, t0, spb, drop);

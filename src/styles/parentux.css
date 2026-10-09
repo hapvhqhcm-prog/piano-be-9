@@ -412,7 +412,8 @@
   background: var(--surface);
   color: var(--ink);
   font: 12px/1.35 ui-monospace, Menlo, monospace;
-  white-space: pre;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
   overflow: auto;
   text-align: left;
 }

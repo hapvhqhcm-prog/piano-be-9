@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { LEVELS, MAX_QUIZ_ROUNDS, MAX_WEEK, WEEKS, buildSessionPlan, criterionProgress, dailyLesson, daysThisWeek, findLesson, levelOf, nextLesson, sessionsThisWeek, songMastered, streakDays, weekPassed } from '../src/lessons/lessonEngine';
 import { PARENT_TIPS } from '../src/lessons/parentTips';
 import { findTune } from '../src/music/exercises';
@@ -566,5 +566,22 @@ describe('sắc thái & kiểu đàn trong giáo trình (OWNER duyệt 2026-10-0
     expect(WEEKS[29].title).toContain('Für Elise');
     expect(findTune('minuet_g')?.week).toBe(29);
     expect(findTune('fur_elise')?.week).toBe(30);
+  });
+});
+
+describe('rà soát 2026-10-09: mã buổi duy nhất (test tuần 20 từng hỏng ngẫu nhiên)', () => {
+  it('hai buổi mở cùng mili-giây với số ngẫu nhiên trùng → lượt chơi vẫn ghi đúng buổi', () => {
+    const { st } = clock();
+    const rnd = vi.spyOn(Math, 'random').mockReturnValue(0.5);
+    try {
+      const a = st.startSession('w19-bkt');
+      const b = st.startSession('w20-l2');
+      expect(a.id).not.toBe(b.id);
+      st.addSongRun(b.id, { songId: 'scale_c_lh', mode: 'tempo', level: 2, bpm: 60, hints: 'names', phrase: null, total: 20, hits: 18, source: 'mic', passed: true });
+      expect(st.get().sessions.find((s) => s.lessonId === 'w20-l2')!.songRuns).toHaveLength(1);
+      expect(st.get().sessions.find((s) => s.lessonId === 'w19-bkt')!.songRuns).toHaveLength(0);
+    } finally {
+      rnd.mockRestore();
+    }
   });
 });

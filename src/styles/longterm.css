@@ -246,6 +246,7 @@
   border-radius: var(--r-md);
   background: var(--surface-2);
   box-shadow: inset 0 0 0 2px var(--line);
+  font-family: inherit; /* (2026-10-09) nút <button> không tự kế thừa phông app */
   font-size: 18px;
   font-weight: 800;
   color: var(--ink-2);
@@ -278,6 +279,6 @@
   flex-wrap: wrap;
   gap: 8px;
 }
-.rem-hint {
-  font-size: 15px;
+.reminder-card .rem-hint {
+  font-size: 16px; /* (2026-10-09) .muted thu nhỏ còn ~13px — khó đọc */
 }

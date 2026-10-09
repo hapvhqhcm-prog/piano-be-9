@@ -694,6 +694,9 @@ async function runSession(label, start, o = {}) {
 // ---------------- cổng phụ huynh ----------------
 async function openParent() {
   await waitFor(`!!document.querySelector('.parent-btn')`, 'nút Phụ huynh');
+  // v0.18.2: màn mừng quà (giữ lại tới lần mở sau) bật lên ~450 ms sau khi màn chính vẽ — đợi rồi đóng nó trước khi nhấn giữ
+  await sleep(800);
+  await dismissUnlock();
   const a = await evaluate(inPage(`return target(document.querySelector('.parent-btn'), 'Phụ huynh');`));
   // Nhấn giữ 2 giây (thử nhả sớm trước: 0,5 giây thì KHÔNG được mở)
   await cdp.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: a.x, y: a.y });

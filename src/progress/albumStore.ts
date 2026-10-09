@@ -258,7 +258,11 @@ export function idbAlbumBackend(idb: IDBFactory | undefined = globalThis.indexed
           tx.onerror = () => reject(tx.error);
           tx.onabort = () => reject(tx.error ?? new Error('idb abort'));
         }),
-    );
+    ).catch((e: unknown) => {
+      // (rà soát 2026-10-09) Safari có thể ngắt kết nối khi app nằm nền lâu → kết nối cũ hỏng mãi; bỏ để lần sau mở mới
+      dbp = null;
+      throw e;
+    });
   const isTake = (v: unknown): v is AlbumTake =>
     !!v && typeof v === 'object' && typeof (v as AlbumTake).songId === 'string' && (v as AlbumTake).data instanceof ArrayBuffer;
   return {
