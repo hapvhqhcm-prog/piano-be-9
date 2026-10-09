@@ -1,0 +1,199 @@
+{
+ "id": "tick_tock_clock",
+ "title": "Tick-tock Clock",
+ "titleVi": "Đồng hồ tích tắc",
+ "composer": "Bài tự sáng tác cho app (piano-be-9)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Bài tự sáng tác cho app (piano-be-9)",
+ "attributionRequired": false,
+ "hand": "RH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 4,
+ "phrases": [
+  0,
+  4
+ ],
+ "notes": [
+  {
+   "pitch": "C4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "C4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "rest": true,
+   "beats": 1
+  },
+  {
+   "pitch": "D4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "F4",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "D4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "F4",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "rest": true,
+   "beats": 1
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "D4",
+   "beats": 2,
+   "finger": 2
+  },
+  {
+   "rest": true,
+   "beats": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "C4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "rest": true,
+   "beats": 1
+  },
+  {
+   "pitch": "D4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "F4",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "D4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "F4",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "rest": true,
+   "beats": 1
+  },
+  {
+   "pitch": "F4",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "F4",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "D4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "C4",
+   "beats": 4,
+   "finger": 1
+  }
+ ]
+}

@@ -585,13 +585,24 @@ export class ProgressStore {
    * Ghi một lượt chơi xong: +1 lượt, cập nhật kỷ lục. `record` = điểm > kỷ lục cũ (và > 0) → "Kỷ lục mới!".
    * Ghi ngay (flush) — trò chơi ngắn, bé có thể tắt app ngay sau đó.
    */
-  recordGame(id: string, score: number): { best: number; prevBest: number; record: boolean } {
+  recordGame(
+    id: string,
+    score: number,
+    extra: { level?: number; streak?: number } = {},
+  ): { best: number; prevBest: number; record: boolean } {
     const s = Number.isFinite(score) ? Math.max(0, score) : 0;
     const games = (this.data.games ??= {});
     const prev = games[id];
     const prevBest = prev?.best ?? 0;
     const best = Math.max(prevBest, s);
-    games[id] = { best, plays: (prev?.plays ?? 0) + 1, lastAt: this.now().getTime() };
+    const g: GameScore = { best, plays: (prev?.plays ?? 0) + 1, lastAt: this.now().getTime() };
+    // (+ 2026-10-09) Tùy chọn: mức khó lượt này (ghi đè — lượt sau bắt đầu gần đó) · chuỗi đúng dài nhất (giữ cao nhất)
+    const fin = (n: number | undefined) => (typeof n === 'number' && Number.isFinite(n) && n >= 0 ? Math.floor(n) : undefined);
+    const level = fin(extra.level) ?? prev?.level;
+    const streak = Math.max(fin(extra.streak) ?? 0, prev?.streak ?? 0);
+    if (level !== undefined) g.level = level;
+    if (streak > 0) g.streak = streak;
+    games[id] = g;
     this.save();
     this.flush();
     return { best, prevBest, record: s > prevBest && s > 0 };

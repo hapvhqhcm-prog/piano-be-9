@@ -42,7 +42,8 @@ function fakeContext() {
     }),
     createGain: () => ({ ...node(), gain: param() }),
     createDynamicsCompressor: () => ({ ...node(), threshold: param(), knee: param(), ratio: param(), attack: param(), release: param() }),
-    createBiquadFilter: () => ({ ...node(), type: 'lowpass', frequency: param(), Q: param() }),
+    createBiquadFilter: () => ({ ...node(), type: 'lowpass', frequency: param(), Q: param(), gain: param() }),
+    createStereoPanner: () => ({ ...node(), pan: param() }),
     createConvolver: () => ({ ...node(), buffer: null }),
     createPeriodicWave: (real: Float32Array, imag: Float32Array) => {
       const w = { real, imag };
@@ -88,10 +89,11 @@ describe('AudioEngine', () => {
     expect(ctx.resume).toHaveBeenCalled();
   });
 
-  it('mỗi nốt: 2 dây PeriodicWave đúng tần số (lệch < 2 cent), sóng dùng chung theo âm vực', async () => {
+  it('tiếng cũ (classic): 2 dây PeriodicWave đúng tần số (lệch < 2 cent), sóng dùng chung theo âm vực', async () => {
     const { ctx, oscs, waves } = fakeContext();
     const eng = new AudioEngine(() => ctx as unknown as AudioContext);
     await eng.unlock();
+    eng.voiceModel = 'classic';
     void eng.playPitch('A4');
     void eng.playPitch('C4');
     expect(oscs).toHaveLength(4);
@@ -107,13 +109,69 @@ describe('AudioEngine', () => {
     eng.stopAll();
   });
 
-  it('khi đã nhiều nốt chồng nhau thì chuyển sang 1 dây (đỡ CPU)', async () => {
-    const { ctx, oscs } = fakeContext();
+  it('tiếng ấm (mặc định): 2 dây lớp thân đúng tần số + lớp sáng hơi cao hơn (không hòa âm, 0,5–6 cent)', async () => {
+    const { ctx, oscs, waves } = fakeContext();
     const eng = new AudioEngine(() => ctx as unknown as AudioContext);
     await eng.unlock();
-    for (let i = 0; i < 12; i++) void eng.scheduleFreq(220 * Math.pow(2, i / 12), 0, 1, 0.5, false);
-    // 8 nốt đầu: 2 dây; 4 nốt sau: 1 dây
-    expect(oscs).toHaveLength(8 * 2 + 4);
+    expect(eng.voiceModel).toBe('warm');
+    void eng.playPitch('A4');
+    void eng.playPitch('C4');
+    expect(oscs).toHaveLength(6);
+    expect(oscs.every((o) => o.type === 'custom')).toBe(true);
+    const cents = (a: number, b: number) => 1200 * Math.log2(a / b);
+    expect(oscs[0].frequency.value).toBe(440);
+    expect(Math.abs(cents(oscs[1].frequency.value, 440))).toBeLessThan(2);
+    expect(cents(oscs[2].frequency.value, 440)).toBeGreaterThanOrEqual(0.5);
+    expect(cents(oscs[2].frequency.value, 440)).toBeLessThanOrEqual(6.001);
+    // lớp sáng là sóng khác lớp thân; 2 dải âm vực × 2 lớp = 4 sóng; nốt lặp lại không tạo thêm
+    expect(oscs[2].wave).not.toBe(oscs[0].wave);
+    void eng.playPitch('A4');
+    expect(waves).toHaveLength(4);
+    eng.stopAll();
+  });
+
+  it('đếm nút CPU: ấm ≤ 1,5 × cũ mỗi nốt; chế độ nhẹ 3 nút như cũ', async () => {
+    const { ctx } = fakeContext();
+    const eng = new AudioEngine(() => ctx as unknown as AudioContext);
+    await eng.unlock();
+    eng.voiceModel = 'classic';
+    void eng.scheduleFreq(261.63, 0, 0.3, 1, false);
+    const classic = eng.stats.lastNoteNodes;
+    expect(classic).toBe(7);
+    eng.voiceModel = 'warm';
+    void eng.scheduleFreq(261.63, 0, 0.3, 1, false); // nhả sớm → có tiếng giảm chấn (nhiều nút nhất)
+    const warmMax = eng.stats.lastNoteNodes;
+    expect(warmMax).toBe(10);
+    expect(warmMax).toBeLessThanOrEqual(classic * 1.5);
+    void eng.scheduleFreq(261.63, 0, 5, 1, false); // giữ tới khi tắt tự nhiên → không có giảm chấn
+    expect(eng.stats.lastNoteNodes).toBe(9);
+    for (let i = 0; i < 10; i++) void eng.scheduleFreq(220 * Math.pow(2, i / 12), 0, 1, 0.5, false);
+    expect(eng.stats.lastNoteNodes).toBe(3);
+    expect(eng.stats.lightNotes).toBeGreaterThan(0);
+    eng.stopAll();
+  });
+
+  it('khi đã nhiều nốt chồng nhau thì chuyển sang 1 dây (đỡ CPU) — cả hai kiểu tiếng', async () => {
+    for (const model of ['classic', 'warm'] as const) {
+      const { ctx, oscs } = fakeContext();
+      const eng = new AudioEngine(() => ctx as unknown as AudioContext);
+      await eng.unlock();
+      eng.voiceModel = model;
+      for (let i = 0; i < 12; i++) void eng.scheduleFreq(220 * Math.pow(2, i / 12), 0, 1, 0.5, false);
+      // 8 nốt đầu: đủ lớp (cũ 2 dây; ấm 2 dây + lớp sáng); 4 nốt sau: 1 dây
+      expect(oscs).toHaveLength(8 * (model === 'classic' ? 2 : 3) + 4);
+      eng.stopAll();
+    }
+  });
+
+  it('bài mẫu hẹn cả bài một lượt: chỉ nốt CHỒNG NHAU thật mới tính (không phải mọi nốt đã hẹn)', async () => {
+    const { ctx } = fakeContext();
+    const eng = new AudioEngine(() => ctx as unknown as AudioContext);
+    await eng.unlock();
+    // 30 nốt nối tiếp (mỗi nốt 0,4 s, cách 0,5 s) — trước đây nốt thứ 9 trở đi thành tiếng "nhẹ" 1 dây
+    for (let i = 0; i < 30; i++) void eng.scheduleFreq(261.63, i * 0.5, 0.4, 1, false);
+    expect(eng.stats.lightNotes).toBe(0);
+    expect(eng.stats.notes).toBe(30);
     eng.stopAll();
   });
 

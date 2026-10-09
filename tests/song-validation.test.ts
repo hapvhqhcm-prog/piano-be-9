@@ -24,14 +24,16 @@ const ALLOWED = [
 ];
 /** Cấp 4 (2026-10-08): số bài mới tuần 32–43 (tests/level4.test.ts kiểm nội dung) */
 const LEVEL4_SONGS = 29;
+/** (2026-10-09, OWNER duyệt "Thêm bài hát") bài CHỈ ĐỂ TRONG THƯ VIỆN, tuần 3–28 (tests/library-2026-10-09.test.ts kiểm nội dung) */
+const LIBRARY_2026_10_09 = 24;
 
-it('có 97 bài hát (56 cũ + 14 bài tự sáng tác v5 + 12 bài Việt Nam + 13 bài tự sáng tác bổ sung 2026-10-06 + 2 bài 2026-10-08: Bánh nóng thế Sol, Xích đu 3/4), id không trùng, đủ tuần 2–30 (trừ 21 — hòa nhạc Cấp 2; v5.1: 31 tuần)', () => {
+it('có 97 bài hát (56 cũ + 14 bài tự sáng tác v5 + 12 bài Việt Nam + 13 bài tự sáng tác bổ sung 2026-10-06 + 2 bài 2026-10-08: Bánh nóng thế Sol, Xích đu 3/4) + Cấp 4 + 24 bài Thư viện 2026-10-09, id không trùng, đủ tuần 2–30 (trừ 21 — hòa nhạc Cấp 2; v5.1: 31 tuần)', () => {
   // 51 bài + 6 bài dân ca Việt Nam − "Cầu London — chấm dôi" (bài lặp, thay bằng "Bắc kim thang") — OWNER yêu cầu 2026-10-05
   // v5 (OWNER duyệt 2026-10-05): + 14 bài tự sáng tác cho tuần củng cố / tuần nhịp mới (giữ đủ 56 bài cũ)
   // 2026-10-06: + 9 dân ca + 3 ca khúc nhạc sĩ Việt Nam đã thuộc về công chúng (Lý ngựa ô thay bằng bản đầy đủ — cùng id)
   // 2026-10-06 (rà soát kho bài): + 13 bài tự sáng tác lấp tuần mỏng — mỗi tuần 2–30 (trừ 21) giờ có ≥ 2 bài, tuần 29–30 có 2
-  expect(SONGS).toHaveLength(97 + LEVEL4_SONGS);
-  expect(new Set(SONGS.map((s) => s.id)).size).toBe(97 + LEVEL4_SONGS);
+  expect(SONGS).toHaveLength(97 + LEVEL4_SONGS + LIBRARY_2026_10_09);
+  expect(new Set(SONGS.map((s) => s.id)).size).toBe(97 + LEVEL4_SONGS + LIBRARY_2026_10_09);
   for (let w = 32; w <= 42; w++) expect(SONGS.filter((s) => s.week === w).length, `tuần ${w}`).toBeGreaterThanOrEqual(2);
   const weeks = new Set(SONGS.map((s) => s.week));
   for (let w = 2; w <= 30; w++) if (w !== 21) expect(weeks.has(w), `tuần ${w}`).toBe(true);

@@ -4,7 +4,8 @@
 import type { AppData } from '../../progress/schema';
 import { button, h } from '../components/dom';
 import { readiness, tonightPlan, type TonightPractice } from './tonight';
-import { diagnosticsScreen, micTestScreen, segmented, type ParentCtx } from './parentShared';
+import { diagnosticsScreen, micTestScreen, segmented, weeklyReportScreen, type ParentCtx } from './parentShared';
+import { addDays, weeklyReportDue } from '../../progress/weeklyReportDue';
 
 /**
  * "Việc cần làm tối nay" (đầu trang): 1 việc cụ thể + "▶ Làm ngay (5')" + 3 chỗ khó + tiêu chí tuần.
@@ -111,5 +112,29 @@ export function readinessCard(c: ParentCtx, data: Readonly<AppData>, at: Date): 
       ),
     ),
     r.held ? h('p', { class: 'muted' }, `App sẽ KHÔNG tự sang tuần mới khi bé đạt mục tiêu — bố mẹ chọn “Không” khi bé sẵn sàng.`) : null,
+  );
+}
+
+/**
+ * (+ 2026-10-09) 📊 Báo cáo tuần: tuần vừa hết có số liệu mà bố mẹ chưa xem → thẻ nổi bật "đã sẵn sàng" ở đầu màn;
+ * không thì một dòng nhỏ mở lịch sử 8 tuần. `back` = vẽ lại màn Phụ huynh khi quay lại.
+ */
+export function weeklyReportCard(c: ParentCtx, d: Readonly<AppData>, now: Date, back: () => void): HTMLElement {
+  const due = weeklyReportDue(d, now);
+  const fmt = (s: string) => `${s.slice(8, 10)}/${s.slice(5, 7)}`;
+  const open = () => c.app.show(weeklyReportScreen(c.app, { onBack: back, ...(due ? { monday: due } : {}) }));
+  return h(
+    'section',
+    // Kiểu nội tuyến: report.css chỉ nạp cùng màn báo cáo (nạp muộn)
+    { class: `card weekly-card${due ? ' due' : ''}`, style: due ? { background: 'var(--violet-100)', boxShadow: 'inset 0 0 0 2px var(--violet-400)' } : {} },
+    h('h2', {}, due ? '📊 Báo cáo tuần đã sẵn sàng' : '📊 Báo cáo tuần'),
+    h(
+      'p',
+      {},
+      due
+        ? `Tuần ${fmt(due)} – ${fmt(addDays(due, 6))}: ngày tập, bài mới thuộc, lời khen nên nói và một việc bố mẹ giúp con. Gửi ảnh cho ông bà chỉ một chạm.`
+        : 'Tóm tắt từng tuần (8 tuần gần nhất) — gửi ảnh hoặc chữ cho ông bà.',
+    ),
+    button({ icon: '📊', label: due ? 'Xem báo cáo tuần' : 'Mở báo cáo tuần', kind: due ? 'primary' : undefined, onTap: open }),
   );
 }

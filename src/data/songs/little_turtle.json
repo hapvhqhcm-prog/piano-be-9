@@ -1,0 +1,117 @@
+{
+ "id": "little_turtle",
+ "title": "Little Turtle",
+ "titleVi": "Rùa con chậm chạp",
+ "composer": "Bài tự sáng tác cho app (piano-be-9)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Bài tự sáng tác cho app (piano-be-9)",
+ "attributionRequired": false,
+ "hand": "LH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 7,
+ "phrases": [
+  0,
+  4
+ ],
+ "notes": [
+  {
+   "pitch": "C3",
+   "beats": 2,
+   "finger": 5,
+   "dyn": "mf"
+  },
+  {
+   "pitch": "D3",
+   "beats": 2,
+   "finger": 4
+  },
+  {
+   "pitch": "E3",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "C3",
+   "beats": 2,
+   "finger": 5
+  },
+  {
+   "pitch": "E3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "F3",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "G3",
+   "beats": 2,
+   "finger": 1
+  },
+  {
+   "pitch": "G3",
+   "beats": 4,
+   "finger": 1
+  },
+  {
+   "pitch": "G3",
+   "beats": 1,
+   "finger": 1,
+   "dyn": "p"
+  },
+  {
+   "pitch": "F3",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D3",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "E3",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "F3",
+   "beats": 2,
+   "finger": 2
+  },
+  {
+   "pitch": "D3",
+   "beats": 1,
+   "finger": 4,
+   "dyn": "mf"
+  },
+  {
+   "pitch": "E3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "F3",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "D3",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "C3",
+   "beats": 4,
+   "finger": 5
+  }
+ ]
+}

@@ -1,7 +1,8 @@
 /**
  * 🎮 Phần dùng chung của các trò chơi: khung màn, màn giới thiệu (đọc hướng dẫn MỘT lần), màn kết (sao + kỷ lục).
  */
-import { cancelSpeech, speak } from '../../../audio/voice';
+import { cancelSpeech, speak, speechBusy } from '../../../audio/voice';
+import { midiToPitch, type Pitch } from '../../../piano/pitchTable';
 import type { GameId } from '../../../practice/games/catalog';
 import type { App } from '../../App';
 import { backButton, button, h } from '../../components/dom';
@@ -96,9 +97,18 @@ export function starsRow(n: number, max = 3): HTMLElement {
 export function showEnd(
   app: App,
   shell: GameShell,
-  o: { id: GameId; score: number; scoreText: string; stars: number; onAgain(): void; onHub(): void },
+  o: {
+    id: GameId;
+    score: number;
+    scoreText: string;
+    stars: number;
+    /** (+ 2026-10-09) Lưu kèm kỷ lục: mức khó lượt này / chuỗi đúng dài nhất */
+    extra?: { level?: number; streak?: number };
+    onAgain(): void;
+    onHub(): void;
+  },
 ): void {
-  const r = app.store.recordGame(o.id, o.score);
+  const r = app.store.recordGame(o.id, o.score, o.extra);
   const record = r.record && r.prevBest > 0;
   const first = r.record && r.prevBest === 0;
   const mood: Mood = record || o.stars >= 3 ? 'cheer' : o.stars >= 1 ? 'happy' : 'love';
@@ -136,4 +146,28 @@ export function showEnd(
     void app.audio.chime();
   }
   void speak(app, record ? `Kỷ lục mới! ${o.scoreText}` : `${o.scoreText}. ${praise}`);
+}
+
+/**
+ * (+ 2026-10-09) Nghe ĐÀN THẬT (khi phụ huynh bật micro): bật micro trong cú chạm, gọi `onPitch` mỗi nốt nghe được.
+ * Tiếng của chính app (phím ảo, nốt mẫu, chuông) / giọng đọc → bỏ qua. Trả về { on, off } — micro tắt / không có → on = false.
+ */
+export async function listenPiano(app: App, onPitch: (p: Pitch) => void): Promise<{ on: boolean; off: () => void }> {
+  if (!app.micWanted) return { on: false, off: () => undefined };
+  const on = await app.ensureMic();
+  if (!on) return { on: false, off: () => undefined };
+  const off = app.mic.onNote((n) => {
+    if (app.audio.isSounding || app.audio.msSinceSound() < 120 || speechBusy()) return;
+    onPitch(midiToPitch(n.midi));
+  });
+  return { on: true, off };
+}
+
+/** Người dùng muốn giảm chuyển động (Cài đặt hệ thống) → trò chơi bỏ hiệu ứng trôi/nhún. */
+export const reducedMotion = (): boolean =>
+  typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/** Chờ `ms` mili-giây; trả về false nếu `alive()` đã sai trong lúc chờ (rời màn / đổi lượt). */
+export function pause(ms: number, alive: () => boolean): Promise<boolean> {
+  return new Promise((r) => window.setTimeout(() => r(alive()), ms));
 }

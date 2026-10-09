@@ -1,0 +1,222 @@
+{
+ "id": "auld_lang_syne",
+ "title": "Auld Lang Syne (Scottish folk song)",
+ "titleVi": "Auld Lang Syne (dân ca Scotland)",
+ "composer": "Dân ca Scotland (traditional)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Original simple arrangement for this app",
+ "attributionRequired": false,
+ "hand": "BOTH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 17,
+ "position": "free",
+ "phrases": [
+  0,
+  5
+ ],
+ "notes": [
+  {
+   "rest": true,
+   "beats": 4
+  },
+  {
+   "pitch": "C4",
+   "beats": 1.5,
+   "finger": 1,
+   "dyn": "mf"
+  },
+  {
+   "pitch": "C4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 1.5,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "C4",
+   "beats": 1.5,
+   "finger": 1
+  },
+  {
+   "pitch": "C4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "A4",
+   "beats": 3,
+   "finger": 5
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "G4",
+   "beats": 1.5,
+   "finger": 4,
+   "dyn": "p"
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "D4",
+   "beats": 1.5,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 0.5,
+   "finger": 1
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "C4",
+   "beats": 1.5,
+   "finger": 1
+  },
+  {
+   "rest": true,
+   "beats": 0.5
+  },
+  {
+   "rest": true,
+   "beats": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 3,
+   "finger": 1
+  },
+  {
+   "rest": true,
+   "beats": 1
+  }
+ ],
+ "lh": [
+  {
+   "rest": true,
+   "beats": 3
+  },
+  {
+   "pitch": "G3",
+   "beats": 1,
+   "finger": 4,
+   "dyn": "mf"
+  },
+  {
+   "rest": true,
+   "beats": 4
+  },
+  {
+   "rest": true,
+   "beats": 4
+  },
+  {
+   "rest": true,
+   "beats": 4
+  },
+  {
+   "rest": true,
+   "beats": 4
+  },
+  {
+   "rest": true,
+   "beats": 4
+  },
+  {
+   "rest": true,
+   "beats": 4
+  },
+  {
+   "rest": true,
+   "beats": 1
+  },
+  {
+   "rest": true,
+   "beats": 0.5
+  },
+  {
+   "pitch": "A3",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "A3",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G3",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "rest": true,
+   "beats": 4
+  }
+ ],
+ "lhPosition": "MC"
+}

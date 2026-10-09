@@ -20,8 +20,8 @@ import { BACKUP_MESSAGE, exportBackup } from '../../progress/backup';
 import { parentSongToTune } from '../../practice/parentSongs';
 import { prefetchLater } from '../lazy';
 import { reminderCard } from '../components/reminderCard';
-import { DAY_MS, fmtMs, micTestMod, reportMod, reportScreen, songEditorMod, storageText, type ParentCtx, type ParentUxSettings } from './parentShared';
-import { micSetupCard, readinessCard, tonightCard } from './parentTodayCards';
+import { DAY_MS, fmtMs, micTestMod, reportMod, reportScreen, songEditorMod, storageText, weeklyReportMod, type ParentCtx, type ParentUxSettings } from './parentShared';
+import { micSetupCard, readinessCard, tonightCard, weeklyReportCard } from './parentTodayCards';
 import { detailsCard, latestSessionCards, overviewCard, skillsCard } from './parentProgressCards';
 import { advancedSection } from './parentAdvanced';
 import { parentSongsCard } from './parentSongsCard';
@@ -38,7 +38,7 @@ export { fmtDate, parentLabel } from './parentShared';
  */
 export function parentScreen(app: App) {
   return (root: HTMLElement) => {
-    prefetchLater([reportMod, songEditorMod, micTestMod]);
+    prefetchLater([reportMod, weeklyReportMod, songEditorMod, micTestMod]);
     const store = app.store;
     const scroller = h('div', { class: 'parent scrollable' });
     root.append(h('div', { class: 'screen' }, scroller));
@@ -173,6 +173,8 @@ export function parentScreen(app: App) {
         storageSpan,
       );
 
+      const weekly = weeklyReportCard(c, d, now, () => app.show(parentScreen(app)));
+      const weeklyDue = weekly.classList.contains('due');
       const sections: (HTMLElement | null)[] = [
         h(
           'header',
@@ -200,6 +202,8 @@ export function parentScreen(app: App) {
             ? h('div', { class: 'banner' }, '✅ App đã tự khôi phục tiến độ của bé từ bản sao lưu trong máy (do lỗi cũ khi lên tuần 9).')
             : null,
         store.lastSaveError ? h('div', { class: 'banner warn' }, `Lỗi lưu dữ liệu: ${store.lastSaveError}`) : null,
+        // (+ 2026-10-09) 📊 Báo cáo tuần: tuần vừa hết chưa xem → thẻ ở đầu màn; không thì nằm cạnh phần tiến độ
+        weeklyDue ? weekly : null,
         micSetupCard(c, d),
         tonightCard(d, now, runPractice),
         readinessCard(c, d, now),
@@ -213,6 +217,7 @@ export function parentScreen(app: App) {
         quickTipsCard(),
         // Chưa thêm vào Màn hình chính → iPad có thể xóa tiến độ: giữ ở phần đầu (an toàn dữ liệu)
         installCard(),
+        weeklyDue ? null : weekly,
         overviewCard(d, now),
         skillsCard(d, stats.skills),
         detailsCard(c, d, stats),

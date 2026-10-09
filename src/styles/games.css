@@ -517,3 +517,442 @@
     font-size: 104px;
   }
 }
+
+/* =========================================================
+   (+ 2026-10-09) 7 trò: lưới 4 + 3 thẻ gọn (vừa iPad 10.2" & mini ngang, không cuộn)
+   ========================================================= */
+.game-cards.n7 {
+  flex-wrap: wrap;
+  gap: 14px 16px;
+  width: min(1060px, 100%);
+  padding: 4px 16px;
+}
+.game-cards.n7 .game-card {
+  flex: 0 1 calc(25% - 12px);
+  max-width: 250px;
+  min-height: 0;
+  height: min(272px, calc((100vh - 270px) / 2));
+  gap: 6px;
+  padding: 14px 10px 12px;
+}
+.game-cards.n7 .gc-emoji {
+  font-size: 54px;
+}
+.game-cards.n7 .gc-title {
+  font-size: 25px;
+}
+.game-cards.n7 .gc-hint {
+  font-size: 17px;
+}
+.game-cards.n7 .gc-best {
+  font-size: 19px;
+  padding: 6px 14px 3px;
+}
+.gc-earGuess {
+  background: linear-gradient(180deg, var(--mint-50), var(--surface) 70%);
+  box-shadow: var(--e2), inset 0 -6px 0 var(--mint-100);
+}
+.gc-contour {
+  background: linear-gradient(180deg, var(--violet-50), var(--surface) 70%);
+  box-shadow: var(--e2), inset 0 -6px 0 var(--violet-100);
+}
+.gc-echo {
+  background: linear-gradient(180deg, var(--sun-50), var(--surface) 70%);
+  box-shadow: var(--e2), inset 0 -6px 0 var(--sun-100);
+}
+.gc-beatCatch {
+  background: linear-gradient(180deg, var(--coral-50), var(--surface) 70%);
+  box-shadow: var(--e2), inset 0 -6px 0 var(--coral-100);
+}
+
+/* ---------- 🎧 Đoán nốt · 🔁 Đàn lại giai điệu (bàn phím Đô4–Đô5) ---------- */
+.keyboard-wrap.eg-kb {
+  flex-basis: 34vh;
+}
+.keyboard-wrap.eg-kb[hidden] {
+  display: none;
+}
+.eg-kb .keyboard.is-disabled {
+  opacity: 0.85;
+}
+.eg-title {
+  font-size: 38px;
+  text-align: center;
+}
+.eg-title.listening {
+  color: var(--violet-600);
+}
+.eg-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+  width: min(1000px, 100%);
+  padding: 0 16px;
+}
+.eg-row .rush-mic {
+  justify-self: end;
+}
+.eg-streak,
+.ec-tries {
+  justify-self: start;
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--coral-700);
+  min-height: 1.2em;
+}
+.ec-tries {
+  font-size: 22px;
+  color: var(--sun-800);
+}
+.eg-streak.hot {
+  animation: game-pop 0.3s var(--ease-pop);
+}
+.eg-set {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+.eg-chip {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--violet-600);
+  background: var(--violet-50);
+  box-shadow: inset 0 0 0 2px var(--violet-100);
+  border-radius: var(--r-pill);
+  padding: 6px 16px 2px;
+}
+.eg-chip.new {
+  color: #fff;
+  background: var(--mint-500);
+  box-shadow: var(--e1);
+  animation: game-pop 0.5s var(--ease-pop) 2;
+}
+.eg-set .game-sub {
+  flex-basis: 100%;
+  text-align: center;
+  margin: 4px 0 0;
+}
+.ec-dots {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  max-width: 520px;
+}
+.ec-dot {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--line);
+  box-shadow: inset 0 -3px 0 var(--line-strong);
+  transition: background 0.15s;
+}
+.ec-dot.done {
+  background: var(--mint-400);
+  box-shadow: inset 0 -3px 0 var(--mint-600);
+}
+
+/* ---------- 🎢 Lên hay xuống? ---------- */
+.ct-voice {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ink-2);
+  background: var(--surface-2);
+  border-radius: var(--r-pill);
+  padding: 6px 18px 4px;
+}
+.ct-cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  width: min(1000px, 100%);
+  padding: 4px 12px;
+}
+.ct-cards.n2 {
+  grid-template-columns: repeat(2, minmax(0, 300px));
+  justify-content: center;
+}
+.ct-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 210px;
+  padding: 14px 8px;
+  border: 4px solid transparent;
+  border-radius: var(--r-xl);
+  background: var(--surface);
+  box-shadow: var(--e2), inset 0 -6px 0 var(--line);
+  font: inherit;
+  color: var(--ink);
+  cursor: pointer;
+  transition: transform 0.12s var(--ease-out);
+}
+.ct-card:active {
+  transform: scale(0.98);
+}
+.ct-card:disabled {
+  cursor: default;
+}
+.ct-card.good {
+  border-color: var(--mint-500);
+  background: var(--mint-50);
+}
+.ct-card.miss {
+  border-color: var(--coral-400);
+  background: var(--coral-50);
+  animation: game-shake 0.42s;
+}
+.ct-card.dim {
+  opacity: 0.45;
+}
+.ct-svg {
+  width: 100%;
+  max-width: 200px;
+  height: auto;
+}
+.ct-line {
+  fill: none;
+  stroke: var(--violet-400);
+  stroke-width: 7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.ct-dot {
+  fill: var(--sun-400);
+  stroke: var(--sun-800);
+  stroke-width: 3;
+  transition: transform 0.12s;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.ct-dot.now {
+  fill: var(--mint-400);
+  stroke: var(--mint-700);
+  transform: scale(1.45);
+}
+.ct-label {
+  font-family: var(--font-display);
+  font-size: 25px;
+  font-weight: 800;
+  text-align: center;
+  line-height: 1.15;
+}
+
+/* ---------- 🎯 Bắt nhịp ---------- */
+.bc-hud {
+  display: grid;
+  grid-template-columns: auto auto 1fr auto;
+  align-items: center;
+  gap: 16px;
+  width: min(1000px, 100%);
+  padding: 0 16px;
+}
+.bc-hint {
+  font-size: 21px;
+  font-weight: 700;
+  color: var(--mint-700);
+  text-align: center;
+}
+.bc-lane {
+  position: relative;
+  width: min(1000px, calc(100% - 24px));
+  height: 120px;
+  flex: 0 0 auto;
+  overflow: hidden;
+  border-radius: var(--r-xl);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 3px var(--line);
+}
+.bc-hitline {
+  position: absolute;
+  left: 150px;
+  top: 50%;
+  width: 86px;
+  height: 86px;
+  margin: -43px 0 0 -43px;
+  border-radius: 50%;
+  border: 5px dashed var(--violet-400);
+  background: var(--violet-50);
+}
+.bc-track {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 0;
+  will-change: transform;
+}
+.bc-barline {
+  position: absolute;
+  top: 14px;
+  bottom: 14px;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--line-strong);
+}
+.bc-dot {
+  position: absolute;
+  top: 50%;
+  width: 0;
+  height: 0;
+}
+.bc-dot-face {
+  position: absolute;
+  left: -34px;
+  top: -34px;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 34px;
+  background: var(--sun-300);
+  box-shadow: inset 0 -5px 0 var(--sun-600), var(--e1);
+  transition: background 0.12s, opacity 0.3s, transform 0.15s;
+}
+.bc-tail {
+  position: absolute;
+  left: 0;
+  top: -12px;
+  height: 24px;
+  border-radius: var(--r-pill);
+  background: var(--sun-100);
+}
+.bc-dot.hit .bc-dot-face {
+  background: var(--mint-400);
+  box-shadow: inset 0 -5px 0 var(--mint-600), var(--e1);
+  transform: scale(1.18);
+}
+.bc-dot.hit-perfect .bc-dot-face {
+  background: var(--violet-400);
+  box-shadow: inset 0 -5px 0 var(--violet-600), var(--glow-sun);
+}
+.bc-dot.missed .bc-dot-face {
+  opacity: 0.35;
+  transform: scale(0.85);
+}
+.bc-under {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 16px;
+  width: min(1000px, 100%);
+  padding: 0 16px;
+}
+.bc-count {
+  justify-self: end;
+  font-family: var(--font-display);
+  font-size: 90px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--violet-500);
+  min-width: 1em;
+  text-align: center;
+}
+.bc-word {
+  justify-self: start;
+  font-family: var(--font-display);
+  font-size: 44px;
+  font-weight: 800;
+  min-height: 1.2em;
+  color: var(--mint-700);
+}
+.bc-word.w-perfect {
+  color: var(--violet-600);
+}
+.bc-word.w-ok {
+  color: var(--sun-800);
+}
+.bc-pad {
+  width: min(300px, 32vw);
+  height: min(220px, 27vh);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: 0;
+  border-radius: 40px;
+  background: linear-gradient(180deg, var(--coral-400), var(--coral-500));
+  box-shadow: inset 0 -10px 0 var(--coral-700), var(--e2);
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.bc-pad-emoji {
+  font-size: 80px;
+  line-height: 1;
+}
+.bc-pad-label {
+  font-family: var(--font-display);
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+.bc-pad.hit {
+  animation: bc-press 0.16s ease-out;
+}
+@keyframes bc-press {
+  40% {
+    transform: translateY(5px) scale(0.97);
+    box-shadow: inset 0 -4px 0 var(--coral-700), var(--e1);
+  }
+}
+
+/* iPad mini ngang */
+@media (max-height: 760px) {
+  .game-cards.n7 .gc-emoji {
+    font-size: 46px;
+  }
+  .game-cards.n7 .gc-hint {
+    font-size: 16px;
+  }
+  .ct-card {
+    min-height: 180px;
+  }
+  .bc-pad {
+    height: min(190px, 25vh);
+  }
+  .bc-pad-emoji {
+    font-size: 64px;
+  }
+  .eg-title {
+    font-size: 34px;
+  }
+}
+
+/* Giảm chuyển động (Cài đặt hệ thống): bỏ nhún / rung / bật trong mọi trò chơi */
+@media (prefers-reduced-motion: reduce) {
+  .game-mascot.react,
+  .game-record,
+  .shake,
+  .pop,
+  .rush-count,
+  .rush-combo.hot .rush-combo-text,
+  .rq-listening .rq-ear,
+  .sg-listening .sg-notes,
+  .rq-card.miss,
+  .sg-card.miss,
+  .ct-card.miss,
+  .eg-streak.hot,
+  .eg-chip.new,
+  .bc-pad.hit {
+    animation: none;
+  }
+  .ct-dot,
+  .bc-dot-face,
+  .rush-time-fill,
+  .rush-combo-fill {
+    transition: none;
+  }
+}

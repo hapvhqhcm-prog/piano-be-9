@@ -1,5 +1,7 @@
 /**
  * 🎮 "Trò chơi" — 3 trò ôn kiến thức đã học (OWNER duyệt 2026-10-07): ⚡ Đọc nốt nhanh · 🥁 Đố nhịp · 🎵 Nghe đoán bài.
+ * (+ 2026-10-09, OWNER duyệt "Thêm trò chơi luyện tai & nhịp") 🎧 Đoán nốt · 🎢 Lên hay xuống? · 🎯 Bắt nhịp ·
+ * 🔁 Đàn lại giai điệu — mỗi trò một chunk nạp muộn (màn chọn trò không nặng thêm).
  * Nội dung mỗi trò lấy theo giáo trình tới tuần hiện tại (chỉ điều con đã học). Kỷ lục lưu ở AppData.games.
  */
 import { SONGS } from '../../music/tune';
@@ -12,12 +14,22 @@ import { homeScreen } from './home';
 import { noteRushScreen } from './games/noteRush';
 import { rhythmQuizScreen } from './games/rhythmQuiz';
 import { songGuessScreen } from './games/songGuess';
+import { lazy, lazyScreen, prefetchLater } from '../lazy';
 import '../../styles/games.css';
+
+const earMod = lazy(() => import('./games/earGuess'));
+const contourMod = lazy(() => import('./games/contour'));
+const beatMod = lazy(() => import('./games/beatCatch'));
+const echoMod = lazy(() => import('./games/echo'));
 
 const SCREENS: Record<GameId, (app: App, onHub: () => void) => Screen> = {
   noteRush: noteRushScreen,
   rhythmQuiz: rhythmQuizScreen,
   songGuess: songGuessScreen,
+  earGuess: (app, onHub) => lazyScreen(earMod, (m) => m.earGuessScreen(app, onHub)),
+  contour: (app, onHub) => lazyScreen(contourMod, (m) => m.contourScreen(app, onHub)),
+  beatCatch: (app, onHub) => lazyScreen(beatMod, (m) => m.beatCatchScreen(app, onHub)),
+  echo: (app, onHub) => lazyScreen(echoMod, (m) => m.echoScreen(app, onHub)),
 };
 
 export function gamesScreen(app: App): Screen {
@@ -63,9 +75,11 @@ export function gamesScreen(app: App): Screen {
           mascot('wave', 72),
           h('h1', { class: 'title' }, '🎮 Trò chơi'),
         ),
-        h('div', { class: 'stage scrollable' }, h('div', { class: 'game-cards' }, ...GAME_IDS.map(card))),
+        h('div', { class: 'stage scrollable' }, h('div', { class: `game-cards n${GAME_IDS.length}` }, ...GAME_IDS.map(card))),
         h('div', { class: 'actions' }, backButton(() => app.show(homeScreen(app)))),
       ),
     );
+    // Nạp ngầm các trò mới (offline đã có trong precache — đây chỉ để chạm là mở ngay)
+    prefetchLater([earMod, contourMod, beatMod, echoMod]);
   };
 }

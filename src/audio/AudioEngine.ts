@@ -1,14 +1,21 @@
 import { pitchFreq, type Pitch } from '../piano/pitchTable';
 import {
+  ampsToTable,
+  bodyAmps,
+  brightAmps,
+  brightEvents,
   cutoffEvents,
   gainEvents,
   harmonicTable,
   roomImpulse,
+  roomImpulseStereo,
   thumpNoise,
   voiceParams,
+  warmVoiceParams,
   waveKey,
   waveKeyFreq,
   type ParamEvent,
+  type VoiceModel,
 } from './pianoVoice';
 import { PING } from './latency';
 
@@ -16,6 +23,8 @@ import { PING } from './latency';
  * AudioEngine — tiếng đàn tổng hợp "giống piano" (OWNER chọn thay cho sample Salamander):
  * 2 dây lệch nhẹ (PeriodicWave) + tiếng búa → lọc tối dần → bao biên 2 giai đoạn (xem pianoVoice.ts),
  * hồi âm phòng nhỏ ở bus chính; tiếng gõ nhịp; hẹn giờ nốt theo đồng hồ AudioContext.
+ * (+ 2026-10-09) Mô hình "ấm" (mặc định, voiceModel = 'warm'): lớp thân + lớp sáng tắt nhanh & hơi lệch (không hòa âm),
+ * tiếng giảm chấn, bus chung có cộng hưởng bầu đàn + trái/phải theo âm vực + hồi âm stereo. 'classic' = tiếng cũ (A/B).
  * Không phụ thuộc DOM: chỉ cần một AudioContext (được tiêm vào để test).
  * AudioContext chỉ được tạo/resume trong unlock(), gọi từ thao tác chạm.
  */
@@ -73,11 +82,35 @@ function defaultFactory(): AudioContext {
 interface Voice {
   /** Bao biên âm lượng chính (stopAll() kéo về 0). */
   env: GainNode;
+  /** Các gain khác đi thẳng ra bus (lớp sáng, búa/giảm chấn) — stopAll() cũng kéo về 0. */
+  fades: GainNode[];
   sources: AudioScheduledSourceNode[];
   nodes: AudioNode[];
+  /** Khoảng vang [t0, t1) theo đồng hồ AudioContext — để đếm nốt CHỒNG NHAU thật (chế độ nhẹ). */
+  t0: number;
+  t1: number;
 }
 
-/** Từ bao nhiêu nốt chồng nhau thì bỏ dây 2 + tiếng búa (đỡ CPU iPad cũ khi hợp âm/bè đệm dày). */
+/** Số liệu CPU (đếm nút Web Audio) — trang ?soundtest hiển thị. */
+export interface VoiceStats {
+  /** Nốt đang vang (kể cả bè đệm). */
+  voices: number;
+  /** Nút Web Audio của các nốt đang vang (không tính bus chung). */
+  liveNodes: number;
+  /** Số nút của nốt vừa hẹn gần nhất. */
+  lastNoteNodes: number;
+  /** Đỉnh liveNodes từ lần resetStats(). */
+  peakNodes: number;
+  /** Số nốt đã chạy chế độ nhẹ từ lần resetStats(). */
+  lightNotes: number;
+  notes: number;
+}
+
+/**
+ * Từ bao nhiêu nốt chồng nhau thì bỏ dây 2 + tiếng búa (+ lớp sáng) (đỡ CPU iPad cũ khi hợp âm/bè đệm dày).
+ * (2026-10-09) Đếm nốt vang CÙNG LÚC với nốt mới (theo khoảng thời gian), không phải mọi nốt đã hẹn: màn mẫu hẹn cả bài
+ * một lượt → trước đây chỉ 8 nốt đầu đủ tiếng, phần còn lại của bài mẫu toàn tiếng "nhẹ" 1 dây.
+ */
 const LIGHT_VOICE_THRESHOLD = 8;
 /** Hồi âm còn nghe sau khi nốt tắt hẳn → cộng vào "app vừa im" để micro không bắt nhầm đuôi vang. */
 export const REVERB_GUARD_MS = 150;
@@ -99,6 +132,15 @@ export const CLICK = {
 } as const;
 /** Mức gửi hồi âm (ướt) — nhỏ, chỉ cho "có phòng". */
 const REVERB_WET = 0.14;
+/** Mô hình ấm: mức gửi hồi âm stereo (đuôi RT60 0,8 s ngắn hơn phòng cũ — xem tests/pianoTone.test.ts về mốc micro). */
+export const WARM_REVERB_WET = 0.13;
+/** Cộng hưởng bầu đàn (bus chung): đỉnh ấm ~230 Hz và "độ vang gỗ" ~2,7 kHz. */
+export const BODY_EQ: ReadonlyArray<{ hz: number; q: number; db: number }> = [
+  { hz: 230, q: 0.9, db: 2 },
+  { hz: 2700, q: 1.2, db: 1.5 },
+];
+/** Các vị trí trái/phải dùng chung (nốt chọn vị trí gần nhất — không tốn nút theo nốt). */
+export const PAN_POSITIONS = [-0.3, -0.15, 0, 0.15, 0.3] as const;
 
 function applyEvents(param: AudioParam, events: ParamEvent[], t0: number): void {
   for (const e of events) {
@@ -111,7 +153,17 @@ function applyEvents(param: AudioParam, events: ParamEvent[], t0: number): void 
 
 export class AudioEngine {
   private ctx: AudioContext | null = null;
+  /** Bus nhạc chính (mô hình ấm: sau cộng hưởng bầu đàn; có hồi âm stereo) → nén → loa. */
   private master: GainNode | null = null;
+  private comp: AudioNode | null = null;
+  /** Đầu vào bus ấm (trước cộng hưởng bầu đàn) và các bộ đặt trái/phải dùng chung. */
+  private warmIn: AudioNode | null = null;
+  private panners: AudioNode[] = [];
+  /** Bus của tiếng cũ (chỉ dựng khi chọn 'classic' — trang A/B): master cũ + hồi âm mono cũ. */
+  private classicMaster: GainNode | null = null;
+  /** Kiểu tiếng đàn (A/B ở trang ?soundtest). Mặc định 'warm'. */
+  voiceModel: VoiceModel = 'warm';
+  private _stats: VoiceStats = { voices: 0, liveNodes: 0, lastNoteNodes: 0, peakNodes: 0, lightNotes: 0, notes: 0 };
   /** Bus khô (không hồi âm) cho tiếng tích nhịp — đuôi vang của tích sẽ lọt vào micro. */
   private dry: GainNode | null = null;
   private waves = new Map<number, PeriodicWave | null>();
@@ -235,26 +287,62 @@ export class AudioEngine {
       }
       master.connect(comp);
       comp.connect(ctx.destination);
+      this.comp = comp;
       const dry = ctx.createGain();
       dry.gain.value = 0.8;
       dry.connect(comp);
       this.dry = dry;
-      // Hồi âm phòng nhỏ (một ConvolverNode dùng chung, IR sinh thủ tục — offline, không tải gì)
+      // Hồi âm phòng nhỏ STEREO (một ConvolverNode dùng chung, IR 2 kênh sinh thủ tục — không tải gì)
       try {
         if (typeof ctx.createConvolver === 'function') {
-          const ir = roomImpulse(ctx.sampleRate);
-          const buf = ctx.createBuffer(1, ir.length, ctx.sampleRate);
-          buf.getChannelData(0).set(ir);
+          const [l, r] = roomImpulseStereo(ctx.sampleRate);
+          const buf = ctx.createBuffer(2, l.length, ctx.sampleRate);
+          buf.getChannelData(0).set(l);
+          buf.getChannelData(1).set(r);
           const conv = ctx.createConvolver();
           conv.buffer = buf;
           const wet = ctx.createGain();
-          wet.gain.value = REVERB_WET;
+          wet.gain.value = WARM_REVERB_WET;
           master.connect(conv);
           conv.connect(wet);
           wet.connect(comp);
         }
       } catch {
         /* không có hồi âm cũng được */
+      }
+      // Cộng hưởng bầu đàn (2 bộ lọc đỉnh dùng chung) → master
+      let eqIn: AudioNode = master;
+      try {
+        for (const b of [...BODY_EQ].reverse()) {
+          const f = ctx.createBiquadFilter();
+          f.type = 'peaking';
+          f.frequency.value = b.hz;
+          f.Q.value = b.q;
+          f.gain.value = b.db;
+          f.connect(eqIn);
+          eqIn = f;
+        }
+      } catch {
+        eqIn = master;
+      }
+      this.warmIn = eqIn;
+      // Trái/phải theo âm vực: vài bộ đặt vị trí DÙNG CHUNG (Safari 14.1+); thiếu thì đi thẳng (mono)
+      this.panners = [];
+      try {
+        if (typeof (ctx as Partial<AudioContext>).createStereoPanner === 'function') {
+          // StereoPanner (luật công suất đều) đưa nguồn mono ở giữa ra 0,707 mỗi kênh → bù √2 (một nút chung)
+          const comp = ctx.createGain();
+          comp.gain.value = Math.SQRT2;
+          comp.connect(eqIn);
+          for (const pos of PAN_POSITIONS) {
+            const pn = ctx.createStereoPanner();
+            pn.pan.value = pos;
+            pn.connect(comp);
+            this.panners.push(pn);
+          }
+        }
+      } catch {
+        this.panners = [];
       }
       this.master = master;
       this.ctx.onstatechange = () => this.emit();
@@ -290,13 +378,19 @@ export class AudioEngine {
     return this.scheduleFreq(freq, ctx.currentTime + 0.01, duration, volume);
   }
 
-  /** PeriodicWave "dây đàn" theo dải âm vực (cache); null nếu trình duyệt không hỗ trợ. */
-  private waveFor(ctx: AudioContext, freq: number): PeriodicWave | null {
-    const key = waveKey(freq);
+  /**
+   * PeriodicWave theo dải âm vực (cache); null nếu trình duyệt không hỗ trợ.
+   * kind: 'classic' = phổ cũ · 'body' = lớp thân (mô hình ấm) · 'bright' = lớp sáng (mô hình ấm).
+   */
+  private waveFor(ctx: AudioContext, freq: number, kind: 'classic' | 'body' | 'bright' = 'classic'): PeriodicWave | null {
+    const band = waveKey(freq);
+    const key = band + (kind === 'classic' ? 0 : kind === 'body' ? 1000 : 2000);
     let w = this.waves.get(key);
     if (w === undefined) {
       try {
-        const { real, imag } = harmonicTable(waveKeyFreq(key));
+        const bf = waveKeyFreq(band);
+        const { real, imag } =
+          kind === 'classic' ? harmonicTable(bf) : ampsToTable(kind === 'body' ? bodyAmps(bf) : brightAmps(bf));
         w = typeof ctx.createPeriodicWave === 'function' ? ctx.createPeriodicWave(real, imag) : null;
       } catch {
         w = null;
@@ -304,6 +398,57 @@ export class AudioEngine {
       this.waves.set(key, w);
     }
     return w;
+  }
+
+  /** Bus của tiếng cũ (A/B): dựng lần đầu cần — y hệt chuỗi trước 2026-10-09 (master 0,72 + hồi âm mono cũ). */
+  private classicBus(ctx: AudioContext): AudioNode | null {
+    if (this.classicMaster) return this.classicMaster;
+    const comp = this.comp;
+    if (!comp) return this.master;
+    const m = ctx.createGain();
+    m.gain.value = 0.72;
+    m.connect(comp);
+    try {
+      if (typeof ctx.createConvolver === 'function') {
+        const ir = roomImpulse(ctx.sampleRate);
+        const buf = ctx.createBuffer(1, ir.length, ctx.sampleRate);
+        buf.getChannelData(0).set(ir);
+        const conv = ctx.createConvolver();
+        conv.buffer = buf;
+        const wet = ctx.createGain();
+        wet.gain.value = REVERB_WET;
+        m.connect(conv);
+        conv.connect(wet);
+        wet.connect(comp);
+      }
+    } catch {
+      /* bỏ qua */
+    }
+    this.classicMaster = m;
+    return m;
+  }
+
+  /** Đầu vào bus ấm cho vị trí trái/phải `pan` (bộ đặt vị trí gần nhất, dùng chung). */
+  private warmOut(pan: number): AudioNode | null {
+    if (this.panners.length) {
+      let best = 0;
+      for (let i = 1; i < PAN_POSITIONS.length; i++) {
+        if (Math.abs(PAN_POSITIONS[i] - pan) < Math.abs(PAN_POSITIONS[best] - pan)) best = i;
+      }
+      return this.panners[best] ?? this.warmIn;
+    }
+    return this.warmIn ?? this.master;
+  }
+
+  /** Số liệu CPU (đếm nút) — trang ?soundtest. */
+  get stats(): VoiceStats {
+    let live = 0;
+    for (const v of this.allVoices) live += v.nodes.length;
+    return { ...this._stats, voices: this.allVoices.size, liveNodes: live };
+  }
+
+  resetStats(): void {
+    this._stats = { voices: 0, liveNodes: 0, lastNoteNodes: 0, peakNodes: 0, lightNotes: 0, notes: 0 };
   }
 
   /** Buffer nhiễu tiếng búa — tạo một lần, dùng chung. */
@@ -322,20 +467,28 @@ export class AudioEngine {
   }
 
   /**
-   * Hẹn giờ một nốt "giống piano" tại thời điểm `when` (giây, đồng hồ AudioContext) — mô hình ở pianoVoice.ts:
-   * 2 dây lệch ~1 cent + tiếng búa → lọc thông thấp tối dần → bao biên 2 giai đoạn, nhả phím có giảm chấn.
-   * Mỗi nốt 7 nút (3 nút khi đã có ≥ 8 nốt chồng nhau); nốt trầm ngân lâu hơn nốt cao.
+   * Hẹn giờ một nốt "giống piano" tại thời điểm `when` (giây, đồng hồ AudioContext) — mô hình ở pianoVoice.ts.
+   * 'warm' (mặc định): 2 dây lệch ~1 cent (lớp thân) → lọc tối dần → bao biên 2 giai đoạn; + lớp sáng (bậc cao,
+   *   nâng vài cent, tắt nhanh) + tiếng búa và tiếng giảm chấn (đi thẳng ra) → bộ đặt trái/phải dùng chung.
+   *   9–10 nút/nốt (≤ 1,5 × mô hình cũ 7 nút); 3 nút khi đã có ≥ 8 nốt chồng nhau (chế độ nhẹ, như cũ).
+   * 'classic': tiếng cũ, 7 nút (3 nút chế độ nhẹ).
+   * Thời điểm im hẳn (tEnd) giữ như cũ (trừ dây cao không giảm chấn — dài hơn ≤ 0,25 s) → mốc micro không đổi.
    * track=false: không tính là "app đang phát" (để micro vẫn nghe được) — dùng cho bè đệm xa cao độ.
    */
   scheduleFreq(freq: number, when: number, duration = 0.9, volume = 1, track = true): Promise<void> {
     const ctx = this.ctx;
     const master = this.master;
     if (!ctx || !master) return Promise.resolve();
+    const warm = this.voiceModel === 'warm';
     const start = Math.max(when, ctx.currentTime);
-    const p = voiceParams(freq, volume, duration);
+    const wp = warm ? warmVoiceParams(freq, volume, duration) : null;
+    const p = wp ?? voiceParams(freq, volume, duration);
     const end = start + p.tEnd;
-    const light = this.allVoices.size >= LIGHT_VOICE_THRESHOLD;
-    const wave = this.waveFor(ctx, freq);
+    let overlapping = 0;
+    for (const v of this.allVoices) if (v.t0 <= start + 1e-6 && v.t1 > start) overlapping++;
+    const light = overlapping >= LIGHT_VOICE_THRESHOLD;
+    const wave = this.waveFor(ctx, freq, warm ? 'body' : 'classic');
+    const out = (wp ? this.warmOut(wp.pan) : this.classicBus(ctx)) ?? master;
 
     const env = ctx.createGain();
     applyEvents(env.gain, gainEvents(p), start);
@@ -344,10 +497,11 @@ export class AudioEngine {
     lp.Q.value = 0;
     applyEvents(lp.frequency, cutoffEvents(p), start);
     lp.connect(env);
-    env.connect(master);
+    env.connect(out);
 
     const sources: AudioScheduledSourceNode[] = [];
     const nodes: AudioNode[] = [env, lp];
+    const fades: GainNode[] = [];
     const addString = (f: number, gain: number): void => {
       const osc = ctx.createOscillator();
       if (wave) osc.setPeriodicWave(wave);
@@ -369,6 +523,23 @@ export class AudioEngine {
     addString(freq, 1);
     if (!light) {
       addString(freq * Math.pow(2, p.detuneCents / 1200), p.string2Gain);
+      // Lớp sáng (mô hình ấm): bậc cao, hơi nâng cao (không hòa âm), tắt nhanh — đi thẳng ra, không qua lọc
+      const bright = wp && wp.brightGain > 0 ? this.waveFor(ctx, freq, 'bright') : null;
+      if (wp && bright) {
+        const ev = brightEvents(wp);
+        const osc = ctx.createOscillator();
+        osc.setPeriodicWave(bright);
+        osc.frequency.value = freq * Math.pow(2, wp.brightCents / 1200);
+        const g = ctx.createGain();
+        applyEvents(g.gain, ev, start);
+        osc.connect(g);
+        g.connect(out);
+        osc.start(start);
+        osc.stop(Math.min(end, start + ev[ev.length - 1].t + 0.01));
+        sources.push(osc);
+        nodes.push(osc, g);
+        fades.push(g);
+      }
       const nb = p.thumpGain > 0 ? this.noise(ctx) : null;
       if (nb) {
         const src = ctx.createBufferSource();
@@ -378,18 +549,41 @@ export class AudioEngine {
         g.gain.linearRampToValueAtTime(p.thumpGain, start + 0.002);
         g.gain.setTargetAtTime(0, start + 0.002, p.thumpTau);
         src.connect(g);
-        g.connect(lp);
+        // Cũ: búa qua lọc + bao biên. Ấm: búa đi thẳng ra (mức đã nhân sẵn mức đỉnh nốt)
+        g.connect(wp ? out : lp);
         // Lệch điểm đọc theo phím → các nốt trong hợp âm không trùng nhiễu
         src.start(start, (Math.round(freq * 7) % 40) / 1000);
         src.stop(start + Math.min(0.08, p.tEnd));
         sources.push(src);
         nodes.push(src, g);
+        if (wp) fades.push(g);
+        // Tiếng giảm chấn lúc nhả phím sớm: nhiễu trầm rất khẽ, dùng chung gain của búa
+        if (wp && wp.damperGain > 0) {
+          const t = start + wp.tOff;
+          const d = ctx.createBufferSource();
+          d.buffer = nb;
+          g.gain.setValueAtTime(0, t);
+          g.gain.linearRampToValueAtTime(wp.damperGain, t + 0.004);
+          g.gain.setTargetAtTime(0, t + 0.004, 0.015);
+          d.connect(g);
+          d.start(t, 0.03 + (Math.round(freq * 3) % 30) / 1000);
+          d.stop(Math.min(end, t + 0.07));
+          sources.push(d);
+          nodes.push(d);
+        }
       }
     }
 
-    const voice: Voice = { env, sources, nodes };
+    const st = this._stats;
+    st.notes++;
+    st.lastNoteNodes = nodes.length;
+    if (light) st.lightNotes++;
+    const voice: Voice = { env, fades, sources, nodes, t0: start, t1: end };
     if (track) this.voices.add(voice);
     this.allVoices.add(voice);
+    let live = 0;
+    for (const v of this.allVoices) live += v.nodes.length;
+    if (live > st.peakNodes) st.peakNodes = live;
     return new Promise((resolve) => {
       let done = false;
       const finish = () => {
@@ -624,6 +818,12 @@ export class AudioEngine {
           g.setValueAtTime(g.value, now);
         }
         g.setTargetAtTime(0, now, 0.012); // tắt nhanh nhưng không "tách"
+        for (const f of v.fades) {
+          const fg = f.gain as AudioParam & { cancelAndHoldAtTime?: (t: number) => AudioParam };
+          if (typeof fg.cancelAndHoldAtTime === 'function') fg.cancelAndHoldAtTime(now);
+          else fg.cancelScheduledValues(now);
+          fg.setTargetAtTime(0, now, 0.012);
+        }
         for (const s of v.sources) s.stop(now + 0.08);
       } catch {
         /* bỏ qua */

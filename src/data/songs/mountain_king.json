@@ -1,0 +1,332 @@
+{
+ "id": "mountain_king",
+ "title": "In the Hall of the Mountain King (Peer Gynt)",
+ "titleVi": "Trong cung điện vua núi (Peer Gynt)",
+ "composer": "Edvard Grieg (1875)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Original simple arrangement for this app",
+ "attributionRequired": false,
+ "hand": "RH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 25,
+ "position": "free",
+ "phrases": [
+  0,
+  4
+ ],
+ "notes": [
+  {
+   "pitch": "A3",
+   "beats": 0.5,
+   "finger": 1,
+   "dyn": "p",
+   "stac": true
+  },
+  {
+   "pitch": "B3",
+   "beats": 0.5,
+   "finger": 2,
+   "stac": true
+  },
+  {
+   "pitch": "C4",
+   "beats": 0.5,
+   "finger": 3,
+   "stac": true
+  },
+  {
+   "pitch": "D4",
+   "beats": 0.5,
+   "finger": 4,
+   "stac": true
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 5,
+   "stac": true
+  },
+  {
+   "pitch": "C4",
+   "beats": 0.5,
+   "finger": 3,
+   "stac": true
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 5,
+   "stac": true
+  },
+  {
+   "pitch": "D#4",
+   "beats": 0.5,
+   "finger": 4,
+   "stac": true
+  },
+  {
+   "pitch": "B3",
+   "beats": 0.5,
+   "finger": 2,
+   "stac": true
+  },
+  {
+   "pitch": "D#4",
+   "beats": 1,
+   "finger": 4,
+   "stac": true
+  },
+  {
+   "pitch": "D4",
+   "beats": 0.5,
+   "finger": 3,
+   "stac": true
+  },
+  {
+   "pitch": "Bb3",
+   "beats": 0.5,
+   "finger": 1,
+   "stac": true
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 3,
+   "stac": true
+  },
+  {
+   "pitch": "A3",
+   "beats": 0.5,
+   "finger": 1,
+   "stac": true
+  },
+  {
+   "pitch": "B3",
+   "beats": 0.5,
+   "finger": 2,
+   "stac": true
+  },
+  {
+   "pitch": "C4",
+   "beats": 0.5,
+   "finger": 3,
+   "stac": true
+  },
+  {
+   "pitch": "D4",
+   "beats": 0.5,
+   "finger": 1,
+   "stac": true
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 2,
+   "stac": true
+  },
+  {
+   "pitch": "C4",
+   "beats": 0.5,
+   "finger": 1,
+   "stac": true
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 2,
+   "stac": true
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 5,
+   "stac": true
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.5,
+   "finger": 4,
+   "stac": true
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 2,
+   "stac": true
+  },
+  {
+   "pitch": "C4",
+   "beats": 0.5,
+   "finger": 1,
+   "stac": true
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 2,
+   "stac": true
+  },
+  {
+   "pitch": "G4",
+   "beats": 2,
+   "finger": 4
+  },
+  {
+   "pitch": "A3",
+   "beats": 0.5,
+   "finger": 1,
+   "dyn": "mf",
+   "stac": true
+  },
+  {
+   "pitch": "B3",
+   "beats": 0.5,
+   "finger": 2,
+   "stac": true
+  },
+  {
+   "pitch": "C4",
+   "beats": 0.5,
+   "finger": 3,
+   "stac": true
+  },
+  {
+   "pitch": "D4",
+   "beats": 0.5,
+   "finger": 4,
+   "stac": true
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 5,
+   "stac": true
+  },
+  {
+   "pitch": "C4",
+   "beats": 0.5,
+   "finger": 3,
+   "stac": true
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 5,
+   "stac": true
+  },
+  {
+   "pitch": "D#4",
+   "beats": 0.5,
+   "finger": 4,
+   "stac": true
+  },
+  {
+   "pitch": "B3",
+   "beats": 0.5,
+   "finger": 2,
+   "stac": true
+  },
+  {
+   "pitch": "D#4",
+   "beats": 1,
+   "finger": 4,
+   "stac": true
+  },
+  {
+   "pitch": "D4",
+   "beats": 0.5,
+   "finger": 3,
+   "stac": true
+  },
+  {
+   "pitch": "Bb3",
+   "beats": 0.5,
+   "finger": 1,
+   "stac": true
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 3,
+   "stac": true
+  },
+  {
+   "pitch": "A3",
+   "beats": 0.5,
+   "finger": 1,
+   "stac": true
+  },
+  {
+   "pitch": "B3",
+   "beats": 0.5,
+   "finger": 2,
+   "stac": true
+  },
+  {
+   "pitch": "C4",
+   "beats": 0.5,
+   "finger": 3,
+   "stac": true
+  },
+  {
+   "pitch": "D4",
+   "beats": 0.5,
+   "finger": 1,
+   "stac": true
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 2,
+   "stac": true
+  },
+  {
+   "pitch": "C4",
+   "beats": 0.5,
+   "finger": 1,
+   "stac": true
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 2,
+   "stac": true
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 5,
+   "stac": true
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.5,
+   "finger": 4,
+   "stac": true
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 2,
+   "stac": true
+  },
+  {
+   "pitch": "C4",
+   "beats": 0.5,
+   "finger": 1,
+   "stac": true
+  },
+  {
+   "pitch": "E4",
+   "beats": 0.5,
+   "finger": 2,
+   "stac": true
+  },
+  {
+   "pitch": "G4",
+   "beats": 2,
+   "finger": 4
+  }
+ ]
+}

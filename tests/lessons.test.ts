@@ -3,6 +3,7 @@ import { LEVELS, MAX_QUIZ_ROUNDS, MAX_WEEK, WEEKS, buildSessionPlan, criterionPr
 import { PARENT_TIPS } from '../src/lessons/parentTips';
 import { findTune } from '../src/music/exercises';
 import { SONGS } from '../src/music/tune';
+import { LIBRARY_2026_10_09 } from './fixtures/library20261009';
 import { makeSightTune } from '../src/music/sightread';
 import { MemoryStorage, ProgressStore } from '../src/progress/ProgressStore';
 import type { SongRun } from '../src/progress/schema';
@@ -123,7 +124,9 @@ describe('lessonEngine', () => {
       // 2026-10-06: bài tự sáng tác lấp chỗ mỏng của kho bài — mở theo tuần trong Thư viện
       // (snail_stroll, sparrow_minuet, summer_shower thì nằm trong bài học tuần 3, 29, 30; choo_choo_train — tuần 4 từ 2026-10-08)
       'duckling_waddle', 'little_elephant', 'bear_lullaby', 'mid_autumn_night', 'robot_dance',
-      'tet_rice_cake', 'kitten_stalks', 'flying_kite', 'boat_race']);
+      'tet_rice_cake', 'kitten_stalks', 'flying_kite', 'boat_race',
+      // 2026-10-09 (OWNER duyệt "Thêm bài hát"): 24 bài chỉ để trong Thư viện, mở theo tuần
+      ...LIBRARY_2026_10_09]);
     const used = new Set(WEEKS.flatMap((w) => w.lessons.flatMap((l) => l.activities.flatMap((a) => (a.kind === 'song' ? [a.songId] : [])))));
     for (const s of SONGS) expect(used.has(s.id) || LIBRARY_ONLY.has(s.id), s.id).toBe(true);
     for (const id of LIBRARY_ONLY) expect(used.has(id), id).toBe(false);

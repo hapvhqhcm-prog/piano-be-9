@@ -1,0 +1,133 @@
+{
+ "id": "shooting_star",
+ "title": "Shooting Star",
+ "titleVi": "Sao băng",
+ "composer": "Bài tự sáng tác cho app (piano-be-9)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Bài tự sáng tác cho app (piano-be-9)",
+ "attributionRequired": false,
+ "hand": "RH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 26,
+ "position": "C5",
+ "phrases": [
+  0,
+  4
+ ],
+ "notes": [
+  {
+   "pitch": "G5",
+   "beats": 1,
+   "finger": 5,
+   "dyn": "mf"
+  },
+  {
+   "pitch": "E5",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "C5",
+   "beats": 2,
+   "finger": 1
+  },
+  {
+   "pitch": "D5",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E5",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "F5",
+   "beats": 2,
+   "finger": 4
+  },
+  {
+   "pitch": "G5",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "F5",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "E5",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D5",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E5",
+   "beats": 4,
+   "finger": 3
+  },
+  {
+   "pitch": "G5",
+   "beats": 1,
+   "finger": 5,
+   "dyn": "p"
+  },
+  {
+   "pitch": "E5",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "C5",
+   "beats": 2,
+   "finger": 1
+  },
+  {
+   "pitch": "D5",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "F5",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "E5",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "E5",
+   "beats": 1,
+   "finger": 3,
+   "dyn": "mf"
+  },
+  {
+   "pitch": "F5",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "E5",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D5",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "C5",
+   "beats": 4,
+   "finger": 1
+  }
+ ]
+}

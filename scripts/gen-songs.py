@@ -920,6 +920,109 @@ S += [
   ts="2/4",arr=FOLK_L4),
 ]
 
+# ---------------------------------------------------------------- THƯ VIỆN BỔ SUNG (OWNER duyệt 2026-10-09: "Thêm bài hát")
+# 24 bài CHỈ ĐỂ TRONG THƯ VIỆN (không thêm vào bài học), rải Cấp 1–3 để bé luôn có bài mới tự chọn ở trình độ của mình.
+# Mỗi bài chỉ dùng kỹ năng đã dạy tới tuần của bài (cùng cổng tuần như mọi bài: tests/library-2026-10-09.test.ts kiểm).
+# · Giai điệu PUBLIC DOMAIN đã biết chắc (dân ca nước ngoài, Grieg †1907, Tchaikovsky †1893) — chép đúng cao độ; chỉ đổi
+#   nhịp khi cần cho trình độ (ghi rõ ở từng bài). Mọi giai điệu tuần 3–6 có tầm Đô–Sol đã có sẵn trong kho
+#   ("Bánh nóng", "Chú cừu", "Dưới ánh trăng", "Đi báo cô Rhody", "Chèo thuyền nhẹ", "Bài ca niềm vui"…) → tuần 3–7 là bài TỰ SÁNG TÁC.
+# · Dân ca Việt Nam: KHÔNG thêm đợt này — chưa đối chiếu được từng nốt với ≥ 2 bản ký âm độc lập (xem LICENSES.md).
+LIB_NEW = []
+PENTA_LS = {"E4": 1, "F4": 2, "A4": 3, "B4": 4, "C5": 5}   # "Hoa anh đào": bàn tay ngũ cung Mi1 Fa2 La3 Si4 Đô cao5
+LIB_NEW += [
+ # ---- Cấp 1: tuần 3 (thế Đô, đen/trắng/tròn — chưa móc đơn, chưa dấu lặng)
+ song("goldfish_swim","Goldfish Swim","Cá vàng bơi",ORIG,3,"RH",
+  "E4 F4 G4:2  G4 F4 E4:2  D4 E4 F4 D4  E4:4  G4 F4 E4 D4  E4 F4 G4:2  F4 E4 D4 E4  C4:4",[0,4],arr=ORIG),
+ song("ants_march","Ants Carry Crumbs","Kiến tha mồi",ORIG,3,"RH",
+  "C4 C4 D4 D4  E4 E4 F4:2  G4 F4 E4 D4  C4 D4 E4:2  E4 E4 D4 D4  C4 C4 D4:2  E4 F4 E4 D4  C4:4",[0,4],arr=ORIG),
+ # ---- tuần 4 (móc đơn "Chạy-chạy" + dấu lặng "Suỵt")
+ song("tick_tock_clock","Tick-tock Clock","Đồng hồ tích tắc",ORIG,4,"RH",
+  "C4:0.5 E4:0.5 C4:0.5 E4:0.5 G4 R  D4:0.5 F4:0.5 D4:0.5 F4:0.5 E4 R  F4 E4 D4 C4  D4:2 R:2  "
+  "C4:0.5 E4:0.5 C4:0.5 E4:0.5 G4 R  D4:0.5 F4:0.5 D4:0.5 F4:0.5 G4 R  F4:0.5 F4:0.5 E4 D4:0.5 D4:0.5 E4  C4:4",[0,4],arr=ORIG),
+ song("morning_sun","Morning Sunshine","Nắng sớm",ORIG,4,"RH",
+  "C4 E4 G4:2  F4:0.5 E4:0.5 D4 E4:2  E4 G4 F4 D4  E4:2 R:2  C4 E4 G4:2  F4:0.5 E4:0.5 D4 C4:2  D4:0.5 E4:0.5 F4 E4 D4  C4:4",[0,4],arr=ORIG),
+ # ---- tuần 5 (củng cố thế Đô: nhảy quãng 3, nốt dài)
+ song("playground_slide","Playground Slide","Cầu tuột",ORIG,5,"RH",
+  "G4:2 E4:2  F4 E4 D4 C4  E4:2 C4:2  D4:4  G4:2 E4:2  F4 E4 D4 C4  D4 E4 D4 E4  C4:4",[0,4],arr=ORIG),
+ song("busy_bee","Busy Bee","Ong bay vo ve",ORIG,5,"RH",
+  "E4:0.5 F4:0.5 E4:0.5 F4:0.5 E4 D4  E4:0.5 F4:0.5 E4:0.5 F4:0.5 G4:2  F4:0.5 G4:0.5 F4:0.5 G4:0.5 F4 E4  D4:2 R:2  "
+  "E4:0.5 F4:0.5 E4:0.5 F4:0.5 E4 D4  C4:0.5 D4:0.5 E4:0.5 F4:0.5 G4:2  F4 E4 D4 E4  C4:4",[0,4],arr=ORIG),
+ # ---- tuần 6 (p / mf / f, dấu luyến, nốt trắng chấm)
+ song("dolphin_jump","Dolphin Jumps the Waves","Cá heo nhảy sóng",ORIG,6,"RH",
+  "mf (C4 D4 E4 F4)  G4:3 E4  f (G4 F4 E4 D4)  E4:3 R  p (C4 D4 E4 F4)  G4:3 E4  mf (F4 E4 D4 E4)  C4:3 R",[0,4],arr=ORIG),
+ # ---- tuần 7 (tay trái thế Đô)
+ song("little_turtle","Little Turtle","Rùa con chậm chạp",ORIG,7,"LH",
+  "mf C3:2 D3:2  E3:2 C3:2  E3 F3 G3:2  G3:4  p G3 F3 E3 D3  E3:2 F3:2  mf D3 E3 F3 D3  C3:4",[0,4],arr=ORIG),
+ # ---- tuần 8 — "Alle meine Entchen" (dân ca Đức, thế kỷ 19): đúng giai điệu & nhịp gốc; La duỗi (Sol–La = 4-5:
+ #      Sol thứ hai đàn lại bằng ngón 4 → "thế Đô nhích lên", về thế Đô trong nốt Sol tròn)
+ song("ducklings_swim","All My Little Ducklings (Alle meine Entchen)","Vịt con bơi hồ (dân ca Đức)","Dân ca Đức (traditional, thế kỷ 19)",8,"RH",
+  "mf C4/1 D4/2 E4/3 F4/4  G4:2/5 G4:2/4  A4/5 A4/5 A4/5 A4/5  G4:4/4  p A4/5 A4/5 A4/5 A4/5  G4:4/4  mf F4/4 F4/4 F4/4 F4/4  E4:2/3 E4:2/3  D4/2 D4/2 D4/2 D4/2  C4:4/1",[0,2,4,6,8],"A4"),
+ # ---- tuần 9 (nhịp 2/4)
+ song("woodpecker","Woodpecker","Chim gõ kiến",ORIG,9,"RH",
+  "mf E4:0.5 E4:0.5 E4  D4:0.5 D4:0.5 D4  C4 E4  G4:2  G4:0.5 F4:0.5 E4  F4:0.5 E4:0.5 D4  E4 D4  C4:2",[0,4],ts="2/4",arr=ORIG),
+ # ---- Cấp 2: tuần 11 — Grieg "Morning Mood" (Peer Gynt, 1875): đúng cao độ (dịch sang Đô trưởng); 6/8 "đen–móc đơn"
+ #      ghi thành 3/4 "trắng–đen" (giữ dáng dài–ngắn; 6/8 tuần 39 mới dạy). La duỗi, LIỀN theo câu.
+ song("morning_mood","Morning Mood (Peer Gynt)","Buổi sáng (Peer Gynt)","Edvard Grieg (1875)",11,"RH",
+  "p (G4:2/5 E4/3  D4:2/2 C4/1  D4:2/2 E4/3)  (G4:2/5 E4/3  D4:2/2 C4/1  D4:2/2 E4/3)  mf (D4:2/1 E4/2  G4:2/4 E4/2  G4:2/4 A4/5)  (E4:2/2 A4/5  G4:2/4 E4/3  D4/2 C4:2/1)",[0,6],"A4",ts="3/4"),
+ # ---- tuần 12 — hai tay CÙNG LÚC: tay trái giữ nốt dài (như "Bánh nóng — hai tay")
+ song("steamboat","Steamboat","Tàu thủy",ORIG,12,"BOTH",
+  "mf E4 G4 E4 C4  D4 F4 D4:2  E4 G4 E4 C4  D4:4  f G4 F4 E4 D4  E4 F4 G4:2  p F4 E4 D4 E4  C4:4",[0,4],
+  lh="C3:4  G3:4  C3:4  G3:4  C3:4  C3:4  G3:4  C3:4",arr=ORIG),
+ song("ducklings_both","All My Little Ducklings (hands together)","Vịt con bơi hồ — hai tay","Dân ca Đức (traditional, thế kỷ 19)",12,"BOTH",
+  "mf C4/1 D4/2 E4/3 F4/4  G4:2/5 G4:2/4  A4/5 A4/5 A4/5 A4/5  G4:4/4  p A4/5 A4/5 A4/5 A4/5  G4:4/4  mf F4/4 F4/4 F4/4 F4/4  E4:2/3 E4:2/3  D4/2 D4/2 D4/2 D4/2  C4:4/1",[0,2,4,6,8],"A4",
+  lh="C3:4  C3:4  F3:4  C3:4  F3:4  C3:4  G3:4  C3:4  G3:4  C3:4"),
+ # ---- tuần 13 — "Yankee Doodle" (dân ca Mỹ, thế kỷ 18), đoạn đầu: hai tay LUÂN PHIÊN — tay phải thế Đô, tay trái Đô giữa
+ #      (Si3 Sol3 La3). Móc đơn 2/4 của bản gốc ghi thành nốt đen 4/4 (cùng giai điệu, dễ đọc).
+ song("yankee_doodle","Yankee Doodle","Yankee Doodle (dân ca Mỹ)","Dân ca Mỹ (traditional, thế kỷ 18)",13,"BOTH",
+  "mf C4 C4 D4 E4  C4 E4 D4 R  C4 C4 D4 E4  C4:2 R:2  C4 C4 D4 E4  F4 E4 D4 C4  R:4  C4:2 C4:2",[0,4],
+  lh="mf R:4  R:3 G3  R:4  R:2 B3:2  R:4  R:4  B3 G3 A3 B3  R:4",lhpos="MC"),
+ # ---- tuần 14 — thế Sol
+ song("squirrel_nuts","Squirrel Gathers Nuts","Sóc nâu nhặt hạt",ORIG,14,"RH",
+  "mf G4 A4 B4 G4  A4 B4 C5:2  D5 C5 B4 A4  B4:4  p D5 C5 B4 A4  B4 C5 D5:2  mf C5 B4 A4 B4  G4:4",[0,4],pos="G",arr=ORIG),
+ # ---- tuần 15 — "We Wish You a Merry Christmas" (dân ca Anh), 3/4 lấy đà 1 phách: tay phải thế Đô, tay trái Đô giữa (La3 Si3 Sol3)
+ song("merry_christmas","We Wish You a Merry Christmas","Chúc mừng Giáng sinh (dân ca Anh)","Dân ca Anh (traditional)",15,"BOTH",
+  "mf R:3  C4 C4:0.5 D4:0.5 C4:0.5 R:0.5  R:3  D4 D4:0.5 E4:0.5 D4:0.5 C4:0.5  R:3  f E4 E4:0.5 F4:0.5 E4:0.5 D4:0.5  mf C4 R:2  R D4 R  C4:2 R",[0,5],
+  lh="mf R:2 G3  R:2 R:0.5 B3:0.5  A3 A3 A3  R:3  B3 G3 G3  R:3  R A3 G3:0.5 G3:0.5  A3 R B3  R:3",lhpos="MC",ts="3/4"),
+ # ---- tuần 16 — thế Rê (Fa♯)
+ song("fireworks","Fireworks","Pháo hoa",ORIG,16,"RH",
+  "f D4 F#4 A4:2  G4 F#4 E4:2  F#4 G4 A4 F#4  E4:4  p A4 G4 F#4 E4  F#4 G4 A4:2  f G4 F#4 E4 F#4  D4:4",[0,4],pos="D",arr=ORIG),
+ # ---- tuần 17 — "Auld Lang Syne" (dân ca Scotland, lời R. Burns 1788 — không dùng lời), đoạn đầu, "Đi-chấm chạy":
+ #      tay phải bàn tay NGŨ CUNG Đô1 Rê2 Mi3 Sol4 La5 (như "Bánh chưng ngày Tết"), tay trái Đô giữa (Sol3, La3).
+ song("auld_lang_syne","Auld Lang Syne (Scottish folk song)","Auld Lang Syne (dân ca Scotland)","Dân ca Scotland (traditional)",17,"BOTH",fingered(
+  "mf R:4  C4:1.5 C4:0.5 C4 E4  D4:1.5 C4:0.5 D4 E4  C4:1.5 C4:0.5 E4 G4  A4:3 A4  p G4:1.5 E4:0.5 E4 C4  D4:1.5 C4:0.5 D4 E4  C4:1.5 R:0.5 R:2  C4:3 R",PENTA_C),
+  [0,5],pos="free",lh="mf R:3 G3  R:4  R:4  R:4  R:4  R:4  R:4  R R:0.5 A3:0.5 A3 G3  R:4",lhpos="MC"),
+ # ---- Cấp 3: tuần 22 — hợp âm I – IV – V tay trái
+ song("spring_comes","Spring Is Coming","Mùa xuân về",ORIG,22,"BOTH",
+  "mf C4 E4 G4 E4  F4 E4 D4:2  E4 F4 G4 E4  D4:4  p C4 E4 G4 E4  F4 E4 D4:2  mf E4 G4 F4 D4  C4:4",[0,4],
+  lh=f"{I}:4  {IV}:2 {V}:2  {I}:4  {V}:4  {I}:4  {IV}:2 {V}:2  {I}:2 {V}:2  {I}:4",arr=ORIG),
+ # ---- tuần 23 — "Sakura Sakura" (dân ca Nhật Bản, thời Edo): đúng giai điệu, khuông lớn hai tay LUÂN PHIÊN —
+ #      tay phải bàn tay ngũ cung Mi1 Fa2 La3 Si4 Đô cao5, tay trái Đô giữa (Đô 1, Si3 2 — dòng kẻ phụ)
+ song("sakura","Sakura Sakura (Japanese folk song)","Hoa anh đào (dân ca Nhật Bản)","Dân ca Nhật Bản (traditional, thời Edo)",23,"BOTH",fingered(
+  "p A4 A4 B4:2  A4 A4 B4:2  mf A4 B4 C5 B4  A4 B4:0.5 A4:0.5 F4:2  E4 R E4 F4  E4 E4:0.5 R:0.5 R:2  "
+  "A4 B4 C5 B4  A4 B4:0.5 A4:0.5 F4:2  E4 R E4 F4  E4 E4:0.5 R:0.5 R:2  p A4 A4 B4:2  A4 A4 B4:2  E4 F4 B4:0.5 A4:0.5 F4  E4:4",PENTA_LS),
+  [0,2,6,10],pos="free",
+  lh="R:4  R:4  R:4  R:4  R C4 R:2  R R:0.5 C4:0.5 B3:2  R:4  R:4  R C4 R:2  R R:0.5 C4:0.5 B3:2  R:4  R:4  R:4  R:4",lhpos="MC"),
+ # ---- tuần 25 — giọng THỨ: Grieg "Trong cung điện vua núi" (Peer Gynt, 1875) — 4 ô chủ đề (dịch Si thứ → La thứ), NGẮT,
+ #      chơi hai lượt NHỎ → VỪA. Ô 3 luồn ngón cái (tuần 20) lên La.
+ song("mountain_king","In the Hall of the Mountain King (Peer Gynt)","Trong cung điện vua núi (Peer Gynt)","Edvard Grieg (1875)",25,"RH",
+  "p A3:0.5/1' B3:0.5/2' C4:0.5/3' D4:0.5/4' E4:0.5/5' C4:0.5/3' E4/5'  D#4:0.5/4' B3:0.5/2' D#4/4' D4:0.5/3' Bb3:0.5/1' D4/3'  "
+  "A3:0.5/1' B3:0.5/2' C4:0.5/3' D4:0.5/1' E4:0.5/2' C4:0.5/1' E4:0.5/2' A4:0.5/5'  G4:0.5/4' E4:0.5/2' C4:0.5/1' E4:0.5/2' G4:2/4  "
+  "mf A3:0.5/1' B3:0.5/2' C4:0.5/3' D4:0.5/4' E4:0.5/5' C4:0.5/3' E4/5'  D#4:0.5/4' B3:0.5/2' D#4/4' D4:0.5/3' Bb3:0.5/1' D4/3'  "
+  "A3:0.5/1' B3:0.5/2' C4:0.5/3' D4:0.5/1' E4:0.5/2' C4:0.5/1' E4:0.5/2' A4:0.5/5'  G4:0.5/4' E4:0.5/2' C4:0.5/1' E4:0.5/2' G4:2/4",[0,4],pos="free"),
+ # ---- tuần 25 — Tchaikovsky "Hồ thiên nga" (1876), chủ đề (dịch Si thứ → La thứ), hai lượt NHỎ → VỪA
+ song("swan_lake","Swan Lake (theme)","Hồ thiên nga (chủ đề)","Pyotr Ilyich Tchaikovsky (1876)",25,"RH",
+  "p E5:2/5 (A4:0.5/1 B4:0.5/2 C5:0.5/3 D5:0.5/4)  E5:1.5/5 C5:0.5/3 E5:1.5/5 C5:0.5/3  E5:1.5/5 A4:0.5/2 C5:0.5/3 A4:0.5/2 F4:0.5/1 C5:0.5/4  A4:4/2  "
+  "mf E5:2/5 (A4:0.5/1 B4:0.5/2 C5:0.5/3 D5:0.5/4)  E5:1.5/5 C5:0.5/3 E5:1.5/5 C5:0.5/3  E5:1.5/5 A4:0.5/2 C5:0.5/3 A4:0.5/2 F4:0.5/1 C5:0.5/4  A4:4/2",[0,4],pos="free"),
+ # ---- tuần 26 — thế Đô cao (Đô5–Sol5)
+ song("shooting_star","Shooting Star","Sao băng",ORIG,26,"RH",
+  "mf G5 E5 C5:2  D5 E5 F5:2  G5 F5 E5 D5  E5:4  p G5 E5 C5:2  D5 F5 E5:2  mf E5 F5 E5 D5  C5:4",[0,4],pos="C5",arr=ORIG),
+ # ---- tuần 28 — hai tay, tay trái đi nốt đen như tiếng trống (như "Đua thuyền"), tay phải NGẮT
+ song("lion_dance","Lion Dance","Múa lân",ORIG,28,"BOTH",
+  "f C4' E4' G4' E4'  F4' D4' E4:2  C4' E4' G4' E4'  D4:4  mf E4' F4' G4' E4'  F4' D4' E4:2  f D4' E4' F4' D4'  C4:4",[0,4],
+  lh=f"C3 G3 C3 G3  C3 G3 C3 G3  C3 G3 C3 G3  D3 G3 D3 G3  C3 G3 C3 G3  C3 G3 C3 G3  D3 G3 D3 G3  {I}:4",arr=ORIG),
+]
+S += LIB_NEW
+
 # Bài Việt Nam (OWNER 2026-10-06) — mục "🇻🇳 Bài Việt Nam" của Thư viện:
 #   vn = "folk"   : dân ca Việt Nam
 #   vn = "lyrics" : giai điệu nước ngoài (public domain) mà trẻ em Việt Nam quen hát lời Việt

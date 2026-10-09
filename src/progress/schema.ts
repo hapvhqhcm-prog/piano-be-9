@@ -264,11 +264,21 @@ export interface GameScore {
   plays: number;
   /** Lần chơi gần nhất (ms) */
   lastAt: number;
+  /**
+   * (+ 2026-10-09, tùy chọn) Mức độ khó bé đạt ở lượt gần nhất (vd 🎧 Đoán nốt: số nốt trong bể) — lượt sau bắt đầu gần đó.
+   * Thiếu / hỏng → coi như chưa có (bắt đầu từ mức 1).
+   */
+  level?: number;
+  /** (+ 2026-10-09, tùy chọn) Chuỗi đúng liên tiếp dài nhất từng đạt */
+  streak?: number;
 }
 
+const okNum = (n: unknown): n is number => typeof n === 'number' && Number.isFinite(n) && n >= 0;
+/** Trường TÙY CHỌN (level/streak): không có hoặc là số hợp lệ. */
+const okOpt = (n: unknown): boolean => n === undefined || okNum(n);
+
 const validGameScore = (g: unknown): g is GameScore =>
-  isObj(g) &&
-  [g.best, g.plays, g.lastAt].every((n) => typeof n === 'number' && Number.isFinite(n) && n >= 0);
+  isObj(g) && [g.best, g.plays, g.lastAt].every(okNum) && okOpt(g.level) && okOpt(g.streak);
 
 /**
  * (+ 2026-10-07) Lọc kỷ lục trò chơi một cách DỄ TÍNH: mục hỏng bị bỏ (không làm hỏng cả bản sao lưu).
@@ -278,7 +288,12 @@ export function sanitizeGames(x: unknown): Record<string, GameScore> | undefined
   if (!isObj(x)) return undefined;
   const out: Record<string, GameScore> = {};
   for (const [k, v] of Object.entries(x)) {
-    if (k && validGameScore(v)) out[k] = { best: v.best, plays: Math.floor(v.plays), lastAt: v.lastAt };
+    if (!k || !isObj(v) || ![v.best, v.plays, v.lastAt].every(okNum)) continue;
+    const g: GameScore = { best: v.best as number, plays: Math.floor(v.plays as number), lastAt: v.lastAt as number };
+    // Trường tùy chọn hỏng → chỉ bỏ trường đó (giữ kỷ lục)
+    if (okNum(v.level)) g.level = Math.floor(v.level);
+    if (okNum(v.streak)) g.streak = Math.floor(v.streak);
+    out[k] = g;
   }
   return Object.keys(out).length ? out : undefined;
 }

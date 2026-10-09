@@ -244,3 +244,179 @@ export function roomImpulse(sampleRate: number, seconds = REVERB_SECONDS, rt60 =
   }
   return out;
 }
+
+/* ───────────────────────── (+ 2026-10-09) Mô hình "ấm" — OWNER: "Tiếng đàn mẫu hay hơn" ─────────────────────────
+ * Giữ nguyên khung thời gian của mô hình cũ (bao biên 2 giai đoạn, naturalDecay, nhả phím → tEnd) để các mốc micro
+ * (isSounding / lastSoundEnd + REVERB_GUARD_MS) KHÔNG đổi; thêm vào:
+ *   • Phổ theo âm vực, 2 LỚP: "thân" (bậc thấp, ngân lâu, qua lọc tối dần) + "sáng" (bậc cao, tắt nhanh — hằng số
+ *     thời gian ngắn hơn hẳn; đánh mạnh → lớp sáng to hơn) ⇒ họa âm cao tắt nhanh hơn họa âm thấp như đàn thật.
+ *   • Tính không hòa âm (inharmonicity) của dây thép: f_k = k·f0·√(1 + B·k²). PeriodicWave chỉ làm được bậc đúng
+ *     bội số → lớp sáng được nâng cao đúng bằng độ lệch của bậc trọng tâm của nó (vài cent) → ánh "kim loại" lúc gõ.
+ *   • Tiếng búa đi thẳng ra (không qua bao biên chính) + tiếng GIẢM CHẤN khi nhả phím sớm (nhiễu trầm rất khẽ).
+ *   • Dây cao từ Fa6 trở lên không có giảm chấn (như đàn thật) → nhả phím tắt chậm hơn một chút.
+ *   • Bus chung (KHÔNG tốn nút theo nốt): cộng hưởng bầu đàn (2 bộ lọc đỉnh), đặt trái/phải theo âm vực, hồi âm stereo.
+ */
+
+/** Kiểu tiếng đàn: 'classic' = tiếng trước 2026-10-09 (giữ để so sánh A/B), 'warm' = mặc định mới. */
+export type VoiceModel = 'classic' | 'warm';
+
+/** Hệ số không hòa âm B theo cao độ (xấp xỉ số đo đàn grand: ~1e-4 ở C2, ~3,5e-4 ở C4, ~1,2e-3 ở C6). */
+export function inharmonicityB(freq: number): number {
+  const m = freqToMidi(clamp(freq, 20, 8000));
+  return clamp(3.5e-4 * Math.pow(2, ((m - 60) / 12) * 0.9), 8e-5, 4e-3);
+}
+
+/** Tần số thật của bậc k khi có không hòa âm (Fletcher 1964). */
+export function stretchedPartial(freq: number, k: number, B = inharmonicityB(freq)): number {
+  return k * freq * Math.sqrt(1 + B * k * k);
+}
+
+/** Dây từ Fa6 (midi 89) trở lên không có giảm chấn. */
+export const UNDAMPED_MIDI = 89;
+/** Hệ số âm lượng mô hình ấm (khớp độ to RMS 0–0,5 s với mô hình cũ ở Đô4 mf ± 1 dB — xem tests/pianoTone.test.ts). */
+export const WARM_LEVEL = 0.8;
+
+export interface WarmParams extends VoiceParams {
+  /** Lớp sáng (bậc ≥ 2, nâng cao brightCents): mức đỉnh (so với peak) và hằng số tắt. 0 = không có lớp sáng. */
+  brightGain: number;
+  brightTau: number;
+  brightCents: number;
+  /** Tiếng giảm chấn khi nhả phím (0 = không). Mức tuyệt đối. */
+  damperGain: number;
+  /** Đặt trái/phải theo âm vực (−1…1; bass trái, treble phải — góc nhìn người đàn). */
+  pan: number;
+}
+
+/** Bậc trọng tâm (theo năng lượng) của lớp sáng — để chọn độ nâng cao lớp sáng. */
+function brightCentroidK(freq: number): number {
+  const amps = brightAmps(freq);
+  let s = 0;
+  let sk = 0;
+  for (let k = 1; k < amps.length; k++) {
+    s += amps[k] * amps[k];
+    sk += k * amps[k] * amps[k];
+  }
+  return s > 0 ? sk / s : 2;
+}
+
+/** Tham số một nốt mô hình ấm. Khung thời gian (tOff, tEnd trừ dây không giảm chấn) giống hệt voiceParams(). */
+export function warmVoiceParams(freq: number, vol: number, duration: number): WarmParams {
+  const base = voiceParams(freq, vol, duration);
+  const f = clamp(freq, 20, 8000);
+  const v = clamp(vol, 0.05, 1.5);
+  const m = Math.round(freqToMidi(f));
+  const peak = base.peak * WARM_LEVEL;
+  // Lớp sáng mang phần lớn bậc cao lúc gõ → lọc của lớp thân tối hơn mô hình cũ
+  const cutStart = clamp(f * (2.5 + 6 * v) + 900 * v, f * 2, 12000);
+  const cutEnd = clamp(f * (1.8 + 1.2 * v) + 250, f * 1.3, 6000);
+  // Lớp sáng: đánh mạnh sáng hơn rõ (v^1.4); treble ít bậc → nhỏ dần, tắt hẳn khi bậc 2 > 9 kHz
+  const brightGain = 2 * f > 9000 ? 0 : clamp(0.55 * Math.pow(v, 1.4) * Math.pow(C4 / Math.max(f, 65), 0.15), 0, 0.9);
+  const brightTau = clamp(0.13 * Math.pow(C4 / f, 0.45), 0.035, 0.3);
+  const B = inharmonicityB(f);
+  const kc = brightCentroidK(f);
+  const brightCents = clamp(600 * Math.log2(1 + B * kc * kc), 0.5, 6);
+  const undamped = m >= UNDAMPED_MIDI;
+  const tauRel = undamped ? clamp(base.tauRel * 3, 0.06, 0.12) : base.tauRel;
+  const tEnd = base.tOff + 5 * tauRel;
+  // Giảm chấn chỉ kêu khi nhả SỚM (dây còn rung) và dây có giảm chấn
+  const damped = !undamped && base.tOff < naturalDecay(f) - 0.05 && duration >= 0.12;
+  const damperGain = damped ? peak * 0.07 * clamp(v, 0.3, 1.2) * Math.pow(C4 / Math.max(f, C4), 0.3) : 0;
+  const pan = clamp((m - 60) / 36, -1, 1) * 0.3;
+  return {
+    ...base,
+    peak,
+    cutStart,
+    cutEnd,
+    tauRel,
+    tEnd,
+    // Búa đi thẳng ra (không qua bao biên chính) → nhân mức đỉnh nốt cho bằng mô hình cũ, bớt 30 % (đỡ "cộc")
+    thumpGain: base.thumpGain * peak * 0.7,
+    brightGain,
+    brightTau,
+    brightCents,
+    damperGain,
+    pan,
+  };
+}
+
+/** Sự kiện bao biên lớp sáng (thời gian tương đối; mức so với peak đã nhân). */
+export function brightEvents(p: WarmParams): ParamEvent[] {
+  const lvl = p.peak * p.brightGain;
+  const stop = Math.min(p.tOff, p.attack + 8 * p.brightTau);
+  return [
+    { kind: 'set', t: 0, v: 0 },
+    { kind: 'ramp', t: p.attack * 0.7, v: lvl },
+    { kind: 'target', t: p.attack * 0.7, v: 0, tau: p.brightTau },
+    { kind: 'target', t: stop, v: 0, tau: Math.min(p.brightTau, p.tauRel) },
+    { kind: 'set', t: Math.min(p.tEnd, stop + 5 * Math.min(p.brightTau, p.tauRel)), v: 0 },
+  ];
+}
+
+/** Hệ số "lược" do búa gõ ở vị trí x của dây (bậc k gần bội của 1/x yếu đi). */
+function hammerComb(k: number, x: number): number {
+  return Math.abs(Math.sin(Math.PI * k * x)) / Math.sin(Math.PI * x);
+}
+
+/** Vị trí búa theo âm vực: ~1/8 ở giữa, gần đầu dây hơn ở treble. */
+function hammerPos(freq: number): number {
+  return clamp(0.125 - 0.025 * ((freqToMidi(freq) - 60) / 36), 0.08, 0.14);
+}
+
+/** Biên độ lớp THÂN (bậc 1…n): dốc ~k^−1,7; bass: cơ bản yếu (loa nhỏ), bậc 2–4 nổi; treble gần sin. */
+export function bodyAmps(freq: number): Float32Array {
+  const f = clamp(freq, 20, 8000);
+  const n = clamp(Math.floor(6000 / f), 1, 24);
+  const a = new Float32Array(n + 1);
+  const x = hammerPos(f);
+  const slope = f < 130 ? 1.3 : f < 520 ? 1.75 : 2.0;
+  for (let k = 1; k <= n; k++) a[k] = hammerComb(k, x) / Math.pow(k, slope);
+  if (f < 110) a[1] *= 0.6;
+  else if (f < 160) a[1] *= 0.8;
+  return a;
+}
+
+/** Biên độ lớp SÁNG (bậc 2…n, không có cơ bản): dốc ~k^−0,9 × thông thấp dạ búa ~4,5 kHz, tới ~10 kHz. */
+export function brightAmps(freq: number): Float32Array {
+  const f = clamp(freq, 20, 8000);
+  const n = clamp(Math.floor(10000 / f), 1, 40);
+  const a = new Float32Array(n + 1);
+  const x = hammerPos(f);
+  // dạ búa: thông thấp mềm ~4,5 kHz (bậc rất cao yếu đi)
+  for (let k = 2; k <= n; k++) a[k] = hammerComb(k, x) / Math.pow(k, 0.9) / (1 + ((k * f) / 4500) ** 2);
+  if (n >= 2) a[2] *= 0.5; // bậc 2 chủ yếu nằm ở lớp thân (ít lệch) — tránh nhịp phách chậm với lớp thân
+  return a;
+}
+
+/** Biên độ → bảng real/imag cho PeriodicWave với pha giả ngẫu nhiên tất định. */
+export function ampsToTable(amps: Float32Array, seed = 7919): { real: Float32Array; imag: Float32Array } {
+  const real = new Float32Array(amps.length);
+  const imag = new Float32Array(amps.length);
+  for (let k = 1; k < amps.length; k++) {
+    const ph = k === 1 ? 0 : hash01(k * seed) * 2 * Math.PI;
+    real[k] = amps[k] * Math.sin(ph);
+    imag[k] = amps[k] * Math.cos(ph);
+  }
+  return { real, imag };
+}
+
+/** Hồi âm stereo (2 kênh lệch nhau) cho mô hình ấm: phản xạ sớm thưa + đuôi tối dần; RT60 ≤ phòng cũ. */
+export const WARM_REVERB_SECONDS = 0.85;
+export const WARM_REVERB_RT60 = 0.8;
+
+export function roomImpulseStereo(
+  sampleRate: number,
+  seconds = WARM_REVERB_SECONDS,
+  rt60 = WARM_REVERB_RT60,
+): [Float32Array, Float32Array] {
+  const make = (seed: number, early: number[]): Float32Array => {
+    const out = roomImpulse(sampleRate, seconds, rt60, seed);
+    const k = Math.log(1000) / rt60;
+    // Vài phản xạ sớm (tường gần) — dấu xen kẽ, nhỏ dần
+    early.forEach((ms, i) => {
+      const idx = Math.floor((ms / 1000) * sampleRate);
+      if (idx < out.length) out[idx] += (i % 2 ? -1 : 1) * 0.5 * Math.exp((-k * ms) / 1000);
+    });
+    return out;
+  };
+  return [make(3, [7, 13, 23, 31]), make(11, [9, 17, 26, 37])];
+}

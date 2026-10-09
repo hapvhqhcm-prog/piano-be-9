@@ -5,6 +5,28 @@
 import type { Tune } from '../../music/tune';
 
 const KEYWORDS: Array<[RegExp, string]> = [
+  // (+ 2026-10-09) bài Thư viện bổ sung — đứng trước các từ khóa chung ("cầu", "hoa", "xuân", "kiến")
+  [/cá vàng/i, '🐠'],
+  [/cá heo/i, '🐬'],
+  [/gõ kiến/i, '🪶'],
+  [/kiến/i, '🐜'],
+  [/đồng hồ/i, '⏰'],
+  [/nắng sớm/i, '☀️'],
+  [/buổi sáng/i, '🌅'],
+  [/cầu tuột/i, '🛝'],
+  [/con ong|ong bay/i, '🐝'],
+  [/rùa/i, '🐢'],
+  [/tàu thủy/i, '🚢'],
+  [/sóc nâu/i, '🐿️'],
+  [/pháo hoa/i, '🎆'],
+  [/yankee/i, '🎩'],
+  [/giáng sinh/i, '🎄'],
+  [/auld lang syne/i, '🤝'],
+  [/mùa xuân về/i, '🌼'],
+  [/vua núi/i, '👑'],
+  [/thiên nga/i, '🦢'],
+  [/sao băng/i, '🌠'],
+  [/múa lân/i, '🦁'],
   [/rô-bốt|robot/i, '🤖'],
   [/siêu nhân/i, '🦸'],
   [/ninja/i, '🥷'],

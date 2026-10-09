@@ -22,6 +22,7 @@ import { parentGateScreen } from './parentGate';
 import { BUSY_WEEK_DAYS, earnedStickerIds, islandPassed } from '../../lessons/stickers';
 import { storageStatus } from '../../progress/ProgressStore';
 import { backupNudge } from '../components/backupNudge';
+import { weeklyNudge } from '../components/weeklyNudge';
 import { cancelSpeech, speak } from '../../audio/voice';
 import { speakChip } from '../components/speakChip';
 import { challengeLine } from '../components/challengeSheet';
@@ -330,7 +331,8 @@ export function homeScreen(app: App, banner?: string) {
             'div',
             { class: 'topbar-side' },
             // (+ 2026-10-09) Nhắc sao lưu: viên nhỏ cạnh nút Phụ huynh (trước đây là một hàng riêng đẩy nút "Học tiếp" xuống dưới mép màn)
-            backupNudge(app, () => app.show(parentGateScreen(app))),
+            // (+ 2026-10-09) 📊 Báo cáo tuần đã sẵn sàng (viên nhỏ cho bố mẹ) — nhường chỗ cho nhắc sao lưu nếu đang có
+            backupNudge(app, () => app.show(parentGateScreen(app))) ?? weeklyNudge(app, () => app.show(parentGateScreen(app))),
             todayStars ? h('div', { class: 'today-stars', 'aria-label': `Hôm nay được ${todayStars} sao` }, `⭐ ${Math.min(todayStars, 99)}`) : null,
             parentButton(() => app.show(parentGateScreen(app))),
           ),

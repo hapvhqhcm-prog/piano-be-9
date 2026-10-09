@@ -12,9 +12,9 @@ const W = 900;
 const PAD = 40;
 const IW = W - PAD * 2;
 const SCALE = 2;
-const DISPLAY = '"Baloo 2", "Nunito", system-ui, sans-serif';
-const BODY = '"Nunito", system-ui, sans-serif';
-const C = {
+export const DISPLAY = '"Baloo 2", "Nunito", system-ui, sans-serif';
+export const BODY = '"Nunito", system-ui, sans-serif';
+export const C = {
   bg: '#fff7ea',
   ink: '#2c2752',
   ink2: '#5b5680',
@@ -44,15 +44,15 @@ export function stripWeeks(r: Pick<ProgressReport, 'level'>): number[] {
   return Array.from({ length: b - a + 1 }, (_, i) => a + i);
 }
 
-const font = (weight: number, size: number, display = false) => `${weight} ${size}px ${display ? DISPLAY : BODY}`;
+export const font = (weight: number, size: number, display = false) => `${weight} ${size}px ${display ? DISPLAY : BODY}`;
 
 /** Tên tệp ảnh: "bao-cao-piano-2026-10-06.png" (không đưa tên bé vào tên tệp). */
 export function reportFileName(r: Pick<ProgressReport, 'date'>): string {
   return `bao-cao-piano-${r.date}.png`;
 }
 
-/** Chờ phông chữ (cả bộ ký tự Tiếng Việt — unicode-range chỉ tải khi có chữ cần). */
-async function loadFonts(): Promise<void> {
+/** (dùng chung với weeklyReportImage.ts) Chờ phông chữ (cả bộ ký tự Tiếng Việt — unicode-range chỉ tải khi có chữ cần). */
+export async function loadFonts(): Promise<void> {
   if (typeof document === 'undefined' || !document.fonts) return;
   const sample = 'Báo cáo tiến bộ học đàn ẮẶỨỰĐđươ 0123';
   try {
@@ -65,7 +65,7 @@ async function loadFonts(): Promise<void> {
   }
 }
 
-function svgToImage(svg: SVGElement, w: number, hgt: number): Promise<HTMLImageElement | null> {
+export function svgToImage(svg: SVGElement, w: number, hgt: number): Promise<HTMLImageElement | null> {
   svg.setAttribute('width', String(w));
   svg.setAttribute('height', String(hgt));
   if (!svg.getAttribute('xmlns')) svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
@@ -78,7 +78,7 @@ function svgToImage(svg: SVGElement, w: number, hgt: number): Promise<HTMLImageE
   });
 }
 
-function rr(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, hgt: number, r: number): void {
+export function rr(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, hgt: number, r: number): void {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
   ctx.arcTo(x + w, y, x + w, y + hgt, r);
@@ -88,7 +88,7 @@ function rr(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, hgt:
   ctx.closePath();
 }
 
-function card(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, hgt: number, fill = C.card, stroke: string | null = C.line): void {
+export function card(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, hgt: number, fill = C.card, stroke: string | null = C.line): void {
   rr(ctx, x, y, w, hgt, 22);
   ctx.fillStyle = fill;
   ctx.fill();
@@ -100,7 +100,7 @@ function card(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, hg
 }
 
 /** Ngắt dòng theo khoảng trắng cho vừa `maxW`. */
-function wrap(ctx: CanvasRenderingContext2D, text: string, maxW: number): string[] {
+export function wrap(ctx: CanvasRenderingContext2D, text: string, maxW: number): string[] {
   const words = text.split(/\s+/);
   const lines: string[] = [];
   let cur = '';
@@ -116,7 +116,7 @@ function wrap(ctx: CanvasRenderingContext2D, text: string, maxW: number): string
 }
 
 /** Viết đoạn chữ nhiều dòng, trả về y sau dòng cuối. */
-function para(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxW: number, lh: number): number {
+export function para(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxW: number, lh: number): number {
   for (const line of wrap(ctx, text, maxW)) {
     ctx.fillText(line, x, y);
     y += lh;
@@ -125,14 +125,14 @@ function para(ctx: CanvasRenderingContext2D, text: string, x: number, y: number,
 }
 
 /** Chữ một dòng, tự thu nhỏ cho vừa. */
-function fit(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxW: number, weight: number, size: number, display = true): void {
+export function fit(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxW: number, weight: number, size: number, display = true): void {
   let s = size;
   ctx.font = font(weight, s, display);
   while (s > 12 && ctx.measureText(text).width > maxW) ctx.font = font(weight, --s, display);
   ctx.fillText(text, x, y);
 }
 
-function star(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number, fill: string = P.sun): void {
+export function star(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number, fill: string = P.sun): void {
   const p = new Path2D(starPath(cx, cy, r));
   ctx.fillStyle = fill;
   ctx.fill(p);

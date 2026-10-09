@@ -62,6 +62,12 @@ function installTouchGuards(): void {
  * tiến độ → khôi phục TRƯỚC khi tạo store (chờ IndexedDB tối đa 1,5 s; dữ liệu chính đọc được thì không chờ gì).
  */
 async function boot(): Promise<void> {
+  // (+ 2026-10-09) Chỉ bản dev: trang nghe thử A/B tiếng đàn (?soundtest) — không có trong bản build.
+  if (import.meta.env.DEV && new URLSearchParams(location.search).has('soundtest')) {
+    const { mountSoundTest } = await import('./dev/soundTest');
+    mountSoundTest(document.getElementById('app') as HTMLElement);
+    return;
+  }
   const kv = storage();
   let backend: ReturnType<typeof idbBackend> = null;
   try {

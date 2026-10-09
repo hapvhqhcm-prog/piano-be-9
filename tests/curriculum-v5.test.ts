@@ -114,7 +114,8 @@ describe('cấu trúc 30 tuần', () => {
     const EARLY = ['hot_cross_buns_g', 'swing_waltz'];
     for (const id of EARLY) expect(songUses(id).length, id).toBeGreaterThan(0);
     // + Cấp 4 (2026-10-08): bài tuần ≥ 32 (tests/level4.test.ts kiểm riêng)
-    expect(SONGS.filter((s) => (s.week ?? 0) <= 31).length).toBe(56 + NEW.length + 12 + EXTRA.length + EARLY.length);
+    // + 24 bài CHỈ ĐỂ TRONG THƯ VIỆN (2026-10-09, OWNER duyệt "Thêm bài hát") — tests/library-2026-10-09.test.ts
+    expect(SONGS.filter((s) => (s.week ?? 0) <= 31).length).toBe(56 + NEW.length + 12 + EXTRA.length + EARLY.length + 24);
   });
 
   it('mục tiêu cuối nói thật: ≈ Faber cấp 1 / đầu cấp 2', () => {

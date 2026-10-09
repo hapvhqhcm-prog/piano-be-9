@@ -751,3 +751,21 @@ Có ba chuyên gia đánh giá: sư phạm, động lực cho trẻ và kỹ thu
 - Tách 5 tệp lớn: song.ts 1307 → 370 dòng (+ chờ/nhịp/kết quả/luyện chỗ khó), lessonEngine.ts 1293 → 61 (10 mô-đun, giữ nguyên 68 export), parent.ts 1084 → 237, micTest.ts 1094 → 294, ProgressStore.ts 991 → 733. Đường import cũ vẫn dùng được (re-export).
 - Không đổi hành vi: so sánh song song bản cũ/mới (giao diện + dữ liệu lưu) trên các luồng micro giả lập; 1980 test; e2e A–E.
 - Gói tải đầu 96,5 → 89,9 kB gzip (phần lập kế hoạch buổi chuyển sang gói màn chính, tải sẵn ngay khi mở app).
+
+## 39. Tiếng đàn ấm hơn, 4 trò chơi, báo cáo tuần, 24 bài mới (2026-10-09)
+- **Tiếng đàn**
+  - Mỗi nốt có 2 lớp: thân (2 dây lệch nhau ~1 cent) và lớp sáng tắt nhanh (họa âm cao tắt nhanh hơn, hơi căng).
+  - Tiếng búa và tiếng giảm âm; EQ thân đàn; trái/phải theo âm vực; vang phòng tạo bằng code.
+  - Sửa lỗi cũ: nốt đã hẹn giờ trước bị tính là đang chồng nhau, nên bài mẫu và nhạc đệm sau 8 nốt đầu chỉ dùng tiếng "nhẹ" 1 dây.
+  - Giữ nguyên thời điểm bắt đầu / kết thúc nốt mà micro dựa vào.
+  - Mỗi nốt dùng 9–10 nút âm thanh (trước là 7).
+- **4 trò chơi mới** (lười tải, chỉ dùng nốt / nhịp bé đã học, không có âm báo sai):
+  - 🎧 Đoán nốt
+  - 🎢 Lên hay xuống?
+  - 🎯 Bắt nhịp
+  - 🔁 Đàn lại giai điệu
+- **Báo cáo tuần cho bố mẹ** (`src/progress/weeklyReport.ts`)
+  - Ngày tập, phút, bài mới thuộc, buổi diễn, thử thách, tiến bộ.
+  - Lời khen và việc bố mẹ giúp (quy tắc thuần, có test).
+  - Ảnh chia sẻ và bản chữ; nhãn nhỏ cho bố mẹ ở màn chính; xem lại 8 tuần; vẫn đúng sau khi gộp dữ liệu.
+- **Thêm 24 bài vào Thư viện** (tổng 150): 6 bài cho tuần 3–6, các bài dân gian / cổ điển đã hết bản quyền (Grieg, Tchaikovsky, Sakura, Yankee Doodle…), có ghi nguồn trong LICENSES.md. Chưa thêm dân ca Việt mới vì chưa đủ 2 nguồn ký âm.

@@ -16,13 +16,18 @@ import { lazy, lazyScreen } from '../lazy';
 export const micTestMod = lazy(() => import('./micTest'));
 export const songEditorMod = lazy(() => import('./songEditor'));
 export const reportMod = lazy(() => import('./report'));
+/** (+ 2026-10-09) 📊 Báo cáo tuần — chunk riêng (cùng ảnh chia sẻ weeklyReportImage.ts) */
+export const weeklyReportMod = lazy(() => import('./weeklyReport'));
 const diagnosticsMod = lazy(() => import('./diagnostics'));
 type SongEditorArgs = Parameters<typeof import('./songEditor').songEditorScreen>;
 type ReportOpts = Parameters<typeof import('./report').reportScreen>[1];
+type WeeklyReportOpts = Parameters<typeof import('./weeklyReport').weeklyReportScreen>[1];
 export const micTestScreen = (app: App): Screen => lazyScreen(micTestMod, (m) => m.micTestScreen(app));
 export const songEditorScreen = (app: App, existing: SongEditorArgs[1], hooks: SongEditorArgs[2]): Screen =>
   lazyScreen(songEditorMod, (m) => m.songEditorScreen(app, existing, hooks));
 export const reportScreen = (app: App, opts: ReportOpts): Screen => lazyScreen(reportMod, (m) => m.reportScreen(app, opts));
+export const weeklyReportScreen = (app: App, opts: WeeklyReportOpts): Screen =>
+  lazyScreen(weeklyReportMod, (m) => m.weeklyReportScreen(app, opts));
 /** 🩺 Kiểm tra iPad (âm thanh, giọng đọc, micro, lưu trữ…) → gửi kết quả cho người hỗ trợ */
 export const diagnosticsScreen = (app: App): Screen => lazyScreen(diagnosticsMod, (m) => m.diagnosticsScreen(app));
 

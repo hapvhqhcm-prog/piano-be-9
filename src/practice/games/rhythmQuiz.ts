@@ -27,9 +27,9 @@ export function rhythmSymbolsUpTo(week: number): RhythmSymbol[] {
   return out;
 }
 
-/** Tuần đầu tiên có đủ ≥ 2 ký hiệu nhịp (mở trò) — null nếu giáo trình không có. */
-export function rhythmUnlockWeek(): number | null {
-  for (const w of WEEKS) if (rhythmSymbolsUpTo(w.week).length >= 2) return w.week;
+/** Tuần đầu tiên có đủ ≥ `min` ký hiệu nhịp (mở trò; mặc định 2) — null nếu giáo trình không có. */
+export function rhythmUnlockWeek(min = 2): number | null {
+  for (const w of WEEKS) if (rhythmSymbolsUpTo(w.week).length >= min) return w.week;
   return null;
 }
 
@@ -61,7 +61,7 @@ function fill(beats: number, syms: readonly RhythmSymbol[], rng: Rng, lead: bool
 }
 
 /** Mẫu hợp lệ: từng ô nhịp lấp riêng (không ký hiệu nào vắt qua vạch nhịp), có ít nhất 2 tiếng vỗ. */
-function makePattern(bars: number, syms: readonly RhythmSymbol[], rng: Rng): RhythmSymbol[] | null {
+export function makePattern(bars: number, syms: readonly RhythmSymbol[], rng: Rng): RhythmSymbol[] | null {
   for (let i = 0; i < 30; i++) {
     const p: RhythmSymbol[] = [];
     for (let b = 0; b < bars; b++) {
