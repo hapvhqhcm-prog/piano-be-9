@@ -226,7 +226,7 @@ export const WEEK24: WeekPlan = {
       { kind: 'sight', title: 'Đọc nhạc thế Sol', position: 'G', hand: 'RH', count: 2, rhythm: 2, hints: 'staff' },
       qa('Hỏi – Đáp thế Sol 💬', 'App hỏi ở thế Sol. Con đáp, kết ở Sol!', 'G'),
     ] },
-    pair('w24-l2', 24, 'Đêm thánh vô cùng', '🌟', 'silent_night', 'Nhịp 3, có chấm dôi và dời tay ở câu 3.'),
+    pair('w24-l2', 24, 'Đêm thánh vô cùng', '🌟', 'silent_night', 'Nhịp 3, có chấm dôi. Dời tay ở nốt dài!'),
     // Dân ca Việt Nam (OWNER yêu cầu 2026-10-05; 2026-10-06: BẢN ĐẦY ĐỦ SGK Âm nhạc 9 — dài gấp 3 bản cũ nên tách khỏi w24-l1
     // để buổi học vẫn ≤ 12 phút): hai tay luân phiên theo âm vực
     { id: 'w24-ngua', week: 24, title: 'Lý ngựa ô', emoji: '🐎', activities: [
@@ -385,6 +385,7 @@ export const WEEK28: WeekPlan = {
   leftHand: true,
   warmup: { variant: 'majorminor', pool: ['C4', 'F4', 'G4'], rounds: 6 },
   teach: { emoji: '👨‍🏫', text: 'Con dạy bố mẹ đệm hợp âm Đô – Fa – Sol bằng tay trái.' },
+  drills: ['arm-drop', 'hand-shape'],
   criterion: { text: 'Chơi trọn "Các thánh tiến bước — hai tay" theo nhịp — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
   kidGoal: 'Các thánh tiến bước — hai tay theo nhịp, 2 hôm nhé! 🎺',
   lessons: [
@@ -444,7 +445,8 @@ export const WEEK30: WeekPlan = {
     { id: 'w30-l1', week: 30, title: 'Für Elise — từng câu', emoji: '🌹', activities: [
         // 2026-10-06: bài tự sáng tác chuẩn bị — La thứ 3/4, hợp âm rải liền và "Mi – Rê♯ – Mi" trong một thế tay
         song('summer_shower', 'wait', 2, 'full', 'Rải "La – Đô – Mi" thật LIỀN, rồi "Mi – Rê thăng – Mi"!'),
-        song('fur_elise', 'wait', 2, 'full')] },
+        // (2026-10-09 rà soát) Sol THĂNG (ô 3) chưa từng có trong thẻ dạy nốt — nêu tên cùng Rê thăng
+        song('fur_elise', 'wait', 2, 'full', 'Hai phím đen: Rê thăng và Sol thăng!')] },
     plus(pair('w30-l2', 30, 'Für Elise — cả đoạn', '🎼', 'fur_elise'), qa('Hỏi – Đáp La thứ 💬', 'App hỏi giọng La thứ. Con đáp, kết ở La!', 'Am')),
   ],
 };

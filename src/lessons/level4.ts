@@ -7,7 +7,7 @@ import type { Activity, Lesson, Target, WeekPlan } from './types';
  * CẤP 4 — "Nghệ sĩ nhỏ" (tuần 32–43; OWNER duyệt 2026-10-08 sau rà soát chuyên gia: sau tuần 31 bé không bị "chững").
  * Mục tiêu nói thật: ≈ ABRSM Initial → đầu Grade 1 (Faber cấp 2A).
  * 32 gam Sol trưởng (luồn ngón cái / vắt ngón 3) · 33 gam Fa trưởng (Si♭) · 34 gam Rê trưởng + gam HAI TAY cùng lúc ·
- * 35 hợp âm rải I–IV–V (Đô, Sol, Fa) · 36 bass Alberti & sonatina nhỏ · 37 CỦNG CỐ · 38 PEDAL ("nhấn sau — nhả trước") ·
+ * 35 hợp âm rải I–IV–V (Đô, Sol, Fa) · 36 bass Alberti & sonatina nhỏ · 37 CỦNG CỐ · 38 PEDAL ("nhả trước — nhấn sau") ·
  * 39 nhịp 6/8 ("MỘT-hai-ba BỐN-năm-sáu") · 40 to dần / nhỏ dần (hairpin), Andante – Allegro – rit. · 41 gam La thứ (tự nhiên,
  * hòa âm) · 42 CỦNG CỐ & chuẩn bị hòa nhạc · 43 Đại hòa nhạc Cấp 4.
  * Cùng kiểu Cấp 3: buổi ≤ 7 màn / ≤ ~12 phút; bài hai tay chính của tuần TÁCH TAY sẵn ở câu khó; ứng tấu 1 phút mỗi tuần.
@@ -177,7 +177,7 @@ export const WEEK33: WeekPlan = {
           id: 'w33-bb',
           step: 'Bài mới',
           title: 'Ngón 4 ở Si giáng',
-          intro: 'Fa-Sol-La-Si giáng bằng 1-2-3-4, rồi cái luồn!',
+          intro: 'Fa Sol La Si giáng: ngón 1-2-3-4, rồi ngón cái luồn!',
           targets: [
             fingerEcho(['F4', 'G4', 'A4', 'Bb4'], [1, 2, 3, 4], 'RH', 'Si giáng là phím ĐEN'),
             fingerEcho(['A4', 'Bb4', 'C5', 'D5'], [3, 4, 1, 2], 'RH', 'Ngón cái lặn xuống Đô'),
@@ -225,7 +225,7 @@ export const WEEK34: WeekPlan = {
       ],
     },
     plus(handsApart('w34-l2', 34, 'Gam Sol hai tay', '🤝', 'scale_g_both', [0, 2], 1, 'Tay phải lên gam trước.'), handCheck(34)),
-    plus(pair('w34-l3', 34, 'Hành khúc Rê trưởng', '🥁', 'march_d', 'Tay trái: hợp âm Rê và La.'), qa('Hỏi – Đáp thế Rê 💬', 'App hỏi ở thế Rê. Con đáp, kết ở Rê!', 'D')),
+    plus(pair('w34-l3', 34, 'Hành khúc Rê trưởng', '🥁', 'march_d', 'Tay trái: hợp âm Rê, Sol và La.'), qa('Hỏi – Đáp thế Rê 💬', 'App hỏi ở thế Rê. Con đáp, kết ở Rê!', 'D')),
   ],
 };
 
@@ -555,9 +555,9 @@ export const WEEK41: WeekPlan = {
       title: 'Gam La thứ',
       emoji: '🌙',
       activities: [
-        song('scale_am_rh', 'wait', 2, 'full', 'Lượt sau có Sol THĂNG!'),
+        song('scale_am_rh', 'wait', 2, 'full', 'Lần lên thứ hai có Sol THĂNG!'),
         song('scale_am_rh', 'tempo', 2, 'names'),
-        song('scale_am_lh', 'wait', 2, 'full', 'Tay trái: cùng phím, khác ngón!'),
+        song('scale_am_lh', 'wait', 2, 'full', 'Tay trái: ngón như gam Đô — 5-4-3-2-1, rồi 3 vắt qua!'),
       ],
     },
     // Câu 2 (ô 5–8): tay phải dời thế ba lần
@@ -594,6 +594,7 @@ export const WEEK42: WeekPlan = {
   kidGoal: 'Greensleeves hai tay theo nhịp — 2 hôm! 🎻',
   lessons: [
     // Câu 1 (ô 0–4, có nhịp lấy đà): nhiều nốt nhất; lượt theo nhịp ở bài 2 (buổi ≤ 12 phút)
+    // (2026-10-09) ngón mới: tay "bò" theo giai điệu, chỉ nhảy ngón cái Mi→La ở nốt lấy đà câu 2 (gen-songs.py)
     plus(handsApart('w42-l1', 42, 'Greensleeves', '🎻', 'greensleeves', [0, 5], 1, 'Nhịp 6/8, bắt đầu bằng một nốt La!', false), handCheck(42)),
     {
       id: 'w42-l2',

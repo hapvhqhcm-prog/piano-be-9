@@ -38,8 +38,9 @@ export const WEEK10: WeekPlan = {
         {
           kind: 'sing',
           title: 'Hát rồi đàn 🎤',
-          intro: 'Nghe thầy đàn, hát lại từng nốt, rồi đàn trên đàn. Hát chưa trúng cũng không sao — hát giúp tai nhớ nốt!',
-          rounds: [{ notes: ['G4', 'E4', 'G4'], fingers: [4, 3, 4] }, { notes: ['C4', 'D4', 'E4'], fingers: [1, 2, 3] }],
+          intro: 'Nghe, hát lại, rồi đàn. Hát chưa trúng cũng không sao!',
+          // ngón như "Ông lão vui tính" (tay nhích phải: Mi 2, Sol 4)
+          rounds: [{ notes: ['G4', 'E4', 'G4'], fingers: [4, 2, 4] }, { notes: ['C4', 'D4', 'E4'], fingers: [1, 2, 3] }],
         },
       ],
     },

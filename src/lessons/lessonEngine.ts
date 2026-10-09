@@ -1071,9 +1071,12 @@ export function reviewSongStep(
   rng: () => number = Math.random,
 ): Extract<SessionStep, { kind: 'review-song' }> | null {
   const inLesson = new Set(lesson.activities.flatMap((a) => (a.kind === 'song' ? [a.songId] : [])));
+  // (rà soát 2026-10-09) CHỈ bài bé ĐÃ chơi — trước đây bài Thư viện chưa từng chơi được điểm "lâu chưa chơi" cao nhất
+  // → bước "Ôn bài cũ" hay thành bài MỚI tinh
+  const played = songStats(data);
   const cands = SONGS.filter((t) => {
     const w = t.week ?? 1;
-    return w >= lesson.week - 4 && w <= lesson.week - 2 && !inLesson.has(t.id) && !t.id.startsWith('sight');
+    return w >= lesson.week - 4 && w <= lesson.week - 2 && !inLesson.has(t.id) && !t.id.startsWith('sight') && !!played[t.id]?.r;
   });
   if (!cands.length) return null;
   const scored = cands.map((t) => {

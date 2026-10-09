@@ -261,7 +261,8 @@ export const WEEK13: WeekPlan = {
       activities: [
         ...pair('w13-l2', 13, 'Đôi bạn', '👫', 'two_friends', 'full', 'Tay trái nốt trắng, tay phải nốt đen — đi cùng nhau!').activities,
         // (2026-10-06) Dân ca Nam Bộ, 2/4 — hai tay LUÂN PHIÊN như tuần 11 (không đánh cùng lúc)
-        song('ly_cay_xanh', 'wait', 2, 'names', 'Hai tay thay nhau! Tay phải ngón 1 ở Mi.'),
+        // (2026-10-09 rà soát) chỗ đặt tay MỚI (tay phải ngón 1 ở Mi) → lần đầu gặp vẫn phím sáng (week4.ts "GỢI Ý RÚT DẦN")
+        song('ly_cay_xanh', 'wait', 2, 'full', 'Hai tay thay nhau! Tay phải ngón 1 ở Mi.'),
       ],
     },
     pair('w13-l3', 13, 'Thung lũng tiếng vọng', '⛰️', 'echo_valley', 'full', 'Câu LIỀN rồi câu NGẮT; TO rồi NHỎ như tiếng vọng.'),
@@ -295,7 +296,7 @@ export const WEEK14: WeekPlan = {
   island: 'Núi Sol',
   islandEmoji: '⛰️',
   title: 'Thế Sol',
-  story: 'Leo lên Núi Sol: cả bàn tay dời sang phải, ngón cái đứng ở Sol. Có thêm bạn mới: Si, Đô cao, Rê cao!',
+  story: 'Leo lên Núi Sol: cả bàn tay dời sang phải, ngón cái đứng ở Sol. Ngón út với tới bạn mới: Rê cao!',
   warmup: { variant: 'identify', pool: ['G4', 'A4', 'B4', 'C5', 'D5'], rounds: 6, reference: 'G4' },
   teach: { emoji: '👨‍🏫', text: 'Con dạy bố mẹ dời tay từ thế Đô sang thế Sol: ngón cái nhảy từ Đô lên Sol.' },
   drills: ['five-finger', 'hand-shape'],
@@ -316,7 +317,7 @@ export const WEEK14: WeekPlan = {
           targets: [
             posNote('G4', 'RH', 'G', 'Ngón 1 — Sol'),
             posNote('A4', 'RH', 'G'),
-            posNote('B4', 'RH', 'G', 'Nốt mới: Si'),
+            posNote('B4', 'RH', 'G', 'Si — ngón 3'),
             posNote('C5', 'RH', 'G', 'Đô cao'),
             posNote('D5', 'RH', 'G', 'Rê cao — ngón 5'),
           ],
@@ -331,7 +332,7 @@ export const WEEK14: WeekPlan = {
         { kind: 'sight', title: 'Đọc nhạc thế Sol', position: 'G', hand: 'RH', count: 2, hints: 'names' },
       ],
     },
-    plus(pair('w14-l2', 14, 'Bài ca niềm vui — thế Sol', '🎶', 'ode_to_joy_g', 'names'), qa('Hỏi – Đáp thế Sol 💬', 'App hỏi ở thế Sol. Con đáp, kết ở Sol!', 'G')),
+    plus(pair('w14-l2', 14, 'Bài ca niềm vui — thế Sol', '🎶', 'ode_to_joy_g', 'full'), qa('Hỏi – Đáp thế Sol 💬', 'App hỏi ở thế Sol. Con đáp, kết ở Sol!', 'G')),
     {
       id: 'w14-l3',
       week: 14,
@@ -455,7 +456,15 @@ export const WEEK16: WeekPlan = {
           step: 'Bài mới',
           title: 'Đô thứ — có Mi giáng',
           intro: 'Ngón 3 đánh phím ĐEN Mi giáng — nghe buồn hẳn!',
-          targets: [posNote('C4', 'RH', 'Cm'), posNote('D4', 'RH', 'Cm'), posNote('Eb4', 'RH', 'Cm', 'Phím ĐEN — Mi giáng'), posNote('F4', 'RH', 'Cm'), posNote('G4', 'RH', 'Cm')],
+          targets: [
+            posNote('C4', 'RH', 'Cm'),
+            posNote('D4', 'RH', 'Cm'),
+            posNote('Eb4', 'RH', 'Cm', 'Phím ĐEN — Mi giáng'),
+            posNote('F4', 'RH', 'Cm'),
+            posNote('G4', 'RH', 'Cm'),
+            // (2026-10-09 rà soát) "Kìa con bướm vàng — giọng buồn" câu 3 có La GIÁNG — dạy trước khi gặp trong bài
+            { ...posEcho(['G4', 'Ab4', 'G4'], 'RH', 'Cm'), subtitle: 'La giáng (phím đen): tay nhích lên, ngón 4 – 5 – 4', fingers: [4, 5, 4] },
+          ],
         }),
         song('frere_jacques_minor', 'wait', 2, 'names', 'Bài "Kìa con bướm vàng" nhưng ở giọng buồn — nghe lạ không?'),
       ],

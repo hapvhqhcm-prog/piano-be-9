@@ -196,12 +196,8 @@
   },
   {
    "pitch": "C4",
-   "beats": 3,
+   "beats": 4,
    "finger": 1
-  },
-  {
-   "rest": true,
-   "beats": 1
   }
  ]
 }

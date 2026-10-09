@@ -151,6 +151,10 @@ describe('4. Ôn bài cũ trong buổi', () => {
     const { st } = clockStore();
     const lesson = shortLesson();
     st.setCurrentWeek(lesson.week);
+    // (rà soát 2026-10-09) "Ôn bài cũ" chỉ chọn bài bé ĐÃ chơi → cho bé từng chơi (chưa đạt) các bài 2–4 tuần trước
+    const old = st.startSession(`w${lesson.week}-song-old`);
+    for (const c of SONGS.filter((s) => (s.week ?? 1) >= lesson.week - 4 && (s.week ?? 1) <= lesson.week - 2))
+      st.addSongRun(old.id, run(c.id, { mode: 'wait', bpm: 40, passed: false }));
     const base = buildSessionPlan(lesson, st.get(), { rng: () => 0.3, now: T0 });
     expect(base.map((s) => s.kind)).not.toContain('review-song');
     const plan = buildSessionPlan(lesson, st.get(), { rng: () => 0.3, now: T0, songReview: true });
@@ -209,6 +213,17 @@ describe('4. Ôn bài cũ trong buổi', () => {
     const s2 = reviewSongStep(lesson, st2.get(), T0 + 40 * DAY, () => 0.5)!;
     expect(s2.songId).toBe(a.id);
     expect(s2.bpm).toBe(60);
+  });
+
+  it('chỉ chọn bài bé ĐÃ chơi — chưa chơi bài nào thì không có bước ôn', () => {
+    const { st } = clockStore();
+    const lesson = shortLesson(10);
+    st.setCurrentWeek(lesson.week);
+    expect(reviewSongStep(lesson, st.get(), T0, () => 0.5)).toBeNull();
+    const c = SONGS.find((s) => (s.week ?? 1) === lesson.week - 3 && !s.id.startsWith('sight'))!;
+    const ss = st.startSession(`w${lesson.week}-song-c`);
+    st.addSongRun(ss.id, run(c.id, { mode: 'wait', bpm: 40 }));
+    expect(reviewSongStep(lesson, st.get(), T0, () => 0.5)?.songId).toBe(c.id);
   });
 
   it('lượt ôn (một câu) không làm bài thành "đã thuộc"', () => {

@@ -12,7 +12,7 @@ import {
   weekPlan,
 } from '../src/lessons/lessonEngine';
 import { findTune } from '../src/music/exercises';
-import { phraseRanges, slice } from '../src/music/tune';
+import { phraseRanges, slice, SONGS as SONGS_ALL } from '../src/music/tune';
 import { pitchToMidi } from '../src/piano/pitchTable';
 import { MemoryStorage, ProgressStore } from '../src/progress/ProgressStore';
 
@@ -121,6 +121,11 @@ describe('v5.1 — buổi ngắn: ≤ 7 màn, ≤ 12 phút', () => {
     st.setCurrentWeek(week);
     // vài buổi cũ → tư thế rút gọn, ôn bài cũ có ứng viên
     for (let i = 0; i < 4; i++) st.finishSession(st.startSession(WEEKS[Math.max(0, week - 3)].lessons[0].id).id);
+    // (rà soát 2026-10-09) "Ôn bài cũ" chỉ chọn bài ĐÃ chơi → bé từng chơi (chưa thuộc) các bài 2–4 tuần trước
+    const played = st.startSession(WEEKS[Math.max(0, week - 3)].lessons[0].id);
+    for (const t of SONGS_ALL.filter((s) => (s.week ?? 1) >= week - 4 && (s.week ?? 1) <= week - 2))
+      st.addSongRun(played.id, { songId: t.id, mode: 'wait', level: 2, bpm: 40, hints: 'full', phrase: null, total: 10, hits: 6, source: 'parent', passed: false });
+    st.finishSession(played.id);
     return st;
   }
 

@@ -62,7 +62,7 @@ export const WEEK6: WeekPlan = {
         {
           kind: 'sing',
           title: 'Hát rồi đàn 🎤',
-          intro: 'Nghe thầy đàn, hát lại từng nốt, rồi đàn trên đàn. Hát chưa trúng cũng không sao — hát giúp tai nhớ nốt!',
+          intro: 'Nghe, hát lại, rồi đàn. Hát chưa trúng cũng không sao!',
           rounds: [{ notes: ['E4', 'F4', 'G4'], fingers: [3, 4, 5] }, { notes: ['G4', 'F4', 'E4'], fingers: [5, 4, 3] }],
         },
       ],
@@ -84,7 +84,7 @@ export const WEEK6: WeekPlan = {
       emoji: '🎺',
       activities: [
         { kind: 'song', songId: 'saints', mode: 'wait', hints: 'full', intro: 'Đầu mỗi câu có "Suỵt" — chờ một phách rồi đàn!' },
-        { kind: 'song', songId: 'saints', mode: 'tempo', level: 3, hints: 'names' },
+        { kind: 'song', songId: 'saints', mode: 'tempo', level: 3, hints: 'names', intro: 'Nốt trắng có chấm "Đi-i-i": giữ đủ 3 phách!' },
       ],
     },
   ],

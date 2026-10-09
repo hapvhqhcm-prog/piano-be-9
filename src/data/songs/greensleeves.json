@@ -55,12 +55,12 @@
   {
    "pitch": "D5",
    "beats": 2,
-   "finger": 5
+   "finger": 3
   },
   {
    "pitch": "B4",
    "beats": 1,
-   "finger": 3
+   "finger": 2
   },
   {
    "pitch": "G4",
@@ -105,12 +105,12 @@
   {
    "pitch": "B4",
    "beats": 2,
-   "finger": 5
+   "finger": 3
   },
   {
    "pitch": "G#4",
    "beats": 1,
-   "finger": 3
+   "finger": 2
   },
   {
    "pitch": "E4",
@@ -120,7 +120,7 @@
   {
    "pitch": "A4",
    "beats": 1,
-   "finger": 4
+   "finger": 1
   },
   {
    "pitch": "C5",
@@ -153,13 +153,13 @@
   {
    "pitch": "D5",
    "beats": 2,
-   "finger": 5,
+   "finger": 3,
    "hairpin": "dim"
   },
   {
    "pitch": "B4",
    "beats": 1,
-   "finger": 3
+   "finger": 2
   },
   {
    "pitch": "G4",

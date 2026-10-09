@@ -27,14 +27,20 @@ describe('fingering (§6 — khóa cứng)', () => {
     const POS = ['C', 'MC', 'G', 'D', 'Cm', 'Am', 'C5'] as const;
     // Cấp 1 (tuần 1–10, v5): bảng thế Đô; từ tuần 8 thêm "thế Đô nhích lên" Sol–La = 4-5 (OWNER duyệt 2026-10-05)
     const GA_GAY_HAND: Record<string, number> = { D4: 1, E4: 2, G4: 3, A4: 4, B4: 5 };
+    const SOL_TRAM: Record<string, number> = { C4: 2, G3: 1 };
+    const SOL_LA_GIANG: Record<string, number> = { G4: 4, Ab4: 5 };
     const okFinger = (pitch: string, hand: 'RH' | 'LH', f: number | undefined, week: number) =>
       week >= 32 // Cấp 4 (2026-10-08): nhại lại có LUỒN NGÓN / vắt ngón (gam, rải, Alberti) — ngón ghi rõ, tests/level4.test.ts kiểm
         ? !!f && f >= 1 && f <= 5
         : week <= 10
         ? f === fingerFor(pitch, hand, true) || (week >= 8 && hand === 'RH' && RH_SOL_LA[pitch] === f) ||
           // tuần 10 (2026-10-08, OWNER duyệt): thẻ dạy nốt Si trước "Gà gáy" — bàn tay Rê 1, Mi 2, Sol 3, La 4, Si 5
-          (week === 10 && hand === 'RH' && GA_GAY_HAND[pitch] === f)
-        : POS.some((p) => fingerInPosition(pitch, hand, p, true) === f);
+          (week === 10 && hand === 'RH' && GA_GAY_HAND[pitch] === f) ||
+          // (2026-10-09 rà soát) tuần 8: thẻ "Đô – Sol trầm – Đô" (2-1-2) như câu cuối "Kìa con bướm vàng"
+          (week === 8 && hand === 'RH' && SOL_TRAM[pitch] === f)
+        : POS.some((p) => fingerInPosition(pitch, hand, p, true) === f) ||
+          // (2026-10-09 rà soát) tuần 16: thẻ "Sol – La giáng – Sol" (4-5-4, tay nhích lên) như câu 3 "Kìa con bướm vàng — giọng buồn"
+          (week === 16 && hand === 'RH' && SOL_LA_GIANG[pitch] === f);
     for (const w of PHASE1_WEEKS) {
       for (const l of w.lessons) {
         for (const a of l.activities) {

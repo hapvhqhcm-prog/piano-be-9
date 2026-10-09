@@ -63,8 +63,9 @@ export const WEEK8: WeekPlan = {
         {
           kind: 'sing',
           title: 'Hát rồi đàn 🎤',
-          intro: 'Nghe thầy đàn, hát lại từng nốt, rồi đàn trên đàn. Hát chưa trúng cũng không sao — hát giúp tai nhớ nốt!',
-          rounds: [{ notes: ['G4', 'A4', 'G4'], fingers: [4, 5, 4] }, { notes: ['C4', 'E4', 'G4'], fingers: [1, 3, 5] }],
+          intro: 'Nghe, hát lại, rồi đàn. Hát chưa trúng cũng không sao!',
+          // (2026-10-09 rà soát) không dùng La trước thẻ dạy nốt La (bài 3) — lượt 1 là bước & nhảy Mi–Sol–Mi
+          rounds: [{ notes: ['E4', 'G4', 'E4'], fingers: [3, 5, 3] }, { notes: ['C4', 'E4', 'G4'], fingers: [1, 3, 5] }],
         },
       ],
     },
@@ -96,6 +97,8 @@ export const WEEK8: WeekPlan = {
             { ...echo(['G4', 'A4', 'G4']), subtitle: 'Tay nhích sang phải: ngón 4 – 5 – 4', fingers: ['G4', 'A4', 'G4'].map((p) => RH_SOL_LA[p]) },
             { ...echo(['G4', 'A4', 'G4', 'F4']), subtitle: 'Ngón 4 – 5 – 4 – 3', fingers: ['G4', 'A4', 'G4', 'F4'].map((p) => RH_SOL_LA[p]) },
             staffNote('A4', 'Ở khe 2'),
+            // (2026-10-09 rà soát) câu cuối "Kìa con bướm vàng" có Sol TRẦM (dưới Đô giữa) — tập trước khi gặp trong bài
+            { ...echo(['C4', 'G3', 'C4']), subtitle: 'Sol trầm: ngón 1 với xuống, ngón 2 ở Đô', fingers: [2, 1, 2] },
           ],
         }),
         { kind: 'song', songId: 'frere_jacques_easy', mode: 'wait', hints: 'full', intro: 'Lần đầu TO, nhắc lại NHỎ. Câu có La: tay nhích phải!' },

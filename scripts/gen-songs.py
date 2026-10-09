@@ -304,7 +304,8 @@ S += [
  song("school_drum","School Drum","Trống trường",ORIG,9,"RH",
   "mf C4 C4  G4:2  E4 E4  G4:2  F4 E4  D4 C4  D4:0.5 D4:0.5 E4  C4:2",[0,4],ts="2/4",arr=ORIG),
  song("ferry_song","Ferry Song","Đò qua sông",ORIG,9,"RH",
-  "p (E4:0.5 F4:0.5 G4)  (E4:0.5 D4:0.5 C4)  D4 E4  D4:2  (E4:0.5 F4:0.5 G4  A4 G4)  (F4:0.5 E4:0.5 D4  C4:2)",[0,4],"A4",ts="2/4",arr=ORIG),
+  # (2026-10-09 rà soát) câu cuối về thế Đô ở chỗ ngắt câu (Sol 4 → Fa 4) — trước: ngón cái trượt Rê→Đô giữa dấu luyến
+  "p (E4:0.5 F4:0.5 G4)  (E4:0.5 D4:0.5 C4)  D4 E4  D4:2  (E4:0.5 F4:0.5 G4  A4 G4)  (F4:0.5/4 E4:0.5/3 D4/2  C4:2/1)",[0,4],"A4",ts="2/4",arr=ORIG),
 ]
 # ---- (2026-10-08, OWNER duyệt sau rà soát chuyên gia) xem trước THẾ SOL và NHỊP 3/4 sớm hơn
 S += [
@@ -696,7 +697,8 @@ S += [
  # Tuần 4 — móc đơn "Chạy-chạy" + dấu lặng "Suỵt": tàu xình xịch (4 móc đơn cùng phím) rồi kéo còi.
  song("choo_choo_train","Choo-choo Train","Tàu hỏa xình xịch",ORIG,4,"RH",
   "C4:0.5 C4:0.5 C4:0.5 C4:0.5 E4 E4  D4:0.5 D4:0.5 E4:0.5 F4:0.5 G4:2  G4:0.5 G4:0.5 F4:0.5 F4:0.5 E4 D4  D4:2 R:2  "
-  "C4:0.5 C4:0.5 C4:0.5 C4:0.5 E4 E4  D4:0.5 D4:0.5 E4:0.5 F4:0.5 G4:2  G4:0.5 F4:0.5 E4:0.5 D4:0.5 E4 D4  C4:3 R",[0,4],arr=ORIG),
+  # (2026-10-09 rà soát) còi kết = nốt tròn "Đi-i-i-i" (tuần 4) — trước là trắng chấm 3 phách, chưa dạy tới tuần 6
+  "C4:0.5 C4:0.5 C4:0.5 C4:0.5 E4 E4  D4:0.5 D4:0.5 E4:0.5 F4:0.5 G4:2  G4:0.5 F4:0.5 E4:0.5 D4:0.5 E4 D4  C4:4",[0,4],arr=ORIG),
  # Tuần 7 — GIAI ĐIỆU TAY TRÁI tự sáng tác (thế Đô tay trái Đô3–Sol3): voi bước nặng TO, rồi phun nước NHỎ.
  song("little_elephant","Little Elephant","Chú voi con",ORIG,7,"LH",
   "f C3 C3 G3:2  E3 E3 C3:2  D3 E3 F3 D3  E3:2 G3:2  p E3 F3 G3 E3  F3 D3 E3:2  mf G3 F3 E3 D3  f C3:4",[0,4],arr=ORIG),
@@ -875,8 +877,11 @@ S += [
   lhpos="free",arr=ARR4),
  # Tuần 42 — CỦNG CỐ: Greensleeves (dân ca Anh, 6/8, La thứ có Sol♯/Fa♯) — nhịp lấy đà 1 móc đơn; hairpin, rit.
  song("greensleeves","Greensleeves (English folk song)","Greensleeves (dân ca Anh)","Dân ca Anh (traditional, thế kỷ 16)",42,"BOTH",
-  "mf R:5 A4/1  C5:2/2 D5/3 E5:1.5/4 F5:0.5/5 E5/4  D5:2/5 B4/3 G4:1.5/1 A4:0.5/2 B4/3  C5:2/4 A4/2 A4:1.5/2 G#4:0.5/1 A4/2  B4:2/5 G#4/3 E4:2/1 A4/4  "
-  "p cresc C5:2/2 D5/3 E5:1.5/4 F5:0.5/5 E5/4]  dim D5:2/5 B4/3 G4:1.5/1 A4:0.5/2 B4/3]  rit C5:1.5/5 B4:0.5/4 A4/3 G#4:1.5/2 F#4:0.5/1 G#4/2  A4:6/3",
+  # (2026-10-09 rà soát sư phạm, OWNER hỏi có nên giản lược) giữ nguyên giai điệu; NGÓN mới — tay "bò" theo giai điệu thay vì
+  # nhảy cả bàn tay ngược hướng giai điệu: Rê ngón 3 → Si 2 → Sol 1 (ô 2, 6); Si 3 → Sol♯ 2 → Mi 1 (ô 4); ngón cái nhảy Mi→La
+  # ở nốt lấy đà câu 2 (như đầu bài). Còn 1 lần nhích tay (ô 7, Fa♯ ngón 1). Trước: 4 lần nhảy (Mi 4→Rê 5, La 2→Si 5, La 4→Đô 2).
+  "mf R:5 A4/1  C5:2/2 D5/3 E5:1.5/4 F5:0.5/5 E5/4  D5:2/3 B4/2 G4:1.5/1 A4:0.5/2 B4/3  C5:2/4 A4/2 A4:1.5/2 G#4:0.5/1 A4/2  B4:2/3 G#4/2 E4:2/1 A4/1  "
+  "p cresc C5:2/2 D5/3 E5:1.5/4 F5:0.5/5 E5/4]  dim D5:2/3 B4/2 G4:1.5/1 A4:0.5/2 B4/3]  rit C5:1.5/5 B4:0.5/4 A4/3 G#4:1.5/2 F#4:0.5/1 G#4/2  A4:6/3",
   [0,5],pos="free",
   lh="R:6  A2+E3:6/5+1  G2+D3:6/5+1  A2+E3:6/5+1  B2+E3:6/4+1  A2+E3:6/5+1  G2+D3:6/5+1  A2+E3:3/5+1 B2+E3:3/4+1  A2+E3:6/5+1",
   lhpos="free",ts="6/8",arr=ARR4,tempo="Andante"),

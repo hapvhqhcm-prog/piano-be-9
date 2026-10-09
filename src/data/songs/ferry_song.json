@@ -97,18 +97,18 @@
   {
    "pitch": "F4",
    "beats": 0.5,
-   "finger": 3,
+   "finger": 4,
    "slur": "start"
   },
   {
    "pitch": "E4",
    "beats": 0.5,
-   "finger": 2
+   "finger": 3
   },
   {
    "pitch": "D4",
    "beats": 1,
-   "finger": 1
+   "finger": 2
   },
   {
    "pitch": "C4",
