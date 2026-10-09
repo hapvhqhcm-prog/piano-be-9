@@ -730,3 +730,19 @@ Có ba chuyên gia đánh giá: sư phạm, động lực cho trẻ và kỹ thu
 ## 36. Nhận xét kiểu thầy giáo + Album nhẹ hơn (2026-10-09)
 - Sau mỗi bài: tô màu từng nốt trên khuông (xanh đúng / đỏ nhầm + tên nốt đã đàn / xám sót / cam sớm-muộn ←→, theo từng tay khi có); ONE nhận xét chính (`src/music/teacher.ts`, ≤ 15 chữ, đọc to: hoàn hảo, tiến bộ, gần đúng, hai tay, nhầm nốt, giữ đủ phách, vội, chậm, nhầm, sót); nút "🎯 Luyện ngay chỗ này" (chậm rồi đúng tốc độ, không tính sao).
 - Album: kho thông tin riêng trong IndexedDB (v2, chuyển tự động từ v1) — danh sách không nạp âm thanh (`tests/albumIdb.test.ts`).
+
+## 37. Rà giáo trình 1–43, micro tự học lệch dây, rà màn hình (2026-10-09)
+- **v0.19.1:** rà toàn bộ giáo trình tuần 1–43 → 22 lỗi nhỏ đã sửa, có test mới `tests/curriculum-audit-2026-10-09.test.ts`. "Ôn bài cũ" giờ chỉ chọn bài bé đã từng chơi.
+- **Micro tự học lệch dây** (`src/audio/autoTune.ts`)
+  - Chỉ học từ nốt đúng với nốt app đang chờ, và lệch không quá ±60 cent.
+  - Học riêng 3 vùng trầm / giữa / cao để bắt được phần căng dây của đàn.
+  - Áp dụng khi đã có ≥ 12 nốt và độ phân tán ≤ 12 cent; có hysteresis. Dùng chung cho chấm nốt, hợp âm và hai tay.
+  - Sửa lỗi nốt trầm đang ngân bị nhảy lên quãng tám.
+  - Kết quả mô phỏng: đàn lệch −45 / −25 / +30 cent, có căng dây → một tay 100%, không báo sai oan; hai tay được nhận 97–99%.
+- **Màn hình**
+  - Bật lại phóng to bằng hai ngón (trừ bàn phím).
+  - Tăng tương phản: `--ink-3`, `--sun-800`, nút xanh, nút bị tắt.
+  - Chữ cho bé ≥ 18px, chữ phụ huynh ≥ 16px; vùng chạm ≥ 44px.
+  - Viền focus rõ hơn; thêm aria-live / aria-label; tắt pháo giấy khi iPad bật giảm chuyển động.
+  - Sửa lớp chồng: toast và pháo giấy nằm trên hộp thoại. Thêm khoảng an toàn cho màn hình có tai thỏ / bo góc.
+  - Đã kiểm ở 4 cỡ iPad.

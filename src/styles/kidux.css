@@ -400,12 +400,15 @@ button.bonus-card {
 }
 .arrival-skip {
   position: absolute;
-  right: 20px;
-  bottom: 16px;
+  right: calc(20px + env(safe-area-inset-right));
+  bottom: calc(16px + env(safe-area-inset-bottom));
   font-weight: 800;
-  font-size: 18px;
+  font-size: 20px;
+  /* (a11y) trước: chữ trắng trên nền trời/biển nhạt (1.2:1) → viên thuốc tối, chữ trắng ≥ 7:1 */
   color: #fff;
-  opacity: 0.9;
+  background: rgba(44, 39, 82, 0.72);
+  border-radius: var(--r-pill);
+  padding: 8px 16px 6px;
 }
 @media (prefers-reduced-motion: reduce) {
   .arrival-boat,
@@ -517,7 +520,7 @@ button.bonus-card {
   text-align: center;
 }
 .stage-pick-star {
-  font-size: 15px;
+  font-size: 18px;
   font-weight: 800;
   color: var(--sun-800);
 }

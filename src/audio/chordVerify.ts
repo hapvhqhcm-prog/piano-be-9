@@ -12,6 +12,7 @@
  *
  * Hàm thuần (không Web Audio) → đo được trên giả lập đàn cơ (tests/chordBench.test.ts).
  */
+import { centsAt, type Tuning } from './pitchDetect';
 
 export interface ChordResult {
   /** true = đủ rõ để kết luận; false = tiếng nhỏ / ồn → nên dùng cách cũ */
@@ -122,8 +123,8 @@ function hannKernel(d: number): number {
 }
 
 /** Tần số họa âm bậc k của nốt (có lệch họa âm nhẹ như dây đàn thật). */
-export function partialHz(midi: number, k: number, tuningCents = 0): number {
-  const f0 = 440 * Math.pow(2, (midi - 69 + tuningCents / 100) / 12);
+export function partialHz(midi: number, k: number, tuningCents: Tuning = 0): number {
+  const f0 = 440 * Math.pow(2, (midi - 69 + centsAt(tuningCents, midi) / 100) / 12);
   const B = midi < 55 ? 0.0007 : 0.0004;
   return k * f0 * Math.sqrt(1 + B * k * k);
 }
@@ -174,7 +175,7 @@ let scratchIm = new Float64Array(0);
  * @param seg      tín hiệu micro THÔ (chưa lọc)
  * @param expected các nốt cần đàn (MIDI)
  */
-export function analyzeChord(seg: Float32Array, sampleRate: number, expected: number[], tuningCents = 0): ChordResult {
+export function analyzeChord(seg: Float32Array, sampleRate: number, expected: number[], tuningCents: Tuning = 0): ChordResult {
   const want = [...new Set(expected)].sort((a, b) => a - b);
   const L = seg.length;
   let N = 1;

@@ -7,6 +7,7 @@
  * Tín hiệu: tests/pianoSim.ts — iPad "thô" (RAW, −60…−66 dBFS khi đàn nhẹ), có/không lọc ồn iOS (ns).
  */
 import { MicAnalyzer, type AppSound, type Sensitivity } from '../src/audio/micAnalyzer';
+import { TuningLearner, type TuningEstimator } from '../src/audio/autoTune';
 import { matchHeard } from '../src/audio/match';
 import { gradeTiming, TIMING_WINDOWS } from '../src/music/timing';
 import { handOnsets, totalBeats, type Tune } from '../src/music/tune';
@@ -42,6 +43,25 @@ export interface Cond {
   seed: number;
   sens?: Sensitivity;
   sim?: SimOptions;
+  /**
+   * (+ 2026-10-09) Tự học lệch dây (như MicListener): nốt đang chờ → TuningLearner → `est`; bộ nhận nốt dùng
+   * `est.map()` khi đã áp dụng. Dùng chung một `est` qua nhiều bài = giữ kết quả đã học (Cài đặt).
+   */
+  autoTune?: TuningEstimator;
+  /** Bù tay (Cài đặt micTuningCents) */
+  tuningCents?: number;
+}
+
+/** Gắn tự học lệch dây vào MicAnalyzer (giống MicListener.learnTuning). */
+function tuner(an: MicAnalyzer, c: Cond): (f: ReturnType<MicAnalyzer['process']>, expected: () => number[] | null) => void {
+  an.tuningCents = c.tuningCents ?? 0;
+  const est = c.autoTune;
+  if (!est) return () => undefined;
+  const L = new TuningLearner(est);
+  an.tuningAt = est.map();
+  return (f, expected) => {
+    if (L.frame(f.pitch, f.note, f.onset, f.note ? expected() : null)) an.tuningAt = est.map();
+  };
 }
 
 function rng(seed: number) {
@@ -241,6 +261,7 @@ export async function simulateWait(t: Tune, c: Cond): Promise<Stats> {
   const sig = new StreamSignal(seconds, c);
   const an = new MicAnalyzer();
   if (c.sens) an.sensitivity = c.sens;
+  const learn = tuner(an, c);
   const res: WaitRun = { creditAt: {}, evals: [] };
   const strikes: Strike[] = [];
   const stats = empty(groups.length);
@@ -296,6 +317,7 @@ export async function simulateWait(t: Tune, c: Cond): Promise<Stats> {
     // ---- app ----
     const fr = an.process(sig.frame(i), SIM_RATE, now);
     dbgFrame(now, fr);
+    learn(fr, () => (groups[cur] && groups[cur].midi.length === 1 ? groups[cur].midi : null));
     const n = fr.note;
     if (!n || cur >= groups.length) continue;
     const ok = matchHeard(n.midi, groups[cur].midi) !== 'none';
@@ -403,6 +425,7 @@ export async function simulateTempo(t: Tune, c: Cond): Promise<Stats> {
   const sig = await render(strikes, seconds, c, { clicks, clickLevel: CLICK_LEVEL });
   const a = new MicAnalyzer();
   if (c.sens) a.sensitivity = c.sens;
+  const learn = tuner(a, c);
   const heard: Array<{ beat: number; midi: number; at: number; t: number }> = [];
   const hop = Math.round(HOP * SIM_RATE);
   for (let i = FRAME, k = 0; i < sig.length; i += hop, k++) {
@@ -410,6 +433,11 @@ export async function simulateTempo(t: Tune, c: Cond): Promise<Stats> {
     const tt = i / SIM_RATE;
     const fr = a.process(sig.subarray(i - FRAME, i), SIM_RATE, tt);
     dbgFrame(tt, fr);
+    // song.ts theo nhịp: nốt đơn của các nhóm quanh phách hiện tại (±1 phách)
+    learn(fr, () => {
+      const b = (tt - 0.07 - t0) / spb;
+      return groups.filter((g) => g.midi.length === 1 && Math.abs(g.start - b) <= 1).map((g) => g.midi[0]);
+    });
     const n = fr.note;
     if (n) {
       const at = n.at ?? tt - 0.07;

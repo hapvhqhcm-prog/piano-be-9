@@ -12,6 +12,8 @@ const NOTE = (c: string) =>
   `<svg viewBox="0 0 20 24" width="100%" height="100%" aria-hidden="true"><ellipse cx="7" cy="18.5" rx="5.6" ry="4.2" transform="rotate(-20 7 18.5)" fill="${c}"/><path d="M11.6 17.5 V3 q5 1.5 6.4 7" fill="none" stroke="${c}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
 export function confetti(pieces = 36): void {
+  // Cài đặt "Giảm chuyển động" của iPad → không bắn pháo giấy (lời khen + âm thanh vẫn có)
+  if (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const layer = document.createElement('div');
   layer.className = 'confetti';
   for (let i = 0; i < pieces; i++) {

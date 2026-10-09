@@ -111,6 +111,17 @@ export function detectPitch(
   return { freq: sampleRate / better, clarity: 1 - dipValue(cmnd, tau, tauMax), rms: level };
 }
 
+/**
+ * Bù độ lệch dây: một số (cent, cả đàn — bù tay) hoặc hàm theo nốt (MIDI số thực → cent; tự học theo âm khu,
+ * autoTune.ts). Kiểm tra hợp âm / hai tay dùng cùng giá trị với bộ nhận nốt.
+ */
+export type Tuning = number | ((midi: number) => number);
+
+/** Độ lệch (cent) ở nốt `midi`. */
+export function centsAt(t: Tuning | undefined, midi: number): number {
+  return typeof t === 'function' ? t(midi) : (t ?? 0);
+}
+
 /** Tần số → MIDI (số thực), có bù độ lệch dây của đàn nhà (cents). */
 export function freqToMidi(freq: number, tuningCents = 0): number {
   return 69 + 12 * Math.log2(freq / 440) - tuningCents / 100;
@@ -171,6 +182,12 @@ const SAME_STRIKE_FRAMES = 2;
  */
 const BETWEEN_MAX_SPAN = 4;
 const BETWEEN_ONSET_FRAMES = 4;
+/**
+ * (+ 2026-10-09, tests/autoTuneBench.test.ts) Nốt TRẦM (dưới Đô4) vừa báo, chưa có lần gõ mới mà "nốt" nhảy LÊN đúng
+ * quãng 8 = YIN bắt nhầm chu kỳ của họa âm 2 (âm cơ bản nốt trầm yếu, tắt nhanh hơn) — không phải bé đàn thêm. Đàn
+ * lệch cao (+15…+30 cent) hay gặp: Rê3 đang ngân → "Rê4" = "đàn sai" oan khi chơi theo nhịp (đàn đúng dây: hiếm).
+ */
+const OCTAVE_UP_BELOW = 60;
 
 export class NoteTracker {
   private candidate: number | null = null;
@@ -269,6 +286,7 @@ export class NoteTracker {
     // của nốt mới + đuôi nốt cũ còn ngân (vd Fa4 + Đô4 → Fa2), không phải bé đàn thêm → không báo.
     if (
       (this.emitted !== null && SUBHARMONIC_STEPS.includes(this.emitted - note.midi)) ||
+      (this.emitted !== null && this.emitted < OCTAVE_UP_BELOW && note.midi - this.emitted === 12) ||
       (this.ringing !== null && this.ringing - note.midi >= RING_MIN_STEP && note.midi < RING_BELOW) ||
       this.between(note.midi)
     ) {

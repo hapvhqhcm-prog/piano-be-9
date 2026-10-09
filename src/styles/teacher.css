@@ -86,7 +86,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 4px 14px;
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 700;
   color: var(--muted);
 }
@@ -129,13 +129,13 @@
 .rv-page {
   min-width: 34px;
   text-align: center;
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 800;
   color: var(--muted);
 }
 .rv-turn {
-  width: 44px;
-  height: 34px;
+  width: 48px;
+  height: 44px;
   border: 0;
   border-radius: 12px;
   background: var(--violet-50, #f3f0ff);

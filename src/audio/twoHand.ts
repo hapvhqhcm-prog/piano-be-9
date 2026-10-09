@@ -19,6 +19,7 @@
  * Hàm thuần (không Web Audio) → đo trên giả lập đàn cơ (tests/twoHandBench.test.ts).
  */
 import { analyzeChord, fft, partialHz, type ChordResult } from './chordVerify';
+import type { Tuning } from './pitchDetect';
 
 export type HandName = 'RH' | 'LH';
 
@@ -126,7 +127,7 @@ function spectrum(seg: Float32Array, N: number): Float64Array {
 }
 
 /** Họa âm (tần số) "riêng" của nốt m: không trùng họa âm nào của các nốt `others`. Không có → mọi họa âm. */
-function ownPartials(m: number, others: number[], tuningCents: number, lobeHz: number): number[] {
+function ownPartials(m: number, others: number[], tuningCents: Tuning, lobeHz: number): number[] {
   const tol = (f: number) => f * (Math.pow(2, TOL_CENTS / 1200) - 1);
   const all: number[] = [];
   const own: number[] = [];
@@ -161,7 +162,7 @@ function peakEnergy(mag: Float64Array, df: number, fs: number[], lobeHz: number)
 }
 
 /** Phần năng lượng tăng thêm (sau − trước) rơi vào họa âm (1–8) của các nốt `want`, trong 100–4000 Hz. */
-function explainedNew(post: Float64Array, pre: Float64Array, df: number, want: number[], tuningCents: number, lobeHz: number): number {
+function explainedNew(post: Float64Array, pre: Float64Array, df: number, want: number[], tuningCents: Tuning, lobeHz: number): number {
   const lo = Math.ceil(100 / df);
   const hi = Math.min(post.length - 1, Math.floor(4000 / df));
   const mark = new Uint8Array(hi + 1);
@@ -184,7 +185,7 @@ function explainedNew(post: Float64Array, pre: Float64Array, df: number, want: n
 }
 
 /** Lệch (cents, −100…100) làm "lược" họa âm của nốt m khớp nhất với phổ mag; ±200 nếu khớp ở biên (trôi ra ngoài). */
-function combCents(mag: Float64Array, df: number, m: number, tuningCents: number): number {
+function combCents(mag: Float64Array, df: number, m: number, tuningCents: Tuning): number {
   const fs: number[] = [];
   for (let k = 1; k <= 8; k++) {
     const f = partialHz(m, k, tuningCents);
@@ -219,7 +220,7 @@ function combCents(mag: Float64Array, df: number, m: number, tuningCents: number
  * Cao độ có ĐỨNG YÊN không (dây đàn: có; giọng nói: trượt liên tục): "lược" họa âm của nốt m khớp ở nửa đầu và nửa
  * sau của khung lệch nhau bao nhiêu cents.
  */
-function drift(seg: Float32Array, N: number, df: number, m: number, tuningCents: number, fs: number[], lobeHz: number): { cents: number; grow: number } {
+function drift(seg: Float32Array, N: number, df: number, m: number, tuningCents: Tuning, fs: number[], lobeHz: number): { cents: number; grow: number } {
   const h = Math.floor(seg.length / 2);
   const A = spectrum(seg.subarray(0, h), N);
   const B = spectrum(seg.subarray(h, 2 * h), N);
@@ -228,7 +229,7 @@ function drift(seg: Float32Array, N: number, df: number, m: number, tuningCents:
   return { cents: Math.abs(combCents(B, df, m, tuningCents) - combCents(A, df, m, tuningCents)), grow: ea > 0 ? eb / ea : Infinity };
 }
 
-function partialList(m: number, tuningCents: number, kMax = 8, fMax = 4000): number[] {
+function partialList(m: number, tuningCents: Tuning, kMax = 8, fMax = 4000): number[] {
   const out: number[] = [];
   for (let k = 1; k <= kMax; k++) {
     const f = partialHz(m, k, tuningCents);
@@ -239,7 +240,7 @@ function partialList(m: number, tuningCents: number, kMax = 8, fMax = 4000): num
 }
 
 /** Họa âm bậc k của x có tách khỏi (dung sai + cả búp phổ) mọi họa âm của các nốt `others` không. */
-function isolated(x: number, k: number, others: number[], tuningCents: number, lobeHz: number): boolean {
+function isolated(x: number, k: number, others: number[], tuningCents: Tuning, lobeHz: number): boolean {
   const tol = (f: number) => f * (Math.pow(2, TOL_CENTS / 1200) - 1);
   const f = partialHz(x, k, tuningCents);
   if (f > 4000) return false;
@@ -270,7 +271,7 @@ export function analyzeHands(
   sampleRate: number,
   onsetIdx: number,
   spec: HandsSpec,
-  tuningCents = 0,
+  tuningCents: Tuning = 0,
   late = true,
 ): HandsResult {
   const rh = [...new Set(spec.RH ?? [])];

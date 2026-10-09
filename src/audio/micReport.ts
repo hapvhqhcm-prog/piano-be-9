@@ -1,4 +1,5 @@
 import { gateFor, type Sensitivity } from './micAnalyzer';
+import { describeAutoTune, type AutoTuneStats } from './autoTune';
 import { chooseSensitivity, SENS_NAME, type NoteCheck } from './micTune';
 import { midiToPitch, viName } from '../piano/pitchTable';
 
@@ -658,6 +659,8 @@ export interface ReportEnv {
     forced?: string[];
   } | null;
   tuningCents: number;
+  /** (+ 2026-10-09) Micro tự học lệch dây (autoTune.ts) — MicListener.autoTune.stats() */
+  autoTune?: AutoTuneStats;
   latencyMs: number;
   micEnabled: boolean;
   autoSens: Array<{ at: string; from: string; to: string; missed: number }>;
@@ -766,7 +769,8 @@ export function formatMicReport(ses: MicReportSession, env: ReportEnv, an: MicAn
   const tu = an.tuning;
   L.push(
     `[Lệch dây] ${tu.medianCents === null ? 'chưa đủ nốt rõ' : `trung vị ${sgn(tu.medianCents)}c (n=${tu.n}) → bù đề xuất ${sgn(tu.suggested ?? 0)}c`}` +
-      ` · ${tu.calibrate ? 'NÊN chỉnh theo đàn nhà' : 'không cần chỉnh'}`,
+      ` · ${tu.calibrate ? (env.autoTune?.applied ? 'app đã tự bù khi học' : 'NÊN chỉnh theo đàn nhà') : 'không cần chỉnh'}` +
+      (env.autoTune ? ` · tự học: ${describeAutoTune(env.autoTune)}` : ''),
   );
   const st = env.stats;
   if (st) L.push(`[Phiên micro này] khung ${st.frames} · trễ khung max ${Math.round(st.maxGapMs)}ms (chậm ${st.slowGaps}) · gõ ${st.onsets} · nốt ${st.notes} · suýt ${st.nearMisses}`);
@@ -799,6 +803,7 @@ export function compactData(ses: MicReportSession, env: ReportEnv, an: MicAnalys
     sim: SENS.map((k) => [an.sim[k].soft[0], an.sim[k].all[0], an.sim[k].ghosts]),
     rec: an.recommend,
     tune: an.tuning.medianCents,
+    at: env.autoTune ? [env.autoTune.n, env.autoTune.median, env.autoTune.applied] : null,
     err: env.errors,
   };
   let json = JSON.stringify(full);

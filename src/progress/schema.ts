@@ -2,6 +2,7 @@
  * STORAGE SCHEMA v1 (§7). Các trường có đánh dấu (+) là bổ sung so với ví dụ §7,
  * chỉ THÊM, không đổi nghĩa trường cũ — vẫn schemaVersion = 1.
  */
+import { validAutoTuning, type AutoTuning } from '../audio/autoTune';
 
 export const SCHEMA_VERSION = 1 as const;
 /**
@@ -158,6 +159,11 @@ export interface Settings {
    * (src/audio/twoHand.ts). Không có = mặc định TWO_HAND_DEFAULT.
    */
   micTwoHand?: boolean;
+  /**
+   * (+ 2026-10-09) Micro TỰ HỌC độ lệch dây của đàn nhà theo âm khu (src/audio/autoTune.ts): số đo gần nhất (cent) của
+   * nốt trầm / giữa / cao + giá trị đang áp dụng. Không có = chưa học (dùng micTuningCents). Phụ huynh xóa ở "Cài micro".
+   */
+  micAutoTune?: AutoTuning;
   /** (+ 2026-10-08) ⏰ Giờ tập bố mẹ đặt gần nhất (màn Phụ huynh → tạo lịch nhắc .ics): thứ (0 = CN … 6 = T7) + "HH:MM" */
   reminder?: { days: number[]; time: string };
 }
@@ -475,6 +481,7 @@ export function validateAppData(x: unknown): string[] {
     if (st.backupNudgeHiddenAt !== undefined && !(typeof st.backupNudgeHiddenAt === 'number' && Number.isFinite(st.backupNudgeHiddenAt))) errs.push('settings.backupNudgeHiddenAt');
     // (+ 2026-10-08) quà mở khóa / giờ nhắc tập — chỉ chặn kiểu sai hẳn; giá trị bên trong đọc mềm (lessons/unlocks.ts, reminder.ts)
     if (st.cosmetics !== undefined && !isObj(st.cosmetics)) errs.push('settings.cosmetics');
+    if (st.micAutoTune !== undefined && !validAutoTuning(st.micAutoTune)) errs.push('settings.micAutoTune');
     if (st.reminder !== undefined && !(isObj(st.reminder) && Array.isArray(st.reminder.days) && typeof st.reminder.time === 'string')) errs.push('settings.reminder');
   }
   const p = x.progress;

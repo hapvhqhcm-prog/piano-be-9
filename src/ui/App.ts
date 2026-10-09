@@ -69,6 +69,9 @@ export class App {
       m.saveAutoSens({ at: new Date().toISOString(), ...c });
       toast(`🎤 Micro chưa nghe rõ tiếng đàn khẽ → đã tăng độ nhạy: ${m.SENS_NAME[c.from]} → ${m.SENS_NAME[c.to]}`, 4500);
     });
+    // (+ 2026-10-09) Tự học lệch dây đàn nhà (autoTune.ts): nạp kết quả đã lưu, lưu lại khi có số đo mới
+    mic.loadAutoTune(this.store.settings.micAutoTune);
+    mic.onAutoTune((st) => this.store.updateSettings({ micAutoTune: st }));
     return mic;
   }
 

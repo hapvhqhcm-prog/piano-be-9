@@ -1,4 +1,4 @@
-import { DEFAULT_DETECT, NoteTracker, detectPitch, type DetectOptions, type HeardNote, type PitchResult } from './pitchDetect';
+import { DEFAULT_DETECT, NoteTracker, detectPitch, freqToMidi, type DetectOptions, type HeardNote, type PitchResult } from './pitchDetect';
 
 /**
  * Bộ phân tích micro THUẦN (không phụ thuộc Web Audio) — MicListener gọi mỗi khung;
@@ -181,6 +181,10 @@ export class MicAnalyzer {
   private detectFor: DetectOptions | null = null;
   private detectNoGate: DetectOptions = DEFAULT_DETECT;
   tuningCents = 0;
+  /**
+   * (+ 2026-10-09) Độ lệch dây TỰ HỌC theo nốt (cent, theo MIDI số thực — autoTune.ts); null = dùng `tuningCents`.
+   */
+  tuningAt: ((midi: number) => number) | null = null;
   sensitivity: Sensitivity = 'normal';
 
   constructor(public detect: DetectOptions = DEFAULT_DETECT) {}
@@ -315,7 +319,9 @@ export class MicAnalyzer {
     // Khung có cao độ rõ hoặc có lần gõ = tiếng đàn → KHÔNG được coi là ồn nền
     this.updateFloor(r, !onset && !(pitch && pitch.clarity >= 0.5));
     // "Im" khi dưới 0,8 × ngưỡng (trễ): nốt khẽ dao động quanh ngưỡng không bị coi là im rồi báo lại lần nữa
-    const note = this.tracker.push(pitch, this.tuningCents, onset, r, gate * SILENCE_HYST);
+    // Bù lệch dây: tự học theo âm khu (autoTune.ts) nếu có, không thì số bù tay (Cài đặt)
+    const tc = pitch && this.tuningAt ? this.tuningAt(freqToMidi(pitch.freq)) : this.tuningCents;
+    const note = this.tracker.push(pitch, tc, onset, r, gate * SILENCE_HYST);
     if (note) this.warm = false; // bé đã đàn → thôi "làm quen phòng"
     if (note) note.at = this.lastOnsetAt >= 0 && t - this.lastOnsetAt < 0.5 ? this.lastOnsetAt : t - 0.07;
     const res = this.result(pitch, level, r, gate, note, onset, onsetAt);

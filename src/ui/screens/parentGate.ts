@@ -31,7 +31,7 @@ export function parentGateScreen(app: App) {
     let answer = 0;
     let entry = '';
     const q = h('div', { class: 'gate-q' });
-    const display = h('div', { class: 'gate-display' });
+    const display = h('div', { class: 'gate-display', 'aria-live': 'polite' });
     const newQuestion = () => {
       const g = gateQuestion();
       answer = g.answer;
@@ -67,7 +67,7 @@ export function parentGateScreen(app: App) {
               'div',
               { class: 'keypad' },
               ...keys.map((k) =>
-                h('button', { class: `key-btn${k === 'OK' ? ' key-ok' : ''}`, type: 'button', onClick: () => press(k) }, k),
+                h('button', { class: `key-btn${k === 'OK' ? ' key-ok' : ''}`, type: 'button', 'aria-label': k === '⌫' ? 'Xóa' : undefined, onClick: () => press(k) }, k),
               ),
             ),
           ),

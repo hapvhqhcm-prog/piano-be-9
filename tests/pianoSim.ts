@@ -34,6 +34,13 @@ export interface SimOptions {
   reverb?: number;
   /** Lệch dây toàn đàn (cents) — đàn lâu không lên dây */
   detuneCents?: number;
+  /**
+   * (+ 2026-10-09) "Giãn dây" theo nốt (cents, cộng thêm vào detuneCents) — đàn thật: dây cao lên cao hơn, dây trầm
+   * thấp hơn một chút. Xem `stretch()`.
+   */
+  stretchCents?: (midi: number) => number;
+  /** (+ 2026-10-09) Nhân hệ số lệch họa âm B (mặc định 1: B = 0,0012 dưới Sol3, 0,0005 từ Sol3) — đàn đứng nhỏ: 2 */
+  inharm?: number;
   /** Bé chưa nhả phím cũ đã bấm phím mới: nốt cũ ngân thêm (giây) */
   legato?: number;
   /** Tần số lấy mẫu (mặc định 48 kHz; iPad cũ / tai nghe có thể 44,1 kHz) */
@@ -62,6 +69,14 @@ export interface SimOptions {
   nsTau?: number;
 }
 
+/**
+ * Giãn dây kiểu đàn thật: 0 ở Đô4–Đô5, tuyến tính tới `lowC3` cent ở Đô3 (48) và `highC6` cent ở Đô6 (84), tiếp tục
+ * cùng độ dốc ra ngoài.
+ */
+export function stretch(lowC3: number, highC6: number): (midi: number) => number {
+  return (m) => (m < 60 ? (lowC3 * (60 - m)) / 12 : m > 72 ? (highC6 * (m - 72)) / 12 : 0);
+}
+
 export function renderPiano(notes: SimNote[], seconds: number, o: SimOptions = {}): Float32Array {
   const SR = o.sampleRate ?? SIM_RATE_DEFAULT;
   const n = Math.floor(seconds * SR);
@@ -69,11 +84,11 @@ export function renderPiano(notes: SimNote[], seconds: number, o: SimOptions = {
   const r = rng(o.seed ?? 7);
   const gain = o.gain ?? 0.25;
   for (const note of notes) {
-    const f0 = 440 * Math.pow(2, (note.midi - 69 + (o.detuneCents ?? 0) / 100) / 12);
+    const f0 = 440 * Math.pow(2, (note.midi - 69 + ((o.detuneCents ?? 0) + (o.stretchCents?.(note.midi) ?? 0)) / 100) / 12);
     const strs = o.strings ? (note.midi < 48 ? [0] : note.midi < 55 ? [-1.5, 1.5] : [-2, 0.5, 2.5]) : [0];
     const held = note.dur + (o.legato ?? 0);
     const vel = note.vel ?? 0.8;
-    const B = note.midi < 55 ? 0.0012 : 0.0005;
+    const B = (note.midi < 55 ? 0.0012 : 0.0005) * (o.inharm ?? 1);
     // Nốt trầm: âm cơ bản yếu, họa âm bậc 2 mạnh hơn
     const low = note.midi < 55;
     const amps = low ? [0.25, 1, 0.7, 0.5, 0.35, 0.25, 0.15, 0.1] : [1, 0.6, 0.35, 0.2, 0.12, 0.08, 0.05, 0.03];

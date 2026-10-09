@@ -303,7 +303,7 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
             'div',
             { class: 'mic-row' },
             h('div', { class: 'mic-level' }, h('span', { class: 'mic-level-bar' })),
-            h('div', { class: 'mic-hint', dataset: { kind: 'listen' } }, '🎤 Nghe mẫu xong rồi con đàn nhé'),
+            h('div', { class: 'mic-hint', role: 'status', 'aria-live': 'polite', dataset: { kind: 'listen' } }, '🎤 Nghe mẫu xong rồi con đàn nhé'),
           )
         : null;
 
@@ -640,6 +640,13 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
       }
     }
 
+    // (+ 2026-10-09) Micro tự học lệch dây đàn nhà (autoTune.ts): chỉ từ nốt đơn app đang chờ
+    app.mic.expected = () => {
+      if (sm.snapshot.state !== 'WAIT_PARENT' || speechBusy() || parentStep === sm.snapshot.index) return null;
+      const t = target();
+      const k = t.sequence ? t.keys[seqPos] : t.keys.length === 1 ? t.keys[0] : undefined;
+      return k ? [pitchToMidi(k)] : null;
+    };
     // Micro nghe được một nốt trên đàn cơ
     const unNote = app.mic.onNote((n) => {
       if (sm.snapshot.state !== 'WAIT_PARENT') return;
@@ -774,6 +781,7 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
       cancelSpeech();
       unsub();
       unNote();
+      app.mic.expected = null;
       unFrame();
       honesty.dispose();
       demo?.cancel();

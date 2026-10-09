@@ -14,6 +14,7 @@ import { APP_VERSION } from '../../pwa/updater';
 import { readErrors } from '../../pwa/errorLog';
 import { isStandalone } from '../../progress/backup';
 import { SENS_NAME } from '../../audio/micTune';
+import { describeAutoTune } from '../../audio/autoTune';
 import { lazy, lazyScreen } from '../lazy';
 
 const diagnosticsMod = lazy(() => import('./diagnostics'));
@@ -113,6 +114,7 @@ export function buildMicLog(app: App, { steps, freeLog, lastFrame, autoTune }: M
     ctxState: ctx?.state ?? null,
     audioSession: (navigator as unknown as { audioSession?: { type?: string } }).audioSession?.type ?? null,
     tuningCents: store.settings.micTuningCents,
+    autoTuning: app.mic.autoTune.stats(),
     sensitivity: store.settings.micSensitivity,
     latencyMs: store.settings.micLatencyMs,
     outputLatency: app.audio.outputLatency,
@@ -276,7 +278,9 @@ export function micTestScreen(app: App) {
 
     const showTuning = () => {
       const c = store.settings.micTuningCents;
-      tuning.textContent = `Đang bù cho đàn nhà: ${c > 0 ? '+' : ''}${c} cent (100 cent = nửa cung)`;
+      tuning.textContent =
+        `Đang bù cho đàn nhà: ${c > 0 ? '+' : ''}${c} cent (100 cent = nửa cung)` +
+        ` · Tự học khi bé đàn đúng: ${describeAutoTune(app.mic.autoTune.stats())}`;
     };
 
     const sensBox = h('div', { class: 'seg' });
@@ -723,6 +727,7 @@ export function micTestScreen(app: App) {
         ctx: ctx ? { state: String(ctx.state), sampleRate: ctx.sampleRate, baseLatency: num(ctx.baseLatency), outputLatency: num(ctx.outputLatency) } : null,
         track: app.mic.trackInfo(),
         tuningCents: store.settings.micTuningCents,
+        autoTune: app.mic.autoTune.stats(),
         latencyMs: store.settings.micLatencyMs,
         micEnabled: store.settings.micEnabled,
         autoSens: loadAutoSens(),
@@ -975,6 +980,17 @@ export function micTestScreen(app: App) {
             showKb();
             calib.textContent = '';
             showTuning();
+          },
+        }),
+        button({
+          icon: '🧹',
+          label: 'Học lại lệch dây',
+          onTap: () => {
+            // (+ 2026-10-09) Xóa kết quả tự học (vd vừa lên dây đàn / đổi đàn) — app học lại từ các nốt bé đàn đúng
+            app.mic.loadAutoTune(null);
+            store.updateSettings({ micAutoTune: undefined });
+            showTuning();
+            toast('🧹 Đã xóa — micro sẽ tự học lại độ lệch dây khi bé đàn', 3000);
           },
         }),
       ),

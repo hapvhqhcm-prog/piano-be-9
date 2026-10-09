@@ -73,7 +73,7 @@ export function freePlayScreen(app: App) {
     let echo: { seq: Pitch[]; pos: number; listening: boolean } | null = null;
     let echoLen = ECHO_START;
     let token = 0;
-    const echoMsg = h('div', { class: 'echo-msg' });
+    const echoMsg = h('div', { class: 'echo-msg', role: 'status', 'aria-live': 'polite' });
     const echoMascot = h('div', { class: 'echo-mascot' }, mascot('wave', 56));
     const setMascot = (m: Parameters<typeof mascot>[0], cls = '') => {
       echoMascot.className = `echo-mascot ${cls}`;

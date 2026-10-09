@@ -29,18 +29,29 @@ function storage(): KeyValueStorage {
   }
 }
 
-/** Chặn zoom/cuộn/chọn chữ ngoài ý muốn trên iPad (§3 Touch). */
+/**
+ * Chặn cuộn/chọn chữ/zoom chạm-đúp ngoài ý muốn trên iPad (§3 Touch).
+ * (2026-10-09, trợ năng) VẪN cho phóng to bằng 2 ngón (pinch) ở mọi nơi TRỪ trên bàn phím đàn — bàn phím có
+ * touch-action: none và chặn cử chỉ ở đây để bấm nhiều ngón không làm màn hình phóng to.
+ */
 function installTouchGuards(): void {
+  const onKeyboard = (e: Event) => !!(e.target as Element | null)?.closest?.('.keyboard');
   document.addEventListener(
     'touchmove',
     (e) => {
-      if (!(e.target as Element | null)?.closest?.('.scrollable')) e.preventDefault();
+      const t = e.target as Element | null;
+      if (t?.closest?.('.scrollable')) return;
+      if (e.touches.length > 1 && !onKeyboard(e)) return; // pinch-zoom
+      e.preventDefault();
     },
     { passive: false },
   );
-  for (const ev of ['gesturestart', 'gesturechange', 'gestureend', 'dblclick']) {
-    document.addEventListener(ev, (e) => e.preventDefault(), { passive: false });
+  for (const ev of ['gesturestart', 'gesturechange', 'gestureend']) {
+    document.addEventListener(ev, (e) => {
+      if (onKeyboard(e)) e.preventDefault();
+    }, { passive: false });
   }
+  document.addEventListener('dblclick', (e) => e.preventDefault(), { passive: false });
   document.addEventListener('contextmenu', (e) => {
     if (!(e.target as Element | null)?.closest?.('input, textarea')) e.preventDefault();
   });

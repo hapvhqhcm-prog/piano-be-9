@@ -10,6 +10,7 @@
  * outputLatency; danh sách giọng nạp ngầm — chờ tối đa 1,5 giây). Logic thuần: src/pwa/diagnostics.ts.
  */
 import { loadAutoSens, loadMicLog, loadMicReport } from '../../audio/micLogStore';
+import { TuningEstimator, describeAutoTune } from '../../audio/autoTune';
 import { cancelSpeech } from '../../audio/voice';
 import { buildSessionPlan, weekPlan } from '../../lessons/lessonEngine';
 import { isStandalone } from '../../progress/backup';
@@ -140,6 +141,7 @@ export function diagnosticsScreen(app: App) {
         enabled: st.micEnabled,
         sensitivity: st.micSensitivity,
         tuningCents: st.micTuningCents,
+        autoTune: safe(() => describeAutoTune(new TuningEstimator(st.micAutoTune).stats()), undefined),
         latencyMs: st.micLatencyMs,
         lastCheck: safe(() => micCheckFromLog(loadMicLog()), null),
         autoSens: safe(() => loadAutoSens().slice(-1)[0] ?? null, null),

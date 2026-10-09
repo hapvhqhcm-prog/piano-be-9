@@ -3,7 +3,8 @@ import { analyzeChord, CHORD_FRAME, CHORD_READY_AFTER, type ChordResult } from '
 import { analyzeHands, HANDS_LATE_READY, HANDS_READY_AFTER, type HandsResult, type HandsSpec } from './twoHand';
 import { MicAnalyzer, type AppSound, type Sensitivity } from './micAnalyzer';
 import { SensitivityAdvisor, type AutoSensChange } from './micAutoSens';
-import type { HeardNote, PitchResult } from './pitchDetect';
+import type { HeardNote, PitchResult, Tuning } from './pitchDetect';
+import { TuningEstimator, TuningLearner, type AutoTuning } from './autoTune';
 
 /**
  * Micro nghe đàn cơ (OWNER mở khóa ARCHITECTURE LOCK ngày 2026-10-04).
@@ -109,6 +110,9 @@ export function readTrackInfo(track: MediaStreamTrack | undefined, fallback: boo
   return info;
 }
 
+/** Lưu kết quả tự học lệch dây sau mỗi bấy nhiêu số đo mới (đỡ ghi bộ nhớ mỗi nốt). */
+export const AUTO_TUNE_SAVE_EVERY = 4;
+
 /** Số mẫu lấy làm "chữ ký" để nhận ra bộ đệm y hệt khung trước. */
 const PROBES = 8;
 /** Khung phân tích cao độ / gõ phím (mẫu) — MicAnalyzer luôn nhận 2048 mẫu gần nhất. */
@@ -186,12 +190,52 @@ export class MicListener {
   /** Đồng hồ (ms) cho watchdog — tiêm vào để test; KHÔNG dùng ctx.currentTime vì nó đứng yên khi bị ngắt. */
   clock: () => number = () => Date.now();
 
-  /** Bù độ lệch dây của đàn nhà (cents), lấy từ Cài đặt. */
+  /** Bù độ lệch dây của đàn nhà (cents) — BÙ TAY, lấy từ Cài đặt (dùng khi chưa tự học đủ). */
   get tuningCents(): number {
     return this.analyzer.tuningCents;
   }
   set tuningCents(c: number) {
     this.analyzer.tuningCents = c;
+  }
+
+  /**
+   * (+ 2026-10-09) TỰ HỌC độ lệch dây (autoTune.ts) từ các nốt chắc chắn đúng trong buổi học. App nạp từ Cài đặt
+   * (settings.micAutoTune) và lưu lại khi có thay đổi (onAutoTune).
+   */
+  readonly autoTune = new TuningEstimator();
+  private learner = new TuningLearner(this.autoTune);
+  private autoTuneListeners = new Set<(st: AutoTuning, applied: boolean) => void>();
+  /** Số đo mới chưa lưu (lưu mỗi AUTO_TUNE_SAVE_EVERY nốt hoặc khi giá trị áp dụng đổi) */
+  private autoTuneUnsaved = 0;
+  /** Tắt tự học (vd màn "Cài micro" đang đo — có bài kiểm tra riêng) */
+  autoTuneEnabled = true;
+  /**
+   * Màn hình cho biết nốt đang chờ (MIDI, từng nốt đơn — hợp âm / không chờ gì: null). Chỉ gọi khi micro vừa nghe ra
+   * nốt (`note.at` = lúc gõ — để màn theo nhịp tìm phách). Không đặt = không tự học (vd màn hát, trò chơi tự do).
+   */
+  expected: ((note: HeardNote) => readonly number[] | null) | null = null;
+
+  /** Nạp kết quả tự học đã lưu (Cài đặt) — null = xóa (phụ huynh bấm "Học lại"). */
+  loadAutoTune(st: AutoTuning | null | undefined): void {
+    this.autoTune.load(st);
+    this.learner.cancel();
+    this.autoTuneUnsaved = 0;
+    this.applyTuning();
+  }
+
+  /** Kết quả tự học thay đổi (cần lưu): `applied` = giá trị đang áp dụng vừa đổi. */
+  onAutoTune(fn: (st: AutoTuning, applied: boolean) => void): () => void {
+    this.autoTuneListeners.add(fn);
+    return () => this.autoTuneListeners.delete(fn);
+  }
+
+  private applyTuning(): void {
+    this.analyzer.tuningAt = this.autoTune.map();
+  }
+
+  /** Bù lệch dây đang dùng (tự học theo âm khu nếu đã đủ, không thì bù tay) — cho kiểm tra hợp âm / hai tay. */
+  get effectiveTuning(): Tuning {
+    return this.autoTune.map() ?? this.tuningCents;
   }
   get sensitivity(): Sensitivity {
     return this.analyzer.sensitivity;
@@ -341,7 +385,7 @@ export class MicListener {
       const onsetIdx = buf.length - Math.round((now - rq.onsetAt) * sr);
       let r: HandsResult | null = null;
       try {
-        r = analyzeHands(buf, sr, onsetIdx, rq.spec, this.tuningCents, rq.late);
+        r = analyzeHands(buf, sr, onsetIdx, rq.spec, this.effectiveTuning, rq.late);
         if (this.audio.isSounding) r.conclusive = false;
       } catch {
         r = null;
@@ -368,7 +412,7 @@ export class MicListener {
       start = Math.max(0, Math.min(buf.length - len, start));
       let r: ChordResult | null = null;
       try {
-        r = analyzeChord(buf.subarray(start, start + len), sr, rq.midis, this.tuningCents);
+        r = analyzeChord(buf.subarray(start, start + len), sr, rq.midis, this.effectiveTuning);
         // App đang phát tiếng (âm mẫu…) → micro nghe cả tiếng app → không kết luận
         if (this.audio.isSounding) r.conclusive = false;
       } catch {
@@ -483,6 +527,7 @@ export class MicListener {
     this.source.connect(this.analyser);
     this.analyzer.reset(false);
     this.advisor.reset();
+    this.learner.cancel();
     this._stats = MicListener.emptyStats();
     this.lastTickAt = -1;
     this.lastOnsetAt = -1;
@@ -584,6 +629,7 @@ export class MicListener {
       const frame: MicFrame = { pitch: f.pitch, level: f.level, rms: f.rms, floor: f.floor, gate: f.gate, onset: f.onset, app, nearMiss: f.nearMiss };
       this.frameListeners.forEach((fn) => fn(frame));
     }
+    this.learnTuning(f, app);
     if (f.note) {
       const n = f.note;
       st.notes++;
@@ -600,6 +646,31 @@ export class MicListener {
         this.sensitivity = c.to;
         this.autoSensListeners.forEach((fn) => fn(c));
       }
+    }
+  }
+
+  /** Tự học lệch dây từ khung này (chỉ khi app im, không đọc to, màn hình đang chờ nốt). */
+  private learnTuning(f: { pitch: PitchResult | null; note: HeardNote | null; onset: boolean }, app: AppSound): void {
+    if (!this.autoTuneEnabled || app !== 'quiet' || this.externalBusy()) {
+      this.learner.cancel();
+      return;
+    }
+    let exp: readonly number[] | null = null;
+    if (f.note) {
+      try {
+        exp = this.expected?.(f.note) ?? null;
+      } catch {
+        exp = null;
+      }
+    }
+    const before = this.autoTune.accepted;
+    const changed = this.learner.frame(f.pitch, f.note, f.onset, exp);
+    if (changed) this.applyTuning();
+    if (this.autoTune.accepted !== before) this.autoTuneUnsaved++;
+    if (changed || this.autoTuneUnsaved >= AUTO_TUNE_SAVE_EVERY) {
+      this.autoTuneUnsaved = 0;
+      const st = this.autoTune.state;
+      this.autoTuneListeners.forEach((fn) => fn(st, changed));
     }
   }
 

@@ -219,7 +219,7 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
       },
     });
     const staffBox = h('div', { class: `song-staff${full.lh ? ' grand' : ''}` });
-    const status = h('div', { class: 'song-status' });
+    const status = h('div', { class: 'song-status', role: 'status', 'aria-live': 'polite' });
     const bar = h('div', { class: 'actions' });
     const screenEl = h('div', { class: 'screen' }, head.el, staffBox, status, h('div', { class: `keyboard-wrap song-kb${full.lh ? ' short' : ''}` }, kb.el), bar);
     root.append(screenEl);
@@ -243,6 +243,8 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
     const handsLine = (r: TwoHandRun): string => ` · 🫱 tay phải ${r.RH.hits}/${r.RH.total} · 🫲 tay trái ${r.LH.hits}/${r.LH.total}`;
     /** Bỏ nghe micro của lượt "theo nhịp" đang chạy (gọi khi dừng / rời màn) */
     let unTempo: () => void = () => undefined;
+    /** (+ 2026-10-09) Lượt "theo nhịp" đang chạy: nốt đơn quanh phách của lần gõ — cho micro tự học lệch dây */
+    let tempoExpect: ((at: number) => number[]) | null = null;
     const setBar = (...b: (HTMLElement | null | false)[]) =>
       bar.replaceChildren(...b.filter((x): x is HTMLElement => !!x));
 
@@ -744,7 +746,11 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
             });
           })
         : () => undefined;
-      unTempo = () => (unNote(), unOnset());
+      tempoExpect = (at) => {
+        const beat = (at - outLat - t0) / spb;
+        return gs.filter((g) => Math.abs(g.start - beat) <= 1).map(midisOf).filter((ms) => ms.length === 1).map((ms) => ms[0]);
+      };
+      unTempo = () => (unNote(), unOnset(), (tempoExpect = null));
       app.mic.resetTracker();
       const countEl = h('div', { class: 'countin' });
       // Đếm to theo phần đếm vào: "1 – 2 – 3 – 4"
@@ -1142,6 +1148,16 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
       } else if (g && midisOf(g).length >= 2) onWaitChord(n.midi, n.at ?? -1);
       else onWaitInput(n.midi, 'mic');
     });
+    // (+ 2026-10-09) Micro tự học lệch dây đàn nhà (autoTune.ts): chỉ từ nốt đơn app đang chờ
+    app.mic.expected = (n) => {
+      if (state !== 'playing' || parentRun) return null;
+      if (mode === 'wait') {
+        const g = groups()[wIdx];
+        const ms = g ? midisOf(g) : [];
+        return ms.length === 1 ? ms : null;
+      }
+      return tempoExpect && n.at !== undefined ? tempoExpect(n.at) : null;
+    };
     // (+ 2026-10-09) Chấm hai tay (chế độ chờ): mỗi lần gõ phím ở nhóm hai tay → kiểm tra từng tay
     const unWaitOnset = app.mic.onOnset((at) => {
       if (state !== 'playing' || mode !== 'wait' || parentRun || !handsOn()) return;
@@ -1282,6 +1298,7 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
       halt();
       unWaitNote();
       unWaitOnset();
+      app.mic.expected = null;
       honesty.dispose();
       overlay.destroy();
       kb.destroy();

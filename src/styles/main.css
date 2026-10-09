@@ -317,13 +317,6 @@ p {
   gap: 8px;
   color: var(--ink);
 }
-.chip-next {
-  border-color: var(--primary);
-}
-.chip-done {
-  color: var(--good);
-  font-weight: 800;
-}
 .home-row {
   display: flex;
   gap: 24px;
@@ -587,9 +580,6 @@ p {
 .hand .finger.on text {
   fill: var(--ink);
 }
-.hand.has-finger .finger:not(.on) {
-  opacity: 0.85;
-}
 
 /* ---------- Micro nghe đàn ---------- */
 .mic-row {
@@ -698,10 +688,10 @@ p {
 .scrollable {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;
+  touch-action: pan-y pinch-zoom;
 }
 .scrollable * {
-  touch-action: pan-y;
+  touch-action: pan-y pinch-zoom;
 }
 .parent {
   flex: 1;

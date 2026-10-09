@@ -18,7 +18,7 @@
   --sun-300: #ffd96a;
   --sun-400: #ffcb3d;
   --sun-600: #f0a81c;
-  --sun-800: #8a5a00; /* chữ trên nền vàng 6:1 */
+  --sun-800: #6e4700; /* chữ trên nền vàng — 5.4:1 cả trên --sun-400 (trước #8a5a00 chỉ 3.9:1) */
   --mint-50: #e7f9f0;
   --mint-100: #c8f1dc;
   --mint-400: #3ccf88;
@@ -41,7 +41,7 @@
   /* --- Chữ & bề mặt --- */
   --ink: #2c2752; /* 13:1 trên trắng */
   --ink-2: #5b5680; /* chữ phụ — 6.4:1 trên trắng */
-  --ink-3: #8c88a8; /* chỉ dùng cho chữ lớn / trang trí */
+  --ink-3: #6f6b93; /* chữ nhạt nhất — vẫn ≥ 4.5:1 trên trắng/cát (trước #8c88a8 = 3.4:1) */
   --surface: #ffffff;
   --surface-2: #f8f7ff;
   --line: #e7e3f6;
@@ -210,16 +210,27 @@ h3,
     0 2px 6px var(--btn-glow);
 }
 .btn:disabled {
-  opacity: 0.38;
+  opacity: 0.5; /* (a11y) 0.38 → chữ gần như không đọc được; vẫn rõ là "chưa bấm được" nhờ saturate + mất bóng */
   filter: saturate(0.6);
   box-shadow: 0 3px 0 var(--btn-edge);
 }
+/* Vòng focus (bàn phím ngoài / Switch Control): MỌI thứ bấm được, không chỉ .btn. Tím đậm (≥ 6:1 trên nền sáng) —
+   trước đây vàng nắng #ffcb3d chỉ ~1.5:1 trên nền trắng/cát, gần như không thấy. */
 .btn:focus-visible,
 .chip:focus-visible,
 .lesson-row:focus-visible,
 .seg-btn:focus-visible,
-.song-card:focus-visible {
-  outline: 4px solid var(--sun-400);
+.song-card:focus-visible,
+button:focus-visible,
+[role='button']:focus-visible,
+[tabindex]:not([tabindex='-1']):focus-visible,
+a:focus-visible,
+summary:focus-visible,
+select:focus-visible,
+input[type='checkbox']:focus-visible,
+input[type='radio']:focus-visible,
+input[type='range']:focus-visible {
+  outline: 4px solid var(--violet-600);
   outline-offset: 3px;
 }
 .btn-icon {
@@ -235,9 +246,10 @@ h3,
   text-shadow: 0 1px 0 rgba(40, 30, 110, 0.35);
 }
 .btn-good {
-  --btn-bg: #3fcf89;
-  --btn-bg2: var(--mint-600);
-  --btn-edge: var(--mint-700);
+  /* (a11y 2026-10-09) đậm hơn để chữ trắng ≥ 3.6:1 (trước #3fcf89 → mint-600: 2:1 ở nửa trên) */
+  --btn-bg: var(--mint-600);
+  --btn-bg2: var(--mint-700);
+  --btn-edge: var(--mint-800);
   --btn-ink: #fff;
   --btn-glow: rgba(26, 154, 90, 0.3);
   text-shadow: 0 1px 0 rgba(10, 70, 40, 0.35);
@@ -366,16 +378,6 @@ h3,
 }
 .chip:active {
   transform: scale(0.96);
-}
-.chip-next {
-  background: var(--violet-50);
-  box-shadow:
-    inset 0 0 0 3px var(--violet-500),
-    0 4px 12px rgba(91, 84, 214, 0.22);
-}
-.chip-done {
-  color: var(--mint-600);
-  font-weight: 800;
 }
 
 /* ---------- Nhãn nhỏ ---------- */
@@ -659,7 +661,7 @@ h3,
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 150;
+  z-index: 192; /* trên hộp thoại (190) — pháo giấy của hộp "Quà mới" không bị nền mờ che */
   overflow: hidden;
 }
 .confetti i {
@@ -765,7 +767,7 @@ h3,
   position: fixed;
   left: 50%;
   bottom: calc(118px + env(safe-area-inset-bottom));
-  z-index: 180;
+  z-index: 195; /* trên hộp thoại (190) & pháo giấy (192), dưới lớp "Xoay iPad" (200) */
   max-width: min(720px, 90vw);
   padding: 14px 28px;
   border-radius: 999px;
@@ -806,10 +808,10 @@ h3,
   max-width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  touch-action: pan-x pan-y;
+  touch-action: pan-x pan-y pinch-zoom;
 }
 .scrollable .tbl-wrap * {
-  touch-action: pan-x pan-y;
+  touch-action: pan-x pan-y pinch-zoom;
 }
 
 /* ---- v4: Sắc thái (p / mf / f), chấm ngắt tiếng, dấu luyến trên khuông ---- */
@@ -2128,7 +2130,7 @@ h3,
 .song-card-week {
   align-self: flex-start;
   margin-top: auto;
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 800;
   color: var(--violet-600);
   background: var(--violet-50);
@@ -2242,7 +2244,7 @@ h3,
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
   background: rgba(44, 39, 82, 0.38);
   -webkit-backdrop-filter: blur(3px);
   backdrop-filter: blur(3px);
@@ -2429,7 +2431,7 @@ h3,
   justify-content: center;
   gap: 18px;
   padding: 4px 28px 0;
-  touch-action: pan-y;
+  touch-action: pan-y pinch-zoom;
   user-select: none;
   -webkit-user-select: none;
 }
@@ -2628,7 +2630,7 @@ h3,
   font-size: 30px;
 }
 .onb-mock-btn.good {
-  background: linear-gradient(180deg, #3fcf89, var(--mint-600));
+  background: linear-gradient(180deg, var(--mint-600), var(--mint-700));
   color: #fff;
   box-shadow:
     0 5px 0 var(--mint-700),
@@ -2760,7 +2762,7 @@ h3,
   filter: drop-shadow(0 4px 6px rgba(44, 39, 82, 0.14));
 }
 .sticker-name {
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 700;
   line-height: 1.15;
   text-align: center;
@@ -2768,7 +2770,7 @@ h3,
 }
 .sticker-cell.locked .sticker-name {
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 17px;
   font-weight: 700;
   color: var(--ink-2);
 }
@@ -2885,8 +2887,11 @@ h3,
    UX 2026-10-05: giọng đọc · chữ P/T cho hai tay · lời khen đúng mức · việc cần làm cho bố mẹ
    ========================================================= */
 
-/* ---------- Chữ P (phải) / T (trái): không chỉ dựa vào màu ---------- */
-.hand-tag {
+/* ---------- Chữ P (phải) / T (trái): không chỉ dựa vào màu ----------
+   (2026-10-09) chỉ áp cho chip P/T (practice.ts) — trước đây `.hand-tag` trùng tên với nhãn trên đầu bài hát
+   (songHead.ts: "🫱 tay phải", "Câu 2", "🔁 ôn bài cũ") khiến các nhãn đó bị thu còn 12px chữ trắng. */
+.hand-tag-rh,
+.hand-tag-lh {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -3541,7 +3546,7 @@ h3,
   line-height: 1;
 }
 .iv-rh-sub {
-  font-size: 15px;
+  font-size: 18px;
   color: var(--ink-2);
 }
 .iv-empty {

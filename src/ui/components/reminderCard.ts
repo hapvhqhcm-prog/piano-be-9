@@ -52,6 +52,7 @@ export function reminderCard(app: App): HTMLElement {
       {
         class: `rem-day${chosen.has(d) ? ' on' : ''}`,
         type: 'button',
+        'aria-label': d === 0 ? 'Chủ nhật' : `Thứ ${d + 1}`,
         'aria-pressed': String(chosen.has(d)),
         onClick: () => {
           if (chosen.has(d)) chosen.delete(d);

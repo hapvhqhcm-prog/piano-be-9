@@ -145,6 +145,8 @@ export interface DiagSnapshot {
     enabled: boolean;
     sensitivity: string;
     tuningCents: number;
+    /** (+ 2026-10-09) Micro tự học lệch dây (autoTune.describeAutoTune) */
+    autoTune?: string;
     latencyMs: number;
     lastCheck: { ok: number; total: number; at: string } | null;
     /** Lần gần nhất micro TỰ tăng độ nhạy trong buổi học (micAutoSens.ts) */
@@ -433,6 +435,14 @@ function micRows(s: DiagSnapshot): DiagRow[] {
       (m.latencyMs > 0 ? `độ trễ đã đo ${m.latencyMs} ms` : 'chưa đo độ trễ'),
     explain: 'Số liệu cho người hỗ trợ (bài kiểm tra 5 nốt tự chỉnh).',
   });
+  if (m.autoTune)
+    rows.push({
+      id: 'autotune',
+      label: 'Lệch dây (tự học)',
+      status: 'info',
+      value: m.autoTune,
+      explain: 'Micro tự học độ lệch dây của đàn nhà từ các nốt bé đàn đúng (trầm / giữa / cao). Xóa ở "Cài micro" → "Học lại lệch dây".',
+    });
   const c = m.lastCheck;
   if (!c)
     rows.push({

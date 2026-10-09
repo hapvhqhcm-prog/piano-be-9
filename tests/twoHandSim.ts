@@ -11,6 +11,7 @@ import { MicAnalyzer } from '../src/audio/micAnalyzer';
 import { analyzeChord, CHORD_FRAME } from '../src/audio/chordVerify';
 import { matchHeard } from '../src/audio/match';
 import { analyzeHands, type HandsResult } from '../src/audio/twoHand';
+import { centsAt, type Tuning } from '../src/audio/pitchDetect';
 import { gradeHandsTempo, type HandNoteResult, type HandsProbe } from '../src/music/handGrade';
 import { gradeTiming, TIMING_WINDOWS } from '../src/music/timing';
 import { handOnsets, totalBeats, type Tune } from '../src/music/tune';
@@ -31,6 +32,8 @@ export interface HandCond {
   every?: number;
   seed: number;
   sim?: SimOptions;
+  /** (+ 2026-10-09) Bù lệch dây cho bộ nhận nốt + kiểm tra hai tay (số = bù tay; hàm = tự học theo âm khu) */
+  tuning?: Tuning;
 }
 
 function rng(seed: number) {
@@ -136,6 +139,9 @@ export async function simulateHands(t: Tune, c: HandCond, bpmOverride?: number):
   await tick();
   // ---- lần gõ (như MicListener) + nốt YIN (cho chấm cũ) ----
   const an = new MicAnalyzer();
+  const tun = c.tuning ?? 0;
+  if (typeof tun === 'function') an.tuningAt = (m) => centsAt(tun, m);
+  else an.tuningCents = tun;
   const hop = Math.round(0.025 * sr);
   const onsets: number[] = [];
   const heard: Array<{ beat: number; midi: number; at: number }> = [];
@@ -163,7 +169,7 @@ export async function simulateHands(t: Tune, c: HandCond, bpmOverride?: number):
       const d = beat - g.beat;
       if (d < -win.early || d > win.late) continue;
       const spec = Object.fromEntries(g.parts.map((p) => [p.hand, p.midis]));
-      const res = analyzeHands(sig, sr, Math.round(on * sr), spec);
+      const res = analyzeHands(sig, sr, Math.round(on * sr), spec, tun);
       const pr: HandsProbe = {
         beat,
         conclusive: res.conclusive,
@@ -188,10 +194,10 @@ export async function simulateHands(t: Tune, c: HandCond, bpmOverride?: number):
       continue;
     }
     const spec = Object.fromEntries(g.parts.map((p) => [p.hand, p.midis]));
-    let res = analyzeHands(sig, sr, Math.round(on * sr), spec, 0, false);
+    let res = analyzeHands(sig, sr, Math.round(on * sr), spec, tun, false);
     let latency = 0.16;
     if (!(res.RH?.verdict === 'hit' && res.LH?.verdict === 'hit')) {
-      res = analyzeHands(sig, sr, Math.round(on * sr), spec, 0, true);
+      res = analyzeHands(sig, sr, Math.round(on * sr), spec, tun, true);
       latency = 0.28;
     }
     wait.push({ g: i, r: res, latency: on + latency - first });
@@ -206,7 +212,7 @@ export async function simulateHands(t: Tune, c: HandCond, bpmOverride?: number):
     const h = heard.find((x) => x.at >= first - 0.06 && x.at <= first + 0.6);
     if (!h) return null;
     const s0 = Math.round((h.at + CHORD_FRAME.startAfter) * sr);
-    const cr = analyzeChord(sig.subarray(s0, s0 + Math.round(CHORD_FRAME.length * sr)), sr, all);
+    const cr = analyzeChord(sig.subarray(s0, s0 + Math.round(CHORD_FRAME.length * sr)), sr, all, tun);
     if (!cr.conclusive) return matchHeard(h.midi, all) !== 'none';
     return cr.missing.length === 0;
   });
