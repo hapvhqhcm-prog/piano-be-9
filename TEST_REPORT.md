@@ -746,3 +746,8 @@ Có ba chuyên gia đánh giá: sư phạm, động lực cho trẻ và kỹ thu
   - Viền focus rõ hơn; thêm aria-live / aria-label; tắt pháo giấy khi iPad bật giảm chuyển động.
   - Sửa lớp chồng: toast và pháo giấy nằm trên hộp thoại. Thêm khoảng an toàn cho màn hình có tai thỏ / bo góc.
   - Đã kiểm ở 4 cỡ iPad.
+
+## 38. Dọn mã nguồn (2026-10-09)
+- Tách 5 tệp lớn: song.ts 1307 → 370 dòng (+ chờ/nhịp/kết quả/luyện chỗ khó), lessonEngine.ts 1293 → 61 (10 mô-đun, giữ nguyên 68 export), parent.ts 1084 → 237, micTest.ts 1094 → 294, ProgressStore.ts 991 → 733. Đường import cũ vẫn dùng được (re-export).
+- Không đổi hành vi: so sánh song song bản cũ/mới (giao diện + dữ liệu lưu) trên các luồng micro giả lập; 1980 test; e2e A–E.
+- Gói tải đầu 96,5 → 89,9 kB gzip (phần lập kế hoạch buổi chuyển sang gói màn chính, tải sẵn ngay khi mở app).
