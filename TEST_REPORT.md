@@ -769,3 +769,17 @@ Có ba chuyên gia đánh giá: sư phạm, động lực cho trẻ và kỹ thu
   - Lời khen và việc bố mẹ giúp (quy tắc thuần, có test).
   - Ảnh chia sẻ và bản chữ; nhãn nhỏ cho bố mẹ ở màn chính; xem lại 8 tuần; vẫn đúng sau khi gộp dữ liệu.
 - **Thêm 24 bài vào Thư viện** (tổng 150): 6 bài cho tuần 3–6, các bài dân gian / cổ điển đã hết bản quyền (Grieg, Tchaikovsky, Sakura, Yankee Doodle…), có ghi nguồn trong LICENSES.md. Chưa thêm dân ca Việt mới vì chưa đủ 2 nguồn ký âm.
+
+## 40. Thử kỹ trên Safari/WebKit + hướng dẫn cho bố mẹ (2026-10-10)
+- `npm run webkit` (Playwright WebKit 26.6) mở rộng 10 kịch bản:
+  - buổi học với dữ liệu thật tuần 4 (có lời mời biểu diễn và nhận xét thầy giáo), cả 7 trò chơi;
+  - màn Phụ huynh: ảnh báo cáo tuần, sao lưu, Cài micro khi micro bị chặn / không có;
+  - màn phục hồi, kiểm tra rò rỉ, cỡ iPad mini;
+  - kiểm tra bố cục ở mọi ảnh chụp.
+- **Lỗi đã sửa**
+  - `stopAll()` không gỡ các nốt mẫu hẹn trước → micro coi như app vẫn đang phát, tiếng mỏng. Có test hồi quy.
+  - Bước 1 "Cho phép micro" vẫn hiện ✓ khi micro bị chặn.
+  - Script e2e: phần tử trong <details> đóng.
+- **Không có rò rỉ:** 10 vòng chuyển màn — interval 1, listener 17, AudioContext 1.
+- **Bench dài sau dọn mã và đổi tiếng đàn:** tuần 4–10, hai tay, tự học lệch dây, micBench, chordBench — kết quả giống hệt trước.
+- **Bố mẹ:** "🆕 Có gì mới" (src/pwa/changelog.ts, lastSeenVersion) và "📖 Hướng dẫn nhanh" (10 việc, nút Mở ngay, bản tóm tắt 1 trang).

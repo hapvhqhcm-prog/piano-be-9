@@ -88,9 +88,9 @@ async function boot(): Promise<void> {
   registerServiceWorker();
   app.show(startScreen(app));
 
-  // Chỉ bản dev: cho phép kiểm thử tự động điều khiển app (không có trong bản build).
+  // Chỉ bản dev (và bản build riêng của kiểm thử WebKit — __TEST_HOOKS__): cho phép kiểm thử tự động điều khiển app.
   // (Chờ chunk micro nạp xong: kịch bản chụp màn nhảy thẳng vào các màn dùng app.mic, không qua màn chính.)
-  if (import.meta.env.DEV) void micModule.load().then(() => ((window as unknown as { __piano: App }).__piano = app));
+  if (import.meta.env.DEV || __TEST_HOOKS__) void micModule.load().then(() => ((window as unknown as { __piano: App }).__piano = app));
 }
 
 void boot();

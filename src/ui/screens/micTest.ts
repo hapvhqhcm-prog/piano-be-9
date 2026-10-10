@@ -82,6 +82,9 @@ export function micTestScreen(app: App) {
     /** Bước nào đang làm: 1 cho phép micro · 2 kiểm tra 5 nốt · 3 dùng micro cho buổi học */
     function stepNow(): 1 | 2 | 3 {
       const lastOk = check.lastOk;
+      // (2026-10-10) Vừa thử bật mà iPad chặn / không có micro → bước 1 CHƯA xong (trước đây vẫn ✓ nếu Cài đặt đang bật micro)
+      const st = app.mic.state;
+      if (st === 'denied' || st === 'unsupported' || st === 'error') return 1;
       // Đã bật micro cho buổi học nhưng CHƯA từng kiểm tra 5 nốt → vẫn ở bước 2
       if ((store.settings.micEnabled && check.everChecked) || (lastOk !== null && lastOk >= MIC_GOOD)) return 3;
       if (store.settings.micEnabled) return 2;

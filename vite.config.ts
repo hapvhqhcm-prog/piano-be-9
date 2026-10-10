@@ -103,6 +103,11 @@ function appVersion(): string {
 export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(appVersion()),
+    // (+ 2026-10-10) Số phiên bản package.json (vd "0.21.0") — "🆕 Có gì mới" của bố mẹ (src/pwa/release.ts)
+    __RELEASE_VERSION__: JSON.stringify((JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as { version: string }).version),
+    // Chỉ bản build của kiểm thử WebKit (scripts/webkit-smoke.mjs đặt PIANO_TEST_HOOKS=1): mở window.__piano như bản dev.
+    // Bản build thường: hằng false → esbuild bỏ hẳn nhánh này.
+    __TEST_HOOKS__: JSON.stringify(process.env.PIANO_TEST_HOOKS === '1'),
   },
   // Đường dẫn tương đối: chạy được ở https://<user>.github.io/<repo>/ lẫn LAN.
   base: './',

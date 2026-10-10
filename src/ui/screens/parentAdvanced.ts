@@ -106,7 +106,7 @@ function settingsCard(c: ParentCtx, d: Readonly<AppData>): HTMLElement {
           (v) => set({ autoAdvanceDelaySec: v }),
         )
       : null,
-    h('h3', {}, `Tuần hiện tại (1–${MAX_WEEK}) — chỉ đổi khi cần`),
+    h('h3', { 'data-guide': 'week' }, `Tuần hiện tại (1–${MAX_WEEK}) — chỉ đổi khi cần`),
     (() => {
       const sel = h('select', { class: 'text-in' }) as HTMLSelectElement;
       for (const w of WEEKS) {
@@ -136,7 +136,7 @@ function settingsCard(c: ParentCtx, d: Readonly<AppData>): HTMLElement {
       });
       return sel;
     })(),
-    h('h3', {}, '🎤 Nghe đàn bằng micro'),
+    h('h3', { 'data-guide': 'mic' }, '🎤 Nghe đàn bằng micro'),
     h(
       'p',
       { class: 'muted' },
@@ -289,7 +289,7 @@ function dataCard(c: ParentCtx, d: Readonly<AppData>): HTMLElement {
 
   return h(
     'section',
-    { class: 'card' },
+    { class: 'card', 'data-guide': 'data' },
     h('h2', {}, 'Dữ liệu'),
     h(
       'p',

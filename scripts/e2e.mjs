@@ -355,6 +355,8 @@ const LIB = String.raw`
 const vis = (el) => {
   if (!el || !el.isConnected) return false;
   if (el.closest('[hidden]')) return false;
+  // WebKit (Safari 18+): nội dung <details> đang ĐÓNG chỉ bị content-visibility: hidden → vẫn có kích thước/toạ độ
+  if (el.closest('details:not([open]) > :not(summary)')) return false;
   const r = el.getBoundingClientRect();
   if (r.width < 2 || r.height < 2) return false;
   const cs = getComputedStyle(el);
@@ -992,10 +994,14 @@ async function main() {
       notes.push(`File tải về: ${dl[0]} (tuần ${j?.progress?.currentWeek ?? j?.data?.progress?.currentWeek ?? '?'})`);
     }
     assert((await kindNow()) === 'parent', 'Sao lưu làm rời màn Phụ huynh');
-    // Hướng dẫn mở lại từ màn Phụ huynh
+    // v0.21.1: nút 📖 mở "Hướng dẫn nhanh cho bố mẹ"; 4 thẻ lần đầu nằm ở "Xem lại 4 thẻ"
     await tapText('Hướng dẫn');
-    await waitFor(`screenKind() === 'onboarding'`, 'Hướng dẫn từ màn Phụ huynh');
+    await waitFor(`!!document.querySelector('.screen') && /Xem lại 4 thẻ/.test(document.body.innerText)`, 'Hướng dẫn nhanh từ màn Phụ huynh');
+    await tapText('Xem lại 4 thẻ');
+    await waitFor(`screenKind() === 'onboarding'`, '4 thẻ hướng dẫn');
     await tapText('Bỏ qua');
+    await waitFor(`/Về màn Phụ huynh/.test(document.body.innerText)`, 'về Hướng dẫn nhanh');
+    await tapText('Về màn Phụ huynh');
     await waitFor(`screenKind() === 'parent'`, 'về Phụ huynh');
     await tapText('Về màn của bé');
     await waitFor(`screenKind() === 'home'`, 'về màn chính');

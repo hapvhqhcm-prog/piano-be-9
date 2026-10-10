@@ -1,0 +1,221 @@
+/* (+ 2026-10-10) Màn Phụ huynh: 🆕 Có gì mới · nút 📖 Hướng dẫn làm nổi · màn Hướng dẫn nhanh (parentGuide.ts) */
+
+/* ---------- 🆕 Có gì mới ---------- */
+.whatsnew {
+  background: linear-gradient(180deg, #fff, var(--violet-50));
+  border-color: var(--violet-200);
+  gap: 8px;
+}
+.wn-head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  width: 100%;
+}
+.wn-head h2 {
+  font-size: 26px;
+  margin: 0;
+}
+.wn-span {
+  font-size: 17px;
+  color: var(--ink-2);
+  flex: 1 1 auto;
+}
+.wn-toggle {
+  min-height: 44px;
+  padding: 4px 14px;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--violet-600);
+  cursor: pointer;
+}
+.wn-entry h3,
+.wn-entry h4 {
+  font-size: 19px;
+  margin: 4px 0 2px;
+  color: var(--ink);
+}
+.wn-entry ul {
+  margin: 0;
+  padding-left: 24px;
+  font-size: 18px;
+  line-height: 1.45;
+}
+.wn-older {
+  width: 100%;
+}
+.wn-older summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--violet-600);
+  cursor: pointer;
+}
+.wn-older .wn-entry {
+  padding-left: 4px;
+}
+.wn-actions {
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.wn-actions .btn {
+  min-height: 48px;
+  font-size: 18px;
+  padding: 4px 16px;
+}
+
+/* ---------- 📖 nút Hướng dẫn: làm nổi một lần ---------- */
+.guide-hint {
+  position: relative;
+  box-shadow: 0 0 0 4px var(--sun-400), var(--e1);
+  animation: guide-pulse 1.6s ease-in-out 4;
+}
+.guide-hint-tag {
+  position: absolute;
+  top: -10px;
+  right: -8px;
+  background: var(--sun-400);
+  color: var(--sun-800);
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1;
+  padding: 4px 8px;
+  border-radius: 999px;
+}
+@keyframes guide-pulse {
+  50% {
+    box-shadow: 0 0 0 9px rgba(255, 203, 61, 0.35), var(--e1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .guide-hint {
+    animation: none;
+  }
+}
+
+/* "Mở ngay" từ Hướng dẫn → nháy viền thẻ đích */
+.guide-flash {
+  outline: 4px solid var(--sun-400);
+  outline-offset: 4px;
+  border-radius: var(--radius);
+}
+[data-guide] {
+  scroll-margin-top: 20px;
+}
+
+/* ---------- 📖 Màn Hướng dẫn nhanh ---------- */
+.guide-intro {
+  font-size: 19px;
+  color: var(--ink-2);
+  margin: 0;
+}
+.guide-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+  gap: 16px;
+}
+.guide-sec {
+  justify-content: space-between;
+}
+.guide-sec h2 {
+  font-size: 23px;
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+.guide-icon {
+  flex: 0 0 auto;
+}
+.guide-sec ul {
+  margin: 0;
+  padding-left: 22px;
+  font-size: 18px;
+  line-height: 1.45;
+  flex: 1 1 auto;
+}
+.guide-go {
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.guide-go .btn {
+  min-height: 48px;
+  font-size: 18px;
+  padding: 4px 16px;
+}
+.guide-sheet {
+  width: 100%;
+  max-height: 320px;
+  overflow: auto;
+  margin: 0;
+  padding: 12px 14px;
+  background: var(--violet-50);
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+  user-select: text;
+  -webkit-user-select: text;
+}
+.guide-copy-area {
+  position: fixed;
+  left: -9999px;
+  top: 0;
+  opacity: 0;
+}
+@media (max-width: 900px) {
+  .guide-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* In: chỉ bản tóm tắt một trang */
+@media print {
+  html.guide-print,
+  html.guide-print body {
+    position: static !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+  html.guide-print #app {
+    position: static !important;
+    display: block !important;
+    padding: 0 !important;
+  }
+  html.guide-print #app::after {
+    content: none !important;
+    display: none !important;
+  }
+  html.guide-print .screen,
+  html.guide-print .guide {
+    display: block !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+  html.guide-print .guide > :not(.guide-summary),
+  html.guide-print .guide-summary > :not(.guide-sheet),
+  html.guide-print .toast,
+  html.guide-print .dialog-wrap {
+    display: none !important;
+  }
+  html.guide-print .guide-summary {
+    border: none !important;
+    padding: 0 !important;
+    background: none !important;
+  }
+  html.guide-print .guide-sheet {
+    max-height: none !important;
+    overflow: visible !important;
+    background: none !important;
+    font-size: 12.5px !important;
+    padding: 0 !important;
+  }
+}

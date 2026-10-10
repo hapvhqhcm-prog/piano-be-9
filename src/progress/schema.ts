@@ -3,6 +3,7 @@
  * chỉ THÊM, không đổi nghĩa trường cũ — vẫn schemaVersion = 1.
  */
 import { validAutoTuning, type AutoTuning } from '../audio/autoTune';
+import { RELEASE_VERSION } from '../pwa/release';
 
 export const SCHEMA_VERSION = 1 as const;
 /**
@@ -166,6 +167,13 @@ export interface Settings {
   micAutoTune?: AutoTuning;
   /** (+ 2026-10-08) ⏰ Giờ tập bố mẹ đặt gần nhất (màn Phụ huynh → tạo lịch nhắc .ics): thứ (0 = CN … 6 = T7) + "HH:MM" */
   reminder?: { days: number[]; time: string };
+  /**
+   * (+ 2026-10-10) "🆕 Có gì mới": phiên bản (package.json, vd "0.21.0") bố mẹ đã xem nhật ký thay đổi (src/pwa/changelog.ts).
+   * Cài mới: = bản đang chạy (defaultData). Không có = dữ liệu cũ, từ trước khi có nhật ký → hiện các bản sau 0.15.0.
+   */
+  lastSeenVersion?: string;
+  /** (+ 2026-10-10) Lúc nút "📖 Hướng dẫn" của màn Phụ huynh đã được làm nổi MỘT lần (ms). Không có = chưa. */
+  guideHintAt?: number;
 }
 
 /** (+ 2026-10-08) Món quà đang dùng — mã món trong lessons/unlocks.ts. */
@@ -446,7 +454,9 @@ export function defaultData(now: Date = new Date()): AppData {
     schemaVersion: SCHEMA_VERSION,
     curriculumRev: CURRICULUM_REV,
     learner: { name: '', createdAt: localDateStr(now) },
-    settings: defaultSettings(),
+    // lastSeenVersion chỉ đặt cho dữ liệu MỚI (không ở defaultSettings: migrations.ts trộn defaultSettings vào dữ liệu cũ
+    // → người dùng cũ sẽ không bao giờ thấy "Có gì mới")
+    settings: { ...defaultSettings(), lastSeenVersion: RELEASE_VERSION },
     progress: { currentWeek: 1, lessonsCompleted: [], practiceDays: {} },
     sessions: [],
   };
@@ -498,6 +508,9 @@ export function validateAppData(x: unknown): string[] {
     if (st.cosmetics !== undefined && !isObj(st.cosmetics)) errs.push('settings.cosmetics');
     if (st.micAutoTune !== undefined && !validAutoTuning(st.micAutoTune)) errs.push('settings.micAutoTune');
     if (st.reminder !== undefined && !(isObj(st.reminder) && Array.isArray(st.reminder.days) && typeof st.reminder.time === 'string')) errs.push('settings.reminder');
+    // (+ 2026-10-10) "Có gì mới" / gợi ý Hướng dẫn
+    if (st.lastSeenVersion !== undefined && !(typeof st.lastSeenVersion === 'string' && /^\d+\.\d+\.\d+$/.test(st.lastSeenVersion))) errs.push('settings.lastSeenVersion');
+    if (st.guideHintAt !== undefined && !(typeof st.guideHintAt === 'number' && Number.isFinite(st.guideHintAt))) errs.push('settings.guideHintAt');
   }
   const p = x.progress;
   if (!isObj(p)) errs.push('Thiếu progress');

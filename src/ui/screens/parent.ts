@@ -4,7 +4,6 @@ import type { AppData, Session, Settings } from '../../progress/schema';
 import type { App } from '../App';
 import { button, confirmDialog, h, toast } from '../components/dom';
 import { homeScreen } from './home';
-import { onboardingScreen } from './onboarding';
 import { parentTip } from '../../lessons/parentTips';
 import { tonightSegment, type TonightPractice } from './tonight';
 import { quickTipsCard } from './onboarding';
@@ -25,6 +24,8 @@ import { micSetupCard, readinessCard, tonightCard, weeklyReportCard } from './pa
 import { detailsCard, latestSessionCards, overviewCard, skillsCard } from './parentProgressCards';
 import { advancedSection } from './parentAdvanced';
 import { parentSongsCard } from './parentSongsCard';
+import { focusGuideAnchor, guideButton, parentGuideMod, parentGuideScreen, syncWhatsNew, tagGuide, takeGuideHint, whatsNewCard } from './parentHelp';
+import { PARENT_ANCHORS, type GuideAnchor } from './parentGuideData';
 
 // Giữ nguyên API cũ
 export { fmtDate, parentLabel } from './parentShared';
@@ -36,10 +37,15 @@ export { fmtDate, parentLabel } from './parentShared';
  * Thẻ: parentTodayCards.ts (tối nay, micro, sẵn sàng) · parentProgressCards.ts (tổng quan, kỹ năng, chi tiết, buổi gần
  * nhất) · parentAdvanced.ts (Nâng cao) · parentSongsCard.ts (bài bố mẹ thêm) · dùng chung: parentShared.ts.
  */
-export function parentScreen(app: App) {
+export function parentScreen(app: App, opts: { focus?: GuideAnchor } = {}) {
   return (root: HTMLElement) => {
-    prefetchLater([reportMod, weeklyReportMod, songEditorMod, micTestMod]);
+    prefetchLater([reportMod, weeklyReportMod, songEditorMod, micTestMod, parentGuideMod]);
     const store = app.store;
+    // (+ 2026-10-10) 🆕 Có gì mới (cài mới → ghi luôn bản hiện tại, không hiện) · 📖 Hướng dẫn làm nổi MỘT lần
+    syncWhatsNew(store);
+    const guideHint = takeGuideHint(store);
+    const whatsNewUi = { open: true };
+    const openGuide = () => app.show(parentGuideScreen(app));
     const scroller = h('div', { class: 'parent scrollable' });
     root.append(h('div', { class: 'screen' }, scroller));
     let message = '';
@@ -66,7 +72,7 @@ export function parentScreen(app: App) {
       },
       ux,
       // resetStep: bước "Đặt lại dữ liệu"; advOpen: mục "Nâng cao" đang mở; detailsOpen: mục "Chi tiết" đang mở
-      ui: { resetStep: 0, advOpen: false, detailsOpen: false },
+      ui: { resetStep: 0, advOpen: !!opts.focus && PARENT_ANCHORS[opts.focus], detailsOpen: false },
     };
 
     const backup = () => void exportBackup(store).then((r) => say(BACKUP_MESSAGE[r]));
@@ -190,7 +196,7 @@ export function parentScreen(app: App) {
               if (backupStale) b.classList.add('warn');
               return b;
             })(),
-            button({ icon: '📖', label: 'Hướng dẫn', onTap: () => app.show(onboardingScreen(app, { onDone: () => app.show(parentScreen(app)) })) }),
+            guideButton(openGuide, guideHint),
             button({ icon: '←', label: 'Về màn của bé', kind: 'primary', onTap: () => app.show(homeScreen(app)) }),
           ),
         ),
@@ -202,11 +208,13 @@ export function parentScreen(app: App) {
             ? h('div', { class: 'banner' }, '✅ App đã tự khôi phục tiến độ của bé từ bản sao lưu trong máy (do lỗi cũ khi lên tuần 9).')
             : null,
         store.lastSaveError ? h('div', { class: 'banner warn' }, `Lỗi lưu dữ liệu: ${store.lastSaveError}`) : null,
+        // (+ 2026-10-10) 🆕 Có gì mới sau khi app cập nhật — chỉ ở màn Phụ huynh, "Đã xem" thì ẩn
+        whatsNewCard(c, d, whatsNewUi, openGuide),
         // (+ 2026-10-09) 📊 Báo cáo tuần: tuần vừa hết chưa xem → thẻ ở đầu màn; không thì nằm cạnh phần tiến độ
         weeklyDue ? weekly : null,
         micSetupCard(c, d),
         tonightCard(d, now, runPractice),
-        readinessCard(c, d, now),
+        tagGuide(readinessCard(c, d, now), 'hold'),
         h(
           'section',
           { class: 'card tip-card' },
@@ -214,7 +222,7 @@ export function parentScreen(app: App) {
           h('p', {}, parentTip(week)),
           whenCorrectBox(),
         ),
-        quickTipsCard(),
+        tagGuide(quickTipsCard(), 'tips'),
         // Chưa thêm vào Màn hình chính → iPad có thể xóa tiến độ: giữ ở phần đầu (an toàn dữ liệu)
         installCard(),
         weeklyDue ? null : weekly,
@@ -230,13 +238,14 @@ export function parentScreen(app: App) {
       // phần đầu màn dành cho việc hằng ngày (tối nay, sẵn sàng sang tuần, mẹo tuần) và tiến độ
       sections.push(
         // (+ 2026-10-08) ⏰ Đặt giờ tập — lời nhắc .ics lặp hằng tuần trong Lịch của iPad
-        reminderCard(app),
-        parentSongsCard(c, () => app.show(parentScreen(app))),
+        tagGuide(reminderCard(app), 'reminder'),
+        tagGuide(parentSongsCard(c, () => app.show(parentScreen(app))), 'songs'),
         details,
       );
       return sections.filter((x): x is HTMLElement => !!x);
     };
 
     render();
+    if (opts.focus) focusGuideAnchor(scroller, opts.focus);
   };
 }

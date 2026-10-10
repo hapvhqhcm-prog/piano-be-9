@@ -175,6 +175,25 @@ describe('AudioEngine', () => {
     eng.stopAll();
   });
 
+  it('stopAll() giữa bài mẫu: nốt hẹn ở tương lai được gỡ ngay — không còn "đang phát" (micro nghe lại được)', async () => {
+    const { ctx } = fakeContext();
+    const eng = new AudioEngine(() => ctx as unknown as AudioContext);
+    await eng.unlock();
+    // Bài mẫu hẹn cả bài một lượt (track = true như playNote của màn mẫu); nguồn giả KHÔNG bắn onended
+    for (let i = 0; i < 20; i++) void eng.scheduleFreq(261.63, 1 + i * 0.5, 0.4);
+    void eng.scheduleFreq(329.63, 0, 0.4); // nốt đang kêu lúc bấm Dừng
+    expect(eng.isSounding).toBe(true);
+    expect(eng.stats.voices).toBe(21);
+    eng.stopAll();
+    // Chỉ còn nốt đang kêu (tắt sau 0,08 s qua onended); 20 nốt chưa bắt đầu đã bị gỡ + ngắt nút
+    expect(eng.stats.voices).toBe(1);
+    // Nốt mới sau đó không bị tính "chồng nhau" với các nốt đã hủy
+    eng.resetStats();
+    void eng.scheduleFreq(261.63, 1.2, 0.4, 1, false);
+    expect(eng.stats.lightNotes).toBe(0);
+    eng.stopAll();
+  });
+
   it('isSounding / msSinceSound tính cả đuôi hồi âm', async () => {
     vi.useFakeTimers();
     try {

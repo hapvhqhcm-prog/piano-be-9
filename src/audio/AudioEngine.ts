@@ -89,6 +89,8 @@ interface Voice {
   /** Khoảng vang [t0, t1) theo đồng hồ AudioContext — để đếm nốt CHỒNG NHAU thật (chế độ nhẹ). */
   t0: number;
   t1: number;
+  /** Gỡ nốt khỏi danh sách + ngắt nút (gọi nhiều lần không sao) — stopAll() gọi ngay cho nốt CHƯA bắt đầu. */
+  finish?: () => void;
 }
 
 /** Số liệu CPU (đếm nút Web Audio) — trang ?soundtest hiển thị. */
@@ -601,6 +603,7 @@ export class AudioEngine {
         }
         resolve();
       };
+      voice.finish = finish;
       sources[0].onended = finish;
       // Phòng khi context bị treo (onended không bao giờ tới).
       setTimeout(finish, (end - ctx.currentTime) * 1000 + 250);
@@ -828,6 +831,10 @@ export class AudioEngine {
       } catch {
         /* bỏ qua */
       }
+      // (2026-10-10) Nốt hẹn ở TƯƠNG LAI (vd cả bài mẫu đã hẹn một lượt rồi bấm Dừng / rời màn): nguồn bị stop() trước lúc
+      // start chỉ bắn 'ended' tới lúc lẽ ra bắt đầu → trước đây nốt vẫn nằm trong danh sách tới hết bài: isSounding = true
+      // (micro bỏ qua tiếng bé đàn, giọng đọc chờ) và các nốt mới bị đếm "chồng nhau" (tiếng nhẹ 1 dây). Nốt chưa kêu → gỡ ngay.
+      if (v.t0 > now + 0.02) v.finish?.();
     }
   }
 }

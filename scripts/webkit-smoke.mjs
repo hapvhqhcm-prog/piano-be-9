@@ -20,12 +20,24 @@
  *   C  Thư viện (lọc 🇻🇳) → bài hát → Xem mẫu; Sổ sticker; cổng phụ huynh (giữ 2 giây + phép tính) → Nâng cao,
  *      💾 Sao lưu, 📊 Báo cáo, 🎤 Cài micro (3 bước); Soạn bài (gõ chữ → khuông); Đàn tự do → 🎵 Đàn theo thầy.
  *   B  Phụ huynh đổi tuần 12 / 19 / 29 (hộp xác nhận) → mỗi tuần một buổi "Học tiếp".
+ *   (+ 2026-10-10, cần bản build có móc kiểm thử PIANO_TEST_HOOKS=1 — script tự build như vậy; dữ liệu "bé thật tuần 4" =
+ *    tests/fixtures/week4Child.ts nạp bằng Vite SSR)
+ *   S  Bé tuần 4: một buổi "Học tiếp" + lời mời 🎤 Biểu diễn (chọn bài → mời → sân khấu); Thư viện → bài "🐢 Từng nốt"
+ *      chạm phím ảo (một lần nhầm) → màn kết quả có nhận xét thầy (khuông tô màu + lời nhắn); Album.
+ *   G  🎮 Màn chọn trò → cả 7 trò: giới thiệu → Bắt đầu → chạm ~9 giây → ra.
+ *   R  Phụ huynh: các thẻ; 📊 Báo cáo tuần + "Gửi ảnh" (canvas → toBlob → PNG tải về, kiểm chữ ký PNG); sao chép chữ;
+ *      💾 Sao lưu (đọc lại JSON); 🩺 Kiểm tra iPad; 🎤 Cài micro khi không có getUserMedia / bị từ chối / không có micro;
+ *      màn "Ối" (window.__piano.show một màn ném lỗi) → lỗi vào nhật ký + dòng "Lỗi gần đây" ở 🩺 → về màn chính.
+ *   L  Rò rỉ: 10 vòng đổi màn + 3 buổi học; sau mỗi vòng đo (đầu dò PROBE) hẹn giờ lặp, trình nghe sự kiện trên
+ *      window/document, nốt đang vang của AudioEngine (stats), nguồn âm chưa 'ended', AudioContext đang mở, DOM, rAF.
+ *   V  Bố cục ở 1133×744 (iPad mini ngang): các màn chính + một buổi.
+ *   Mọi ảnh chụp đều chạy KIỂM BỐ CỤC (LAYOUT_CHECK: cuộn ngang, phần tử bị cắt/ngoài màn, chữ tràn nút, thanh nút khuất).
  *   D  Service worker: đăng ký + điều khiển trang → offline → tải lại (nếu WebKit hỗ trợ).
  *
  * Kết quả: ảnh PNG từng bước, webkit.log, summary.json trong <scratchpad>/webkit-N (hoặc --out).
  */
 import { spawn, spawnSync } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
@@ -55,7 +67,7 @@ const opt = (n) => {
   return i >= 0 ? argv[i + 1] : undefined;
 };
 const ENGINE = opt('--engine') ?? 'webkit'; // webkit | chromium (= Edge đã cài, kênh msedge) | chromium-bundled
-const ONLY = (opt('--only') ?? 'P,A,C,B,D').toUpperCase().split(',').map((s) => s.trim());
+const ONLY = (opt('--only') ?? 'P,A,C,B,S,G,R,L,V,D').toUpperCase().split(',').map((s) => s.trim());
 const SKIP_BUILD = flag('--skip-build');
 const HEADED = flag('--headed');
 const WEEKS = (opt('--weeks') ?? '12,19,29').split(',').map(Number).filter((n) => n >= 1);
@@ -104,7 +116,12 @@ function freePort() {
 /** vite build thẳng vào thư mục ra (không đụng dist/ của người khác; bỏ tsc — kiểu đã có `npm run build` lo). */
 function runBuild(outDir) {
   log(`▶ vite build → ${outDir}`);
-  const r = spawnSync(process.execPath, [VITE, 'build', '--outDir', outDir, '--emptyOutDir'], { cwd: ROOT, encoding: 'utf8' });
+  // PIANO_TEST_HOOKS=1: bản build này có window.__piano (như bản dev) cho các kịch bản cần móc kiểm thử (R, L)
+  const r = spawnSync(process.execPath, [VITE, 'build', '--outDir', outDir, '--emptyOutDir'], {
+    cwd: ROOT,
+    encoding: 'utf8',
+    env: { ...process.env, PIANO_TEST_HOOKS: '1' },
+  });
   writeFileSync(join(OUT, 'build.log'), `${r.stdout}\n${r.stderr}`);
   if (r.status !== 0) {
     console.error(r.stdout, r.stderr);
@@ -211,6 +228,76 @@ const FAKE_AUDIO = `(() => {
   window.AudioContext = FakeAudioContext;
 })();`;
 
+/**
+ * (+ 2026-10-10) ĐẦU DÒ RÒ RỈ (cài trước mã app): đếm hẹn giờ lặp (setInterval) còn sống, hẹn giờ một lần còn chờ,
+ * trình nghe sự kiện trên window / document / visualViewport / speechSynthesis, và AudioContext / nguồn âm đang chạy.
+ * WebKit không có performance.memory → dùng các số đếm này làm "dấu hiệu rò". window.__probe.snap() đọc số liệu.
+ */
+const PROBE = `(() => {
+  if (window.__probe) return;
+  const where = () => { const s = (new Error().stack || '').split('\\n').map((l) => l.trim()).filter((l) => l && !/__probe|PROBE|^Error/.test(l));
+    return (s[1] || s[0] || '?').replace(/https?:\\/\\/[^/]+/, '').slice(0, 140); };
+  const intervals = new Map(); const timeouts = new Set();
+  const _si = window.setInterval, _ci = window.clearInterval, _st = window.setTimeout, _ct = window.clearTimeout;
+  window.setInterval = function (fn, ms, ...a) { const id = _si.call(window, fn, ms, ...a); intervals.set(id, where() + ' @' + ms + 'ms'); return id; };
+  window.clearInterval = function (id) { intervals.delete(id); return _ci.call(window, id); };
+  window.setTimeout = function (fn, ms, ...a) { let id = 0; const wrap = typeof fn === 'function' ? function (...b) { timeouts.delete(id); return fn.apply(this, b); } : fn;
+    id = _st.call(window, wrap, ms, ...a); timeouts.add(id); return id; };
+  window.clearTimeout = function (id) { timeouts.delete(id); return _ct.call(window, id); };
+  let rafCalls = 0; const _raf = window.requestAnimationFrame;
+  if (_raf) window.requestAnimationFrame = function (fn) { rafCalls++; return _raf.call(window, fn); };
+  const targets = () => [[window, 'window'], [document, 'document'], [window.visualViewport, 'visualViewport'], [window.speechSynthesis, 'speechSynthesis']].filter((x) => x[0]);
+  const listeners = new Map(); // key: name|type|capture → Set(fn)
+  const nameOf = (t) => { for (const [o, n] of targets()) if (o === t) return n; return null; };
+  const cap = (o) => (typeof o === 'boolean' ? o : !!(o && o.capture));
+  const _add = EventTarget.prototype.addEventListener, _rem = EventTarget.prototype.removeEventListener;
+  EventTarget.prototype.addEventListener = function (type, fn, opts) {
+    const n = nameOf(this);
+    if (n && fn) {
+      const k = n + '|' + type + '|' + cap(opts); let s = listeners.get(k); if (!s) listeners.set(k, (s = new Map()));
+      if (!s.has(fn)) s.set(fn, where());
+      if (opts && typeof opts === 'object' && opts.once) _add.call(this, type, () => s.delete(fn), { once: true, capture: cap(opts) });
+      if (opts && typeof opts === 'object' && opts.signal) opts.signal.addEventListener('abort', () => s.delete(fn), { once: true });
+    }
+    return _add.call(this, type, fn, opts);
+  };
+  EventTarget.prototype.removeEventListener = function (type, fn, opts) {
+    const n = nameOf(this);
+    if (n && fn) listeners.get(n + '|' + type + '|' + cap(opts))?.delete(fn);
+    return _rem.call(this, type, fn, opts);
+  };
+  const audio = { contexts: 0, closed: 0, sourcesStarted: 0, sourcesEnded: 0, nodes: 0 };
+  const hookAudio = () => {
+    const C = window.AudioContext || window.webkitAudioContext; if (!C || C.__probed) return;
+    const P = C.prototype;
+    for (const m of Object.getOwnPropertyNames(P)) {
+      if (!/^create/.test(m) || typeof P[m] !== 'function' || m === 'createBuffer' || m === 'createPeriodicWave') continue;
+      const orig = P[m];
+      P[m] = function (...a) { const n = orig.apply(this, a); audio.nodes++;
+        if (n && typeof n.start === 'function') { const s0 = n.start; n.start = function (...b) { audio.sourcesStarted++; n.addEventListener('ended', () => audio.sourcesEnded++, { once: true }); return s0.apply(this, b); }; }
+        return n; };
+    }
+    const close0 = P.close; P.close = function () { audio.closed++; return close0.call(this); };
+    const W = function (...a) { audio.contexts++; return Reflect.construct(C, a, new.target || W); };
+    W.prototype = P; W.__probed = true; Object.setPrototypeOf(W, C);
+    window.AudioContext = W; if (window.webkitAudioContext) window.webkitAudioContext = W;
+  };
+  hookAudio();
+  window.addEventListener('unhandledrejection', (e) => { const r = e.reason; console.error('unhandledrejection: ' + (r && (r.stack || r.message) || String(r))); });
+  window.__probe = {
+    hookAudio,
+    snap() {
+      const l = {}; let total = 0; const where = {};
+      for (const [k, s] of listeners) if (s.size) { l[k] = s.size; total += s.size; where[k] = [...s.values()].slice(0, 4); }
+      const app = window.__piano; let engine = null;
+      try { engine = app ? app.audio.stats : null; } catch { engine = null; }
+      return { intervals: intervals.size, intervalWhere: [...intervals.values()], timeouts: timeouts.size, listeners: total, byType: l, listenerWhere: where,
+        audio: { ...audio, activeSources: audio.sourcesStarted - audio.sourcesEnded, openContexts: audio.contexts - audio.closed },
+        engine, dom: document.getElementsByTagName('*').length, raf: rafCalls };
+    },
+  };
+})();`;
+
 // ---------------- thư viện trong trang: lấy nguyên văn từ e2e.mjs ----------------
 const e2eSrc = readFileSync(join(ROOT, 'scripts', 'e2e.mjs'), 'utf8');
 const libMatch = /const LIB = String\.raw`([\s\S]*?)\n`;\n/.exec(e2eSrc);
@@ -221,6 +308,10 @@ const inPage = (body) => `(() => { ${LIB}\n${body}\n })()`;
 // ---------------- ghi nhận lỗi ----------------
 let currentScenario = 'setup';
 let expectNetFailures = false;
+/** Lỗi console CỐ Ý gây ra (vd màn lỗi giả để thử màn "Ối") — khớp regex này thì tính là dự kiến */
+let expectedConsole = null;
+/** Tệp trình duyệt tải về (sao lưu JSON, ảnh báo cáo…) */
+const downloads = [];
 const problems = [];
 const warnings = [];
 const findings = []; // khác biệt / quan sát riêng của WebKit
@@ -257,11 +348,13 @@ async function launch() {
     acceptDownloads: true,
   });
   if (!NO_FAKE_AUDIO) await context.addInitScript(FAKE_AUDIO);
+  await context.addInitScript(PROBE);
   page = await context.newPage();
   page.on('console', (m) => {
     const text = m.text();
     if (m.type() === 'error' || m.type() === 'assert') {
-      const expected = expectNetFailures && /Failed to load|network|offline|Could not connect/i.test(text);
+      const expected =
+        (expectNetFailures && /Failed to load|network|offline|Could not connect/i.test(text)) || (expectedConsole !== null && expectedConsole.test(text));
       addProblem('console.error', text, { expected });
     } else if (m.type() === 'warning') {
       warnings.push({ scenario: currentScenario, text });
@@ -281,7 +374,9 @@ async function launch() {
     const f = join(OUT, 'downloads', d.suggestedFilename());
     mkdirSync(join(OUT, 'downloads'), { recursive: true });
     await d.saveAs(f).catch(() => undefined);
-    log(`  ⬇ tải về: ${d.suggestedFilename()}`);
+    const size = existsSync(f) ? statSync(f).size : 0;
+    downloads.push({ name: d.suggestedFilename(), file: f, size, scenario: currentScenario });
+    log(`  ⬇ tải về: ${d.suggestedFilename()} (${size} B)`);
   });
   page.on('dialog', (d) => {
     log(`  (hộp thoại trình duyệt ${d.type()}: ${d.message().slice(0, 100)})`);
@@ -290,6 +385,67 @@ async function launch() {
 }
 
 const evaluate = (expr) => page.evaluate(expr);
+
+/**
+ * (+ 2026-10-10) KIỂM BỐ CỤC ở mỗi ảnh chụp: trang cuộn ngang, phần tử nằm (một phần) ngoài màn mà không có khung cuộn /
+ * khung cắt nào bên trong màn chứa nó (= bị cắt mất, không cuộn tới được), chữ tràn khỏi nút, thanh nút dưới bị khuất.
+ * Bỏ qua phần trang trí (aria-hidden), pháo giấy, toast. Trả về danh sách mô tả (mỗi phần tử ngoài cùng một dòng).
+ */
+const LAYOUT_CHECK = `(() => {
+  const W = innerWidth, H = innerHeight, out = [];
+  const de = document.documentElement;
+  if (de.scrollWidth > W + 1) out.push('trang cuộn ngang: scrollWidth ' + de.scrollWidth + ' > ' + W);
+  if (de.scrollHeight > H + 1 && getComputedStyle(document.body).overflowY !== 'hidden') out.push('trang cuộn dọc: scrollHeight ' + de.scrollHeight + ' > ' + H);
+  const name = (e) => { let n = e.tagName.toLowerCase(); const c = (typeof e.className === 'string' ? e.className : (e.className && e.className.baseVal) || '').trim().split(/\s+/).filter(Boolean).slice(0, 3).join('.');
+    if (c) n += '.' + c; const t = (e.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 30); return n + (t ? ' "' + t + '"' : ''); };
+  const root = document.getElementById('app'); if (!root) return out;
+  const inView = (r) => r.right <= W + 1 && r.left >= -1 && r.bottom <= H + 1 && r.top >= -1;
+  const shown = (e) => { const cs = getComputedStyle(e); return cs.visibility !== 'hidden' && cs.display !== 'none' && +cs.opacity >= 0.05; };
+  const bad = [];
+  for (const e of root.querySelectorAll('*')) {
+    const r = e.getBoundingClientRect();
+    if (r.width < 2 || r.height < 2 || inView(r)) continue;
+    if (e.closest('[aria-hidden="true"], .confetti, .toast, svg *, details:not([open]) > :not(summary)') || !shown(e)) continue;
+    // Khung cuộn (auto/scroll) chứa nó → cuộn tới được, bỏ qua. Khung cắt (hidden/clip) → chỉ báo nếu là chữ / nút (bị cắt mất).
+    let a = e.parentElement, scroller = false, cutter = null;
+    while (a && a !== document.body) {
+      const cs = getComputedStyle(a);
+      const sc = /auto|scroll/.test(cs.overflowX + cs.overflowY);
+      if ((sc || cs.overflowX !== 'visible' || cs.overflowY !== 'visible') && inView(a.getBoundingClientRect())) { if (sc) scroller = true; else cutter = a; break; }
+      a = a.parentElement;
+    }
+    if (scroller || bad.some((b) => b.contains(e))) continue;
+    const texty = e.tagName === 'BUTTON' || [...e.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim());
+    if (cutter && !texty) continue;
+    bad.push(e);
+    out.push(name(e) + (cutter ? ' bị cắt bởi ' + name(cutter).slice(0, 40) : ' ngoài màn') + ' [' + [r.left, r.top, r.right, r.bottom].map(Math.round).join(',') + ']');
+  }
+  for (const b of root.querySelectorAll('button')) {
+    const r = b.getBoundingClientRect(); if (r.width < 2 || !shown(b) || b.closest('[aria-hidden="true"], details:not([open]) > :not(summary)')) continue;
+    // nhãn chữ; nút không có .btn-label: chỉ khi không có phần tử con định vị tuyệt đối (huy hiệu số "17" cố ý chìa ra)
+    const abs = [...b.querySelectorAll('*')].some((x) => getComputedStyle(x).position === 'absolute');
+    const labels = [...b.querySelectorAll('.btn-label')];
+    for (const l of labels.length ? labels : abs ? [] : [b]) {
+      if (l.scrollWidth > l.clientWidth + 2 && l.clientWidth > 0) { out.push('chữ tràn ngang: ' + name(l) + ' ' + l.scrollWidth + '>' + l.clientWidth); break; }
+    }
+  }
+  for (const a of root.querySelectorAll('.actions')) { const r = a.getBoundingClientRect(); if (r.height > 2 && shown(a) && r.bottom > H + 1) out.push('thanh nút dưới bị khuất: bottom ' + Math.round(r.bottom) + ' > ' + H); }
+  return out;
+})()`;
+/** Vấn đề bố cục: khóa "WxH | màn | mô tả" → ảnh đầu tiên gặp */
+const layoutIssues = new Map();
+async function checkLayout(where) {
+  const res = await evaluate(`(() => { const issues = ${LAYOUT_CHECK}; ${LIB}; return { issues, kind: screenKind(), w: innerWidth, h: innerHeight }; })()`).catch(() => null);
+  if (!res) return;
+  for (const i of res.issues) {
+    const k = `${res.w}×${res.h} | ${res.kind} | ${i}`;
+    if (!layoutIssues.has(k)) {
+      layoutIssues.set(k, where);
+      log(`  ▭ bố cục ${res.w}×${res.h} [${res.kind}] ${i} (${where})`);
+    }
+  }
+}
+
 let shotNo = 0;
 async function shot(name) {
   shotNo++;
@@ -303,6 +459,7 @@ async function shot(name) {
       ]),
     )
     .catch(() => undefined);
+  await checkLayout(safe);
   try {
     await page.screenshot({ path: join(OUT, `${safe}.png`), timeout: 20_000, animations: 'allow' });
   } catch (e) {
@@ -322,9 +479,20 @@ async function doAction(a) {
   }
   await tapXY(a.x, a.y);
 }
+/** Màn mừng "🎁 Quà mới" (màn chính) che các nút → bấm "Tuyệt!" để đóng (như e2e.mjs). */
+async function dismissUnlock() {
+  const a = await evaluate(
+    inPage(`const w = document.querySelector('.unlock-backdrop'); const b = w && [...w.querySelectorAll('button')].find((x) => label(x).includes('Tuyệt')); return b && vis(b) ? target(b, 'Tuyệt!') : null;`),
+  ).catch(() => null);
+  if (!a) return false;
+  await doAction(a);
+  await sleep(400);
+  return true;
+}
 async function tapBy(finder, what, timeoutMs = 15_000) {
   const end = Date.now() + timeoutMs;
   for (;;) {
+    if (await dismissUnlock()) continue;
     const a = await evaluate(inPage(`const el = (${finder}); return el && vis(el) && !el.disabled ? target(el, ${JSON.stringify(what)}) : null;`)).catch(
       () => null,
     );
@@ -384,7 +552,33 @@ async function toHome() {
 
 // ---------------- buổi học tự lái ----------------
 const STUCK_MS = 90_000;
-async function runSession(label, start) {
+/**
+ * (+ 2026-10-10) Bài hát chế độ "Từng nốt" (chờ): chạm PHÍM ẢO đang sáng thay vì "👪 Bố mẹ: tiếp" — app có dữ liệu từng
+ * nốt → màn kết quả có nhận xét kiểu thầy giáo (khuông tô màu + lời nhắn). Nhóm nốt đầu mỗi bài: chạm nhầm một phím
+ * trắng khác trước (để thầy có lỗi "nhầm" mà nhận xét). Không có phím sáng (gợi ý "nhìn khuông") → đường bố mẹ như cũ.
+ */
+const SONG_TAP = `
+  const q = (s) => document.querySelector(s);
+  if (!q('.song-head') || !btn('Bố mẹ: tiếp') || !q('.song-progress')) return null;
+  const keys = [...document.querySelectorAll('.key.is-target')].filter(vis);
+  if (!keys.length) return null;
+  const title = txt(q('.song-title'));
+  if (txt(q('.song-progress')).startsWith('1/') && window.__wkWrongFor !== title) {
+    window.__wkWrongFor = title;
+    const lit = new Set(keys.map((k) => k.dataset.pitch));
+    const wrong = [...document.querySelectorAll('.key.key-white[data-pitch]')].filter((k) => vis(k) && !lit.has(k.dataset.pitch))[2];
+    if (wrong) return target(wrong, 'phím nhầm ' + wrong.dataset.pitch);
+  }
+  return target(keys[0], 'phím ' + keys[0].dataset.pitch);
+`;
+/** Màn kết quả bài hát có nhận xét kiểu thầy (khuông tô màu từng nốt / lời nhắn 🧑‍🏫)? */
+const REVIEW_SEEN = `
+  const q = (s) => document.querySelector(s);
+  if (!q('.song-head') || !q('.song-result-head')) return null;
+  return { title: txt(q('.song-title')), rv: !!q('.rv-row'), marks: document.querySelectorAll('.staff-wrap [class*="rv-"], svg [class*="rv-"]').length,
+    teacher: q('.song-result-next.teacher') ? txt(q('.song-result-next')) : '', next: txt(q('.song-result-next')) };
+`;
+async function runSession(label, start, o = {}) {
   const tStart = Date.now();
   if (start === 'next') await tapTextStarts('Học tiếp:');
   else await tapSel(`[data-lesson="${start}"]`);
@@ -396,6 +590,9 @@ async function runSession(label, start) {
   let banner = '';
   const verdicts = { ok: 0, wrong: [] };
   let pendingAnswer = null;
+  const songKeys = { taps: 0, songs: new Set() };
+  const reviews = new Map();
+  let concert = null;
   for (;;) {
     let d;
     try {
@@ -422,6 +619,32 @@ async function runSession(label, start) {
     }
     if (d.banner) banner = d.banner;
     if (d.home) break;
+    // Bài hát "Từng nốt": chạm phím ảo đang sáng (xem SONG_TAP)
+    if (d.kind === 'song' || d.kind === 'review-song') {
+      const k = await evaluate(inPage(SONG_TAP)).catch(() => null);
+      if (k) {
+        if (!songKeys.taps) await shot(`${label}-song-keys`);
+        songKeys.taps++;
+        await doAction(k);
+        await sleep(220);
+        continue;
+      }
+      const rv = await evaluate(inPage(REVIEW_SEEN)).catch(() => null);
+      if (rv && !reviews.has(rv.title)) {
+        reviews.set(rv.title, rv);
+        await shot(`${label}-song-result`);
+        log(`    🧑‍🏫 kết quả "${rv.title}": khuông nhận xét=${rv.rv} · lời thầy="${rv.teacher || rv.next}"`);
+      }
+    }
+    // Màn kết buổi có lời mời 🎤 Biểu diễn cho cả nhà
+    if (d.kind === 'session-end' && concert === null) {
+      concert = await evaluate(inPage(`return !!btn('Biểu diễn cho cả nhà');`)).catch(() => false);
+      if (concert && o.concert) {
+        await shot(`${label}-concert-offer`);
+        await exploreConcert(label);
+        break;
+      }
+    }
     if (Date.now() - sigSince > STUCK_MS) {
       await shot(`${label}-STUCK`);
       throw new Fail(`Buổi ${label} kẹt ở: ${d.sig}`);
@@ -435,12 +658,36 @@ async function runSession(label, start) {
   }
   const ms = Date.now() - tStart;
   log(`  ✓ buổi ${label} xong sau ${(ms / 1000).toFixed(0)}s — ${seq.join(' → ')}${banner ? ` — banner: ${banner}` : ''}`);
+  if (songKeys.taps || reviews.size || concert)
+    log(`    phím ảo trong bài hát: ${songKeys.taps} lần · màn kết quả có nhận xét thầy: ${[...reviews.values()].filter((r) => r.rv || r.teacher).length}/${reviews.size} · mời biểu diễn: ${concert ? 'có' : 'không'}`);
   await shot(`${label}-home`);
   const data = await appData();
   const last = data.sessions[data.sessions.length - 1];
   assert(!verdicts.wrong.length, `Buổi ${label}: đáp án đọc từ khuông bị chấm sai: ${verdicts.wrong.join(', ')}`);
   assert(last?.completed, `Buổi ${label} chưa được lưu là hoàn thành`);
-  return { kinds, seq, banner, ms };
+  return { kinds, seq, banner, ms, songTaps: songKeys.taps, reviews: [...reviews.values()], concert };
+}
+
+/** 🎤 Biểu diễn cho cả nhà: chọn bài → mời khán giả → sân khấu (đếm vào) → quay ra → chọn bài khác → về màn chính. */
+async function exploreConcert(label) {
+  await tapText('Biểu diễn cho cả nhà');
+  await waitFor(`!!document.querySelector('.stage-pick')`, 'màn chọn bài biểu diễn');
+  await shot(`${label}-concert-pick`);
+  await tapSel('.stage-pick');
+  await waitFor(`!!btn('Bắt đầu biểu diễn')`, 'màn mời khán giả');
+  await shot(`${label}-concert-invite`);
+  await tapText('Bắt đầu biểu diễn');
+  await waitFor(`!!document.querySelector('.song-head')`, 'sân khấu biểu diễn', 10_000);
+  await sleep(2500);
+  await shot(`${label}-concert-stage`);
+  await tapBy(`btn('Dừng') || btn('Quay lại')`, 'Dừng/Quay lại');
+  await sleep(600);
+  if (await evaluate(inPage(`return !!document.querySelector('.song-head') && !!btn('Quay lại');`))) await tapText('Quay lại');
+  await waitFor(`!!btn('Chọn bài khác')`, 'về màn mời khán giả', 10_000);
+  await tapText('Chọn bài khác');
+  await waitFor(`!!document.querySelector('.stage-pick')`, 'về màn chọn bài');
+  await tapText('Quay lại');
+  await waitFor(`screenKind() === 'home'`, 'về màn chính sau biểu diễn', 15_000);
 }
 
 // ---------------- phụ huynh ----------------
@@ -453,6 +700,7 @@ async function holdParent(ms) {
 }
 async function openParent() {
   await waitFor(`!!document.querySelector('.parent-btn')`, 'nút Phụ huynh');
+  await dismissUnlock();
   await holdParent(500);
   await sleep(1800);
   assert((await kindNow()) === 'home', 'Nhấn 0,5 giây đã mở cổng phụ huynh');
@@ -496,6 +744,37 @@ async function setWeek(week) {
   const t = await homeTitle();
   assert(t.startsWith(`Tuần ${week} `), `Màn chính phải là Tuần ${week}, đang là "${t}"`);
 }
+
+// ---------------- (+ 2026-10-10) móc kiểm thử, dữ liệu mẫu, đầu dò ----------------
+/** Bản build có window.__piano (PIANO_TEST_HOOKS=1)? (--skip-build chép dist/ thường → không có) */
+async function hooksReady(ms = 10_000) {
+  return !!(await waitFor(`!!window.__piano`, 'window.__piano (móc kiểm thử)', ms).catch(() => false));
+}
+let fixtureCache = null;
+/** Dữ liệu "bé thật tuần 4" (tests/fixtures/week4Child.ts) — nạp TS bằng Vite SSR ngay trong Node. */
+async function week4ChildJSON() {
+  if (fixtureCache) return fixtureCache;
+  const { createServer } = await import('vite');
+  const srv = await createServer({ root: ROOT, configFile: false, logLevel: 'error', server: { middlewareMode: true, hmr: false }, appType: 'custom', optimizeDeps: { noDiscovery: true } });
+  try {
+    const fx = await srv.ssrLoadModule('/tests/fixtures/week4Child.ts');
+    fixtureCache = JSON.stringify(fx.fixtureWeek4Child(new Date()));
+  } finally {
+    await srv.close();
+  }
+  return fixtureCache;
+}
+/** Nạp dữ liệu vào app (như "Nhập từ tệp JSON", bỏ qua hỏi) rồi mở lại app → màn chính. */
+async function loadData(json) {
+  assert(await hooksReady(), 'Cần bản build có móc kiểm thử (bỏ --skip-build)');
+  const r = await evaluate(`(() => { const s = window.__piano.store; const r = s.importJSON(${JSON.stringify(json)}, { force: true }); s.recoveredFromMirror = false; s.flush(); return r; })()`);
+  await gotoApp();
+  await toHome();
+  await sleep(1200); // màn mừng "🎁 Quà mới" hiện ~0,45 s sau khi vẽ màn chính
+  for (let i = 0; i < 3 && (await dismissUnlock()); i++);
+  return r;
+}
+const snap = () => evaluate(`window.__probe.snap()`);
 
 // ---------------- kịch bản ----------------
 const results = [];
@@ -799,6 +1078,439 @@ async function main() {
       const s = await runSession(`w${w}`, 'next');
       notes.push(`Tuần ${w}: ${s.seq.join(' → ')} (${(s.ms / 1000).toFixed(0)}s)`);
     }
+  });
+
+  // ---------- S: bé thật tuần 4 — buổi học đủ bước ----------
+  await scenario('S', 'Bé thật tuần 4: buổi học (khởi động, nhịp, tập, bài hát chờ + nhận xét thầy, kết) + mời biểu diễn', async (notes) => {
+    await gotoApp();
+    await toHome();
+    const r = await loadData(await week4ChildJSON());
+    notes.push(`Nạp dữ liệu bé tuần 4: ${JSON.stringify(r).slice(0, 80)} → "${await homeTitle()}"`);
+    await shot('home-week4');
+    const s = await runSession('w4-child', 'next', { concert: true });
+    notes.push(`Buổi: ${s.seq.join(' → ')} (${(s.ms / 1000).toFixed(0)}s)`);
+    notes.push(
+      `Bài hát: chạm phím ảo ${s.songTaps} lần; kết quả: ${s.reviews.map((x) => `"${x.title}" khuông=${x.rv} lời="${(x.teacher || x.next).slice(0, 60)}"`).join(' · ') || '(không có màn kết quả)'}`,
+    );
+    notes.push(`Mời biểu diễn ở màn kết: ${s.concert ? 'có → đã mở chọn bài / mời khán giả / sân khấu' : 'KHÔNG'}`);
+    assert(s.concert, 'Màn kết buổi không mời biểu diễn (dữ liệu bé tuần 4 đã qua tuần 3)');
+    // Thư viện → bài hát "🐢 Từng nốt": chạm phím ảo (một lần nhầm) → bố mẹ chấm → kết quả có nhận xét thầy → Album
+    await tapText('Bài hát');
+    await waitFor(`screenKind() === 'library'`, 'Thư viện');
+    await tapSel('.song-card:not(.locked)');
+    await waitFor(`screenKind() === 'song'`, 'màn bài hát');
+    await tapBy(`[...document.querySelectorAll('.song-head button')].find((b) => txt(b).includes('Từng nốt'))`, '🐢 Từng nốt');
+    await sleep(300);
+    await tapText('Bắt đầu');
+    let rv = null;
+    let taps = 0;
+    for (let i = 0; i < 200 && !rv; i++) {
+      const k = await evaluate(inPage(SONG_TAP)).catch(() => null);
+      if (k) {
+        taps++;
+        await doAction(k);
+      } else {
+        rv = await evaluate(inPage(REVIEW_SEEN)).catch(() => null);
+        if (rv) break;
+        const d = await evaluate(inPage('return decide();')).catch(() => null);
+        for (const x of d?.actions ?? []) if (!/Bắt đầu|Tiếp/.test(x.what)) await doAction(x);
+      }
+      await sleep(250);
+    }
+    await shot('song-wait-result');
+    notes.push(`Thư viện, Từng nốt: ${taps} lần chạm phím ảo → kết quả: khuông nhận xét=${rv?.rv} · ${rv?.marks} dấu màu · lời thầy "${rv?.teacher || rv?.next}"`);
+    assert(rv && (rv.rv || rv.teacher), 'Không thấy màn kết quả có nhận xét thầy (khuông tô màu / lời nhắn)');
+    await tapText('Quay lại');
+    await waitFor(`screenKind() === 'library'`, 'về Thư viện');
+    await tapText('Album của con');
+    await waitFor(`screenKind() !== 'library'`, 'màn Album', 10_000);
+    await sleep(800);
+    await shot('album');
+    notes.push(`Album: "${(await evaluate(inPage(`return txt(document.querySelector('.screen')).slice(0, 120)`))).trim()}"`);
+    await tapText('Quay lại');
+    await waitFor(`screenKind() === 'library' || screenKind() === 'home'`, 'rời Album');
+    if ((await kindNow()) === 'library') await tapText('Quay lại');
+    await waitFor(`screenKind() === 'home'`, 'về màn chính');
+  });
+
+  // ---------- G: 7 trò chơi ----------
+  await scenario('G', 'Trò chơi: màn chọn trò → từng trò (giới thiệu → Bắt đầu → chạm vài lượt → ra)', async (notes) => {
+    await gotoApp();
+    await toHome();
+    if (await hooksReady(3000)) {
+      // Tuần 20: mở khóa hết các trò (nội dung theo giáo trình tới tuần hiện tại)
+      await evaluate(`window.__piano.store.setCurrentWeek(20)`);
+      await gotoApp();
+      await toHome();
+    }
+    await tapText('Trò chơi');
+    await waitFor(`!!document.querySelector('.games-hub')`, 'màn Trò chơi');
+    await shot('hub');
+    const cards = await evaluate(
+      `[...document.querySelectorAll('.game-card')].map((c) => ({ id: c.dataset.game, locked: c.classList.contains('locked'), title: c.querySelector('.gc-title')?.textContent }))`,
+    );
+    notes.push(`Màn chọn trò: ${cards.map((c) => `${c.title}${c.locked ? ' 🔒' : ''}`).join(', ')}`);
+    assert(cards.length === 7, `Cần 7 trò, có ${cards.length}`);
+    for (const c of cards) {
+      if (c.locked) continue;
+      await tapSel(`.game-card[data-game="${c.id}"]`);
+      await waitFor(`!!document.querySelector('.game-intro') && !!btn('Bắt đầu')`, `giới thiệu ${c.id}`, 10_000);
+      await shot(`${c.id}-intro`);
+      await tapText('Bắt đầu');
+      await sleep(1500);
+      let acts = 0;
+      const t0g = Date.now();
+      while (Date.now() - t0g < 9000 && acts < 14) {
+        if (await evaluate(`!!document.querySelector('.game-end')`)) break;
+        const a = await evaluate(
+          inPage(`
+          const pick = (l) => l[Math.floor(Math.random() * l.length)];
+          const pad = document.querySelector('.bc-pad'); if (pad && vis(pad)) return target(pad, 'bc-pad');
+          const nxt = btn('Tiếp') || btn('Câu tiếp'); if (nxt) return target(nxt, 'Tiếp');
+          const opts = [...document.querySelectorAll('.game-stage button')].filter((b) => vis(b) && !b.disabled && !String(b.className).includes('speak'));
+          if (opts.length) { const b = pick(opts); return target(b, 'chọn ' + label(b)); }
+          const keys = [...document.querySelectorAll('.game-screen .key[data-pitch]')].filter(vis);
+          const lit = keys.filter((k) => k.classList.contains('is-target'));
+          if (keys.length) { const k = pick(lit.length ? lit : keys); return target(k, 'phím ' + k.dataset.pitch); }
+          return null;`),
+        ).catch(() => null);
+        if (a) {
+          await doAction(a);
+          acts++;
+        }
+        await sleep(a?.what === 'bc-pad' ? 450 : 700);
+      }
+      await shot(`${c.id}-play`);
+      const state = await evaluate(inPage(`return txt(document.querySelector('.game-stage')).slice(0, 90)`));
+      notes.push(`${c.title}: ${acts} lần chạm → "${state}"`);
+      // Ra: màn kết → "Về Trò chơi"; đang chơi → "Quay lại"
+      if (await evaluate(inPage(`return !!btn('Về Trò chơi')`))) await tapText('Về Trò chơi');
+      else await tapText('Quay lại');
+      await sleep(400);
+      if ((await kindNow()) === 'dialog')
+        await tapBy(`[...document.querySelector('.dialog-backdrop').querySelectorAll('button')].find((b) => label(b) !== 'Hủy')`, 'xác nhận rời trò');
+      if (!(await evaluate(`!!document.querySelector('.games-hub')`)) && (await evaluate(inPage(`return !!btn('Quay lại')`)))) await tapText('Quay lại');
+      await waitFor(`!!document.querySelector('.games-hub')`, `về màn Trò chơi từ ${c.id}`, 10_000);
+    }
+    await tapText('Quay lại');
+    await waitFor(`screenKind() === 'home'`, 'về màn chính');
+  });
+
+  // ---------- R: phụ huynh + công cụ ----------
+  await scenario('R', 'Phụ huynh: thẻ, báo cáo tuần + ảnh, sao lưu, 🩺, micro không có / bị từ chối, màn "Ối"', async (notes) => {
+    await gotoApp();
+    await toHome();
+    const hooks = await hooksReady(3000);
+    if (hooks) await loadData(await week4ChildJSON());
+    await openParent();
+    await shot('parent');
+    const cardsTxt = await evaluate(inPage(`return [...document.querySelectorAll('.screen section.card h2, .screen .card > h2')].map(txt)`));
+    notes.push(`Thẻ màn Phụ huynh (${cardsTxt.length}): ${cardsTxt.join(' | ')}`);
+    // 📊 Báo cáo tuần + ảnh (canvas → toBlob → share / tải về)
+    await tapBy(`btn('Xem báo cáo tuần') || btn('Mở báo cáo tuần')`, 'Báo cáo tuần');
+    await waitFor(`!!document.querySelector('.wr-tabs')`, 'màn Báo cáo tuần');
+    await sleep(800);
+    await shot('weekly');
+    const tabs = await evaluate(`document.querySelectorAll('.wr-tab').length`);
+    const before = downloads.length;
+    await tapText('Gửi ảnh');
+    const toastW = await waitFor(`txt(document.querySelector('.toast.show')) || ''`, 'thông báo gửi ảnh', 8000).catch(() => '');
+    await sleep(800);
+    const png = downloads.slice(before).find((d) => d.name.endsWith('.png'));
+    let pngOk = false;
+    if (png && existsSync(png.file)) {
+      const b = readFileSync(png.file);
+      pngOk = b.length > 20_000 && b.subarray(1, 4).toString() === 'PNG';
+      notes.push(`📊 Báo cáo tuần: ${tabs} tuần; "Gửi ảnh" → ${png.name} ${b.length} B, ${b.readUInt32BE(16)}×${b.readUInt32BE(20)}, PNG=${pngOk}; toast "${toastW}"`);
+    } else notes.push(`📊 Báo cáo tuần: "Gửi ảnh" KHÔNG tải ảnh nào (toast "${toastW}")`);
+    assert(pngOk, 'Ảnh báo cáo tuần (canvas toBlob) không tạo được');
+    if (tabs > 1) {
+      await tapSel('.wr-tab:not(.on)');
+      await sleep(600);
+      await shot('weekly-other');
+    }
+    await tapText('Sao chép chữ');
+    notes.push(`📋 Sao chép chữ → "${await waitFor(`txt(document.querySelector('.toast.show')) || ''`, 'toast sao chép', 5000).catch(() => '')}"`);
+    await tapText('Quay lại');
+    await waitFor(`screenKind() === 'parent'`, 'về Phụ huynh từ báo cáo tuần');
+    // 💾 Sao lưu → tệp JSON hợp lệ, đủ buổi
+    const b0 = downloads.length;
+    await tapText('Sao lưu');
+    await sleep(2000);
+    const js = downloads.slice(b0).find((d) => d.name.endsWith('.json'));
+    let backupOk = false;
+    if (js) {
+      try {
+        const data = JSON.parse(readFileSync(js.file, 'utf8'));
+        const d = data.data ?? data;
+        backupOk = Array.isArray(d.sessions) && d.sessions.length >= (hooks ? 40 : 1);
+        notes.push(`💾 Sao lưu → ${js.name} ${js.size} B, ${d.sessions?.length} buổi, tuần ${d.progress?.currentWeek}`);
+      } catch (e) {
+        notes.push(`💾 Sao lưu → ${js.name} KHÔNG đọc được JSON: ${e.message}`);
+      }
+    } else notes.push('💾 Sao lưu: không có tệp tải về');
+    assert(backupOk, 'Sao lưu không ra tệp JSON đủ dữ liệu');
+    // 🩺 Kiểm tra iPad
+    await openAdvanced();
+    await tapText('Kiểm tra iPad (gửi người hỗ trợ)');
+    await waitFor(`!!btn('Phát thử')`, 'màn Kiểm tra iPad');
+    await sleep(1200);
+    await shot('diagnostics');
+    await tapText('Phát thử');
+    await sleep(1500);
+    await tapText('Nghe thử').catch(() => undefined);
+    await sleep(1500);
+    await shot('diagnostics-tested');
+    const d0 = downloads.length;
+    await tapText('Gửi kết quả cho người hỗ trợ');
+    await sleep(2000);
+    notes.push(
+      `🩺 Gửi kết quả → ${downloads.slice(d0).map((d) => `${d.name} ${d.size} B`).join(', ') || 'không tải tệp'}; "${await evaluate(inPage(`return txt(document.querySelector('.diag-send-result')) || txt(document.querySelector('.toast.show'))`))}"`,
+    );
+    await tapText('Quay lại');
+    await waitFor(`screenKind() === 'parent'`, 'về Phụ huynh từ 🩺', 10_000);
+    // 🎤 Micro: (1) trình duyệt không có getUserMedia (WebKit Windows), (2) bị từ chối, (3) không có micro
+    const micCases = [
+      ['không có getUserMedia', null],
+      ['bị từ chối (NotAllowedError)', 'NotAllowedError'],
+      ['không có micro (NotFoundError)', 'NotFoundError'],
+    ];
+    for (const [name, err] of micCases) {
+      if (err)
+        await evaluate(`(() => {
+          const md = { getUserMedia: () => Promise.reject(new DOMException('wk-test ${err}', '${err}')), enumerateDevices: () => Promise.resolve([]),
+            addEventListener() {}, removeEventListener() {} };
+          Object.defineProperty(navigator, 'mediaDevices', { value: md, configurable: true });
+        })()`);
+      if (!(await evaluate(inPage(`return !!btn('Bắt đầu cài micro')`)))) await openAdvanced();
+      await tapBy(`btn('Bắt đầu cài micro') || btn('Cài micro (3 bước)') || btn('Thử / chỉnh micro')`, 'Cài micro');
+      await waitFor(`!document.querySelector('.parent-head')`, 'màn micro', 8000);
+      await sleep(800);
+      const allow = await evaluate(inPage(`return !!btnStarts('1. Cho phép')`));
+      if (allow) {
+        await tapTextStarts('1. Cho phép');
+        await sleep(2500);
+      }
+      await shot(`mic-${err ?? 'none'}`);
+      const msg = await evaluate(inPage(`return txt(document.querySelector('.screen')).slice(0, 260)`));
+      notes.push(`🎤 Micro ${name}: ${allow ? 'chạm "1. Cho phép micro" → ' : '(không có nút cho phép) '}"${msg}"`);
+      await tapText('Quay lại');
+      await waitFor(`screenKind() === 'parent'`, 'về Phụ huynh từ micro', 10_000);
+    }
+    await backToKid();
+    // 🙈 Màn "Ối" (lỗi khi vẽ màn) → 🩺 thấy lỗi trong nhật ký → về màn chính
+    if (hooks) {
+      expectedConsole = /wk-test: màn lỗi giả|^screen/;
+      await evaluate(`window.__piano.show(() => { throw new Error('wk-test: màn lỗi giả'); })`);
+      await waitFor(`!!document.querySelector('.app-recovery')`, 'màn "Ối"');
+      await shot('recovery');
+      await tapText('Kiểm tra iPad');
+      await waitFor(`!!btn('Phát thử')`, '🩺 từ màn Ối', 10_000);
+      await sleep(800);
+      const logged = await evaluate(
+        `(() => { const t = document.body.textContent; const m = /Lỗi gần đây[^0-9]{0,5}[0-9]+ lỗi/.exec(t); return { row: m ? m[0] : '', stored: Object.keys(localStorage).some((k) => /err/i.test(k) && (localStorage.getItem(k) || '').includes('wk-test')) }; })()`,
+      );
+      notes.push(`Màn "Ối": hiện đúng; nhật ký lỗi ${logged.stored ? 'CÓ' : 'KHÔNG có'} "wk-test"; 🩺 dòng "${logged.row}"`);
+      assert(logged.stored && logged.row, 'Lỗi vẽ màn không vào nhật ký / không hiện trong 🩺');
+      await shot('recovery-diag');
+      await evaluate(`window.__piano.show(() => { throw new Error('wk-test: màn lỗi giả'); })`);
+      await waitFor(`!!document.querySelector('.app-recovery')`, 'màn "Ối" lần 2');
+      await tapText('Về màn chính');
+      await waitFor(`screenKind() === 'home'`, 'về màn chính từ màn Ối', 10_000);
+      expectedConsole = null;
+    } else notes.push('Màn "Ối": bỏ qua (bản build không có móc kiểm thử)');
+  });
+
+  // ---------- L: rò rỉ ----------
+  await scenario('L', 'Rò rỉ: 10 vòng đổi màn + 3 buổi học — hẹn giờ, trình nghe sự kiện, nút âm thanh, DOM', async (notes) => {
+    await gotoApp();
+    await toHome();
+    const hooks = await hooksReady(3000);
+    if (hooks) await loadData(await week4ChildJSON());
+    const idle = async () => {
+      await waitFor(`screenKind() === 'home'`, 'màn chính (đo)');
+      await sleep(2500); // hẹn giờ ngắn chạy xong, nốt tắt hẳn
+      const a = await snap();
+      await sleep(2000);
+      const b = await snap();
+      return { ...b, rafPerSec: (b.raf - a.raf) / 2 };
+    };
+    const cycle = async (i) => {
+      await tapText('Bài hát');
+      await waitFor(`screenKind() === 'library'`, 'Thư viện');
+      await tapSel('.song-card:not(.locked)');
+      await waitFor(`screenKind() === 'song'`, 'bài hát');
+      await tapText('Xem mẫu');
+      await sleep(1500);
+      await tapText('Dừng', 3000).catch(() => undefined);
+      await tapText('Quay lại');
+      await waitFor(`screenKind() === 'library'`, 'Thư viện');
+      await tapText('Quay lại');
+      await waitFor(`screenKind() === 'home'`, 'màn chính');
+      await tapText('Trò chơi');
+      await waitFor(`!!document.querySelector('.games-hub')`, 'Trò chơi');
+      await tapSel('.game-card:not(.locked)');
+      await tapText('Bắt đầu', 10_000);
+      await sleep(1200);
+      await tapBy(`[...document.querySelectorAll('.game-screen .key[data-pitch], .game-stage button')].filter(vis)[0]`, 'chạm trong trò', 3000).catch(() => undefined);
+      await sleep(500);
+      // Đang chơi → "Quay lại" về màn giới thiệu trò → "Quay lại" lần nữa về màn chọn trò
+      for (let k = 0; k < 3 && !(await evaluate(`!!document.querySelector('.games-hub')`)); k++) {
+        await tapText('Quay lại');
+        await sleep(500);
+      }
+      await waitFor(`!!document.querySelector('.games-hub')`, 'về Trò chơi');
+      await tapText('Quay lại');
+      await waitFor(`screenKind() === 'home'`, 'màn chính');
+      await tapText('Đàn tự do');
+      await waitFor(`!!document.querySelector('.echo-box')`, 'Đàn tự do');
+      await tapBy(`keyFor('E4')`, 'E4');
+      await tapText('Quay lại');
+      await waitFor(`screenKind() === 'home'`, 'màn chính');
+      await tapText('Sticker');
+      await waitFor(`screenKind() === 'stickers'`, 'Sticker');
+      await tapText('Quay lại');
+      if (i % 3 === 0) {
+        await openParent();
+        await tapText('Về màn của bé');
+      }
+    };
+    const rows = [];
+    const row = (label, s) => {
+      const r = {
+        label,
+        intervals: s.intervals,
+        timeouts: s.timeouts,
+        listeners: s.listeners,
+        liveNodes: s.engine?.liveNodes ?? null,
+        voices: s.engine?.voices ?? null,
+        activeSources: s.audio.activeSources,
+        audioNodes: s.audio.nodes,
+        contexts: s.audio.openContexts,
+        dom: s.dom,
+        rafPerSec: s.rafPerSec,
+      };
+      rows.push(r);
+      log(
+        `    ${label.padEnd(10)} hẹn giờ lặp ${r.intervals} · chờ ${r.timeouts} · nghe sự kiện ${r.listeners} · nút đang vang ${r.liveNodes} (nốt ${r.voices}) · nguồn đang chạy ${r.activeSources} · AudioContext ${r.contexts} · DOM ${r.dom} · rAF/s ${r.rafPerSec}`,
+      );
+      return s;
+    };
+    const s0 = row('đầu', await idle());
+    for (let i = 1; i <= 10; i++) {
+      await cycle(i);
+      row(`vòng ${i}`, await idle());
+    }
+    for (let i = 1; i <= 3; i++) {
+      await runSession(`leak-${i}`, 'next');
+      row(`buổi ${i}`, await idle());
+    }
+    const last = await snap();
+    writeFileSync(join(OUT, 'leak.json'), JSON.stringify({ first: s0, rows, last }, null, 2));
+    const r1 = rows[1];
+    const r10 = rows[10];
+    const rl = rows[rows.length - 1];
+    for (const k of ['intervals', 'timeouts', 'listeners', 'liveNodes', 'activeSources', 'contexts', 'dom', 'rafPerSec'])
+      notes.push(`${k}: đầu ${rows[0][k]} → vòng 1 ${r1[k]} → vòng 10 ${r10[k]} → sau 3 buổi ${rl[k]}`);
+    const leaks = [];
+    if (rl.intervals > r1.intervals) leaks.push(`hẹn giờ lặp +${rl.intervals - r1.intervals}: ${JSON.stringify(last.intervalWhere).slice(0, 400)}`);
+    if (rl.listeners > r1.listeners + 2) leaks.push(`trình nghe sự kiện ${r1.listeners} → ${rl.listeners}`);
+    if ((rl.liveNodes ?? 0) > (r1.liveNodes ?? 0) + 8) leaks.push(`nút âm thanh ${r1.liveNodes} → ${rl.liveNodes}`);
+    if (rl.activeSources > r1.activeSources + 4) leaks.push(`nguồn âm đang chạy ${r1.activeSources} → ${rl.activeSources}`);
+    if (rl.contexts > 1) leaks.push(`${rl.contexts} AudioContext đang mở`);
+    if (r10.dom > r1.dom * 1.2 + 50) leaks.push(`DOM ${r1.dom} → ${r10.dom}`);
+    if (rl.rafPerSec > 5) leaks.push(`rAF vẫn chạy ở màn chính đứng yên: ${rl.rafPerSec}/s`);
+    for (const l of leaks) finding(`Dấu hiệu rò: ${l}`);
+    notes.push(leaks.length ? `DẤU HIỆU RÒ: ${leaks.join(' · ')}` : 'Không thấy dấu hiệu rò');
+  });
+
+  // ---------- V: bố cục ở 1133×744 ----------
+  await scenario('V', 'Bố cục iPad 1133×744 (iPad mini ngang): các màn chính + một buổi học', async (notes) => {
+    await page.setViewportSize({ width: 1133, height: 744 });
+    try {
+      await gotoApp();
+      await toHome();
+      if (await hooksReady(3000)) await loadData(await week4ChildJSON());
+      await shot('home');
+      await tapText('Bài hát');
+      await waitFor(`screenKind() === 'library'`, 'Thư viện');
+      await shot('library');
+      await tapSel('.song-card:not(.locked)');
+      await waitFor(`screenKind() === 'song'`, 'bài hát');
+      await shot('song');
+      await tapText('Quay lại');
+      await waitFor(`screenKind() === 'library'`, 'Thư viện');
+      await tapText('Album của con');
+      await sleep(1200);
+      await shot('album');
+      await tapText('Quay lại');
+      await sleep(500);
+      if ((await kindNow()) === 'library') await tapText('Quay lại');
+      await waitFor(`screenKind() === 'home'`, 'màn chính');
+      await tapText('Trò chơi');
+      await waitFor(`!!document.querySelector('.games-hub')`, 'Trò chơi');
+      await shot('games');
+      const ids = await evaluate(`[...document.querySelectorAll('.game-card:not(.locked)')].map((c) => c.dataset.game)`);
+      for (const id of ids) {
+        await tapSel(`.game-card[data-game="${id}"]`);
+        await waitFor(`!!document.querySelector('.game-intro')`, `giới thiệu ${id}`, 10_000);
+        await shot(`game-${id}`);
+        await tapText('Bắt đầu');
+        await sleep(1800);
+        await shot(`game-${id}-play`);
+        for (let k = 0; k < 3 && !(await evaluate(`!!document.querySelector('.games-hub')`)); k++) {
+          await tapText('Quay lại');
+          await sleep(500);
+        }
+        if ((await kindNow()) === 'dialog')
+          await tapBy(`[...document.querySelector('.dialog-backdrop').querySelectorAll('button')].find((b) => label(b) !== 'Hủy')`, 'rời trò');
+        await waitFor(`!!document.querySelector('.games-hub')`, 'về Trò chơi', 10_000);
+      }
+      await tapText('Quay lại');
+      await waitFor(`screenKind() === 'home'`, 'màn chính');
+      await tapText('Sticker');
+      await waitFor(`screenKind() === 'stickers'`, 'Sticker');
+      await shot('stickers');
+      await tapText('Quay lại');
+      await openParent();
+      await shot('parent');
+      await tapBy(`btn('Xem báo cáo tuần') || btn('Mở báo cáo tuần')`, 'Báo cáo tuần');
+      await waitFor(`!!document.querySelector('.wr-tabs')`, 'Báo cáo tuần');
+      await shot('weekly');
+      await tapText('Quay lại');
+      await waitFor(`screenKind() === 'parent'`, 'Phụ huynh');
+      await tapText('Báo cáo');
+      await sleep(1200);
+      await shot('report');
+      await tapText('Quay lại');
+      await sleep(600);
+      // Sau Báo cáo app hỏi "💾 Sao lưu luôn?" (tối đa mỗi tuần một lần) → chụp rồi "Hủy"
+      if ((await kindNow()) === 'dialog') {
+        await shot('report-backup-ask');
+        await tapText('Hủy');
+      }
+      await waitFor(`screenKind() === 'parent'`, 'Phụ huynh');
+      await openAdvanced();
+      await shot('parent-advanced');
+      await tapText('Kiểm tra iPad (gửi người hỗ trợ)');
+      await waitFor(`!!btn('Phát thử')`, '🩺');
+      await shot('diagnostics');
+      await tapText('Quay lại');
+      await waitFor(`screenKind() === 'parent'`, 'Phụ huynh');
+      if (!(await evaluate(inPage(`return !!btn('Bắt đầu cài micro')`)))) await openAdvanced();
+      await tapBy(`btn('Bắt đầu cài micro') || btn('Cài micro (3 bước)') || btn('Thử / chỉnh micro')`, 'Cài micro');
+      await sleep(1200);
+      await shot('mictest');
+      await tapText('Quay lại');
+      await waitFor(`screenKind() === 'parent'`, 'Phụ huynh');
+      await backToKid();
+      const s = await runSession('v-w4', 'next', { concert: true });
+      notes.push(`Buổi ở 1133×744: ${s.seq.join(' → ')}`);
+    } finally {
+      await page.setViewportSize({ width: W, height: H });
+    }
+    const mine = [...layoutIssues.keys()].filter((k) => k.startsWith('1133×744'));
+    notes.push(`Vấn đề bố cục ở 1133×744: ${mine.length}`);
   });
 
   // ---------- D ----------

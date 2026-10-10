@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { MemoryStorage, ProgressStore, STORAGE_KEY } from '../src/progress/ProgressStore';
 import { defaultData, validateAppData } from '../src/progress/schema';
 import { migrate } from '../src/progress/migrations';
+import { RELEASE_VERSION } from '../src/pwa/release';
 
 const fixedNow = () => new Date(2026, 9, 4, 17, 0, 0);
 
@@ -28,6 +29,7 @@ describe('schema v1 (§7)', () => {
       onboardedAt: 0,
       voice: true, // giọng đọc hướng dẫn mặc định BẬT
       autoAdvanceMigrated: true,
+      lastSeenVersion: RELEASE_VERSION, // (+ 2026-10-10) cài mới = đã xem "Có gì mới" của bản hiện tại
     });
   });
 
