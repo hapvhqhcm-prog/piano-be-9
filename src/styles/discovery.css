@@ -1,0 +1,63 @@
+/* (+ 2026-10-10) Nhãn "Mới" (src/ui/components/newBadge.ts) — nhỏ, êm, không phải màn mừng. */
+.has-new {
+  position: relative;
+}
+/* Viên "Mới" trên thẻ: chữ trắng trên san hô đậm (#b8432a — 5.2:1), viền trắng tách khỏi thẻ */
+.new-pill {
+  position: absolute;
+  top: -11px;
+  left: 14px;
+  z-index: 1;
+  padding: 2px 11px 1px;
+  border-radius: var(--r-pill, 999px);
+  background: var(--coral-700, #b8432a);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 22px;
+  letter-spacing: 0.2px;
+  box-shadow: 0 0 0 3px #fff;
+  pointer-events: none;
+}
+/* Thẻ trò chơi: góc trên phải (không che hình trò ở giữa) */
+.game-card .new-pill {
+  top: 14px;
+  left: auto;
+  right: 14px;
+}
+/* Nút "Album của con" */
+.btn .new-pill {
+  top: -12px;
+  left: auto;
+  right: -6px;
+}
+/* Chấm trên nút ở màn chính (một chấm, không có số) */
+.new-dot {
+  position: absolute;
+  top: -5px;
+  right: -3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--coral-500, #f26b4e);
+  box-shadow: 0 0 0 3px #fff;
+  pointer-events: none;
+}
+/* Chuyển động nhẹ MỘT lần khi hiện (không nhấp nháy mãi) — chỉ khi máy không yêu cầu giảm chuyển động.
+   Dùng thuộc tính `scale` riêng (không đè `transform` sẵn có của thẻ / nút). */
+@media (prefers-reduced-motion: no-preference) {
+  .new-pill,
+  .new-dot {
+    animation: new-pop 0.5s ease-out 0.2s both;
+  }
+}
+@keyframes new-pop {
+  from {
+    opacity: 0;
+    scale: 0.6;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}

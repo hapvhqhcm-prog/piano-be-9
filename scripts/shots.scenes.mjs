@@ -409,3 +409,17 @@ SCENES.push(
   { name: 'w4child-first-open', wait: 1500, js: `${w4child} const st = await import('/src/ui/screens/start.ts'); app.show(st.startScreen(app)); ${tapAny} await tapAny('Bắt đầu');` },
   { name: 'w4child-home', js: `${w4child} app.store.updateSettings({ cosmetics: { outfit: 'cap', seen: ['outfit:cap', 'timbre:musicbox', 'backing:march'] } }); const m = await import('/src/ui/screens/home.ts'); app.show(m.homeScreen(app));` },
 );
+
+/** (+ 2026-10-10) Nhãn "Mới" (lessons/discovery.ts): bé tuần 4 sau cập nhật — chấm trên 🎵 / 🎮, viên "Mới" trên thẻ bài / trò. */
+const w4calm = `${w4child} app.store.updateSettings({ cosmetics: { outfit: 'cap', seen: ['outfit:cap', 'timbre:musicbox', 'backing:march'] } });`;
+SCENES.push(
+  { name: 'new-home', wait: 900, js: `${w4calm} const m = await import('/src/ui/screens/home.ts'); app.show(m.homeScreen(app));` },
+  { name: 'new-library', wait: 900, js: `${w4calm} const m = await import('/src/ui/screens/library.ts'); app.show(m.libraryScreen(app));` },
+  { name: 'new-games', wait: 900, js: `${w4calm} const m = await import('/src/ui/screens/games.ts'); app.show(m.gamesScreen(app));` },
+  {
+    // Đã mở Thư viện + Trò chơi một lần → chấm ở màn chính tắt (viên trên thẻ còn tới khi chơi)
+    name: 'new-home-after-seen',
+    wait: 900,
+    js: `${w4calm} const l = await import('/src/ui/screens/library.ts'); app.show(l.libraryScreen(app)); const g = await import('/src/ui/screens/games.ts'); app.show(g.gamesScreen(app)); const m = await import('/src/ui/screens/home.ts'); app.show(m.homeScreen(app));`,
+  },
+);

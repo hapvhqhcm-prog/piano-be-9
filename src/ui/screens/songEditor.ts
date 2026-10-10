@@ -16,6 +16,7 @@ import type { ParentSong } from '../../progress/schema';
 import type { App } from '../App';
 import { backButton, button, confirmDialog, h, toast } from '../components/dom';
 import { StaffView } from '../components/staffView';
+import { lazy } from '../lazy';
 import '../../styles/parentSongs.css';
 import '../../styles/parentux.css';
 
@@ -24,6 +25,7 @@ import '../../styles/parentux.css';
  * - ✍️ Gõ chữ: Đô Rê Mi… (cách gõ ở src/music/solfege.ts), đọc ngay khi gõ, báo lỗi theo dòng, khuông nhạc xem trước
  *   (có số ngón tự ghi) theo chỗ con trỏ đang gõ.
  * - 🎹 Chạm phím: bảng trường độ + bàn phím Đô3–Đô6 (dùng lại trình soạn của trò Sáng tác, không giới hạn số ô).
+ * - 🎙️ Đàn để thêm bài (+ 2026-10-10, songRecord.ts): đàn giai điệu trên đàn thật → app chép nốt + trường độ → ô Gõ chữ.
  * - ▶ Nghe thử · 💾 Lưu → Thư viện mục "📝 Bài bố mẹ thêm" (chơi được mọi chế độ như bài hát thường).
  * Bài chỉ lưu trên iPad này (PRIVACY_NOTE) — app công khai không chứa giai điệu có bản quyền.
  */
@@ -34,6 +36,9 @@ export interface SongEditorHooks {
 }
 
 type Mode = 'text' | 'tap';
+
+/** (+ 2026-10-10) "🎙️ Đàn để thêm bài": ghi giai điệu từ đàn thật → nốt (chép nhạc: src/music/transcribe.ts). */
+const recordMod = lazy(() => import('./songRecord'));
 
 const EXAMPLES: Array<{ name: string; ts: TimeSig; text: string }> = [
   {
@@ -192,10 +197,48 @@ export function songEditorScreen(app: App, existing: ParentSong | null, hooks: S
         b.addEventListener('click', () => switchMode(m));
         return b;
       };
+      const rec = h('button', { class: 'se-tab se-rec', type: 'button' }, '🎙️ Đàn để thêm bài');
+      rec.addEventListener('click', openRecorder);
       tabs.replaceChildren(
         h('div', { class: 'se-tabset', role: 'tablist' }, tab('text', '✍️ Gõ chữ Đô Rê Mi'), tab('tap', '🎹 Chạm phím')),
+        rec,
         h('div', { class: 'se-privacy' }, `🔒 ${PRIVACY_NOTE}`),
       );
+    }
+
+    // ---------------- 🎙️ Đàn để thêm bài (songRecord.ts — chunk riêng, nạp ngầm khi mở trình soạn) ----------------
+    let recClose: (() => void) | null = null;
+    function openRecorder(): void {
+      stopPlay();
+      const go = (m: typeof import('./songRecord')) => {
+        recClose = m.openSongRecorder(app, screen, {
+          ts,
+          bpm,
+          onClose: () => (recClose = null),
+          onApply: (r) => {
+            const take = () => {
+              recClose?.();
+              recClose = null;
+              ts = r.ts;
+              bpm = r.bpm;
+              text = r.text;
+              area.value = text;
+              area.setSelectionRange(0, 0);
+              mode = 'text';
+              dirty = true;
+              renderTop();
+              renderTabs();
+              render();
+              toast(`🎙️ Đã chép ${r.notes} nốt — ▶ Nghe thử, sửa chữ nếu cần rồi 💾 Lưu`, 3500);
+            };
+            const has = mode === 'text' ? !!text.trim() : tapNotes.length > 0;
+            if (has) confirmDialog({ title: 'Thay nốt đang có?', text: 'Nốt vừa đàn sẽ THAY cho nốt đang có trong trình soạn.', okLabel: 'Thay', onOk: take });
+            else take();
+          },
+        });
+      };
+      if (recordMod.loaded) go(recordMod.loaded);
+      else recordMod.load().then(go, () => toast('Chưa mở được — thử lại nhé', 2600));
     }
 
     function switchMode(m: Mode): void {
@@ -505,7 +548,9 @@ export function songEditorScreen(app: App, existing: ParentSong | null, hooks: S
     renderTabs();
     render();
     if (mode === 'text' && !text) window.setTimeout(() => area.focus(), 50);
+    recordMod.prefetch();
     return () => {
+      recClose?.();
       window.clearTimeout(parseTimer);
       stopPlay();
       kb.destroy();

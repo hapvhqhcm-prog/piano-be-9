@@ -5,7 +5,9 @@
  * Nội dung mỗi trò lấy theo giáo trình tới tuần hiện tại (chỉ điều con đã học). Kỷ lục lưu ở AppData.games.
  */
 import { SONGS } from '../../music/tune';
-import { GAME_IDS, GAME_INFO, gameLock, type GameId } from '../../practice/games/catalog';
+import { GAME_IDS, GAME_INFO, gameLock, unlockedGames, type GameId } from '../../practice/games/catalog';
+import { gameKey, gamePlayed, newGameIds, withSeen } from '../../lessons/discovery';
+import { newPillOn } from '../components/newBadge';
 import { speak } from '../../audio/voice';
 import type { App, Screen } from '../App';
 import { backButton, h, toast } from '../components/dom';
@@ -55,6 +57,8 @@ export function gamesScreen(app: App): Screen {
             )
           : null,
       );
+      // (+ 2026-10-10) "Mới": trò đã mở mà con chưa chơi xong lượt nào (tắt sau lượt đầu)
+      if (!lock && !gamePlayed(data, id)) newPillOn(b);
       b.addEventListener('click', () => {
         if (lock) {
           toast(lock);
@@ -79,6 +83,9 @@ export function gamesScreen(app: App): Screen {
         h('div', { class: 'actions' }, backButton(() => app.show(homeScreen(app)))),
       ),
     );
+    // (+ 2026-10-10) Con đã THẤY các trò mới ở đây → tắt chấm trên nút 🎮 ở màn chính (viên "Mới" trên thẻ vẫn còn tới khi chơi)
+    const seen = withSeen(data, newGameIds(data, unlockedGames(data, SONGS)).map(gameKey));
+    if (seen) app.store.updateSettings({ seenNew: seen });
     // Nạp ngầm các trò mới (offline đã có trong precache — đây chỉ để chạm là mở ngay)
     prefetchLater([earMod, contourMod, beatMod, echoMod]);
   };

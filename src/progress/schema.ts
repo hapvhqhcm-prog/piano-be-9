@@ -174,6 +174,11 @@ export interface Settings {
   lastSeenVersion?: string;
   /** (+ 2026-10-10) Lúc nút "📖 Hướng dẫn" của màn Phụ huynh đã được làm nổi MỘT lần (ms). Không có = chưa. */
   guideHintAt?: number;
+  /**
+   * (+ 2026-10-10) Nhãn "Mới" (src/lessons/discovery.ts): các mục mới bé ĐÃ THẤY ở màn chứa nó — chấm ở màn chính tắt.
+   * Mã: "s:<bài>" (bài mới ở Thư viện) · "g:<trò>" (trò ở màn Trò chơi) · "album". Không có = chưa thấy gì. Đọc MỀM (cleanSeenNew).
+   */
+  seenNew?: string[];
 }
 
 /** (+ 2026-10-08) Món quà đang dùng — mã món trong lessons/unlocks.ts. */
@@ -292,6 +297,17 @@ const validGameScore = (g: unknown): g is GameScore =>
  * (+ 2026-10-07) Lọc kỷ lục trò chơi một cách DỄ TÍNH: mục hỏng bị bỏ (không làm hỏng cả bản sao lưu).
  * Không phải object / rỗng → undefined.
  */
+/** (+ 2026-10-10) Tối đa số mã trong settings.seenNew (mỗi mã ≤ SEEN_KEY_MAX ký tự). */
+export const SEEN_NEW_MAX = 300;
+const SEEN_KEY_MAX = 64;
+
+/** (+ 2026-10-10) Lọc settings.seenNew DỄ TÍNH: bỏ mã hỏng / trùng, giữ SEEN_NEW_MAX mã cuối. Rỗng / sai kiểu → undefined. */
+export function cleanSeenNew(x: unknown): string[] | undefined {
+  if (!Array.isArray(x)) return undefined;
+  const out = [...new Set(x.filter((k): k is string => typeof k === 'string' && k.length > 0 && k.length <= SEEN_KEY_MAX))].slice(-SEEN_NEW_MAX);
+  return out.length ? out : undefined;
+}
+
 export function sanitizeGames(x: unknown): Record<string, GameScore> | undefined {
   if (!isObj(x)) return undefined;
   const out: Record<string, GameScore> = {};
@@ -511,6 +527,8 @@ export function validateAppData(x: unknown): string[] {
     // (+ 2026-10-10) "Có gì mới" / gợi ý Hướng dẫn
     if (st.lastSeenVersion !== undefined && !(typeof st.lastSeenVersion === 'string' && /^\d+\.\d+\.\d+$/.test(st.lastSeenVersion))) errs.push('settings.lastSeenVersion');
     if (st.guideHintAt !== undefined && !(typeof st.guideHintAt === 'number' && Number.isFinite(st.guideHintAt))) errs.push('settings.guideHintAt');
+    // (+ 2026-10-10) Nhãn "Mới" — migrate() đã lọc (cleanSeenNew); ở đây chỉ chặn kiểu sai hẳn
+    if (st.seenNew !== undefined && !(Array.isArray(st.seenNew) && st.seenNew.every((k) => typeof k === 'string'))) errs.push('settings.seenNew');
   }
   const p = x.progress;
   if (!isObj(p)) errs.push('Thiếu progress');

@@ -13,6 +13,8 @@ import '../../styles/kidux.css';
 import { button } from '../components/dom';
 import { albumStore } from '../../progress/albumStore';
 import { lazy, lazyScreen } from '../lazy';
+import { ALBUM_KEY, albumIsNew, isNewSong, newSongIds, seenNew, songKey, withSeen } from '../../lessons/discovery';
+import { newPillOn } from '../components/newBadge';
 
 // (+ 2026-10-08) 🎧 Album của con — chunk riêng
 const albumMod = lazy(() => import('./album'));
@@ -55,7 +57,7 @@ export function libraryScreen(app: App, filter?: 'all' | 'vn') {
           h('div', { class: 'song-card-week' }, `🔒 Tuần ${s.week}`),
         );
       }
-      return h(
+      const el = h(
         'button',
         {
           class: `song-card${star ? ' is-star' : ''}`,
@@ -86,6 +88,8 @@ export function libraryScreen(app: App, filter?: 'all' | 'vn') {
         open && s.aka ? h('div', { class: 'song-card-aka' }, `còn gọi: “${s.aka}”`) : null,
         h('div', { class: 'song-card-week' }, faded ? 'Ôn lại nhé!' : star ? 'Đã thuộc!' : `Tuần ${s.week}`),
       );
+      // (+ 2026-10-10) "Mới": bài vừa thêm vào Thư viện (songAdditions.ts), đã mở, con chưa chơi lần nào
+      return isNewSong(data, s) ? newPillOn(el) : el;
     };
     // v5 — "🎼 Bài của con": bài bé tự sáng tác (trò Sáng tác), mới nhất trước; chạm để chơi như bài hát
     const mine = [...(data.compositions ?? [])].sort((a, b) => b.createdAt - a.createdAt);
@@ -174,6 +178,26 @@ export function libraryScreen(app: App, filter?: 'all' | 'vn') {
     const mineSection = mine.length
       ? h('section', { class: 'lib-mine' }, h('h2', { class: 'lib-level' }, '🎼 Bài con sáng tác'), h('div', { class: 'library' }, ...mine.map(compCard)))
       : null;
+    const albumBtn = button({
+      icon: '🎧',
+      label: 'Album của con',
+      kind: 'sun',
+      onTap: () => {
+        // (+ 2026-10-10) Đã mở Album → tắt viên "Mới" trên nút
+        const seenAlbum = withSeen(app.store.get(), [ALBUM_KEY]);
+        if (seenAlbum) app.store.updateSettings({ seenNew: seenAlbum });
+        app.show(lazyScreen(albumMod, (m) => m.albumScreen(app, () => app.show(libraryScreen(app)))));
+      },
+    });
+    // (+ 2026-10-10) Album có bản thu mà con chưa mở lần nào → viên "Mới" (đọc bản thu là bất đồng bộ — hiện sau một chút)
+    const album = albumStore();
+    if (album && !seenNew(data).has(ALBUM_KEY))
+      void album.list().then((l) => {
+        if (albumIsNew(app.store.get(), l.length) && albumBtn.isConnected && !albumBtn.querySelector('.new-pill')) newPillOn(albumBtn);
+      });
+    // (+ 2026-10-10) Con đã THẤY các bài mới ở đây → tắt chấm trên nút 🎵 ở màn chính (viên trên thẻ còn tới khi chơi)
+    const seen = withSeen(data, newSongIds(data).map(songKey));
+    if (seen) app.store.updateSettings({ seenNew: seen });
     root.append(
       h(
         'div',
@@ -184,18 +208,7 @@ export function libraryScreen(app: App, filter?: 'all' | 'vn') {
           { class: 'library-wrap scrollable' },
           h('p', { class: 'muted lib-note' }, `⭐ Đã thuộc ${SONGS.filter((x) => songMastered(data, x.id)).length}/${SONGS.length} bài — thuộc = đàn trọn bài theo nhịp, tốc độ từ 60 trở lên.`),
           // (+ 2026-10-08) 🎧 Album của con: bản thu hay nhất của mỗi bài (chỉ trên iPad này)
-          albumStore()
-            ? h(
-                'div',
-                { class: 'lib-album-row' },
-                button({
-                  icon: '🎧',
-                  label: 'Album của con',
-                  kind: 'sun',
-                  onTap: () => app.show(lazyScreen(albumMod, (m) => m.albumScreen(app, () => app.show(libraryScreen(app))))),
-                }),
-              )
-            : null,
+          albumStore() ? h('div', { class: 'lib-album-row' }, albumBtn) : null,
           filterBar,
           ...(libFilter === 'vn' ? vnSections : [mineSection, parentSection, ...levelSections]),
         ),

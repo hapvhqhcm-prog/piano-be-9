@@ -1,0 +1,305 @@
+/* =========================================================
+   "🎙️ Đàn để thêm bài" (2026-10-10): lớp phủ ghi giai điệu từ đàn thật trên màn soạn bài (songRecord.ts).
+   ========================================================= */
+
+.sr {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-2);
+  padding-top: env(safe-area-inset-top);
+}
+.sr-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 20px 4px;
+}
+.sr-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--violet-700);
+  white-space: nowrap;
+}
+.sr-sub {
+  flex: 1;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.sr-close {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 3px solid var(--violet-200);
+  background: var(--surface);
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+.sr-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 20px;
+}
+
+/* ---------- Bước 1: chuẩn bị ---------- */
+.sr-steps {
+  width: min(980px, 100%);
+  margin: 4px 0 8px;
+  padding: 12px 20px 12px 48px;
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  box-shadow: var(--e2);
+  font-size: 21px;
+  line-height: 1.45;
+  color: var(--ink);
+}
+.sr-steps li + li {
+  margin-top: 4px;
+}
+.sr-opts {
+  width: min(980px, 100%);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 24px;
+  align-items: center;
+  margin: 6px 0;
+}
+.sr-opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sr-opt .seg-group {
+  display: flex;
+  gap: 4px;
+}
+.sr-opt .seg-btn,
+.sr-tools .seg-btn {
+  min-width: 56px;
+  min-height: 52px;
+  padding: 4px 12px;
+  font-size: 21px;
+}
+.sr-lbl {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.sr-warn,
+.sr-tip {
+  width: min(980px, 100%);
+  margin: 8px 0 0;
+  padding: 10px 16px;
+  border-radius: var(--r-md);
+  font-size: 19px;
+  line-height: 1.4;
+}
+.sr-warn {
+  color: var(--coral-700);
+  background: var(--coral-50);
+  border: 3px solid var(--coral-100);
+  font-weight: 700;
+}
+.sr-tip {
+  color: var(--sun-800);
+  background: var(--sun-50);
+  border: 2px solid var(--sun-100);
+}
+
+/* ---------- Bước 2: đang nghe ---------- */
+.sr-live {
+  flex: 1;
+  width: min(980px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+}
+.sr-mic {
+  font-size: 96px;
+  line-height: 1;
+  animation: sr-pulse 1.2s ease-in-out infinite;
+}
+.sr-count {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 96px;
+  font-weight: 800;
+  color: #fff;
+  background: var(--violet-500);
+  box-shadow: inset 0 -6px 0 var(--violet-700), var(--e2);
+}
+.sr-live-msg {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--ink);
+}
+.sr-live-notes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  min-height: 52px;
+}
+.sr-live-time {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+@keyframes sr-pulse {
+  50% {
+    transform: scale(1.12);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sr-mic {
+    animation: none;
+  }
+}
+
+/* ---------- Bước 3: xem lại ---------- */
+.sr-review {
+  width: min(1000px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sr-summary,
+.sr-hand {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.sr-hand {
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.sr-out {
+  color: var(--coral-700);
+  font-weight: 700;
+}
+.sr-staff {
+  width: 100%;
+  height: 168px;
+  flex: 0 0 auto;
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  box-shadow: var(--e2);
+  padding: 2px 8px;
+}
+.sr-staff-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.sr-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 128px;
+  overflow-y: auto;
+  padding: 2px;
+}
+.sr-chip {
+  min-width: 64px;
+  min-height: 56px;
+  padding: 2px 10px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-md);
+  border: 3px solid var(--violet-200);
+  background: var(--surface);
+  font: inherit;
+  color: var(--ink);
+  cursor: pointer;
+}
+.sr-chip b {
+  font-size: 19px;
+  line-height: 1.1;
+}
+.sr-chip small {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.sr-chip.rest {
+  border-style: dashed;
+  background: var(--surface-2);
+}
+.sr-chip.on {
+  border-color: var(--violet-500);
+  background: var(--violet-50);
+  box-shadow: 0 0 0 3px var(--violet-200);
+}
+.sr-chip.live {
+  min-height: 48px;
+  font-size: 22px;
+  font-weight: 800;
+  flex-direction: row;
+}
+.sr-edit,
+.sr-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.sr-edit {
+  padding: 8px 12px;
+  border-radius: var(--r-md);
+  background: var(--violet-50);
+}
+.sr-edit-lbl {
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--violet-700);
+  margin-right: 6px;
+}
+.sr-edit-hint {
+  margin: 0;
+  font-size: 17px;
+  color: var(--ink-2);
+}
+.sr-edit .btn,
+.sr-tools .btn {
+  min-height: 52px;
+  padding: 4px 14px;
+  font-size: 18px;
+}
+.sr-edit .btn .btn-icon,
+.sr-tools .btn .btn-icon {
+  font-size: 20px;
+}
+.sr-tools .sr-lbl + .btn {
+  margin-left: 2px;
+}
+.sr-tools .sr-opt {
+  margin-left: auto;
+}

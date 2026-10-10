@@ -22,6 +22,14 @@ export const CHANGELOG_BASELINE = '0.15.0';
 
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
+    version: '0.22.0',
+    date: '2026-10-10',
+    items: [
+      '🎙️ Đàn để thêm bài (trong "Bố mẹ thêm bài"): đàn giai điệu, app tự ghi nốt và nhịp.',
+      'Nhãn "Mới" nhỏ trên bài hát và trò chơi bé chưa thử — tự mất khi bé chơi lần đầu.',
+    ],
+  },
+  {
     version: '0.21.1',
     date: '2026-10-10',
     items: [

@@ -32,6 +32,9 @@ import type { AppData } from '../../progress/schema';
 import { playableSongCount, welcomeBack } from '../../lessons/shortSession';
 import { applyCosmetics, showUnlockCelebration, takeFreshUnlocks } from '../components/unlocksUi';
 import { celebrations } from '../celebrationQueue';
+import { gameKey, hasUnseen, newGameIds, newSongIds, songKey } from '../../lessons/discovery';
+import { newDotOn } from '../components/newBadge';
+import { SONGS } from '../../music/tune';
 import '../../styles/pedagogy.css';
 import '../../styles/longterm.css';
 import '../../styles/kidux.css';
@@ -314,6 +317,7 @@ export function homeScreen(app: App, banner?: string) {
     const freshUnlocks = celebrations.canShow() ? takeFreshUnlocks(app) : (applyCosmetics(app.store.get()), []);
     if (freshUnlocks.length) celebrations.mark();
 
+    const gamesBtn = gamesDockButton(app);
     root.append(
       h(
         'div',
@@ -402,13 +406,21 @@ export function homeScreen(app: App, banner?: string) {
         h(
           'nav',
           { class: 'home-dock' },
-          button({ icon: '🎵', label: 'Bài hát', kind: 'sun', onTap: () => app.show(libraryScreen(app)) }),
+          libraryDockButton(app),
           button({ icon: '🎹', label: 'Đàn tự do', kind: 'mint', onTap: () => app.show(freePlayScreen(app)) }),
-          gamesDockButton(app),
+          gamesBtn,
           stickerDockButton(app),
         ),
       ),
     );
+    // (+ 2026-10-10) Chấm "mới" trên 🎮: trò đã mở mà con chưa thấy ở màn Trò chơi. Danh mục trò (khóa theo tuần) nằm
+    // ở chunk riêng → đọc sau khi màn chính đã vẽ (chấm hiện sau một chút — không làm nặng màn chính)
+    void import('../../practice/games/catalog')
+      .then((m) => {
+        const d = app.store.get();
+        if (gamesBtn.isConnected && hasUnseen(d, newGameIds(d, m.unlockedGames(d, SONGS)).map(gameKey))) newDotOn(gamesBtn);
+      })
+      .catch(() => undefined);
     // Buổi học là việc bé bấm NGAY → tải sẵn sớm (300 ms, sau khi màn chính đã vẽ)
     prefetchLater([sessionMod], 300);
     // Đọc to câu chuyện của tuần — mỗi ngày một lần (không phải mỗi lần về màn chính)
@@ -456,6 +468,14 @@ function shouldTellStory(today: string, week: number): boolean {
     /* không có bộ nhớ → vẫn đọc */
   }
   return true;
+}
+
+/** Nút "🎵 Bài hát" ở thanh dưới — (+ 2026-10-10) chấm "mới" khi Thư viện có bài mới con chưa thấy (lessons/discovery.ts). */
+function libraryDockButton(app: App): HTMLButtonElement {
+  const b = button({ icon: '🎵', label: 'Bài hát', kind: 'sun', onTap: () => app.show(libraryScreen(app)) });
+  const d = app.store.get();
+  if (hasUnseen(d, newSongIds(d).map(songKey))) newDotOn(b);
+  return b;
 }
 
 /** (+ 2026-10-07) Nút "🎮 Trò chơi" ở thanh dưới (họ nút xanh trời riêng). */

@@ -783,3 +783,14 @@ Có ba chuyên gia đánh giá: sư phạm, động lực cho trẻ và kỹ thu
 - **Không có rò rỉ:** 10 vòng chuyển màn — interval 1, listener 17, AudioContext 1.
 - **Bench dài sau dọn mã và đổi tiếng đàn:** tuần 4–10, hai tay, tự học lệch dây, micBench, chordBench — kết quả giống hệt trước.
 - **Bố mẹ:** "🆕 Có gì mới" (src/pwa/changelog.ts, lastSeenVersion) và "📖 Hướng dẫn nhanh" (10 việc, nút Mở ngay, bản tóm tắt 1 trang).
+
+## 41. Đàn để thêm bài + nhãn "Mới" (2026-10-10)
+- **Đàn để thêm bài** (`src/music/transcribe.ts`, `songRecord.ts`, nạp lười)
+  - Có máy gõ nhịp: dò lưới phách. Không máy gõ nhịp: tự ước lượng tempo trong khoảng 40–150.
+  - Nhận ra nhịp lấy đà. Lượng tử hóa trường độ đến móc đơn, dấu lặng chỉ thêm khi nhả phím rõ.
+  - Gợi ý thế tay và ngón (autoFinger); sửa từng nốt; nút "Nghe thử".
+  - Mô phỏng: nốt đúng 100%, trường độ chính xác 96% (162 nốt, có và không có máy gõ nhịp).
+- **Nhãn "Mới"** (`src/lessons/discovery.ts`, `songAdditions.ts`)
+  - Gắn cho bài thêm 2026-10-09 (đã mở theo tuần, chưa chơi) và trò chơi chưa chơi.
+  - Chấm nhỏ trên nút ở màn chính, tắt khi mở màn tương ứng.
+  - Không có lớp phủ.

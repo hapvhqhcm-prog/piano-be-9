@@ -1,4 +1,4 @@
-import { CURRICULUM_REV, SCHEMA_VERSION, defaultData, defaultSettings, sanitizeGames, type AppData, type Session } from './schema';
+import { CURRICULUM_REV, SCHEMA_VERSION, defaultData, defaultSettings, sanitizeGames, cleanSeenNew, type AppData, type Session } from './schema';
 
 /**
  * Migration theo schemaVersion. Hiện chỉ có v1 → chưa có bước nào.
@@ -222,5 +222,9 @@ function fillDefaults(d: Record<string, unknown>): AppData {
   const games = sanitizeGames(d.games);
   if (games) out.games = games;
   else delete out.games;
+  // (+ 2026-10-10) Nhãn "Mới" đã thấy: mục hỏng bị bỏ
+  const seen = cleanSeenNew(out.settings.seenNew);
+  if (seen) out.settings.seenNew = seen;
+  else delete out.settings.seenNew;
   return out;
 }

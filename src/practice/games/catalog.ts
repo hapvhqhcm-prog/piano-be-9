@@ -45,3 +45,8 @@ export function gameLock(id: GameId, data: Readonly<AppData>, songs: readonly Tu
   }
   return null;
 }
+
+/** (+ 2026-10-10) Các trò đang mở (không khóa) — theo thứ tự màn chọn trò. Dùng cho nhãn "Mới" (lessons/discovery.ts). */
+export function unlockedGames(data: Readonly<AppData>, songs: readonly Tune[]): GameId[] {
+  return GAME_IDS.filter((id) => gameLock(id, data, songs) === null);
+}
