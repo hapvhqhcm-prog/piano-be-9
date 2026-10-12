@@ -9,6 +9,10 @@ import {
   harmonicTable,
   roomImpulse,
   roomImpulseStereo,
+  RESONANCE_CLOSE_TAU,
+  RESONANCE_OPEN_TAU,
+  RESONANCE_SEND,
+  stringResonanceIR,
   thumpNoise,
   voiceParams,
   warmVoiceParams,
@@ -89,6 +93,10 @@ interface Voice {
   /** Khoảng vang [t0, t1) theo đồng hồ AudioContext — để đếm nốt CHỒNG NHAU thật (chế độ nhẹ). */
   t0: number;
   t1: number;
+  /** Tần số (để đàn lại cùng phím khi pedal đang đạp thì tắt nốt cũ — như búa gõ lại dây đang rung). */
+  freq: number;
+  /** Nốt được pedal giữ (được phép "cướp" khi quá nhiều nốt chồng nhau). */
+  pedal: boolean;
   /** Gỡ nốt khỏi danh sách + ngắt nút (gọi nhiều lần không sao) — stopAll() gọi ngay cho nốt CHƯA bắt đầu. */
   finish?: () => void;
 }
@@ -114,6 +122,20 @@ export interface VoiceStats {
  * một lượt → trước đây chỉ 8 nốt đầu đủ tiếng, phần còn lại của bài mẫu toàn tiếng "nhẹ" 1 dây.
  */
 const LIGHT_VOICE_THRESHOLD = 8;
+/**
+ * (+ 2026-10-12) Pedal giữ tiếng → nốt chồng nhau lâu hơn. Từ ngần này nốt vang cùng lúc, nốt pedal CŨ NHẤT bị tắt nhanh
+ * (như đàn thật: các nốt cũ đã nhỏ hẳn) — giới hạn số nút Web Audio đang sống.
+ */
+export const MAX_PEDAL_VOICES = 14;
+/** Tắt nốt bị "cướp" (đàn lại cùng phím / quá nhiều nốt): hằng số thời gian & lúc dừng nguồn. */
+const STEAL_TAU = 0.04;
+const STEAL_STOP = 0.25;
+
+/** Tùy chọn của một nốt. */
+export interface NoteOptions {
+  /** Nốt được pedal vang giữ: ngân quá naturalDecay, gửi vào bus cộng hưởng dây, đàn lại cùng phím thì tắt nốt cũ. */
+  pedal?: boolean;
+}
 /** Hồi âm còn nghe sau khi nốt tắt hẳn → cộng vào "app vừa im" để micro không bắt nhầm đuôi vang. */
 export const REVERB_GUARD_MS = 150;
 /**
@@ -183,6 +205,10 @@ export class AudioEngine {
   /** Tiếng phát ngoài bộ tổng hợp đang giữ "bận" (holdBusy) — stopAll() dừng hết. */
   private externals = new Set<{ stop: () => void }>();
   private idleWaiters: Array<() => void> = [];
+  /** Bus cộng hưởng dây (pedal): gửi → convolver (IR dây mở) → cổng → bus ấm. Dựng lần đầu có pedal; null = không hỗ trợ. */
+  private resonance: { send: GainNode; gate: GainNode } | null | undefined = undefined;
+  /** Các lần đạp pedal đã hẹn (track): giữ "app đang phát" tới lúc nhả + đuôi — stopAll() gỡ hết. */
+  private pedalHolds = new Set<{ up: number; finish: () => void }>();
 
   constructor(private readonly factory: ContextFactory = defaultFactory) {}
 
@@ -217,7 +243,7 @@ export class AudioEngine {
 
   /** App đang phát ra tiếng (âm mẫu, phím ảo, chuông) — micro phải bỏ qua lúc này. */
   get isSounding(): boolean {
-    return this.voices.size > 0 || this.busyCount > 0;
+    return this.voices.size > 0 || this.busyCount > 0 || this.pedalHolds.size > 0;
   }
 
   /** Số ms kể từ khi app im hẳn (0 nếu đang phát). */
@@ -477,17 +503,22 @@ export class AudioEngine {
    * Thời điểm im hẳn (tEnd) giữ như cũ (trừ dây cao không giảm chấn — dài hơn ≤ 0,25 s) → mốc micro không đổi.
    * track=false: không tính là "app đang phát" (để micro vẫn nghe được) — dùng cho bè đệm xa cao độ.
    */
-  scheduleFreq(freq: number, when: number, duration = 0.9, volume = 1, track = true): Promise<void> {
+  scheduleFreq(freq: number, when: number, duration = 0.9, volume = 1, track = true, opts: NoteOptions = {}): Promise<void> {
     const ctx = this.ctx;
     const master = this.master;
     if (!ctx || !master) return Promise.resolve();
     const warm = this.voiceModel === 'warm';
     const start = Math.max(when, ctx.currentTime);
-    const wp = warm ? warmVoiceParams(freq, volume, duration) : null;
-    const p = wp ?? voiceParams(freq, volume, duration);
+    const pedal = !!opts.pedal;
+    const wp = warm ? warmVoiceParams(freq, volume, duration, pedal) : null;
+    const p = wp ?? voiceParams(freq, volume, duration, pedal);
     const end = start + p.tEnd;
+    if (pedal) this.stealForPedal(freq, start);
     let overlapping = 0;
-    for (const v of this.allVoices) if (v.t0 <= start + 1e-6 && v.t1 > start) overlapping++;
+    // Nốt pedal: không đếm nốt sắp tắt hẳn (vừa nhả / thay pedal — chỉ còn đuôi giảm chấn) → nốt đầu ô sau khi thay pedal
+    // vẫn đủ tiếng (không rơi vào chế độ nhẹ chỉ vì đuôi của khoảng pedal trước)
+    const tail = pedal ? STEAL_STOP : 0;
+    for (const v of this.allVoices) if (v.t0 <= start + 1e-6 && v.t1 > start + tail) overlapping++;
     const light = overlapping >= LIGHT_VOICE_THRESHOLD;
     const wave = this.waveFor(ctx, freq, warm ? 'body' : 'classic');
     const out = (wp ? this.warmOut(wp.pan) : this.classicBus(ctx)) ?? master;
@@ -500,6 +531,9 @@ export class AudioEngine {
     applyEvents(lp.frequency, cutoffEvents(p), start);
     lp.connect(env);
     env.connect(out);
+    // Pedal: lớp thân gửi thêm vào bus cộng hưởng dây (một kết nối — không thêm nút theo nốt)
+    const res = pedal ? this.resonanceBus(ctx) : null;
+    if (res) env.connect(res.send);
 
     const sources: AudioScheduledSourceNode[] = [];
     const nodes: AudioNode[] = [env, lp];
@@ -580,7 +614,7 @@ export class AudioEngine {
     st.notes++;
     st.lastNoteNodes = nodes.length;
     if (light) st.lightNotes++;
-    const voice: Voice = { env, fades, sources, nodes, t0: start, t1: end };
+    const voice: Voice = { env, fades, sources, nodes, t0: start, t1: end, freq, pedal };
     if (track) this.voices.add(voice);
     this.allVoices.add(voice);
     let live = 0;
@@ -608,6 +642,102 @@ export class AudioEngine {
       // Phòng khi context bị treo (onended không bao giờ tới).
       setTimeout(finish, (end - ctx.currentTime) * 1000 + 250);
     });
+  }
+
+  /**
+   * (+ 2026-10-12) Nốt pedal mới lúc `start`: (1) cùng phím đang còn ngân → tắt nốt cũ (búa gõ lại dây đang rung);
+   * (2) đã có ≥ MAX_PEDAL_VOICES nốt vang cùng lúc → tắt nhanh nốt pedal CŨ NHẤT. Nốt cũ giữ nguyên trong danh sách
+   * (micro vẫn coi là "đang phát") tới khi nguồn dừng thật.
+   */
+  private stealForPedal(freq: number, start: number): void {
+    const live: Voice[] = [];
+    for (const v of this.allVoices) if (v.t0 <= start + 1e-6 && v.t1 > start + STEAL_STOP + 1e-6) live.push(v);
+    for (const v of live) if (v.t0 < start - 1e-6 && Math.abs(v.freq / freq - 1) < 0.003) this.steal(v, start);
+    let n = live.filter((v) => v.t1 > start + STEAL_STOP + 1e-6).length;
+    const old = live.filter((v) => v.pedal && v.t0 < start - 1e-6 && v.t1 > start + STEAL_STOP + 1e-6).sort((a, b) => a.t0 - b.t0);
+    for (const v of old) {
+      if (n < MAX_PEDAL_VOICES) break;
+      this.steal(v, start);
+      n--;
+    }
+  }
+
+  /** Tắt nhanh một nốt từ lúc `at` (hẹn trước được — bài mẫu hẹn cả bài một lượt). */
+  private steal(v: Voice, at: number): void {
+    if (v.t1 <= at + STEAL_STOP) return;
+    try {
+      for (const g of [v.env, ...v.fades]) {
+        g.gain.cancelScheduledValues(at);
+        g.gain.setTargetAtTime(0, at, STEAL_TAU);
+      }
+      for (const s of v.sources) s.stop(at + STEAL_STOP);
+    } catch {
+      /* bỏ qua */
+    }
+    v.t1 = at + STEAL_STOP;
+  }
+
+  /** Bus cộng hưởng dây (dựng một lần): gửi (RESONANCE_SEND) → convolver IR dây mở → cổng (0 khi không đạp) → bus ấm. */
+  private resonanceBus(ctx: AudioContext): { send: GainNode; gate: GainNode } | null {
+    if (this.resonance !== undefined) return this.resonance;
+    this.resonance = null;
+    const master = this.master;
+    if (!master || typeof ctx.createConvolver !== 'function') return null;
+    try {
+      const ir = stringResonanceIR(ctx.sampleRate);
+      const buf = ctx.createBuffer(1, ir.length, ctx.sampleRate);
+      buf.getChannelData(0).set(ir);
+      const send = ctx.createGain();
+      send.gain.value = RESONANCE_SEND;
+      const conv = ctx.createConvolver();
+      conv.buffer = buf;
+      const gate = ctx.createGain();
+      gate.gain.value = 0;
+      send.connect(conv);
+      conv.connect(gate);
+      gate.connect(this.warmIn ?? master);
+      this.resonance = { send, gate };
+    } catch {
+      this.resonance = null;
+    }
+    return this.resonance;
+  }
+
+  /** Số nút của bus cộng hưởng (0 = chưa dựng / không hỗ trợ) — test & trang ?soundtest. */
+  get resonanceNodes(): number {
+    return this.resonance ? 3 : 0;
+  }
+
+  /**
+   * (+ 2026-10-12) Đạp pedal vang từ `down` tới `up` (giây, đồng hồ AudioContext): mở cổng cộng hưởng dây (nở dần),
+   * nhả thì đóng nhanh. Độ dài nốt do người gọi tính (nốt pedal: scheduleFreq(..., { pedal: true }) tới lúc nhả).
+   * track (mặc định): tính là "app đang phát" tới lúc nhả + đuôi — micro không nghe nhầm tiếng ngân thành tiếng bé.
+   */
+  pedal(down: number, up: number, track = true): void {
+    const ctx = this.ctx;
+    if (!ctx || !this.master) return;
+    const a = Math.max(down, ctx.currentTime);
+    if (up <= a) return;
+    const res = this.resonanceBus(ctx);
+    if (res) {
+      const g = res.gate.gain;
+      g.setTargetAtTime(1, a, RESONANCE_OPEN_TAU);
+      g.setTargetAtTime(0, up, RESONANCE_CLOSE_TAU);
+    }
+    if (!track) return;
+    let done = false;
+    const hold = {
+      up,
+      finish: () => {
+        if (done) return;
+        done = true;
+        this.pedalHolds.delete(hold);
+        this.lastSoundEnd = Math.max(this.lastSoundEnd, Date.now() + REVERB_GUARD_MS);
+      },
+    };
+    this.pedalHolds.add(hold);
+    // Đuôi cộng hưởng sau khi đóng cổng: 5τ
+    setTimeout(hold.finish, (up - ctx.currentTime + 5 * RESONANCE_CLOSE_TAU) * 1000);
   }
 
   /**
@@ -812,6 +942,17 @@ export class AudioEngine {
     }
     this.clicks.clear();
     this.clickTimes = [];
+    // Pedal: nhả ngay (đóng cổng cộng hưởng), gỡ các lần đạp đã hẹn
+    if (this.resonance) {
+      const g = this.resonance.gate.gain;
+      try {
+        g.cancelScheduledValues(now);
+        g.setTargetAtTime(0, now, 0.012);
+      } catch {
+        /* bỏ qua */
+      }
+    }
+    for (const h of [...this.pedalHolds]) h.finish();
     for (const v of this.allVoices) {
       const g = v.env.gain as AudioParam & { cancelAndHoldAtTime?: (t: number) => AudioParam };
       try {

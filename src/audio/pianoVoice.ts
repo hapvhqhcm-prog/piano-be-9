@@ -64,9 +64,18 @@ function hash01(n: number): number {
 export const freqToMidi = (f: number): number => 69 + 12 * Math.log2(f / 440);
 
 /**
- * Tham số một nốt. vol: 1 ≈ mf/f bình thường (cũ: peak 0,5·vol); duration: thời gian giữ phím.
+ * (+ 2026-10-12) Pedal vang: khi pedal đang đạp, dây được thả tự do → ngân tới lúc nhả pedal, KHÔNG bị cắt ở naturalDecay
+ * (vẫn tắt dần theo giai đoạn 2). Giới hạn PEDAL_RING × naturalDecay (lúc đó còn ≈ −45…−50 dB — im thật, đỡ giữ nút).
  */
-export function voiceParams(freq: number, vol: number, duration: number): VoiceParams {
+export const PEDAL_RING = 2.2;
+/** Nhả pedal: mọi giảm chấn rơi CÙNG LÚC → tiếng giảm chấn của mỗi nốt nhỏ lại (tổng vẫn nghe một tiếng "sột" khẽ). */
+export const PEDAL_DAMPER_SCALE = 0.5;
+
+/**
+ * Tham số một nốt. vol: 1 ≈ mf/f bình thường (cũ: peak 0,5·vol); duration: thời gian giữ phím.
+ * pedal = nốt được pedal giữ (duration = tới lúc nhả/thay pedal; có thể dài hơn naturalDecay).
+ */
+export function voiceParams(freq: number, vol: number, duration: number, pedal = false): VoiceParams {
   const f = clamp(freq, 20, 8000);
   const v = clamp(vol, 0.05, 1.5); // độ mạnh (velocity) cho độ sáng
   const decayT = naturalDecay(f);
@@ -79,7 +88,7 @@ export function voiceParams(freq: number, vol: number, duration: number): VoiceP
   const kneeLevel = kneeTarget + (1 - kneeTarget) * Math.exp(-1.5); // ≈ 0,456
   // Giai đoạn 2: tới decayT còn ~6 % đỉnh (≈ −24 dB) như cũ
   const tau2 = Math.max(0.25, (decayT - tKnee) / Math.log(kneeLevel / 0.06));
-  const tOff = Math.max(attack + 0.02, Math.min(duration, decayT));
+  const tOff = Math.max(attack + 0.02, Math.min(duration, decayT * (pedal ? PEDAL_RING : 1)));
   // Giảm chấn: nhanh nhưng không "cụp" (bass chậm hơn)
   const tauRel = clamp(0.03 * Math.pow(C4 / f, 0.35), 0.02, 0.07);
   const tEnd = tOff + 5 * tauRel;
@@ -300,8 +309,8 @@ function brightCentroidK(freq: number): number {
 }
 
 /** Tham số một nốt mô hình ấm. Khung thời gian (tOff, tEnd trừ dây không giảm chấn) giống hệt voiceParams(). */
-export function warmVoiceParams(freq: number, vol: number, duration: number): WarmParams {
-  const base = voiceParams(freq, vol, duration);
+export function warmVoiceParams(freq: number, vol: number, duration: number, pedal = false): WarmParams {
+  const base = voiceParams(freq, vol, duration, pedal);
   const f = clamp(freq, 20, 8000);
   const v = clamp(vol, 0.05, 1.5);
   const m = Math.round(freqToMidi(f));
@@ -320,7 +329,9 @@ export function warmVoiceParams(freq: number, vol: number, duration: number): Wa
   const tEnd = base.tOff + 5 * tauRel;
   // Giảm chấn chỉ kêu khi nhả SỚM (dây còn rung) và dây có giảm chấn
   const damped = !undamped && base.tOff < naturalDecay(f) - 0.05 && duration >= 0.12;
-  const damperGain = damped ? peak * 0.07 * clamp(v, 0.3, 1.2) * Math.pow(C4 / Math.max(f, C4), 0.3) : 0;
+  const damperGain = damped
+    ? peak * 0.07 * clamp(v, 0.3, 1.2) * Math.pow(C4 / Math.max(f, C4), 0.3) * (pedal ? PEDAL_DAMPER_SCALE : 1)
+    : 0;
   const pan = clamp((m - 60) / 36, -1, 1) * 0.3;
   return {
     ...base,
@@ -419,4 +430,60 @@ export function roomImpulseStereo(
     return out;
   };
   return [make(3, [7, 13, 23, 31]), make(11, [9, 17, 26, 37])];
+}
+
+/* ───────────────────────── (+ 2026-10-12) Cộng hưởng dây khi đạp pedal ─────────────────────────
+ * Pedal nhấc mọi giảm chấn → các dây KHÔNG đàn cũng rung theo các bậc trùng tần số của nốt đang kêu ("nở" tiếng).
+ * Mô hình tuyến tính: một dãy bộ cộng hưởng (dây C2…C7, 3 bậc đầu, có không hòa âm) — đáp ứng xung của nó là tổng các
+ * sin tắt dần → dùng làm IR cho MỘT ConvolverNode dùng chung (không tốn nút theo nốt). Cổng (gain) chỉ mở khi pedal đạp,
+ * đóng nhanh lúc nhả (giảm chấn rơi xuống cả dây cộng hưởng).
+ */
+export const RESONANCE_SECONDS = 1.8;
+/** Mức gửi vào bus cộng hưởng (rất khẽ — chỉ "nở" tiếng). */
+export const RESONANCE_SEND = 0.1;
+/** Cổng cộng hưởng: mở chậm (tiếng nở dần), đóng nhanh (giảm chấn). */
+export const RESONANCE_OPEN_TAU = 0.15;
+export const RESONANCE_CLOSE_TAU = 0.03;
+
+/**
+ * IR "dây mở": Σ a·e^(−t/τ)·sin(2π f t + φ) qua các dây midi 36…96 × bậc 1–3 (f ≤ 5 kHz). Tính bằng bộ dao động
+ * đệ quy (3 phép nhân/mẫu — ~40 ms cho 1,8 s ở 48 kHz trên máy bàn; tính MỘT lần, lần đầu có pedal). Chuẩn hóa đỉnh 1.
+ */
+export function stringResonanceIR(sampleRate: number, seconds = RESONANCE_SECONDS, seed = 5): Float32Array {
+  const len = Math.max(1, Math.floor(sampleRate * seconds));
+  const out = new Float32Array(len);
+  const r = rng(seed);
+  for (let m = 36; m <= 96; m++) {
+    const f0 = 440 * Math.pow(2, (m - 69) / 12);
+    for (let k = 1; k <= 3; k++) {
+      const f = stretchedPartial(f0, k);
+      if (f > 5000) break;
+      // Dây trầm ngân lâu hơn; bậc cao tắt nhanh hơn; loa iPad: bass sâu nhỏ lại
+      const tau = clamp((0.28 * naturalDecay(f0)) / Math.pow(k, 0.5), 0.08, 0.8);
+      const amp = (registerGain(f) / k) * (f < 110 ? 0.6 : 1);
+      const w = (2 * Math.PI * f) / sampleRate;
+      const dec = Math.exp(-1 / (tau * sampleRate));
+      const c = 2 * dec * Math.cos(w);
+      const d2 = dec * dec;
+      const ph = r() * 2 * Math.PI;
+      // y[n] = c·y[n−1] − d2·y[n−2], khởi đầu từ sin(φ), dec·sin(w + φ)
+      let y2 = amp * Math.sin(ph);
+      let y1 = amp * dec * Math.sin(w + ph);
+      out[0] += y2;
+      if (len > 1) out[1] += y1;
+      const nMax = Math.min(len, Math.ceil(tau * 5 * sampleRate)); // e^−5 ≈ −43 dB
+      for (let n = 2; n < nMax; n++) {
+        const y = c * y1 - d2 * y2;
+        out[n] += y;
+        y2 = y1;
+        y1 = y;
+      }
+    }
+  }
+  let peak = 1e-9;
+  for (let i = 0; i < len; i++) peak = Math.max(peak, Math.abs(out[i]));
+  // Mở đầu mềm 5 ms (không "tách") + chuẩn hóa
+  const fadeIn = Math.max(1, Math.floor(0.005 * sampleRate));
+  for (let i = 0; i < len; i++) out[i] = (out[i] / peak) * Math.min(1, i / fadeIn);
+  return out;
 }

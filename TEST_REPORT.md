@@ -831,3 +831,13 @@ Có ba chuyên gia đánh giá: sư phạm, động lực cho trẻ và kỹ thu
 - **Ô chữ**
   - Ô chữ cuộn được bằng ngón tay (trước đây bị chặn).
   - Các ô chữ báo cáo đặt cỡ 16px để iOS không tự phóng to.
+
+## 45. Pedal trong tiếng đàn mẫu + bàn phím tránh mép (2026-10-12)
+- **Pedal**
+  - `pedalLength`/`tunePedal` (tune.ts) tính độ ngân của nốt theo pedal; nốt vẫn đang giữ khi đạp đổi pedal thì được bắt lại.
+  - Giọng đàn ngân tối đa 2,2 × độ tắt tự nhiên; thêm bus cộng hưởng dây dùng chung (3 nút, đáp ứng xung tạo bằng code).
+  - Phím đánh lại thì tắt dần tiếng cũ; tối đa 14 giọng có pedal.
+  - Micro tính app là "đang phát" cho tới khi tiếng ngân hết hẳn.
+  - Silent Night: tối đa 9 nốt chồng nhau, 82 nút, 0 nốt rơi vào chế độ nhẹ.
+  - Có test `tests/pedal.test.ts` (16 ca).
+- **Bàn phím:** đo trên 14 màn ở 4 cỡ màn hình, đáy phím đã cách mép dưới 90–116 px. Thêm biến `--safe-b` và luật dự phòng khi bàn phím là phần tử cuối.

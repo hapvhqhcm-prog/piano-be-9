@@ -5,7 +5,7 @@
 .report-wrap {
   flex: 1;
   min-height: 0;
-  padding: 14px 24px calc(32px + env(safe-area-inset-bottom));
+  padding: 14px 24px calc(32px + var(--safe-b));
   display: flex;
   flex-direction: column;
   gap: 10px;

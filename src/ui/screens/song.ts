@@ -5,7 +5,7 @@ import { pitchToMidi } from '../../piano/pitchTable';
 import type { StaffView } from '../components/staffView';
 import type { App } from '../App';
 import { backButton, button, h } from '../components/dom';
-import { HandOverlay, eventsFromTune, playDemo } from '../components/demo';
+import { HandOverlay, eventsFromTune, pedalOfTune, playDemo } from '../components/demo';
 import { speakChip } from '../components/speakChip';
 import { cancelSpeech, speak } from '../../audio/voice';
 import { SongHead, type SongChoices } from './songHead';
@@ -288,6 +288,7 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
       scheduleAccomp(c, app.audio.now() + 0.35, spb);
       c.demoRun = playDemo(app.audio, kb, overlay, eventsFromTune(c.tune), {
         bpm: c.bpm,
+        pedal: pedalOfTune(c.tune),
         onCaption: (t) => (caption.textContent = `🎬 ${t}`),
         onBeat: (beat) => {
           if (c.mode === 'tempo' && c.level === 3) c.staff.setTime(Math.max(0, beat));

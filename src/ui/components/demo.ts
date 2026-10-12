@@ -1,6 +1,6 @@
 import type { AudioEngine } from '../../audio/AudioEngine';
 import type { Target } from '../../lessons/types';
-import { noteStyles, onsets, type Tune } from '../../music/tune';
+import { expressionUsed, noteStyles, onsets, tunePedal, type Tune } from '../../music/tune';
 import type { Hand } from '../../piano/fingering';
 import type { PianoKeyboard } from '../../piano/PianoKeyboard';
 import { pitchFreq, pitchToMidi, viName, type Pitch } from '../../piano/pitchTable';
@@ -21,6 +21,8 @@ export interface DemoNote {
   vol?: number;
   /** v4 — độ dài thật sự kêu (phách): ngắt tiếng ngắn, luyến giữ liền; mặc định 95% độ dài sự kiện */
   len?: number;
+  /** (+ 2026-10-12) Cấp 4 — pedal giữ tiếng (len tính tới lúc thay / nhả pedal) */
+  pedal?: boolean;
 }
 
 export interface DemoEvent {
@@ -43,7 +45,7 @@ export function eventsFromTune(t: Tune): DemoEvent[] {
   return onsets(t).map((o) => {
     const notes: DemoNote[] = o.notes.flatMap((n) => {
       const st = styles.get(n.index);
-      const style = st ? { vol: st.vol, len: st.len } : {};
+      const style = st ? { vol: st.vol, len: st.len, ...(st.pedal ? { pedal: true } : {}) } : {};
       return [
         { pitch: n.pitch!, finger: n.finger, hand: n.hand, ...style },
         ...(n.also ?? []).map((a) => ({ pitch: a.pitch, finger: a.finger, hand: n.hand, ...style })),
@@ -52,6 +54,53 @@ export function eventsFromTune(t: Tune): DemoEvent[] {
     const dur = Math.min(...o.notes.map((n) => n.beats));
     return { time: o.start, dur, notes, caption: captionOf(notes) };
   });
+}
+
+/** (+ 2026-10-12) Cấp 4 — các khoảng pedal đạp (phách) của bài, để playDemo đạp pedal thật; [] nếu bài không ghi pedal. */
+export function pedalOfTune(t: Tune): Array<[number, number]> {
+  return expressionUsed(t).ped ? tunePedal(t) : [];
+}
+
+/**
+ * Pedal "nhả trước — nhấn sau" (legato pedal): lúc thay pedal, chân nhấc lên NGAY khi nốt mới kêu (giảm chấn rơi xuống
+ * dây cũ sau một chút — PEDAL_UP_S) rồi đạp lại sau PEDAL_DOWN_S (nốt mới vẫn giữ phím → được bắt lại).
+ */
+export const PEDAL_UP_S = 0.04;
+export const PEDAL_DOWN_S = 0.1;
+
+export interface PlannedNote {
+  freq: number;
+  /** Giây (đồng hồ AudioContext) */
+  when: number;
+  dur: number;
+  vol: number;
+  pedal: boolean;
+}
+
+/**
+ * Kế hoạch TIẾNG của bài mẫu (hàm thuần — có test): nốt (giây) + các lần đạp pedal [đạp, nhả] (giây).
+ * Nốt pedal ngân tới lúc giảm chấn rơi (nhả / thay pedal + PEDAL_UP_S).
+ */
+export function soundPlan(
+  events: DemoEvent[],
+  spb: number,
+  t0: number,
+  pedal: ReadonlyArray<readonly [number, number]> = [],
+): { notes: PlannedNote[]; pedals: Array<[number, number]> } {
+  const notes: PlannedNote[] = [];
+  for (const ev of events)
+    for (const n of ev.notes) {
+      const dur = (n.len ?? ev.dur * 0.95) * spb + (n.pedal ? PEDAL_UP_S : 0);
+      notes.push({ freq: pitchFreq(n.pitch), when: t0 + ev.time * spb, dur, vol: n.vol ?? 1, pedal: !!n.pedal });
+    }
+  const pedals = pedal.map(([a, b]): [number, number] => [t0 + a * spb + PEDAL_DOWN_S, t0 + b * spb + PEDAL_UP_S]);
+  return { notes, pedals };
+}
+
+/** Hẹn giờ tiếng theo soundPlan() (bài mẫu, đoán bài…). */
+export function playPlan(audio: AudioEngine, plan: ReturnType<typeof soundPlan>, track = true): void {
+  for (const [down, up] of plan.pedals) audio.pedal(down, up, track);
+  for (const n of plan.notes) void audio.scheduleFreq(n.freq, n.when, n.dur, n.vol, track, n.pedal ? { pedal: true } : {});
 }
 
 /** Sự kiện từ danh sách việc "Từng nốt": nốt rời, nhại lại (lần lượt), hợp âm (cùng lúc), nhóm phím đen. */
@@ -180,6 +229,8 @@ export interface DemoOptions {
   onBeat?: (beat: number) => void;
   /** Phát tiếng (mặc định có) */
   sound?: boolean;
+  /** (+ 2026-10-12) Cấp 4 — các khoảng pedal đạp (phách, xem pedalOfTune) */
+  pedal?: ReadonlyArray<readonly [number, number]>;
 }
 
 /**
@@ -203,12 +254,8 @@ export function playDemo(
     const first = events.flatMap((e) => e.notes).find((n) => n.hand === hand && n.finger);
     if (first) overlay.place(hand, first.pitch, first.finger!, true);
   }
+  if (o.sound !== false) playPlan(audio, soundPlan(events, spb, t0, o.pedal));
   for (const ev of events) {
-    if (o.sound !== false) {
-      for (const n of ev.notes) {
-        void audio.scheduleFreq(pitchFreq(n.pitch), t0 + ev.time * spb, (n.len ?? ev.dur * 0.95) * spb, n.vol ?? 1);
-      }
-    }
     const at = ev.time * spb * 1000;
     // Ngắt tiếng: phím sáng / ngón nhấn ngắn theo đúng độ dài kêu
     const lenOf = (n: DemoNote) => Math.min(ev.dur * 0.9, n.len ?? ev.dur);

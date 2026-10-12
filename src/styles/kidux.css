@@ -401,7 +401,7 @@ button.bonus-card {
 .arrival-skip {
   position: absolute;
   right: calc(20px + env(safe-area-inset-right));
-  bottom: calc(16px + env(safe-area-inset-bottom));
+  bottom: calc(16px + var(--safe-b));
   font-weight: 800;
   font-size: 20px;
   /* (a11y) trước: chữ trắng trên nền trời/biển nhạt (1.2:1) → viên thuốc tối, chữ trắng ≥ 7:1 */

@@ -7,6 +7,8 @@
 import { AudioEngine } from '../audio/AudioEngine';
 import type { VoiceModel } from '../audio/pianoVoice';
 import { nodesPerNote, partialDecayRate, spectralCentroid } from '../audio/voiceAnalysis';
+import { SONGS, slice } from '../music/tune';
+import { eventsFromTune, pedalOfTune, soundPlan } from '../ui/components/demo';
 
 const NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 const midiOf = (name: string): number => {
@@ -22,12 +24,36 @@ interface Ev {
   dur: number;
   vol: number;
   track: boolean;
+  /** (+ 2026-10-12) nốt được pedal giữ; tần số sẵn (thay cho `note`) */
+  pedal?: boolean;
+  hz?: number;
 }
 
 /** Một mục nghe thử: danh sách nốt (vol tương đối, nhân với độ mạnh đang chọn). */
 interface Item {
   label: string;
   events: () => Ev[];
+  /** (+ 2026-10-12) các lần đạp pedal [đạp, nhả] (giây từ lúc bắt đầu) */
+  pedals?: () => Array<[number, number]>;
+}
+
+/**
+ * (+ 2026-10-12) "Silent Night" (silent_night_ped, 2 câu đầu) như màn Xem mẫu: có pedal (ngân tới lúc thay pedal +
+ * cộng hưởng dây) hoặc bỏ pedal (nốt tắt theo độ dài viết) — để so sánh.
+ */
+function silentNight(withPedal: boolean): Pick<Item, 'events' | 'pedals'> {
+  const plan = () => {
+    const song = SONGS.find((s) => s.id === 'silent_night_ped');
+    if (!song) return { notes: [], pedals: [] };
+    let t = slice(song, 0, 8);
+    if (!withPedal) t = { ...t, notes: t.notes.map(({ ped: _p, ...n }) => n), lh: t.lh?.map(({ ped: _p, ...n }) => n) };
+    return soundPlan(eventsFromTune(t), 60 / (song.bpm ?? 60), 0, pedalOfTune(t));
+  };
+  return {
+    events: () =>
+      plan().notes.map((n) => ({ at: n.when, note: '', hz: n.freq, dur: n.dur, vol: n.vol, track: true, pedal: n.pedal })),
+    pedals: () => plan().pedals,
+  };
 }
 
 const single = (n: string): Item => ({ label: n, events: () => [{ at: 0, note: n, dur: 1.6, vol: 1, track: true }] });
@@ -84,6 +110,8 @@ const ITEMS: Item[] = [
     },
   },
   { label: 'Giai điệu + bè đệm (Vui sao nhạc ơi)', events: melodyWithAccomp },
+  { label: 'Silent Night có pedal (2 câu, như Xem mẫu)', ...silentNight(true) },
+  { label: 'Silent Night KHÔNG pedal (so sánh)', ...silentNight(false) },
   {
     label: 'Tải nặng: 16 nốt cùng lúc (chế độ nhẹ)',
     events: () =>
@@ -154,11 +182,15 @@ export function mountSoundTest(root: HTMLElement): void {
     eng.stopAll();
   };
 
-  const play = (evs: Ev[], model: VoiceModel, offset: number): void => {
+  const play = (evs: Ev[], model: VoiceModel, offset: number, pedals: Array<[number, number]> = []): void => {
     const go = (): void => {
       eng.voiceModel = model;
       const t0 = eng.now() + 0.08;
-      for (const e of evs) void eng.scheduleFreq(hz(e.note), t0 + e.at, e.dur, e.vol * vel, e.track);
+      for (const [a, b] of pedals) eng.pedal(t0 + a, t0 + b);
+      for (const e of evs) {
+        const f = e.hz ?? hz(e.note);
+        void eng.scheduleFreq(f, t0 + e.at, e.dur, e.vol * vel, e.track, e.pedal ? { pedal: true } : {});
+      }
       lastModel = model;
     };
     if (offset <= 0) go();
@@ -175,7 +207,8 @@ export function mountSoundTest(root: HTMLElement): void {
       stop();
       eng.resetStats();
       const evs = it.events();
-      models.forEach((m, i) => play(evs, m, i * (length(evs) + 0.6)));
+      const pedals = it.pedals?.() ?? [];
+      models.forEach((m, i) => play(evs, m, i * (length(evs) + 0.6), pedals));
     };
     row.appendChild(btn('A', () => run(['classic'])));
     row.appendChild(btn('B', () => run(['warm']), 'background:#e4f1ff'));
@@ -228,7 +261,9 @@ export function mountSoundTest(root: HTMLElement): void {
     status.textContent =
       `Trạng thái: ${eng.state} · đang nghe: ${lastModel === 'classic' ? 'A (cũ)' : 'B (mới)'}\n` +
       `Nốt đang vang / đã hẹn: ${s.voices} · nút Web Audio của các nốt đó: ${s.liveNodes} (đỉnh ${s.peakNodes})\n` +
-      `Nút của nốt gần nhất: ${s.lastNoteNodes} · số nốt chế độ nhẹ: ${s.lightNotes}/${s.notes}`;
+      `Nút của nốt gần nhất: ${s.lastNoteNodes} · số nốt chế độ nhẹ: ${s.lightNotes}/${s.notes}
+` +
+      `Bus cộng hưởng dây (pedal): ${eng.resonanceNodes ? `${eng.resonanceNodes} nút dùng chung` : 'chưa dựng'} · app đang phát: ${eng.isSounding ? 'có' : 'không'}`;
   };
   window.setInterval(tick, 150);
   tick();

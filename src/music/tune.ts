@@ -508,6 +508,8 @@ export interface NoteStyle {
   len: number;
   /** Nằm trong dấu luyến (đàn liền) */
   slurred: boolean;
+  /** (+ 2026-10-12) Cấp 4 — pedal giữ tiếng nốt này (len = tới lúc thay / nhả pedal). Chỉ có khi true. */
+  pedal?: boolean;
 }
 
 /**
@@ -543,7 +545,7 @@ export function noteStyles(t: Tune): Map<number, NoteStyle> {
   const anyDyn = used.dyn;
   // Cấp 4: nêm to dần / nhỏ dần (theo bè chính, áp cho cả hai bè như sắc thái) và pedal vang (giữ tiếng)
   const hpVol = used.hairpin ? hairpinVolume(t) : null;
-  const pedSegs = used.ped ? [...pedalSegments(timeline(t)), ...pedalSegments(lhTimeline(t))] : [];
+  const pedSegs = used.ped ? tunePedal(t) : [];
   for (const voice of [timeline(t), lhTimeline(t)]) {
     // Bài có ghi sắc thái (hoặc nêm): trước dấu đầu tiên coi như mf
     let cur: Dynamic | null = anyDyn || used.hairpin ? 'mf' : null;
@@ -559,11 +561,10 @@ export function noteStyles(t: Tune): Map<number, NoteStyle> {
       const slurred = open || ending;
       // Trong dấu luyến: giữ phím tới tận nốt sau (chồng nhẹ cho liền tiếng); nốt cuối luyến nhấc tay
       const frac = n.stac ? STAC_FRACTION : open && !ending ? 1.02 : ending ? 0.85 : NORMAL_FRACTION;
-      let len = n.beats * frac;
-      // Pedal đang đạp lúc nốt kêu → tiếng ngân tới lúc thay / nhả pedal (không bao giờ ngắn hơn)
-      for (const [a, b] of pedSegs) if (n.start >= a - 1e-9 && n.start < b - 1e-9) len = Math.max(len, b - n.start);
+      const keyLen = n.beats * frac;
+      const len = pedalLength(n.start, keyLen, pedSegs);
       const vol = hpVol?.(n.start) ?? (cur ? DYN_VOLUME[cur] : 1);
-      out.set(n.index, { dyn: cur, vol, len, slurred });
+      out.set(n.index, { dyn: cur, vol, len, slurred, ...(len > keyLen + 1e-9 ? { pedal: true } : {}) });
       if (ending) open = false;
     }
   }
@@ -685,6 +686,29 @@ export function pedalSegments(voice: TimedNote[]): Array<[number, number]> {
     });
   }
   return out;
+}
+
+/** Cấp 4 — Các khoảng pedal đạp của cả bài (pedal chỉ ghi ở một bè), theo thứ tự thời gian (phách). */
+export function tunePedal(t: Tune): Array<[number, number]> {
+  return [...pedalSegments(timeline(t)), ...pedalSegments(lhTimeline(t))].sort((x, y) => x[0] - y[0]);
+}
+
+/** Phím giữ quá lúc thay pedal ít nhất ngần này (phách) mới được pedal mới bắt lại. */
+export const PEDAL_CATCH = 0.1;
+
+/**
+ * (+ 2026-10-12) Cấp 4 — Độ dài thật sự kêu (phách) của nốt bắt đầu ở `start`, giữ phím `keyLen` phách, khi pedal đạp
+ * trong các khoảng `segs`. Pedal "bắt" nốt khi nốt kêu TRONG khoảng, hoặc khi phím còn giữ lúc pedal đạp xuống
+ * (thay pedal: nhả hết rồi bắt lại nốt còn giữ phím). Tiếng ngân tới lúc thay / nhả pedal — không bao giờ ngắn hơn keyLen.
+ */
+export function pedalLength(start: number, keyLen: number, segs: ReadonlyArray<readonly [number, number]>): number {
+  let len = keyLen;
+  for (const [a, b] of segs) {
+    // Phím phải còn giữ lúc chân đạp xuống (đạp SAU nốt mới ~0,1 phách) — luyến chồng nhẹ (2 %) không tính
+    const caught = (start >= a - 1e-9 && start < b - 1e-9) || (start < a - 1e-9 && start + keyLen > a + PEDAL_CATCH);
+    if (caught) len = Math.max(len, b - start);
+  }
+  return len;
 }
 
 /** Cấp 4 — Một nêm to dần / nhỏ dần: [nốt đầu, nốt cuối] (TimedNote.index, tính cả nốt cuối). */

@@ -13,8 +13,11 @@ import {
   accompaniment,
   beatsPerMeasure,
   dynAtBeat,
+  expressionUsed,
   handOnsets,
+  noteStyles,
   otherHandNotes,
+  tunePedal,
   pitchesOf,
   slice,
   totalBeats,
@@ -27,6 +30,7 @@ import type { PianoKeyboard, KeyTarget } from '../../piano/PianoKeyboard';
 import { midiToFreq, pitchToMidi } from '../../piano/pitchTable';
 import type { SongRun } from '../../progress/schema';
 import type { App } from '../App';
+import { PEDAL_DOWN_S, PEDAL_UP_S } from '../components/demo';
 import { h } from '../components/dom';
 import { StaffView } from '../components/staffView';
 import type { HandOverlay } from '../components/demo';
@@ -241,14 +245,26 @@ export function buildStaff(c: SongCtx, pageMode = false): void {
   c.staffBox.replaceChildren(c.staff.el);
 }
 
-/** Tập tách tay: app đàn khẽ nốt tay KIA bắt đầu trong [fromBeat, toBeat) — chỉ khi micro tắt */
+/**
+ * Tập tách tay: app đàn khẽ nốt tay KIA bắt đầu trong [fromBeat, toBeat) — chỉ khi micro tắt.
+ * (+ 2026-10-12) Cấp 4: cả bài theo nhịp (toBeat = ∞) và bài có pedal → app đạp pedal cho tay kia (nốt ngân tới lúc thay pedal).
+ */
 export function playOther(c: SongCtx, fromBeat: number, toBeat: number, t0: number, spb: number, mute: [number, number] | null = null): void {
   if (micOn(c)) return; // micro bật: tiếng app đàn sẽ lẫn vào tiếng bé
+  const pedalOn = toBeat === Infinity && !!expressionUsed(c.tune).ped;
+  const styles = pedalOn ? noteStyles(c.tune) : null;
+  const muted = (b: number) => !!mute && b >= mute[0] - 1e-6 && b < mute[1] - 1e-6;
+  if (pedalOn)
+    for (const [a, b] of tunePedal(c.tune))
+      if (a >= fromBeat - 1e-6 && !muted(a)) c.app.audio.pedal(t0 + (a - fromBeat) * spb + PEDAL_DOWN_S, t0 + (b - fromBeat) * spb + PEDAL_UP_S, false);
   for (const n of otherHandNotes(c.tune, solo(c))) {
     if (n.start < fromBeat - 1e-6 || n.start >= toBeat - 1e-6) continue;
-    if (mute && n.start >= mute[0] - 1e-6 && n.start < mute[1] - 1e-6) continue; // máy im: tay kia cũng nghỉ
+    if (muted(n.start)) continue; // máy im: tay kia cũng nghỉ
+    const st = styles?.get(n.index);
+    const ped = !!st?.pedal && !muted(n.start + st.len - 1e-6);
+    const dur = ped ? st!.len * spb + PEDAL_UP_S : n.beats * spb * 0.9;
     for (const p of pitchesOf(n)) {
-      void c.app.audio.scheduleFreq(midiToFreq(pitchToMidi(p)), t0 + (n.start - fromBeat) * spb, n.beats * spb * 0.9, 0.35, false);
+      void c.app.audio.scheduleFreq(midiToFreq(pitchToMidi(p)), t0 + (n.start - fromBeat) * spb, dur, 0.35, false, ped ? { pedal: true } : {});
     }
   }
 }

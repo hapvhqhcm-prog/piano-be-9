@@ -1,9 +1,8 @@
 /**
  * 🎵 "Nghe đoán bài" — app đàn câu đầu của một bài con biết; bé chọn tên bài (thẻ có tranh emoji). 6 lượt.
  */
-import { eventsFromTune } from '../../components/demo';
+import { eventsFromTune, pedalOfTune, playPlan, soundPlan } from '../../components/demo';
 import { SONGS, type Tune } from '../../../music/tune';
-import { pitchFreq } from '../../../piano/pitchTable';
 import { GAME_INFO } from '../../../practice/games/catalog';
 import { baseTitle, eligibleSongs, firstPhrase, guessBpm, makeSongRounds, songStars, type SongRound } from '../../../practice/games/songGuess';
 import { cancelSpeech, speak } from '../../../audio/voice';
@@ -62,8 +61,7 @@ export function songGuessScreen(app: App, onHub: () => void) {
       const spb = 60 / guessBpm(t);
       const t0 = app.audio.now() + 0.25;
       const events = eventsFromTune(clip);
-      for (const ev of events)
-        for (const n of ev.notes) void app.audio.scheduleFreq(pitchFreq(n.pitch), t0 + ev.time * spb, (n.len ?? ev.dur * 0.95) * spb, n.vol ?? 1);
+      playPlan(app.audio, soundPlan(events, spb, t0, pedalOfTune(clip)));
       const end = events.length ? Math.max(...events.map((e) => e.time + e.dur)) : 0;
       stage.classList.add('sg-listening');
       window.clearTimeout(timer);

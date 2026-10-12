@@ -22,6 +22,14 @@ export const CHANGELOG_BASELINE = '0.15.0';
 
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
+    version: '0.23.3',
+    date: '2026-10-12',
+    items: [
+      'Bài có pedal (Cấp 4: Silent Night, Largo) — đàn mẫu ngân và cộng hưởng như đàn thật giữ pedal.',
+      'Bàn phím luôn cách xa mép dưới màn hình để bé không lỡ vuốt thoát app.',
+    ],
+  },
+  {
     version: '0.23.2',
     date: '2026-10-12',
     items: [
