@@ -125,7 +125,7 @@
 }
 .diag-report {
   height: 12rem;
-  font: 13px/1.35 ui-monospace, monospace;
+  font: 16px/1.35 ui-monospace, monospace; /* ≥ 16px: iPad không tự phóng to khi chạm vào ô */
 }
 .diag-name {
   display: flex;

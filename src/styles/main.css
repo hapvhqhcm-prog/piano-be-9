@@ -835,9 +835,9 @@ p {
   }
 }
 
-/* Dọc: nhắc xoay ngang */
+/* Dọc: nhắc xoay ngang — chỉ khi đứng dọc ≥ 1,2 s (main.ts installPortraitNag gắn html.portrait-nag), không chớp khi nghiêng thoáng qua */
 @media (orientation: portrait) and (max-width: 1100px) {
-  #app::after {
+  html.portrait-nag #app::after {
     content: '↻ Xoay iPad nằm ngang nhé';
     position: fixed;
     inset: 0;

@@ -412,7 +412,7 @@
   padding: 10px 12px;
   background: var(--surface);
   color: var(--ink);
-  font: 12px/1.35 ui-monospace, Menlo, monospace;
+  font: 16px/1.35 ui-monospace, Menlo, monospace; /* ≥ 16px: iPad không tự phóng to khi chạm vào ô */
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   overflow: auto;

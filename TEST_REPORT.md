@@ -815,3 +815,19 @@ Có ba chuyên gia đánh giá: sư phạm, động lực cho trẻ và kỹ thu
   - `stop()` không tắt track nữa mà giữ luồng `MIC_KEEP_ALIVE_MS` = 10 phút, nếu micro đang bật trong Cài đặt và luồng còn sống. `start()` dùng lại luồng này, không xin quyền lần nữa.
   - Luồng bị tắt hẳn khi: hết 10 phút, track bị iOS mute hoặc kết thúc, tắt micro trong Cài đặt, hoặc `pagehide`.
   - Có test trong `tests/micListener.test.ts`.
+
+## 44. Phiền toái chỉ gặp trên iPad thật (2026-10-12)
+- **Giữ màn hình sáng** (`src/ui/screenAwake.ts`, dùng Screen Wake Lock)
+  - Chạm màn hình hoặc micro nghe thấy lần gõ phím thì giữ sáng; không có hoạt động trong 5 phút thì thả ra.
+  - Khi app hiện lại thì xin giữ sáng lại.
+  - Có test.
+- **Âm thanh tự mở lại** sau cuộc gọi, Siri hoặc chuyển app: có trình xử lý toàn cục (capture) gọi `unlock()` ở lần chạm kế; khi app hiện lại thì gọi `resume()`.
+- **Giọng đọc**
+  - Mở khóa ở `pointerup`/`click` thay vì `pointerdown` (iOS không coi `pointerdown` là cử chỉ người dùng).
+  - Chờ danh sách giọng tối đa 1,2 s nên câu đầu không bị mất.
+  - Không có giọng tiếng Việt thì im lặng, không đọc bằng giọng tiếng Anh.
+  - Có test `tests/voiceIos.test.ts`.
+- **"Xoay iPad"** chỉ hiện khi máy để dọc liên tục 1,2 s.
+- **Ô chữ**
+  - Ô chữ cuộn được bằng ngón tay (trước đây bị chặn).
+  - Các ô chữ báo cáo đặt cỡ 16px để iOS không tự phóng to.

@@ -1,3 +1,4 @@
+import { installWakeLock, type ActivityWakeLock } from './screenAwake';
 import type { AudioEngine } from '../audio/AudioEngine';
 import type { MicListener } from '../audio/MicListener';
 import { button, h, toast } from './components/dom';
@@ -23,6 +24,8 @@ function micSupportedNow(): boolean {
 export type Screen = (root: HTMLElement) => (() => void) | void;
 
 export class App {
+  /** Giữ màn hình sáng theo hoạt động (screenAwake.ts) */
+  readonly screenAwake: ActivityWakeLock;
   private cleanup: (() => void) | null = null;
   private _started = false;
   /** Đã chờ lần chạm kế tiếp để bật lại micro (sau khi iOS cắt ngầm) */
@@ -45,6 +48,8 @@ export class App {
     audio.recordSessionWanted = () => this.micWanted;
     // Chunk micro: nạp ngầm ngay (màn Bắt đầu đã vẽ trong cùng lượt — không làm chậm khung hình đầu)
     micModule.prefetch();
+    // (2026-10-12) Giữ màn hình sáng khi bé đang học (chạm / micro nghe tiếng đàn) — xem screenAwake.ts
+    this.screenAwake = installWakeLock();
   }
 
   /**
@@ -72,6 +77,8 @@ export class App {
     // (+ 2026-10-09) Tự học lệch dây đàn nhà (autoTune.ts): nạp kết quả đã lưu, lưu lại khi có số đo mới
     mic.loadAutoTune(this.store.settings.micAutoTune);
     mic.onAutoTune((st) => this.store.updateSettings({ micAutoTune: st }));
+    // Bé đàn trên đàn thật (không chạm màn hình) vẫn là đang học → giữ màn hình sáng
+    mic.onOnset(() => this.screenAwake.poke());
     // (2026-10-12) Tắt micro trong Cài đặt → bỏ luồng micro đang giữ chờ màn kế (đèn micro iPad tắt ngay)
     this.store.subscribe(() => {
       if (!this.micWanted) mic.releaseKept();

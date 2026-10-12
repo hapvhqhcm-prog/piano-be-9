@@ -48,6 +48,25 @@ function pickVoice(): void {
   viVoice = [...vi].sort((a, b) => score(a) - score(b))[0];
 }
 
+/**
+ * (2026-10-12) iOS: getVoices() thường TRỐNG ở lần gọi đầu (danh sách nạp ngầm, báo bằng 'voiceschanged').
+ * Câu đọc đầu tiên rơi vào lúc này → chờ tối đa `ms` cho danh sách nạp xong thay vì im lặng bỏ câu.
+ * KHÔNG bao giờ đọc khi không tìm thấy giọng vi-VN (tránh giọng tiếng Anh đọc chữ Việt).
+ */
+function waitVoices(ms: number): Promise<void> {
+  const s = synth();
+  if (!s || voicesLoaded) return Promise.resolve();
+  return new Promise<void>((resolve) => {
+    let left = Math.max(1, Math.round(ms / 100));
+    const tick = () => {
+      pickVoice();
+      if (voicesLoaded || --left <= 0) resolve();
+      else setTimeout(tick, 100);
+    };
+    setTimeout(tick, 100);
+  });
+}
+
 function init(): void {
   const s = synth();
   if (!s) return;
@@ -58,8 +77,11 @@ function init(): void {
     /* Safari cũ: không có addEventListener trên speechSynthesis */
     (s as unknown as { onvoiceschanged: () => void }).onvoiceschanged = pickVoice;
   }
-  // iOS: phải có một lần speak() trong thao tác chạm thì các lần sau (tự động) mới kêu
+  // iOS: phải có một lần speak() trong thao tác chạm thì các lần sau (tự động) mới kêu.
+  // (2026-10-12) Nghe ở lúc NHẤC ngón (pointerup/touchend/click/phím) — WebKit không coi pointerdown/touchstart của ngón tay
+  // là "thao tác người dùng" (từ iOS 9), nên câu "mở khóa" phát trong pointerdown có thể không mở khóa gì.
   if (typeof document !== 'undefined') {
+    const events = ['pointerup', 'touchend', 'click', 'keydown'] as const;
     const unlock = () => {
       if (unlocked) return;
       unlocked = true;
@@ -72,9 +94,9 @@ function init(): void {
         /* bỏ qua */
       }
       pickVoice();
-      document.removeEventListener('pointerdown', unlock, true);
+      for (const ev of events) document.removeEventListener(ev, unlock, true);
     };
-    document.addEventListener('pointerdown', unlock, true);
+    for (const ev of events) document.addEventListener(ev, unlock, true);
   }
 }
 init();
@@ -140,6 +162,11 @@ export async function speak(host: VoiceHost, text: string): Promise<void> {
   const line = speakable(text);
   if (!s || !line || host.store.settings.voice === false) return;
   if (!viVoice) pickVoice();
+  if (!viVoice && !voicesLoaded) {
+    const my0 = gen;
+    await waitVoices(1200);
+    if (my0 !== gen) return; // đã có câu khác / bị hủy trong lúc chờ
+  }
   if (!viVoice) return;
   cancelSpeech();
   const my = ++gen;

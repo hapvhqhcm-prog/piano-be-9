@@ -22,6 +22,15 @@ export const CHANGELOG_BASELINE = '0.15.0';
 
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
+    version: '0.23.2',
+    date: '2026-10-12',
+    items: [
+      'Màn hình iPad không tự tắt khi bé đang đàn (kể cả không chạm máy); 5 phút không ai dùng thì tắt như thường.',
+      'Âm thanh tự bật lại sau cuộc gọi / Siri ở lần chạm kế tiếp.',
+      'Giọng đọc không còn bỏ mất câu đầu; nghiêng iPad thoáng qua không hiện "Xoay iPad".',
+    ],
+  },
+  {
     version: '0.23.1',
     date: '2026-10-12',
     items: [

@@ -40,7 +40,8 @@ function installTouchGuards(): void {
     'touchmove',
     (e) => {
       const t = e.target as Element | null;
-      if (t?.closest?.('.scrollable')) return;
+      // (2026-10-12) Ô chữ nhiều dòng (Soạn bài, báo cáo micro…) tự cuộn nội dung dài — trước đây bị chặn ngoài .scrollable.
+      if (t?.closest?.('.scrollable, textarea')) return;
       if (e.touches.length > 1 && !onKeyboard(e)) return; // pinch-zoom
       e.preventDefault();
     },
@@ -55,6 +56,35 @@ function installTouchGuards(): void {
   document.addEventListener('contextmenu', (e) => {
     if (!(e.target as Element | null)?.closest?.('input, textarea')) e.preventDefault();
   });
+}
+
+/**
+ * (2026-10-12) Lớp "↻ Xoay iPad nằm ngang" chỉ hiện khi iPad ĐỨNG DỌC liên tục ≥ 1,2 s (CSS: html.portrait-nag).
+ * Trước đây là @media thuần → nghiêng/nhấc iPad một chút (con quay xoay qua dọc rồi về ngang) là chớp cả màn che kín.
+ * Lớp phủ chỉ là hình — không dừng âm thanh / micro / buổi học.
+ */
+function installPortraitNag(delayMs = 1200): void {
+  if (typeof matchMedia !== 'function') return;
+  const mq = matchMedia('(orientation: portrait) and (max-width: 1100px)');
+  const root = document.documentElement;
+  let t = 0;
+  const apply = () => {
+    window.clearTimeout(t);
+    if (!mq.matches) {
+      root.classList.remove('portrait-nag');
+      return;
+    }
+    // Mở app khi đang cầm dọc → hiện ngay; xoay giữa chừng → chờ xem có phải chỉ nghiêng thoáng qua.
+    if (!root.dataset.nagReady) root.classList.add('portrait-nag');
+    else t = window.setTimeout(() => mq.matches && root.classList.add('portrait-nag'), delayMs);
+  };
+  apply();
+  root.dataset.nagReady = '1';
+  try {
+    mq.addEventListener('change', apply);
+  } catch {
+    mq.addListener(apply); // Safari < 14
+  }
 }
 
 /**
@@ -84,6 +114,7 @@ async function boot(): Promise<void> {
   const root = document.getElementById('app') as HTMLElement;
   const app = new App(root, new AudioEngine(), store);
   installTouchGuards();
+  installPortraitNag();
   installAudioOverlay(app.audio, () => app.started);
   registerServiceWorker();
   app.show(startScreen(app));
