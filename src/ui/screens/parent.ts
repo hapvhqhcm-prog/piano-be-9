@@ -26,6 +26,8 @@ import { advancedSection } from './parentAdvanced';
 import { parentSongsCard } from './parentSongsCard';
 import { focusGuideAnchor, guideButton, parentGuideMod, parentGuideScreen, syncWhatsNew, tagGuide, takeGuideHint, whatsNewCard } from './parentHelp';
 import { PARENT_ANCHORS, type GuideAnchor } from './parentGuideData';
+import { parentReviewScreen, reviewCard } from './parentReview';
+import { cleanReviewAudio } from '../selfStudy';
 
 // Giữ nguyên API cũ
 export { fmtDate, parentLabel } from './parentShared';
@@ -180,6 +182,9 @@ export function parentScreen(app: App, opts: { focus?: GuideAnchor } = {}) {
       );
 
       const weekly = weeklyReportCard(c, d, now, () => app.show(parentScreen(app)));
+      // (+ 2026-10-12) 🕑 Chờ bố mẹ xem (bé tự học): có mục chờ → thẻ ở ĐẦU màn; không thì thẻ nhỏ (cài đặt) ở cuối
+      const review = reviewCard(c, d, () => app.show(parentReviewScreen(app, () => app.show(parentScreen(app)))));
+      const reviewTop = review.classList.contains('has-items');
       const weeklyDue = weekly.classList.contains('due');
       const sections: (HTMLElement | null)[] = [
         h(
@@ -202,6 +207,7 @@ export function parentScreen(app: App, opts: { focus?: GuideAnchor } = {}) {
         ),
         backupLine,
         message ? h('div', { class: 'banner' }, message) : null,
+        reviewTop ? review : null,
         store.recoveredFromMirror
           ? h('div', { class: 'banner' }, '✅ Dữ liệu chính bị trống / hỏng — app đã tự khôi phục tiến độ của bé từ bản sao thứ hai trong máy.')
           : store.recoveredFromBackup
@@ -237,6 +243,7 @@ export function parentScreen(app: App, opts: { focus?: GuideAnchor } = {}) {
       // (2026-10-09) Nhóm "thiết lập một lần" ở cuối (trước Nâng cao): ⏰ giờ tập · bài bố mẹ thêm —
       // phần đầu màn dành cho việc hằng ngày (tối nay, sẵn sàng sang tuần, mẹo tuần) và tiến độ
       sections.push(
+        reviewTop ? null : review,
         // (+ 2026-10-08) ⏰ Đặt giờ tập — lời nhắc .ics lặp hằng tuần trong Lịch của iPad
         tagGuide(reminderCard(app), 'reminder'),
         tagGuide(parentSongsCard(c, () => app.show(parentScreen(app))), 'songs'),
@@ -246,6 +253,7 @@ export function parentScreen(app: App, opts: { focus?: GuideAnchor } = {}) {
     };
 
     render();
+    void cleanReviewAudio(app);
     if (opts.focus) focusGuideAnchor(scroller, opts.focus);
   };
 }

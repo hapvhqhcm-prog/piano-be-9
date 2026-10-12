@@ -106,6 +106,8 @@ export const WEEK22: WeekPlan = {
           ],
         }),
         qa('Hỏi – Đáp về nhà 💬', 'App hỏi. Con đáp, kết ở Đô — như hợp âm I!', 'C'),
+        // (2026-10-12, OWNER duyệt) 📘 Biết thêm — nhạc lý nhẹ nhàng; THÊM VÀO CUỐI bài
+        { kind: 'theory', ids: ['chords'] },
       ],
     },
     // Câu 2 (ô 5–8): tay trái đổi hợp âm nhiều hơn câu 1
@@ -172,6 +174,8 @@ export const WEEK23: WeekPlan = {
           position: 'C',
           bars: 4,
         },
+        // (2026-10-12, OWNER duyệt) 📘 Biết thêm — nhạc lý nhẹ nhàng; THÊM VÀO CUỐI bài
+        { kind: 'theory', ids: ['ledger'] },
       ],
     },
     {
@@ -215,7 +219,8 @@ export const WEEK24: WeekPlan = {
   title: 'Đổi thế tay',
   story: 'Trên Biển Đổi Thế, bàn tay như con thuyền: dời sang chỗ mới mà vẫn chèo êm.',
   // Ôn dòng kẻ phụ (tuần 23) La3, Si3 — dùng ở La thứ tuần 25 — và đọc trước Mi5–Sol5 (tuần 26 nốt cao, Minuet tuần 29)
-  warmup: { variant: 'read', pool: ['A3', 'B3', 'C4', 'E4', 'G4', 'A4', 'B4', 'C5', 'D5', 'E5', 'F5', 'G5'], rounds: 6 },
+  // (2026-10-12, OWNER duyệt) khởi động THỈNH THOẢNG bằng "📘 Đố vui nhạc lý" — chỉ hỏi khái niệm đã có thẻ ở tuần trước
+  warmup: { variant: 'theory', pool: [], rounds: 6, theoryUpTo: 23 },
   teach: { emoji: '👨‍🏫', text: 'Con chỉ bố mẹ chỗ trong bài phải dời tay, và dời bằng ngón nào.' },
   drills: ['thumb-under', 'wrist-circle'],
   criterion: { text: 'Chơi trọn "Đêm thánh vô cùng" THEO NHỊP (tốc độ từ 50 trở lên) — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
@@ -261,6 +266,8 @@ export const WEEK25: WeekPlan = {
           quiz: { variant: 'read', pool: ['A3', 'B3', 'C4', 'D5', 'E5', 'F5', 'G5'], rounds: 6 },
         },
         song('frere_jacques_minor', 'tempo', 2, 'names'),
+        // (2026-10-12, OWNER duyệt) 📘 Biết thêm — nhạc lý nhẹ nhàng; THÊM VÀO CUỐI bài
+        { kind: 'theory', ids: ['major-minor'] },
       ],
     },
     // OWNER duyệt 2026-10-05: thay "Bài ca niềm vui — La thứ" (bài lặp) bằng bài tự sáng tác giọng La thứ

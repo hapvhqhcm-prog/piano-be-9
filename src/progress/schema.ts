@@ -179,7 +179,18 @@ export interface Settings {
    * Mã: "s:<bài>" (bài mới ở Thư viện) · "g:<trò>" (trò ở màn Trò chơi) · "album". Không có = chưa thấy gì. Đọc MỀM (cleanSeenNew).
    */
   seenNew?: string[];
+  /**
+   * (+ 2026-10-12, OWNER duyệt "Bé tự học, bố mẹ đỡ vất") Cách học HÔM NAY bé/bố mẹ chọn ở màn chính: 'self' = 👦 Con tự học
+   * (việc cần bố mẹ được HOÃN vào hàng "🕑 Chờ bố mẹ xem"), 'parent' = 👪 Có bố mẹ ngồi cùng. Chỉ có hiệu lực đúng `date`
+   * (YYYY-MM-DD) — hôm sau về `studyDefault`. Không có = chưa chọn.
+   */
+  studyMode?: { mode: StudyMode; date: string };
+  /** (+ 2026-10-12) Cách học mặc định khi chưa chọn hôm nay (màn Phụ huynh). Không có = 'parent' (như trước). */
+  studyDefault?: StudyMode;
 }
+
+/** (+ 2026-10-12) 👦 Con tự học / 👪 Có bố mẹ ngồi cùng */
+export type StudyMode = 'self' | 'parent';
 
 /** (+ 2026-10-08) Món quà đang dùng — mã món trong lessons/unlocks.ts. */
 export interface Cosmetics {
@@ -249,6 +260,45 @@ export interface AppData {
    * Bản ghi hỏng bên trong bị bỏ qua khi đọc (concertLog) — không làm hỏng cả dữ liệu.
    */
   concerts?: ConcertEntry[];
+  /**
+   * (+ 2026-10-12) 🕑 HÀNG CHỜ BỐ MẸ XEM (progress/reviewQueue.ts): việc cần bố mẹ mà bé làm lúc TỰ HỌC — chưa tính gì cho
+   * tiêu chí tuần cho tới khi bố mẹ chấm "✅ Đạt" (khi đó ghi như bố mẹ chấm vào đúng buổi / ngày bé đàn). Chỉ thông tin
+   * (bản ghi âm nằm riêng trong IndexedDB — progress/reviewAudio.ts, không vào bản sao lưu JSON). Tự hết hạn sau 14 ngày.
+   * Không có = hàng chờ trống. Mục hỏng bị bỏ khi đọc (sanitizeReviews).
+   */
+  reviews?: ReviewItem[];
+}
+
+/** (+ 2026-10-12) Phần lượt chơi được hoãn (không có kết quả — bố mẹ chấm sau). */
+export type ReviewRun = Omit<SongRun, 'ts' | 'source' | 'passed' | 'checklist' | 'hits' | 'hands'>;
+
+/** (+ 2026-10-12) Một việc chờ bố mẹ xem (bé tự học). */
+export interface ReviewItem {
+  id: string;
+  /** song = một lượt cả bài (phiếu 3 ý) · check = thẻ / nốt bố mẹ xác nhận (PARENT_ASSESSMENT) · challenge = thử thách tuần */
+  kind: 'song' | 'check' | 'challenge';
+  /** Khóa gộp: các lần hoãn cùng khóa (cùng buổi) gộp vào MỘT mục (vd 10 nốt của một bài "Từng nốt") */
+  group: string;
+  /** Tên hiện cho bố mẹ ("Bánh nóng — theo nhịp 60") */
+  label: string;
+  /** Ngày bé làm (YYYY-MM-DD) — duyệt thì ghi vào ĐÚNG ngày này (quy tắc "2 ngày khác nhau") */
+  date: string;
+  /** Lúc bé làm (ms) */
+  ts: number;
+  /** Buổi chứa lượt (gộp lịch sử không gộp buổi còn mục chờ) */
+  sessionId?: string;
+  lessonId?: string;
+  run?: ReviewRun;
+  /** kind 'check': các thẻ / nốt (mỗi lần bé làm một lần, giữ trùng — vd tìm Đô 10 lần) */
+  notes?: Array<{ note: string; ts: number }>;
+  /** kind 'challenge': mã thử thách */
+  challenge?: string;
+  /** Không chấm được bằng tai (bố mẹ phải NHÌN tay) → chỉ là lời nhắc "Lần sau ngồi cùng xem tay nhé" */
+  visual?: boolean;
+  /** Nhận xét tạm của app (micro), vd "Micro nghe đúng 7/10 nốt" */
+  mic?: string;
+  /** Có bản ghi âm (IndexedDB) */
+  audio?: boolean;
 }
 
 /** (+ 2026-10-08) Một buổi "Biểu diễn cho cả nhà". */
@@ -529,6 +579,9 @@ export function validateAppData(x: unknown): string[] {
     if (st.guideHintAt !== undefined && !(typeof st.guideHintAt === 'number' && Number.isFinite(st.guideHintAt))) errs.push('settings.guideHintAt');
     // (+ 2026-10-10) Nhãn "Mới" — migrate() đã lọc (cleanSeenNew); ở đây chỉ chặn kiểu sai hẳn
     if (st.seenNew !== undefined && !(Array.isArray(st.seenNew) && st.seenNew.every((k) => typeof k === 'string'))) errs.push('settings.seenNew');
+    // (+ 2026-10-12) Bé tự học
+    if (st.studyMode !== undefined && !(isObj(st.studyMode) && isStudyMode(st.studyMode.mode) && typeof st.studyMode.date === 'string')) errs.push('settings.studyMode');
+    if (st.studyDefault !== undefined && !isStudyMode(st.studyDefault)) errs.push('settings.studyDefault');
   }
   const p = x.progress;
   if (!isObj(p)) errs.push('Thiếu progress');
@@ -641,6 +694,8 @@ export function validateAppData(x: unknown): string[] {
   if (x.games !== undefined && (!isObj(x.games) || !Object.values(x.games).every(validGameScore))) errs.push('games');
   // (+ 2026-10-08) Nhật ký buổi diễn — chỉ chặn kiểu sai hẳn; bản ghi hỏng bị lọc khi đọc (lessons/concert.ts)
   if (x.concerts !== undefined && !Array.isArray(x.concerts)) errs.push('concerts');
+  // (+ 2026-10-12) Hàng chờ bố mẹ xem — migrate() đã lọc mục hỏng (sanitizeReviews); ở đây chặn mọi mục sai
+  if (x.reviews !== undefined && !(Array.isArray(x.reviews) && x.reviews.every(validReviewItem))) errs.push('reviews');
   // (+ 2026-10-06) Tổng hợp lịch sử đã gộp — không có = chưa gộp
   if (x.history !== undefined) {
     const hs = x.history;
@@ -657,6 +712,56 @@ export function validateAppData(x: unknown): string[] {
     }
   }
   return errs;
+}
+
+const isStudyMode = (m: unknown): m is StudyMode => m === 'self' || m === 'parent';
+
+/** (+ 2026-10-12) Giới hạn hàng chờ: số mục, số thẻ trong một mục, độ dài chữ. */
+export const REVIEW_MAX_ITEMS = 60;
+export const REVIEW_MAX_NOTES = 40;
+const REVIEW_TEXT_MAX = 120;
+const okText = (t: unknown, max = REVIEW_TEXT_MAX): t is string => typeof t === 'string' && t.length > 0 && t.length <= max;
+const okOptText = (t: unknown): boolean => t === undefined || okText(t);
+
+/** (+ 2026-10-12) Một mục hàng chờ hợp lệ (thuần — có test). */
+export function validReviewItem(x: unknown): x is ReviewItem {
+  if (!isObj(x)) return false;
+  if (!okText(x.id, 64) || !okText(x.group) || !okText(x.label) || !okText(x.date, 10) || !/^\d{4}-\d{2}-\d{2}$/.test(x.date)) return false;
+  if (!okNum(x.ts) || !okOptText(x.sessionId) || !okOptText(x.lessonId) || !okOptText(x.mic) || !okOptText(x.challenge)) return false;
+  if (x.visual !== undefined && typeof x.visual !== 'boolean') return false;
+  if (x.audio !== undefined && typeof x.audio !== 'boolean') return false;
+  if (x.notes !== undefined && !(Array.isArray(x.notes) && x.notes.length <= REVIEW_MAX_NOTES && x.notes.every((n) => isObj(n) && okText(n.note, 64) && okNum(n.ts)))) return false;
+  switch (x.kind) {
+    case 'song': {
+      const r = x.run;
+      return (
+        isObj(r) &&
+        okText(r.songId) &&
+        (r.mode === 'wait' || r.mode === 'tempo') &&
+        typeof r.bpm === 'number' &&
+        Number.isFinite(r.bpm) &&
+        okNum(r.total) &&
+        ['full', 'names', 'staff'].includes(r.hints as string) &&
+        (r.hand === undefined || r.hand === 'RH' || r.hand === 'LH') &&
+        (r.level === undefined || r.level === 2 || r.level === 3) &&
+        (r.phrase === undefined || r.phrase === null || (Array.isArray(r.phrase) && r.phrase.length === 2 && r.phrase.every(Number.isInteger)))
+      );
+    }
+    case 'check':
+      return Array.isArray(x.notes) && x.notes.length > 0;
+    case 'challenge':
+      return okText(x.challenge, 64);
+    default:
+      return false;
+  }
+}
+
+/** (+ 2026-10-12) Lọc hàng chờ DỄ TÍNH: bỏ mục hỏng / trùng mã, giữ REVIEW_MAX_ITEMS mục mới nhất. Rỗng / sai kiểu → undefined. */
+export function sanitizeReviews(x: unknown): ReviewItem[] | undefined {
+  if (!Array.isArray(x)) return undefined;
+  const seen = new Set<string>();
+  const out = x.filter((r): r is ReviewItem => validReviewItem(r) && !seen.has(r.id) && !!seen.add(r.id)).slice(-REVIEW_MAX_ITEMS);
+  return out.length ? out : undefined;
 }
 
 /** Một nốt bài bố mẹ nhập: độ dài > 0, cao độ đúng dạng (hoặc dấu lặng), số ngón 1–5 nếu có. */

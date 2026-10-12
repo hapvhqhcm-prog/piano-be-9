@@ -286,12 +286,17 @@ export function scheduleAccomp(c: SongCtx, t0: number, spb: number, mute: [numbe
   }
 }
 
-/** Ghi một lượt (SongRun) qua hooks.onRun */
-export function record(c: SongCtx, r: Pick<SongRun, 'mode' | 'total' | 'hits' | 'source' | 'passed' | 'checklist'>): void {
+/** Dựng một lượt (SongRun, chưa có ts) của màn đang mở */
+export function buildRun(c: SongCtx, r: Pick<SongRun, 'mode' | 'total' | 'hits' | 'source' | 'passed' | 'checklist'>): Omit<SongRun, 'ts'> {
   const sh = solo(c);
   // (+ 2026-10-09) Micro chấm hai tay → lưu thêm số nốt đúng của từng tay (trường tùy chọn)
   const hs = r.source === 'mic' && c.lastHands ? { hands: { RH: c.lastHands.RH, LH: c.lastHands.LH } } : {};
-  c.hooks.onRun({ songId: c.full.id, ...r, level: r.mode === 'tempo' ? c.level : undefined, bpm: c.bpm, hints: c.hints, phrase: c.phrase, ...(sh ? { hand: sh } : {}), ...hs });
+  return { songId: c.full.id, ...r, level: r.mode === 'tempo' ? c.level : undefined, bpm: c.bpm, hints: c.hints, phrase: c.phrase, ...(sh ? { hand: sh } : {}), ...hs };
+}
+
+/** Ghi một lượt (SongRun) qua hooks.onRun */
+export function record(c: SongCtx, r: Pick<SongRun, 'mode' | 'total' | 'hits' | 'source' | 'passed' | 'checklist'>): void {
+  c.hooks.onRun(buildRun(c, r));
 }
 
 export const streakDots = (c: SongCtx) =>

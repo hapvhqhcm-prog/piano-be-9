@@ -19,6 +19,8 @@ import { leftHandActive } from '../../lessons/lessonEngine';
 import { StaffView } from '../components/staffView';
 import { HandOverlay, eventsFromTargets, playDemo } from '../components/demo';
 import { MicHonestyWatch, micHonestyBox } from '../components/micHonesty';
+import { SELF_DONE, deferCheck, selfStudy } from '../selfStudy';
+import { isVisualNote } from '../../progress/reviewQueue';
 
 /**
  * Lời khen ĐÚNG MỨC (khoa học học tập): nốt đúng bình thường → chuông + câu khen NÓI RÕ kỹ năng
@@ -82,6 +84,8 @@ const SKIP_AFTER_MIC_WRONG = 5;
 const SILENCE_HELP_MS = 8000;
 /** Bố mẹ chấm giúp một nốt (micro nghe chưa rõ) */
 const PARENT_STEP_HINT = '👪 Bố mẹ nhìn con đàn rồi bấm Đúng rồi / Thử lại nhé';
+/** (+ 2026-10-12) 👦 Bé tự học: bé tự chạm "Con đàn xong" — bố mẹ xem lại sau (hàng chờ) */
+const SELF_STEP_HINT = '✋ Đàn xong thì con chạm “Con đàn xong” — bố mẹ xem lại sau nhé';
 const HAND_TAG = { RH: { letter: 'P', name: 'tay phải' }, LH: { letter: 'T', name: 'tay trái' } } as const;
 const pick = <T,>(a: T[]): T => a[Math.floor(Math.random() * a.length)];
 
@@ -156,6 +160,8 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
     /** Nốt mà bố mẹ đang "chấm giúp" (micro nghe chưa rõ) — micro không chấm nốt này nữa (-1 = không) */
     let parentStep = -1;
     const micOn = () => app.mic.state === 'on';
+    /** (+ 2026-10-12) 👦 Bé tự học hôm nay: nút "👪 Đúng rồi / Thử lại" → nút của bé; "Đúng rồi" vào hàng chờ bố mẹ xem */
+    const self = selfStudy(app);
     /** Đã đọc gợi ý cho nốt thứ mấy (chỉ đọc khi sang nốt MỚI) */
     let spokenIndex = -1;
     /** Đếm im lặng khi micro đang chờ bé đàn */
@@ -235,9 +241,9 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
     /** Micro bật mà im lặng lâu: có thể đàn quá nhỏ / micro xa → chỉ cách, không để bé ngồi chờ mãi */
     const showSilenceHelp = () => {
       honesty.timeout();
-      micHint('🎤 App chưa nghe thấy — con đàn to hơn, hoặc nhờ bố mẹ bấm 👪 Đúng rồi', 'wrong');
+      micHint(self ? '🎤 App chưa nghe thấy — con đàn to hơn, hoặc chạm ✋ Con đàn xong' : '🎤 App chưa nghe thấy — con đàn to hơn, hoặc nhờ bố mẹ bấm 👪 Đúng rồi', 'wrong');
       lastHintSpokenAt = Date.now();
-      void say('App chưa nghe thấy. Con đàn to hơn, hoặc nhờ bố mẹ bấm Đúng rồi nhé.');
+      void say(self ? 'App chưa nghe thấy. Con đàn to hơn nhé.' : 'App chưa nghe thấy. Con đàn to hơn, hoặc nhờ bố mẹ bấm Đúng rồi nhé.');
     };
     /** Câu đọc khi sang nốt mới — thật ngắn: "Đô, ngón 1". */
     const noteSpeech = (t: Target): string => {
@@ -475,7 +481,7 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
           if (waiting && micOn() && t.keys.length > 0) {
             app.mic.resetTracker();
             honesty.step();
-            if (parentStep === snap.index) micHint(PARENT_STEP_HINT);
+            if (parentStep === snap.index) micHint(self ? SELF_STEP_HINT : PARENT_STEP_HINT);
             else micHint(t.keys.length > 1 ? '🎤 Đang nghe… đàn từng phím đang sáng' : '🎤 Đang nghe… con đàn đi!');
             quietSince = Date.now();
             silenceShown = false;
@@ -487,10 +493,12 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
           if (hasSample) {
             bar.append(button({ icon: '🔊', label: 'Nghe lại', disabled: !waiting, onTap: () => send('REPLAY') }));
           }
-          bar.append(
-            button({ icon: '👪', label: 'Đúng rồi', kind: 'good', disabled: !waiting, onTap: () => send('CORRECT') }),
-            button({ icon: '↻', label: 'Thử lại', kind: 'retry', disabled: !waiting, onTap: () => send('RETRY') }),
-          );
+          if (self) bar.append(button({ ...SELF_DONE, kind: 'good', disabled: !waiting, onTap: () => send('CORRECT') }));
+          else
+            bar.append(
+              button({ icon: '👪', label: 'Đúng rồi', kind: 'good', disabled: !waiting, onTap: () => send('CORRECT') }),
+              button({ icon: '↻', label: 'Thử lại', kind: 'retry', disabled: !waiting, onTap: () => send('RETRY') }),
+            );
           if (snap.state === 'SHOW_NOTE') {
             // Nốt MỚI: đọc "Đô, ngón 1" trước, rồi mới phát âm mẫu
             if (spokenIndex !== snap.index && voiceOn(app)) {
@@ -544,7 +552,7 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
           }
           bar.append(
             back,
-            button({ icon: '👪', label: 'Bố mẹ sửa', onTap: () => send('EDIT') }),
+            self ? '' : button({ icon: '👪', label: 'Bố mẹ sửa', onTap: () => send('EDIT') }),
             // (`tries` chưa tính lần "Thử lại" vừa bấm — hiệu ứng ghi chạy sau khi vẽ)
             !ok && tries + 1 >= SKIP_AFTER_RETRIES ? skipButton() : '',
             ok
@@ -588,7 +596,18 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
           app.audio.stopAll();
           break;
         case 'record':
-          hooks.record(seg.targets[ef.index], ef.result);
+          // (+ 2026-10-12) Bé tự học: "Đúng rồi" do BÉ chạm → hàng chờ bố mẹ xem (tính khi bố mẹ duyệt, đúng ngày hôm nay);
+          // "Thử lại" (bỏ qua — mai ôn lại) vẫn ghi ngay như trước
+          if (self && ef.result === 'correct') {
+            const t = seg.targets[ef.index];
+            deferCheck(app, {
+              group: `notes:${seg.id}`,
+              // Thẻ xem tay (lời nhắc riêng từng thẻ): tên thẻ; còn lại: tên bài
+              label: isVisualNote(t.noteId) ? `${plainTitle(t)} (xem tay)` : seg.title,
+              note: t.noteId,
+              ...(micOn() && t.keys.length ? { mic: 'micro nghe chưa rõ' } : {}),
+            });
+          } else hooks.record(seg.targets[ef.index], ef.result);
           if (ef.result === 'retry') {
             retries.set(ef.index, (retries.get(ef.index) ?? 0) + 1);
             firstTryRun = 0;
@@ -755,9 +774,9 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
         if (stage.querySelector('.mic-honest')) return;
         const box = micHonestyBox(() => {
           parentStep = sm.snapshot.index;
-          box.replaceChildren(h('div', { class: 'mic-honest-text' }, PARENT_STEP_HINT));
-          micHint(PARENT_STEP_HINT);
-        });
+          box.replaceChildren(h('div', { class: 'mic-honest-text' }, self ? SELF_STEP_HINT : PARENT_STEP_HINT));
+          micHint(self ? SELF_STEP_HINT : PARENT_STEP_HINT);
+        }, { self });
         stage.append(box);
         // (2026-10-09) Hộp nằm cuối vùng cuộn — đưa vào tầm nhìn (trước đây bị bàn phím che, phải cuộn mới thấy nút)
         box.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });

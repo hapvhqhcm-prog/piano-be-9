@@ -136,6 +136,8 @@ export const WEEK32: WeekPlan = {
         }),
         song('scale_g_rh', 'wait', 2, 'full', 'Gam Sol: nhớ Fa THĂNG — phím đen!'),
         song('scale_g_rh', 'tempo', 2, 'names'),
+        // (2026-10-12, OWNER duyệt) 📘 Biết thêm — nhạc lý nhẹ nhàng; THÊM VÀO CUỐI bài
+        { kind: 'theory', ids: ['key-sig-g'] },
       ],
     },
     plus(
@@ -186,6 +188,8 @@ export const WEEK33: WeekPlan = {
         }),
         song('scale_f_rh', 'wait', 2, 'full', 'Ngón 4 đàn Si giáng nhé!'),
         song('scale_f_rh', 'tempo', 2, 'names'),
+        // (2026-10-12, OWNER duyệt) 📘 Biết thêm — nhạc lý nhẹ nhàng; THÊM VÀO CUỐI bài
+        { kind: 'theory', ids: ['key-sig-f'] },
       ],
     },
     plus(pair('w33-l2', 33, 'Gam Fa tay trái', '🍂', 'scale_f_lh', 'Tay trái: Si giáng là ngón 2.', 'full'), handCheck(33)),
@@ -336,7 +340,8 @@ export const WEEK37: WeekPlan = {
   title: 'Củng cố: gam & hợp âm',
   story: 'Nghỉ chân ở làng nhỏ! Không có gì mới — con đàn bài mới bằng những gì đã giỏi: gam, hợp âm, Alberti.',
   leftHand: true,
-  warmup: { variant: 'interval', pool: ['G4', 'A4', 'B4', 'C5', 'D5'], rounds: 6, maxInterval: 5 },
+  // (2026-10-12, OWNER duyệt) khởi động THỈNH THOẢNG bằng "📘 Đố vui nhạc lý" — chỉ hỏi khái niệm đã có thẻ ở tuần trước
+  warmup: { variant: 'theory', pool: [], rounds: 6, theoryUpTo: 36 },
   teach: { emoji: '👨‍🏫', text: 'Con chọn một bài tuần trước, đàn cho bố mẹ và kể: tay trái đệm kiểu gì?' },
   drills: ['five-finger', 'thumb-under'],
   criterion: {
@@ -467,6 +472,8 @@ export const WEEK39: WeekPlan = {
       activities: [
         conveyor('boat_song_68', 'Thuyền đưa — chỉ nhìn khuông!'),
         { kind: 'sight', title: 'Đọc nhạc thế Sol', position: 'G', hand: 'RH', count: 2, rhythm: 2, hints: 'staff' },
+        // (2026-10-12, OWNER duyệt) 📘 Biết thêm — nhạc lý nhẹ nhàng; THÊM VÀO CUỐI bài
+        { kind: 'theory', ids: ['tempo', 'cresc-dim'] },
       ],
     },
   ],
@@ -583,7 +590,8 @@ export const WEEK42: WeekPlan = {
   title: 'Củng cố: chuẩn bị hòa nhạc',
   story: 'Sắp tới Nhà hát Lớn! Tuần này con ghép mọi thứ đã học: 6/8, La thứ, to dần – nhỏ dần, và chọn bài để biểu diễn.',
   leftHand: true,
-  warmup: { variant: 'read', pool: ['E4', 'G4', 'A4', 'C5', 'E5', 'F5'], rounds: 6 },
+  // (2026-10-12, OWNER duyệt) khởi động THỈNH THOẢNG bằng "📘 Đố vui nhạc lý" — chỉ hỏi khái niệm đã có thẻ ở tuần trước
+  warmup: { variant: 'theory', pool: [], rounds: 6, theoryUpTo: 41 },
   teach: { emoji: '👨‍🏫', text: 'Con chọn bài sẽ biểu diễn ở Nhà hát và tập giới thiệu bài cho bố mẹ nghe.' },
   drills: ['arm-drop', 'wrist-circle'],
   criterion: {

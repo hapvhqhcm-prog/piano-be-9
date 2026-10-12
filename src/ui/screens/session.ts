@@ -27,6 +27,8 @@ const stageMod = lazy(() => import('./stage'));
 const singMod = lazy(() => import('./sing'));
 type SingHooks = Parameters<typeof import('./sing').singScreen>[1];
 const singScreen = (app: App, hooks: SingHooks): Screen => lazyScreen(singMod, (m) => m.singScreen(app, hooks));
+// (2026-10-12) Thẻ "📘 Biết thêm" (nhạc lý nhẹ nhàng) — chunk riêng
+const theoryMod = lazy(() => import('./theory'));
 type ImprovHooks = Parameters<typeof import('./improv').improvScreen>[1];
 type StageHooks = Parameters<typeof import('./stage').stageScreen>[1];
 const improvScreen = (app: App, hooks: ImprovHooks): Screen => lazyScreen(improvMod, (m) => m.improvScreen(app, hooks));
@@ -200,6 +202,8 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
           onDone: onComplete,
           onBack: onExit,
         });
+      case 'theory':
+        return lazyScreen(theoryMod, (m) => m.theoryCardScreen(app, { ids: a.ids, onDone: onComplete, onBack: onExit }));
       case 'stage':
         return stageScreen(app, {
           level: a.level ?? 1,

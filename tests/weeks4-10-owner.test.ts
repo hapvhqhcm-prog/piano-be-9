@@ -63,7 +63,8 @@ describe('tiến độ tuần 4 đã lưu vẫn đúng sau rà soát 2026-10-08'
     // Bài đã xong vẫn xong; bài dở chỉ còn hoạt động 1–2 (+ 3: ứng tấu thêm vào CUỐI ngày 2026-10-08) — không làm lại hoạt động 0
     expect(nextLesson(d).id).toBe('w4-l4');
     const acts = buildSessionPlan(findLesson('w4-l4')!, d).flatMap((s) => (s.kind === 'activity' ? [s.index] : []));
-    expect(acts).toEqual([1, 2, 3]);
+    // (+ 2026-10-12) + 4: thẻ "📘 Biết thêm" (quãng 2 & 3) thêm vào CUỐI bài
+    expect(acts).toEqual([1, 2, 3, 4]);
     // Bài 3 đã xong: không bị "mở lại" vì có thêm bước (Chơi lại / tiêu chí vẫn làm đủ bài)
     expect(d.progress.lessonsCompleted).toContain('w4-l3');
   });
@@ -105,7 +106,8 @@ describe('tiến độ tuần 4 đã lưu vẫn đúng sau rà soát 2026-10-08'
 
 describe('tuần 5 & 10 (rà soát 2026-10-08)', () => {
   it('tuần 5 bài 4: Chèo thuyền nhẹ Mức 2 TRƯỚC Mức 3', () => {
-    expect(findLesson('w5-l4')!.activities.map((_, i) => songOf('w5-l4', i))).toEqual(['notes', 'lightly_row@tempo2', 'lightly_row@tempo3']);
+    // (+ 2026-10-12) thẻ "📘 Biết thêm" (legato) thêm vào CUỐI bài
+    expect(findLesson('w5-l4')!.activities.map((_, i) => songOf('w5-l4', i))).toEqual(['notes', 'lightly_row@tempo2', 'lightly_row@tempo3', 'theory']);
   });
 
   it('tuần 10: tách bài 2 → bài 3 "Nốt Si & Gà gáy"; thẻ dạy Si (vạch 3) đứng trước Gà gáy', () => {

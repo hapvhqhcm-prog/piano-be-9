@@ -35,6 +35,7 @@ import {
 } from './songState';
 import { askParent, makeReview, showResult } from './songResult';
 import { focusStepDone } from './songFocus';
+import { SELF_DONE, selfStudy } from '../selfStudy';
 
 export function startWait(c: SongCtx): void {
   c.token++;
@@ -69,7 +70,13 @@ export function showWaitNote(c: SongCtx): void {
     c.loop3 ? streakDots(c) : '',
     c.loop3 ? ' ' : '',
     c.hints === 'staff' ? 'Nhìn khuông nhạc — nốt đang sáng' : `Đàn ${onsetLabel(g)}`,
-    c.parentRun ? ' · 👪 Bố mẹ chấm giúp — đàn xong nốt thì bấm "Bố mẹ: tiếp"' : micOn(c) ? ' · 🎤' : '',
+    c.parentRun
+      ? selfStudy(c.app)
+        ? ' · ✋ Đàn xong nốt thì con chạm "Con đàn xong"'
+        : ' · 👪 Bố mẹ chấm giúp — đàn xong nốt thì bấm "Bố mẹ: tiếp"'
+      : micOn(c)
+        ? ' · 🎤'
+        : '',
   );
   waitBar(c, g);
 }
@@ -80,7 +87,12 @@ function waitBar(c: SongCtx, g: Onset): void {
     backButton(() => c.act.reset()),
     c.hints !== 'full' ? button({ icon: '💡', label: 'Gợi ý', onTap: () => hint(c, g) }) : null,
     // Luôn có nút cho bố mẹ (kể cả khi micro bật) — phòng micro không nhận ra nốt; micro chưa nghe đủ hai tay 3 lần → nổi bật
-    button({ icon: '👪', label: 'Bố mẹ: tiếp', kind: c.parentRun || c.wHandFails >= 3 ? 'primary' : 'good', onTap: () => onWaitInput(c, midisOf(g)[0], 'parent') }),
+    // (+ 2026-10-12) 👦 Bé tự học: nút của BÉ ("✋ Con đàn xong") — cả lượt vào hàng chờ bố mẹ xem (songResult.askParent)
+    button({
+      ...(selfStudy(c.app) ? SELF_DONE : { icon: '👪', label: 'Bố mẹ: tiếp' }),
+      kind: c.parentRun || c.wHandFails >= 3 ? 'primary' : 'good',
+      onTap: () => onWaitInput(c, midisOf(g)[0], 'parent'),
+    }),
   );
 }
 
@@ -188,7 +200,11 @@ function finishLoopPass(c: SongCtx, total: number): void {
     return verdict(false);
   }
   c.state = 'rate';
-  c.status.replaceChildren(streakDots(c), ' ', h('b', {}, '👪 Bố mẹ: bé đàn đúng hết, không sai nốt nào chứ?'));
+  c.status.replaceChildren(
+    streakDots(c),
+    ' ',
+    h('b', {}, selfStudy(c.app) ? 'Con đàn đúng hết, không sai nốt nào chứ?' : '👪 Bố mẹ: bé đàn đúng hết, không sai nốt nào chứ?'),
+  );
   setBar(
     c,
     backButton(reset),

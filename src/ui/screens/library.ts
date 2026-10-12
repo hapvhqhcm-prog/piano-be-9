@@ -18,6 +18,8 @@ import { newPillOn } from '../components/newBadge';
 
 // (+ 2026-10-08) 🎧 Album của con — chunk riêng
 const albumMod = lazy(() => import('./album'));
+// (+ 2026-10-12) 📘 Từ điển nhạc nhỏ — chunk riêng
+const glossaryMod = lazy(() => import('./glossary'));
 
 /** Bộ lọc Thư viện (giữ trong lúc mở app): tất cả · 🇻🇳 Bài Việt Nam */
 let libFilter: 'all' | 'vn' = 'all';
@@ -208,7 +210,18 @@ export function libraryScreen(app: App, filter?: 'all' | 'vn') {
           { class: 'library-wrap scrollable' },
           h('p', { class: 'muted lib-note' }, `⭐ Đã thuộc ${SONGS.filter((x) => songMastered(data, x.id)).length}/${SONGS.length} bài — thuộc = đàn trọn bài theo nhịp, tốc độ từ 60 trở lên.`),
           // (+ 2026-10-08) 🎧 Album của con: bản thu hay nhất của mỗi bài (chỉ trên iPad này)
-          albumStore() ? h('div', { class: 'lib-album-row' }, albumBtn) : null,
+          // (+ 2026-10-12) 📘 Từ điển nhạc nhỏ: mọi khái niệm nhạc lý con đã học (thẻ "Biết thêm")
+          h(
+            'div',
+            { class: 'lib-album-row' },
+            albumStore() ? albumBtn : null,
+            button({
+              icon: '📘',
+              label: 'Từ điển nhạc nhỏ',
+              kind: 'primary',
+              onTap: () => app.show(lazyScreen(glossaryMod, (m) => m.glossaryScreen(app, () => app.show(libraryScreen(app))))),
+            }),
+          ),
           filterBar,
           ...(libFilter === 'vn' ? vnSections : [mineSection, parentSection, ...levelSections]),
         ),

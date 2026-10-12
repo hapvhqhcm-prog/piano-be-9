@@ -66,8 +66,9 @@ describe('AN TOÀN TIẾN ĐỘ tuần 1–4 (bé đang ở tuần 4)', () => {
     ['w4-l1', 'w4-l2', 'w4-l3', activityDoneId('w4-l4', 0), activityDoneId('w4-l4', 1)].forEach((id) => st.markLessonCompleted(id));
     const plan = buildSessionPlan(findLesson('w4-l4')!, st.get());
     const acts = plan.flatMap((s) => (s.kind === 'activity' ? [s] : []));
-    expect(acts.map((s) => s.index)).toEqual([2, 3]);
-    expect(acts.map((s) => sig(s.activity))).toEqual(['song:lightly_row@wait', 'improv:black-keys']);
+    // (+ 2026-10-12) thẻ "📘 Biết thêm" (quãng 2 & 3) THÊM VÀO CUỐI bài 4 — chỉ số cũ giữ nguyên
+    expect(acts.map((s) => s.index)).toEqual([2, 3, 4]);
+    expect(acts.map((s) => sig(s.activity))).toEqual(['song:lightly_row@wait', 'improv:black-keys', 'theory']);
     expect(plan.length).toBeLessThanOrEqual(MAX_SESSION_STEPS);
   });
 });

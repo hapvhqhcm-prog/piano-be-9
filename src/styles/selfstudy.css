@@ -1,0 +1,132 @@
+/* (+ 2026-10-12) 👦 Con tự học — chọn cách học ở màn chính, viên "Chờ bố mẹ xem", màn chờ bố mẹ xem (parentReview.ts) */
+
+.study-mode {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 4px 0 6px;
+}
+.study-chip {
+  appearance: none;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--r-pill, 999px);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 2px var(--line-strong);
+  color: var(--ink-2);
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.study-chip.on {
+  background: var(--violet-50);
+  box-shadow: inset 0 0 0 3px var(--violet-500);
+  color: var(--violet-700);
+  font-weight: 800;
+}
+.study-chip[data-mode='self'].on {
+  background: var(--mint-50);
+  box-shadow: inset 0 0 0 3px var(--mint-600);
+  color: var(--mint-800);
+}
+.study-note {
+  flex-basis: 100%;
+  text-align: center;
+  font-size: 18px;
+  color: var(--mint-800);
+}
+
+.review-pill {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--r-pill, 999px);
+  background: var(--sky-100);
+  box-shadow: inset 0 0 0 2px var(--sea-300);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+/* Thẻ ở đầu màn Phụ huynh */
+.card.review-card {
+  box-shadow: inset 0 0 0 3px var(--sea-300);
+  background: var(--sky-100);
+}
+.review-card .review-card-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.review-card .study-default {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* Màn chờ bố mẹ xem */
+.review-screen .review-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.review-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 2px var(--line);
+}
+.review-row.playing {
+  box-shadow: inset 0 0 0 3px var(--sea-500);
+}
+.review-row .review-what {
+  flex: 1 1 300px;
+  min-width: 0;
+}
+.review-row .review-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink);
+}
+.review-row .review-meta {
+  font-size: 17px;
+  color: var(--ink-2);
+}
+.review-row .review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.review-row.reminder {
+  background: var(--sun-50);
+  box-shadow: inset 0 0 0 2px var(--sun-300);
+}
+.review-done {
+  text-align: center;
+  font-size: 22px;
+  padding: 24px 0;
+}

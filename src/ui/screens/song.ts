@@ -12,6 +12,7 @@ import { SongHead, type SongChoices } from './songHead';
 import { LOOP_TARGET, fingerMap, idxOf, midisOf, shortIntro, type HandSel, type SongOptions } from './songShared';
 import { TakeReplay } from './songTake';
 import { MicHonestyWatch, micHonestyBox } from '../components/micHonesty';
+import { selfStudy } from '../selfStudy';
 import { songEverPlayed } from '../../lessons/lessonEngine';
 import { buildStaff, groupAt, groups, halt, handsOn, lightOnset, micOn, pulseWindow, scheduleAccomp, setBar, solo, together, type SongCtx, type SongHooks } from './songState';
 import { onWaitChord, onWaitHands, onWaitInput, showWaitNote, startWait } from './songWait';
@@ -104,10 +105,13 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
       onTrigger: () => {
         if (status.querySelector('.mic-honest')) return;
         status.append(
-          micHonestyBox(() => {
-            c.parentRun = true;
-            showWaitNote(c);
-          }),
+          micHonestyBox(
+            () => {
+              c.parentRun = true;
+              showWaitNote(c);
+            },
+            { self: selfStudy(app) },
+          ),
         );
       },
     });

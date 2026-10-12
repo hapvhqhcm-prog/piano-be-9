@@ -90,6 +90,8 @@ export const WEEK4: WeekPlan = {
           intro: 'App đàn nền. Con đàn phím đen: Đi, Đi, Chạy-chạy!',
           mode: 'black-keys',
         },
+        // (2026-10-12, OWNER duyệt) 📘 Biết thêm — nhạc lý nhẹ nhàng; THÊM VÀO CUỐI bài
+        { kind: 'theory', ids: ['step-skip'] },
       ],
     },
   ],

@@ -2,6 +2,7 @@ import type { App } from '../App';
 import { mascot } from '../components/mascot';
 import { button, h } from '../components/dom';
 import { speakChip } from '../components/speakChip';
+import { selfStudy } from '../selfStudy';
 
 export const TEACH_TITLE = 'Bây giờ con là thầy giáo!';
 
@@ -34,6 +35,7 @@ export function teachCard(app: App, teach: { emoji: string; text: string }, onTa
     h('div', { class: 'hero-mascot' }, mascot('wave', 72)),
     h('h2', { class: 'title' }, TEACH_TITLE),
     h('p', { class: 'lead teach-card' }, teach.text, speakChip(app, `${TEACH_TITLE} ${teach.text}`)),
-    h('div', { class: 'closing-teach-actions' }, btn),
+    // (+ 2026-10-12) 👦 Bé tự học: không có bố mẹ để dạy → hẹn tối nay (không ghi gì)
+    h('div', { class: 'closing-teach-actions' }, selfStudy(app) ? h('p', { class: 'lead' }, '👪 Tối nay con dạy lại bố mẹ nhé!') : btn),
   );
 }

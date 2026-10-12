@@ -139,7 +139,41 @@ export type Activity =
       title: string;
       intro: string;
       rounds: SingRound[];
-    };
+    }
+  /**
+   * (OWNER duyệt 2026-10-12 — "Nhạc lý nhẹ nhàng") THẺ "📘 Biết thêm": mỗi khái niệm một thẻ (tên, 1–3 dòng, hình khuông /
+   * bàn phím, nút "Nghe thử") + 2 câu hỏi nhanh. Nội dung ở lessons/theory.ts (THEORY). Không ghi điểm, không tính tiêu chí.
+   * Tuần 1–5 chỉ THÊM VÀO CUỐI bài (mã "<bài>#<i>" đã lưu giữ nguyên nghĩa).
+   */
+  | { kind: 'theory'; ids: TheoryId[] };
+
+/** Khái niệm nhạc lý (thẻ "📘 Biết thêm", Từ điển nhạc nhỏ) — dữ liệu ở lessons/theory.ts. */
+export type TheoryId =
+  | 'octave'
+  | 'step-skip'
+  | 'note-values'
+  | 'time-44'
+  | 'legato'
+  | 'dynamics'
+  | 'dotted-half'
+  | 'staff-treble'
+  | 'time-24'
+  | 'bass-clef'
+  | 'time-34'
+  | 'staccato'
+  | 'interval-45'
+  | 'sharp-flat'
+  | 'natural'
+  | 'dotted'
+  | 'tie'
+  | 'half-whole'
+  | 'chords'
+  | 'ledger'
+  | 'major-minor'
+  | 'key-sig-g'
+  | 'key-sig-f'
+  | 'tempo'
+  | 'cresc-dim';
 
 /** Một lượt "hát rồi đàn": 2–3 nốt; ngón cho từng nốt (mặc định theo thế Đô) */
 export interface SingRound {

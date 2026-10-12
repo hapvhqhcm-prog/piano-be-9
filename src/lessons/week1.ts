@@ -123,6 +123,8 @@ export const WEEK1: WeekPlan = {
             rhNote('C4', 'Đô giữa'),
           ],
         }),
+        // (2026-10-12, OWNER duyệt) 📘 Biết thêm — nhạc lý nhẹ nhàng; THÊM VÀO CUỐI bài
+        { kind: 'theory', ids: ['octave'] },
       ],
     },
     {

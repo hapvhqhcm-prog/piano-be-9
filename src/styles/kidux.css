@@ -677,3 +677,11 @@ button.bonus-card {
 .quest-card .btn-big .btn-label {
   text-wrap: balance;
 }
+
+/* (+ 2026-10-12) Thư viện: hàng nút Album + 📘 Từ điển nhạc nhỏ */
+.library-wrap .lib-album-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 4px 0 8px;
+}

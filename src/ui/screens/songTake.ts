@@ -111,6 +111,19 @@ export class TakeReplay {
     this.note(text, undo);
   }
 
+  /**
+   * (+ 2026-10-12) Bản ghi của lượt vừa dừng (Blob + giây) — cho hàng "🕑 Chờ bố mẹ xem" (bé tự học). null = không có
+   * (micro tắt / lượt đã bị bỏ). Lấy Blob NGAY khi bản ghi tới (trước khi lượt mới / rời màn giải phóng nó).
+   */
+  clipNow(): Promise<{ blob: Blob; seconds: number } | null> | null {
+    const p = this.pending;
+    if (!p) return null;
+    return p.then((c) => {
+      const blob = c?.blob?.() ?? null;
+      return c && blob ? { blob, seconds: c.seconds } : null;
+    });
+  }
+
   /** Bỏ bản ghi (lượt mới / rời màn): dừng phát, giải phóng bộ nhớ */
   drop(): void {
     if (this.held && !this.d.disposed()) return;

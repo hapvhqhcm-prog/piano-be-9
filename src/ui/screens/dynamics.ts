@@ -17,6 +17,7 @@ import { confetti } from '../components/celebrate';
 import { HandOverlay, playDemo, type DemoEvent } from '../components/demo';
 import { backButton, button, h } from '../components/dom';
 import { mascot } from '../components/mascot';
+import { deferCheck, selfStudy } from '../selfStudy';
 
 type DynActivity = Extract<Activity, { kind: 'dynamics' }>;
 export type DynRound = DynActivity['rounds'][number];
@@ -377,6 +378,23 @@ export function dynamicsScreen(app: App, hooks: DynamicsHooks) {
       const id = `dyn:${hooks.mode}:${i}`;
       kb.clear();
       light(r);
+      // (+ 2026-10-12) 👦 Bé tự học: bé tự đi tiếp — lượt này vào hàng "🕑 Chờ bố mẹ xem"
+      if (selfStudy(app)) {
+        stage.replaceChildren(card(r.want, false), h('h1', { class: 'title' }, 'Con đàn xong chưa? Bố mẹ sẽ xem lại sau nhé!'));
+        setBar(
+          backButton(() => show(false)),
+          button({
+            icon: '✋',
+            label: 'Con đàn xong',
+            kind: 'good',
+            onTap: () => {
+              deferCheck(app, { group: `dyn:${hooks.mode}`, label: hooks.title, note: id });
+              next();
+            },
+          }),
+        );
+        return;
+      }
       stage.replaceChildren(card(r.want, false), h('h1', { class: 'title' }, `👪 Bố mẹ: ${WANT[r.want].ask}`));
       setBar(
         backButton(() => show(false)),

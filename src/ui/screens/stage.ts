@@ -4,6 +4,7 @@ import type { SongRun } from '../../progress/schema';
 import type { App } from '../App';
 import { backButton, button, h } from '../components/dom';
 import { songScreen } from './song';
+import { deferOther, selfStudy } from '../selfStudy';
 import { shortTitle, songEmoji } from '../components/songArt';
 import '../../styles/kidux.css';
 
@@ -155,7 +156,7 @@ export function stageScreen(app: App, hooks: StageHooks) {
           { class: 'screen center' },
           h('div', { class: 'hero-emoji huge' }, '👏'),
           h('h1', { class: 'hero-title' }, 'Bravo! Buổi biểu diễn tuyệt vời!'),
-          h('p', { class: 'lead' }, '👪 Bố mẹ: hãy trao huy chương cho nghệ sĩ nhỏ'),
+          h('p', { class: 'lead' }, selfStudy(app) ? '🏅 Huy chương của con! Bố mẹ sẽ nghe lại buổi diễn nhé' : '👪 Bố mẹ: hãy trao huy chương cho nghệ sĩ nhỏ'),
           h(
             'div',
             { class: 'end-actions' },
@@ -165,7 +166,9 @@ export function stageScreen(app: App, hooks: StageHooks) {
               kind: 'primary',
               big: true,
               onTap: () => {
-                hooks.onMedal();
+                // (+ 2026-10-12) 👦 Bé tự học: huy chương (tiêu chí tuần cuối cấp) chỉ tính khi bố mẹ duyệt ở hàng chờ
+                if (selfStudy(app)) deferOther(app, { kind: 'check', group: 'medal', label: 'Buổi biểu diễn cuối cấp — trao huy chương', notes: [{ note: 'medal', ts: Date.now() }] });
+                else hooks.onMedal();
                 root.replaceChildren(
                   h(
                     'div',

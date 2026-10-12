@@ -5,6 +5,18 @@ import { RATING_STARS, bumpDataRev, hist, sessionCount } from './history';
 import { confirmSelfChallenge, recordChallenges } from '../lessons/challenges';
 import { upsertConcert } from '../lessons/concert';
 import {
+  addReview,
+  approveAll,
+  approveReview,
+  dismissReview,
+  expireReviews,
+  pinnedSessionIds,
+  resolveReminders,
+  setReviewAudio,
+  studyModeToday,
+  type ReviewInput,
+} from './reviewQueue';
+import {
   defaultData,
   localDateStr,
   validateAppData,
@@ -19,6 +31,8 @@ import {
   type SelfRating,
   type SongRun,
   type Settings,
+  type ReviewItem,
+  type StudyMode,
 } from './schema';
 import {
   FUTURE_VERSION_MESSAGE,
@@ -131,6 +145,13 @@ export class ProgressStore {
   futureVersion = false;
   /** Khóa bản cất ("archived-*") vừa tạo ở lần nhập JSON / đặt lại gần nhất */
   lastArchiveKey: string | null = null;
+  /**
+   * (+ 2026-10-12) Buổi mở GẦN NHẤT (startSession) — việc bé tự học được hoãn vào hàng chờ của buổi này
+   * (màn hoạt động không cần biết mã buổi). null = chưa mở buổi nào từ lúc mở app.
+   */
+  activeSessionId: string | null = null;
+  /** (+ 2026-10-12) Mã các mục chờ vừa hết hạn / được xử lý — giao diện xoá bản ghi âm tương ứng (xem takeDroppedReviews). */
+  private droppedReviews: string[] = [];
   private listeners = new Set<() => void>();
   private dirty = false;
   private timer: ReturnType<typeof setTimeout> | null = null;
@@ -152,7 +173,10 @@ export class ProgressStore {
     this.data = this.load();
     pruneUnreadableCorrupt(this.kv);
     bumpDataRev(this.data);
-    if (this.compact()) this.writeNow();
+    // (+ 2026-10-12) Mục chờ bố mẹ xem quá 14 ngày → bỏ (trước khi gộp lịch sử: buổi của chúng hết bị giữ lại)
+    const expired = this.futureVersion ? [] : expireReviews(this.data, this.now().getTime());
+    this.droppedReviews.push(...expired);
+    if (this.compact() || expired.length) this.writeNow();
     // Bản sao IndexedDB có ngay từ lần mở đầu (không chờ tới lần đổi đầu tiên). Dữ liệu mới tinh (chưa học buổi nào,
     // chưa có tên) thì KHÔNG gửi: không có gì để giữ, mà có thể đè mất bản sao tốt khi localStorage vừa bị xóa.
     if (!this.recoveredFromCorrupt && !this.futureVersion && (sessionCount(this.data) > 0 || this.data.learner.name)) this.mirrorNow();
@@ -352,6 +376,8 @@ export class ProgressStore {
   discardSessionIfEmpty(sessionId: string): void {
     const i = this.data.sessions.findIndex((s) => s.id === sessionId);
     if (i < 0 || !isEmptySession(this.data.sessions[i])) return;
+    // (+ 2026-10-12) Buổi tự học chỉ có việc chờ bố mẹ xem → vẫn là một buổi thật (bé đã đàn), giữ lại
+    if (pinnedSessionIds(this.data).has(sessionId)) return;
     this.data.sessions.splice(i, 1);
     this.recomputePracticeDays();
     this.save();
@@ -399,6 +425,7 @@ export class ProgressStore {
       checklist: {},
     };
     this.data.sessions.push(s);
+    this.activeSessionId = id;
     this.save();
     return s;
   }
@@ -413,8 +440,84 @@ export class ProgressStore {
   addParentAssessment(sessionId: string, note: string, result: ParentResult): void {
     const s = this.session(sessionId);
     s.parentAssessments.push({ note, result, ts: this.now().getTime() });
+    // (+ 2026-10-12) Bố mẹ ngồi cùng & chấm thẻ xem tay → lời nhắc "Lần sau ngồi cùng xem tay nhé" của thẻ đó xong
+    if (this.studyMode() === 'parent') this.droppedReviews.push(...resolveReminders(this.data, note));
     this.touch(s);
     this.save();
+  }
+
+  // ---------------- (+ 2026-10-12) 👦 Bé tự học — hàng chờ bố mẹ xem (progress/reviewQueue.ts) ----------------
+
+  /** Cách học hôm nay ('self' = 👦 Con tự học · 'parent' = 👪 Có bố mẹ ngồi cùng). */
+  studyMode(): StudyMode {
+    return studyModeToday(this.data.settings, this.today());
+  }
+
+  /** Bé / bố mẹ chọn cách học HÔM NAY (một chạm, nhớ tới hết ngày). */
+  setStudyMode(mode: StudyMode): void {
+    if (this.studyMode() === mode && this.data.settings.studyMode?.date === this.today()) return;
+    this.updateSettings({ studyMode: { mode, date: this.today() } });
+  }
+
+  /** Các mục chờ (cũ → mới). */
+  reviews(): readonly ReviewItem[] {
+    return this.data.reviews ?? [];
+  }
+
+  /**
+   * Hoãn một việc cần bố mẹ vào hàng chờ (buổi mặc định = buổi mở gần nhất). Trả về mã mục (gộp vào mục cùng nhóm
+   * của cùng buổi nếu có). Ghi ngay.
+   */
+  deferReview(input: ReviewInput): string {
+    const sessionId = input.sessionId ?? (input.kind === 'challenge' ? undefined : this.activeSessionId ?? undefined);
+    const valid = sessionId && this.data.sessions.some((s) => s.id === sessionId) ? sessionId : undefined;
+    const id = addReview(this.data, { ...input, ...(valid ? { sessionId: valid } : { sessionId: undefined }) }, this.now().getTime());
+    if (valid) this.touch(this.session(valid));
+    this.save();
+    this.flush();
+    return id;
+  }
+
+  /** ✅ Đạt (ghi như bố mẹ chấm vào đúng ngày bé làm). false = không có mục / là lời nhắc. */
+  approveReview(id: string): boolean {
+    const done = approveReview(this.data, id);
+    if (!done) return false;
+    this.droppedReviews.push(id);
+    this.recomputePracticeDays();
+    this.save();
+    this.flush();
+    return true;
+  }
+
+  /** ✅ Đạt hết các mục chấm được. Trả về số mục. */
+  approveAllReviews(): number {
+    const done = approveAll(this.data);
+    if (!done.length) return 0;
+    this.droppedReviews.push(...done.map((r) => r.id));
+    this.recomputePracticeDays();
+    this.save();
+    this.flush();
+    return done.length;
+  }
+
+  /** 🔁 Chưa đạt / "Đã nhớ": bỏ mục, không ghi kết quả. */
+  dismissReview(id: string): boolean {
+    if (!dismissReview(this.data, id)) return false;
+    this.droppedReviews.push(id);
+    this.save();
+    this.flush();
+    return true;
+  }
+
+  /** Mục đã có bản ghi âm (IndexedDB) / không còn. */
+  setReviewAudio(id: string, has: boolean): void {
+    if (!setReviewAudio(this.data, id, has)) return;
+    this.save();
+  }
+
+  /** Lấy (và xoá khỏi danh sách) mã các mục đã hết hạn / đã xử lý — để xoá bản ghi âm của chúng. */
+  takeDroppedReviews(): string[] {
+    return this.droppedReviews.splice(0);
   }
 
   /** "Sửa": đổi kết quả PARENT_ASSESSMENT vừa bấm. */
@@ -491,6 +594,7 @@ export class ProgressStore {
     // (+ 2026-10-07) 🏆 Lưu tuần vừa hoàn thành thử thách (đánh dấu dữ liệu mới trước — bỏ ghi nhớ cũ)
     bumpDataRev(this.data);
     recordChallenges(this.data, this.today(), s.endedAt);
+    this.droppedReviews.push(...expireReviews(this.data, s.endedAt));
     // Gộp lịch sử cũ (nếu có) rồi ghi ngay
     this.compact();
     this.save();

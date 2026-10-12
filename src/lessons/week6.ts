@@ -40,6 +40,8 @@ export const WEEK6: WeekPlan = {
           ],
         },
         { kind: 'song', songId: 'ode_to_joy_easy', mode: 'wait', hints: 'full', intro: 'Dấu mf = đàn VỪA. Tập từng nốt trước nhé!' },
+        // (2026-10-12, OWNER duyệt) 📘 Biết thêm — nhạc lý nhẹ nhàng; THÊM VÀO CUỐI bài
+        { kind: 'theory', ids: ['dynamics'] },
       ],
     },
     {
@@ -85,6 +87,8 @@ export const WEEK6: WeekPlan = {
       activities: [
         { kind: 'song', songId: 'saints', mode: 'wait', hints: 'full', intro: 'Đầu mỗi câu có "Suỵt" — chờ một phách rồi đàn!' },
         { kind: 'song', songId: 'saints', mode: 'tempo', level: 3, hints: 'names', intro: 'Nốt trắng có chấm "Đi-i-i": giữ đủ 3 phách!' },
+        // (2026-10-12, OWNER duyệt) 📘 Biết thêm — nhạc lý nhẹ nhàng; THÊM VÀO CUỐI bài
+        { kind: 'theory', ids: ['dotted-half'] },
       ],
     },
   ],

@@ -794,3 +794,16 @@ Có ba chuyên gia đánh giá: sư phạm, động lực cho trẻ và kỹ thu
   - Gắn cho bài thêm 2026-10-09 (đã mở theo tuần, chưa chơi) và trò chơi chưa chơi.
   - Chấm nhỏ trên nút ở màn chính, tắt khi mở màn tương ứng.
   - Không có lớp phủ.
+
+## 42. Nhạc lý nhẹ nhàng + Bé tự học (2026-10-12)
+- **Nhạc lý**
+  - Có 25 khái niệm, mỗi khái niệm một thẻ "📘 Biết thêm" (`src/lessons/theory.ts`, hoạt động mới 'theory'). Thẻ đặt ở tuần dùng đến, hoặc tuần ngay sau đó.
+  - Tuần 1–5 chỉ thêm thẻ vào cuối bài.
+  - Câu đố nhạc lý (quiz 'theory') làm bài khởi động ở các tuần 10, 13, 24, 37, 42.
+  - "📘 Từ điển nhạc nhỏ" trong Thư viện.
+- **Bé tự học**
+  - Bé chọn chế độ trong ngày. Micro chấm ngay; việc cần bố mẹ được đưa vào hàng chờ (`src/progress/reviewQueue.ts`), kèm bản thu.
+  - Bản thu lưu trong IndexedDB riêng, tối đa 25 MB, hết hạn sau 14 ngày.
+  - Bố mẹ bấm "Đạt" thì kết quả được ghi lại đúng phiên và đúng giờ gốc, nên tiêu chí "2 ngày khác nhau" vẫn tính đúng.
+  - Phiên còn mục chờ duyệt sẽ không bị gộp (compaction).
+  - Mặc định vẫn là "Có bố mẹ".

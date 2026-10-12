@@ -87,7 +87,7 @@ export class MicHonestyWatch {
 }
 
 /** Hộp thông báo nhẹ cho bé + lối ra cho bố mẹ (chấm giúp; gợi ý "Cài micro"). */
-export function micHonestyBox(onParent: () => void): HTMLElement {
+export function micHonestyBox(onParent: () => void, opts: { self?: boolean } = {}): HTMLElement {
   return h(
     'div',
     { class: 'mic-honest', role: 'status' },
@@ -95,7 +95,10 @@ export function micHonestyBox(onParent: () => void): HTMLElement {
     h(
       'div',
       { class: 'mic-honest-row' },
-      button({ icon: '👪', label: 'Bố mẹ chấm giúp', kind: 'good', onTap: onParent }),
+      // (+ 2026-10-12) 👦 Bé tự học: bé tự đi tiếp — lượt này vào hàng "🕑 Chờ bố mẹ xem"
+      opts.self
+        ? button({ icon: '▶', label: 'Con đàn tiếp — bố mẹ nghe sau', kind: 'good', onTap: onParent })
+        : button({ icon: '👪', label: 'Bố mẹ chấm giúp', kind: 'good', onTap: onParent }),
       h('span', { class: 'mic-honest-hint' }, 'Bố mẹ: màn Phụ huynh → 🎤 Cài micro để micro nghe rõ hơn'),
     ),
   );

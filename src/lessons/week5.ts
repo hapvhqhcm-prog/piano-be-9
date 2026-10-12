@@ -29,6 +29,8 @@ export const WEEK5: WeekPlan = {
       activities: [
         { kind: 'song', songId: 'frog_hop', mode: 'wait', hints: 'full', intro: 'Ếch nhảy Đô – Mi – Sol: ngón 1 – 3 – 5!' },
         { kind: 'song', songId: 'frog_hop', mode: 'tempo', level: 2, hints: 'names' },
+        // (2026-10-12, OWNER duyệt) 📘 Biết thêm — nhạc lý nhẹ nhàng; THÊM VÀO CUỐI bài
+        { kind: 'theory', ids: ['note-values'] },
       ],
     },
     {
@@ -39,6 +41,8 @@ export const WEEK5: WeekPlan = {
       activities: [
         { kind: 'song', songId: 'raindrops', mode: 'wait', hints: 'full', intro: 'Mưa rơi "Chạy-chạy" — đọc to trước khi đàn nhé!' },
         { kind: 'song', songId: 'raindrops', mode: 'tempo', level: 2, hints: 'names' },
+        // (2026-10-12, OWNER duyệt) 📘 Biết thêm — nhạc lý nhẹ nhàng; THÊM VÀO CUỐI bài
+        { kind: 'theory', ids: ['time-44'] },
       ],
     },
     {
@@ -86,6 +90,8 @@ export const WEEK5: WeekPlan = {
         // (2026-10-08, OWNER duyệt) một lượt Mức 2 trước Mức 3 — tuần 5 chưa có tiến độ nên chèn giữa an toàn
         { kind: 'song', songId: 'lightly_row', mode: 'tempo', level: 2, hints: 'names', intro: 'Bài quen tuần trước — đàn theo nhịp trước nhé!' },
         { kind: 'song', songId: 'lightly_row', mode: 'tempo', level: 3, hints: 'names', intro: 'Giờ thử băng chuyền nhé!' },
+        // (2026-10-12, OWNER duyệt) 📘 Biết thêm — legato & dấu luyến (vừa chơi "Đàn liền" ở bài 3); THÊM VÀO CUỐI bài
+        { kind: 'theory', ids: ['legato'] },
       ],
     },
   ],

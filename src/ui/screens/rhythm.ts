@@ -4,6 +4,7 @@ import type { App } from '../App';
 import { backButton, button, h } from '../components/dom';
 import { confetti } from '../components/celebrate';
 import { RHYTHM_CHECKS, parentChecklist } from '../components/parentCheck';
+import { deferCheck, selfStudy } from '../selfStudy';
 import { TIMING_WINDOWS, countBridgeFor, countLine, countWords, gradeTiming, type CountBridgeStage } from '../../music/timing';
 import { cancelSpeech, speak } from '../../audio/voice';
 
@@ -271,6 +272,25 @@ export function rhythmScreen(app: App, hooks: RhythmHooks) {
     function askParent(): void {
       const p = hooks.patterns[i];
       const id = `rhythm:${p.join('-')}`;
+      // (+ 2026-10-12) 👦 Bé tự học: bé tự đi tiếp — lượt vỗ này vào hàng "🕑 Chờ bố mẹ xem"
+      if (selfStudy(app)) {
+        stage.replaceChildren(h('h1', { class: 'title' }, 'Con vỗ xong chưa?'), cells(p).row, h('p', { class: 'lead' }, 'Bố mẹ sẽ xem lại sau nhé!'));
+        setBar(
+          backButton(show),
+          button({
+            icon: '✋',
+            label: 'Con vỗ xong',
+            kind: 'good',
+            onTap: () => {
+              deferCheck(app, { group: `rhythm:${hooks.title}`, label: hooks.title, note: id });
+              i++;
+              if (i >= hooks.patterns.length) done();
+              else show();
+            },
+          }),
+        );
+        return;
+      }
       // v5 — bố mẹ chấm 2 ý (Đúng tiếng vỗ · Đều nhịp); đạt khi cả hai được tích
       const { row, done: doneBtn } = parentChecklist(RHYTHM_CHECKS, (_v, all) => {
         hooks.record(id, all ? 'correct' : 'retry');

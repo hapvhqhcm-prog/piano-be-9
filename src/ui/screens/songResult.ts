@@ -13,7 +13,8 @@ import { mascot } from '../components/mascot';
 import type { ReviewMark } from '../components/staffView';
 import { kindsPresent, outcomeOf, placeLabel, reviewUsable, teach, type NoteKind, type NoteReview, type RunReview, type TeacherPoint } from '../../music/teacher';
 import { TEMPOS, hardestPhrase } from './songShared';
-import { buildStaff, record, setBar, solo, type ResultBack, type SongCtx } from './songState';
+import { buildRun, buildStaff, micOn, record, setBar, solo, type ResultBack, type SongCtx } from './songState';
+import { SELF_PRAISE, deferSong, selfStudy } from '../selfStudy';
 
 const pick = <T,>(a: T[]): T => a[Math.floor(Math.random() * a.length)];
 
@@ -27,6 +28,8 @@ const KIND_LABEL: Record<NoteKind, string> = { ok: 'đúng', wrong: 'nhầm', mi
  * `beat: true` (không áp dụng = không trừ) để lessonEngine (notes && beat && fingers) giữ nguyên.
  */
 export function askParent(c: SongCtx, question: string, total: number): void {
+  // (+ 2026-10-12) 👦 Bé tự học: không hỏi bố mẹ — lượt cả bài vào hàng "🕑 Chờ bố mẹ xem" (kèm bản ghi nếu micro bật)
+  if (selfStudy(c.app)) return deferToParent(c, total);
   c.state = 'rate';
   const waitMode = c.mode === 'wait';
   const items: ReadonlyArray<CheckItem<'notes' | 'beat' | 'fingers'>> = waitMode ? SONG_CHECKS_WAIT : SONG_CHECKS;
@@ -43,11 +46,34 @@ export function askParent(c: SongCtx, question: string, total: number): void {
   setBar(c, backButton(() => c.act.reset()), done);
 }
 
-export function showResult(c: SongCtx, s: number, text: string, back: (ResultBack & { practiced: boolean; clean: boolean | null }) | null = null): void {
+/**
+ * (+ 2026-10-12) 👦 Bé tự học: lượt CẢ BÀI (không một câu / tách tay — chỉ lượt này mới tính tiêu chí) được hoãn vào hàng
+ * chờ; chỉ tính cho tiêu chí khi bố mẹ chấm "✅ Đạt" (vào đúng ngày hôm nay). Bé nhận lời tích cực, không sao, không chê.
+ */
+function deferToParent(c: SongCtx, total: number): void {
+  const whole = !c.phrase && !solo(c) && !c.hardBack;
+  if (whole) {
+    const { ts: _t, source: _s, passed: _p, checklist: _c, hits: _h, hands: _hs, ...run } = { ...buildRun(c, { mode: c.mode, total, hits: 0, source: 'parent', passed: false }), ts: 0 };
+    const label = `${c.full.titleVi || c.full.title} — ${c.mode === 'tempo' ? `theo nhịp ${c.bpm}` : 'từng nốt'}`;
+    // Micro bật nhưng nghe chưa rõ (bố mẹ chấm giúp) → nhận xét tạm của micro
+    const mic = c.parentRun && micOn(c) ? `micro nghe chưa rõ (nghe được ${c.wHits}/${total} nốt)` : undefined;
+    deferSong(c.app, run, label, mic, c.take.clipNow());
+  }
+  showResult(c, 0, whole ? SELF_PRAISE : 'Con đàn xong rồi — giỏi lắm!', null, true);
+}
+
+export function showResult(
+  c: SongCtx,
+  s: number,
+  text: string,
+  back: (ResultBack & { practiced: boolean; clean: boolean | null }) | null = null,
+  pending = false,
+): void {
   const { app, opts, full, take, hooks } = c;
   c.state = 'result';
   const stars = starsFor(s);
-  const passedNow = s >= PASS_SCORE;
+  // pending (bé tự học, chờ bố mẹ xem): không sao, không "Gần được rồi" — chỉ "Con đàn xong rồi! 👏"
+  const passedNow = !pending && s >= PASS_SCORE;
   // Quay về từ "🎯 Luyện ngay chỗ này": vẽ lại màn kết quả cũ, không chúc mừng / đọc / lưu Album lần nữa
   if (passedNow && !back) {
     void app.audio.chime();
@@ -71,7 +97,7 @@ export function showResult(c: SongCtx, s: number, text: string, back: (ResultBac
   // (2026-10-09) Thầy đã chỉ ra chỗ cần luyện → "🎯 Luyện ngay chỗ này" thay cho "Lặp câu khó"
   const hard = !focusRange && !opts.stage && !opts.review && !c.phrase && !faster ? hardestPhrase(phraseRanges(full), c.missByMeasure) : null;
   // Chưa đạt (không phải sân khấu): Bé Nốt suy nghĩ + MỘT lời nhắn to, rõ + MỘT nút chính (Lặp câu khó / Chơi lại)
-  const retryCard = !passedNow && !opts.stage;
+  const retryCard = !passedNow && !opts.stage && !pending;
   const headline = retryCard ? 'Gần được rồi! 💪' : passedNow ? pick(['Tuyệt vời! 🎉', 'Siêu quá! 🦸', 'Đỉnh của chóp! 🚀']) : 'Con đàn xong rồi! 👏';
   const nextStep = afterPractice
     ? afterPractice
@@ -93,7 +119,7 @@ export function showResult(c: SongCtx, s: number, text: string, back: (ResultBac
       h(
         'div',
         { class: 'song-lines' },
-        h('div', { class: 'song-result-head' }, headline, ' ', h('span', { class: 'stars small' }, '★'.repeat(stars), h('span', { class: 'stars-off' }, '★'.repeat(3 - stars)))),
+        h('div', { class: 'song-result-head' }, headline, ' ', pending ? '' : h('span', { class: 'stars small' }, '★'.repeat(stars), h('span', { class: 'stars-off' }, '★'.repeat(3 - stars)))),
         h('div', { class: 'song-result-sub' }, text),
         nextStep
           ? h('div', { class: `song-result-next${point && !afterPractice ? ' teacher' : ''}` }, `${afterPractice ? '✅' : point ? '🧑‍🏫' : '👉'} ${nextStep}`)
@@ -104,10 +130,11 @@ export function showResult(c: SongCtx, s: number, text: string, back: (ResultBac
   );
   take.render();
   // Album: chỉ lượt CẢ BÀI, hai tay như bài (không phải một câu / tách tay / lặp câu khó)
-  if (!back) take.offerAlbum(!c.phrase && !solo(c) && !c.hardBack ? { stars, accuracy: s } : null);
+  if (!back) take.offerAlbum(!pending && !c.phrase && !solo(c) && !c.hardBack ? { stars, accuracy: s } : null);
   if (back) {
     if (afterPractice) void speak(app, afterPractice);
   } else if (retryCard) void speak(app, `Gần được rồi! ${nextStep}`);
+  else if (pending) void speak(app, text);
   else if (point) void speak(app, point.text);
   const reset = () => c.act.reset();
   const again = button({

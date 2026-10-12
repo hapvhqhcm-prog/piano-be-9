@@ -27,6 +27,7 @@ import { confetti } from '../components/celebrate';
 import { HandOverlay, playDemo, type DemoEvent } from '../components/demo';
 import { backButton, button, h, toast } from '../components/dom';
 import { mascot } from '../components/mascot';
+import { selfStudy } from '../selfStudy';
 import { speakChip } from '../components/speakChip';
 import { StaffView } from '../components/staffView';
 
@@ -322,7 +323,7 @@ export function improvScreen(app: App, hooks: ImprovHooks) {
       );
       setBar(
         backButton(intro),
-        qaFails >= 2 ? button({ icon: '👪', label: 'Bố mẹ: qua', onTap: qaGood }) : null,
+        qaFails >= 2 ? button({ icon: selfStudy(app) ? '▶' : '👪', label: selfStudy(app) ? 'Đi tiếp' : 'Bố mẹ: qua', onTap: qaGood }) : null,
         button({ icon: '↻', label: 'Trả lời lại', kind: 'primary', onTap: () => qaAnswer(q) }),
       );
     }
@@ -330,13 +331,13 @@ export function improvScreen(app: App, hooks: ImprovHooks) {
     function qaParent(q: ComposeNote[]): void {
       halt();
       stage.replaceChildren(
-        h('h1', { class: 'title' }, `👪 Bố mẹ: câu trả lời của bé kết thúc ở ${viName(tonic)} chưa?`),
+        h('h1', { class: 'title' }, selfStudy(app) ? `Câu trả lời của con kết thúc ở ${viName(tonic)} chưa?` : `👪 Bố mẹ: câu trả lời của bé kết thúc ở ${viName(tonic)} chưa?`),
         h('p', { class: 'lead' }, 'Con đàn trên đàn thật — bố mẹ nghe giúp nhé'),
       );
       setBar(
         backButton(() => qaAnswer(q)),
         button({ icon: '↻', label: 'Làm lại', kind: 'retry', onTap: () => qaAnswer(q) }),
-        button({ icon: '👪', label: 'Về nhà rồi!', kind: 'good', onTap: qaGood }),
+        button({ icon: selfStudy(app) ? '✋' : '👪', label: 'Về nhà rồi!', kind: 'good', onTap: qaGood }),
       );
     }
 

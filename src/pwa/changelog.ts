@@ -22,6 +22,16 @@ export const CHANGELOG_BASELINE = '0.15.0';
 
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
+    version: '0.23.0',
+    date: '2026-10-12',
+    items: [
+      '👦 Con tự học: bố mẹ bận thì bé tự học, app ghi lại chỗ cần bố mẹ nghe.',
+      '🕑 Chờ bố mẹ xem: tối nghe lại vài đoạn, bấm Đạt / Chưa đạt — khoảng 2 phút.',
+      '📘 Nhạc lý nhẹ nhàng: thẻ Biết thêm (quãng, nhịp, khóa, thuật ngữ) và câu đố.',
+      '📘 Từ điển nhạc nhỏ trong Thư viện: các thuật ngữ bé đã học.',
+    ],
+  },
+  {
     version: '0.22.0',
     date: '2026-10-10',
     items: [

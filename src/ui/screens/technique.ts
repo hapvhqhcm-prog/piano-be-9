@@ -10,6 +10,7 @@ import { backButton, button, h } from '../components/dom';
 import { mascot } from '../components/mascot';
 import { speakChip } from '../components/speakChip';
 import { techniqueArt } from '../components/techniqueArt';
+import { selfStudy } from '../selfStudy';
 
 export interface TechniqueHooks {
   title: string;
@@ -224,6 +225,15 @@ export function techniqueScreen(app: App, hooks: TechniqueHooks) {
     function ask(): void {
       const d = hooks.drills[i];
       const id = `tech:${d}`;
+      // (+ 2026-10-12) 👦 Bé tự học: khởi động tay không cần bố mẹ chấm (không tính tiêu chí) → bé tự đi tiếp, không ghi
+      if (selfStudy(app)) {
+        void app.audio.chime();
+        i++;
+        if (i < hooks.drills.length) show();
+        else if (hooks.mini) (halt(), hooks.onDone());
+        else done();
+        return;
+      }
       stage.querySelector('.tq-timer')?.classList.add('done');
       const q = h('p', { class: 'lead tq-ask' }, '👪 Bố mẹ: bé làm đúng chưa?');
       stage.querySelector('.tq-ask')?.remove();

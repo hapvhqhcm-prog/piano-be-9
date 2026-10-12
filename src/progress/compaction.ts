@@ -22,6 +22,7 @@ import { isLessonSession } from '../lessons/bonusStickers';
 import { RATING_STARS, bumpDataRev, emptyHistory, foldParentStats, mondayKey, weekOfLessonId, weekdayIndex, type ParentStats } from './history';
 import { sessionAnswers } from './answers';
 import { recordChallenges } from '../lessons/challenges';
+import { pinnedSessionIds } from './reviewQueue';
 import { localDateStr, type AppData, type CountPair, type History, type Session } from './schema';
 
 /** Giữ nguyên các buổi trong ngần này ngày gần nhất (8 tuần). */
@@ -47,7 +48,9 @@ const weekOfLesson = weekOfLessonId;
  */
 export function compactData(data: AppData, now: Date, windowDays: number = COMPACT_WINDOW_DAYS): CompactResult {
   const cutoff = localDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate() - windowDays));
-  const old = data.sessions.filter((s) => s.date < cutoff);
+  // (+ 2026-10-12) Buổi còn mục "🕑 Chờ bố mẹ xem" (reviewQueue.ts) KHÔNG gộp: bố mẹ duyệt muộn vẫn ghi đúng buổi / ngày
+  const pinned = pinnedSessionIds(data);
+  const old = data.sessions.filter((s) => s.date < cutoff && !pinned.has(s.id));
   if (!old.length) return { folded: 0, keptOld: 0 };
   const passedBefore = new Set(data.history?.passedWeeks ?? []);
   // Nhóm buổi cũ theo tuần giáo trình

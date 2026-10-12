@@ -12,6 +12,7 @@ import { backButton, button, h } from '../components/dom';
 import { mascot } from '../components/mascot';
 import { MicHonestyWatch, micHonestyBox } from '../components/micHonesty';
 import { meterPct } from '../../audio/MicListener';
+import { deferCheck, selfStudy } from '../selfStudy';
 import '../../styles/sing.css';
 
 export interface SingHooks {
@@ -61,11 +62,27 @@ export function singScreen(app: App, hooks: SingHooks) {
       activity: (f, near) => (micStep === 'sing' ? f.onset || (meterPct(f) >= 55 && !listener.hearing) : f.onset || near),
       onTrigger: () => {
         if (stage.querySelector('.mic-honest')) return;
-        stage.append(micHonestyBox(() => onHonestParent()));
+        stage.append(micHonestyBox(() => onHonestParent(), { self }));
       },
     });
     const round = (): SingRound => hooks.rounds[r] ?? hooks.rounds[0];
     const idOf = (x: SingRound) => x.notes.join('-');
+    /**
+     * (+ 2026-10-12) 👦 Bé tự học: nút "👪 Đúng rồi" thành nút của BÉ; kết quả BÉ tự chạm (không phải micro nghe) vào hàng
+     * "🕑 Chờ bố mẹ xem" thay vì ghi ngay. Kết quả micro chấm vẫn ghi ngay như trước.
+     */
+    const self = selfStudy(app);
+    let claimed = false;
+    const rec = (id: string, r: ParentResult) => {
+      const byChild = claimed;
+      claimed = false;
+      if (self && byChild && r === 'correct') deferCheck(app, { group: `sing:${hooks.title}`, label: `${hooks.title} (hát & đàn)`, note: id });
+      else hooks.record(id, r);
+    };
+    const parentBtn = (onTap: () => void, label = 'Đúng rồi') =>
+      self
+        ? button({ icon: '✋', label: label === 'Đúng rồi' ? 'Con xong rồi' : label, kind: 'good', onTap: () => ((claimed = true), onTap()) })
+        : button({ icon: '👪', label, kind: 'good', onTap });
     const names = (x: SingRound) => x.notes.map((p) => viName(p)).join(' – ');
 
     const all = hooks.rounds.flatMap((x) => x.notes);
@@ -208,7 +225,7 @@ export function singScreen(app: App, hooks: SingHooks) {
           },
         }),
         // Luôn có lối ra cho bố mẹ (micro không nghe rõ giọng) — không bao giờ kẹt
-        button({ icon: '👪', label: 'Đúng rồi', kind: 'good', onTap: () => sungDone(i, true) }),
+        parentBtn(() => sungDone(i, true)),
       );
       if (!spokeIntro && i === 0) {
         spokeIntro = true;
@@ -239,7 +256,7 @@ export function singScreen(app: App, hooks: SingHooks) {
       const quiet = () => {
         if (tk !== token || disposed) return;
         if (Date.now() - lastSound >= QUIET_HINT_MS) {
-          hint('🎤 App chưa nghe thấy — con hát to hơn, hoặc bố mẹ chạm 👪 Đúng rồi', 'soft');
+          hint(self ? '🎤 App chưa nghe thấy — con hát to hơn nhé' : '🎤 App chưa nghe thấy — con hát to hơn, hoặc bố mẹ chạm 👪 Đúng rồi', 'soft');
           if (!quietCounted) honesty.timeout();
           quietCounted = true;
         }
@@ -281,7 +298,7 @@ export function singScreen(app: App, hooks: SingHooks) {
       timer = window.setTimeout(() => {
         if (tk !== token || disposed) return;
         if (i + 1 < round().notes.length) return singNote(i + 1);
-        hooks.record(`sing:${idOf(round())}`, roundOk ? 'correct' : 'retry');
+        rec(`sing:${idOf(round())}`, roundOk ? 'correct' : 'retry');
         toPlay(roundOk ? 'Con hát đúng hết rồi! 🎉' : 'Con hát hay lắm! 🎵');
       }, delay);
     }
@@ -301,19 +318,15 @@ export function singScreen(app: App, hooks: SingHooks) {
           icon: '🙂',
           label: 'Gần đúng',
           onTap: () => {
+            claimed = false;
             hooks.record(`sing:${idOf(x)}`, 'retry');
             toPlay('Hát giúp tai nhớ nốt — con giỏi lắm! 🎵');
           },
         }),
-        button({
-          icon: '👪',
-          label: 'Đúng rồi',
-          kind: 'good',
-          onTap: () => {
-            hooks.record(`sing:${idOf(x)}`, 'correct');
-            void app.audio.chime();
-            toPlay('Con hát đúng rồi! 🎉');
-          },
+        parentBtn(() => {
+          rec(`sing:${idOf(x)}`, 'correct');
+          void app.audio.chime();
+          toPlay(self ? 'Con hát hay lắm! Bố mẹ sẽ nghe lại nhé 🎵' : 'Con hát đúng rồi! 🎉');
         }),
       );
     }
@@ -339,7 +352,7 @@ export function singScreen(app: App, hooks: SingHooks) {
       setBar(
         backButton(() => void listen()),
         button({ icon: '🔊', label: 'Nghe lại', onTap: () => void app.audio.playPitch(x.notes[playPos >= 0 ? playPos : 0], 0.8) }),
-        button({ icon: '👪', label: 'Đúng rồi', kind: 'good', onTap: () => playDone() }),
+        parentBtn(() => playDone()),
       );
       if (micOn()) {
         app.mic.resetTracker();
@@ -352,7 +365,7 @@ export function singScreen(app: App, hooks: SingHooks) {
           unNote();
           unNote = () => undefined;
           stage.querySelector('.mic-honest')?.remove();
-          hint('👪 Bố mẹ nhìn con đàn rồi bấm Đúng rồi nhé', 'listen');
+          hint(self ? '✋ Đàn xong thì con chạm “Con xong rồi” nhé' : '👪 Bố mẹ nhìn con đàn rồi bấm Đúng rồi nhé', 'listen');
         };
         unNote = app.mic.onNote((n) => {
           if (tk !== token) return;
@@ -384,7 +397,7 @@ export function singScreen(app: App, hooks: SingHooks) {
       halt();
       const x = round();
       x.notes.forEach((_, i) => mark(i, 'good'));
-      hooks.record(`singplay:${idOf(x)}`, 'correct');
+      rec(`singplay:${idOf(x)}`, 'correct');
       void app.audio.chime();
       confetti(20);
       hint('Hát đúng — đàn đúng! Tai và tay cùng nhớ nốt rồi! 🎉', 'good');

@@ -24,6 +24,11 @@ import { backButton, button, h } from '../components/dom';
 import { StaffView } from '../components/staffView';
 import { cancelSpeech, speak } from '../../audio/voice';
 import { speakChip } from '../components/speakChip';
+import type { Screen } from '../App';
+import { lazy, lazyScreen } from '../lazy';
+
+// (2026-10-12) "📘 Đố vui nhạc lý" — màn riêng, nạp muộn (dữ liệu nhạc lý không nằm trong gói chính)
+const theoryMod = lazy(() => import('./theory'));
 
 export interface QuizHooks {
   title: string;
@@ -53,6 +58,7 @@ const QUESTION: Record<QuizSpec['variant'], string> = {
   majorminor: 'Vui hay buồn?',
   interval: 'Nốt sau giống, bước hay nhảy?',
   landmark: 'Nốt mốc nào đây?',
+  theory: 'Đố vui nhạc lý',
 };
 
 /** v5 — Khuông TO hiện 1 nốt (nốt tròn) hoặc 2 nốt (hai nốt trắng) cho trò đọc theo quãng / nốt mốc. */
@@ -74,7 +80,8 @@ function quizStaff(notes: Pitch[], clef: 'treble' | 'bass', round: number): HTML
 }
 
 /** Trò nghe / đọc nốt (v2): Lên hay xuống? · Bước hay nhảy? · Nốt nào đây? (có mốc Đô) · Đọc nốt. */
-export function quizScreen(app: App, hooks: QuizHooks) {
+export function quizScreen(app: App, hooks: QuizHooks): Screen {
+  if (hooks.quiz.variant === 'theory') return lazyScreen(theoryMod, (m) => m.theoryQuizScreen(app, hooks));
   return (root: HTMLElement) => {
     const spec = hooks.quiz;
     const lhOn = spec.pool.some((p) => p.endsWith('3')) || app.store.get().progress.currentWeek >= LEFT_HAND_WEEK;

@@ -102,6 +102,8 @@ export const WEEK8: WeekPlan = {
           ],
         }),
         { kind: 'song', songId: 'frere_jacques_easy', mode: 'wait', hints: 'full', intro: 'Lần đầu TO, nhắc lại NHỎ. Câu có La: tay nhích phải!' },
+        // (2026-10-12, OWNER duyệt) 📘 Biết thêm — nhạc lý nhẹ nhàng; THÊM VÀO CUỐI bài
+        { kind: 'theory', ids: ['staff-treble'] },
       ],
     },
     {

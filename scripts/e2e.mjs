@@ -416,6 +416,10 @@ const screenKind = () => {
   if (q('.dyn-pair, .dyn-card')) return 'dynamics';
   // (2026-10-08) Hát trước khi đàn: nút "Bắt đầu" → "Đúng rồi" (hát, micro tắt) → "Đúng rồi" (đàn) → "Tiếp" — đã có trong ORDER
   if (q('.sing-stage')) return 'sing';
+  // (2026-10-12) Nhạc lý nhẹ nhàng: thẻ "📘 Biết thêm" (.th-card) / "📘 Đố vui nhạc lý" (.th-quiz) — nút "Tiếp"/"Bắt đầu" có trong ORDER
+  if (q('.th-card')) return 'theory';
+  if (q('.th-quiz')) return 'quiz:theory';
+  if (q('.glossary-wrap')) return 'glossary';
   if (q('.rh-how')) return 'rhythm';
   if (q('.song-head') && /Ôn bài cũ/.test(txt(q('.song-status')))) return 'review-song';
   if (q('.song-head')) return q('.song-head .song-title') && /\(\d+\/\d+\)/.test(txt(q('.song-title'))) ? 'sight' : 'song';
@@ -480,6 +484,11 @@ const decide = () => {
       else if (dirs) b = btn(dir === 'up' ? 'Lên' : 'Xuống');
       if (b) { tap(b, 'interval ' + label(b)); return out; }
     }
+  }
+  // (2026-10-12) Câu hỏi nhanh nhạc lý: chọn đáp án đúng (data-ok="1"); đã trả lời → "Tiếp" (ORDER)
+  if (kind === 'theory' || kind === 'quiz:theory') {
+    const ok = qa('.th-choices button[data-ok="1"]').find((b) => !b.disabled);
+    if (ok) { tap(ok, 'theory ' + label(ok)); return out; }
   }
   // Trò nghe có nút lựa chọn: chọn bất kỳ (đáp án tai nghe không quan trọng cho kiểm thử)
   const choice = qa('.choice-row button')[0];

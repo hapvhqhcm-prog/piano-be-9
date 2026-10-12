@@ -10,6 +10,8 @@ import { MAX_QUIZ_ROUNDS, weekPlan } from './curriculum';
 export const SIGHT_DAILY_WEEK = 8;
 /** Ước lượng (phút) của bước đọc nhạc mỗi ngày. */
 export const SIGHT_DAILY_MIN = 1;
+/** (2026-10-12) Ước lượng (phút) cho MỘT thẻ "📘 Biết thêm" (thẻ + 2 câu hỏi nhanh). */
+export const THEORY_CARD_MIN = 0.75;
 /** Trần ước lượng một buổi (phút) — test pacing; bước đọc nhạc mỗi ngày chỉ thêm khi còn chỗ. */
 export const MAX_SESSION_MINUTES = 12;
 
@@ -77,6 +79,10 @@ function baseLessonMinutes(lesson: Lesson): number {
       case 'sing':
         // (2026-10-08) hát rồi đàn: ~0,6 phút/lượt (nghe – hát từng nốt – đàn)
         m += 0.6 * a.rounds.length;
+        break;
+      case 'theory':
+        // (2026-10-12) thẻ "📘 Biết thêm": đọc thẻ + nghe thử ~25" + 2 câu hỏi nhanh ~10" mỗi câu ≈ 0,75 phút/khái niệm
+        m += THEORY_CARD_MIN * a.ids.length;
         break;
       case 'song': {
         const full = findTune(a.songId);

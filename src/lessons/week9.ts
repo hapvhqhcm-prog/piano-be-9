@@ -41,6 +41,8 @@ export const WEEK9: WeekPlan = {
           ],
         },
         { kind: 'song', songId: 'school_drum', mode: 'wait', hints: 'full', intro: 'Trống "TÙNG-tùng": nốt trắng giữ cả ô nhịp!' },
+        // (2026-10-12, OWNER duyệt) 📘 Biết thêm — nhạc lý nhẹ nhàng; THÊM VÀO CUỐI bài
+        { kind: 'theory', ids: ['time-24'] },
       ],
     },
     {

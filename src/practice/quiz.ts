@@ -14,7 +14,12 @@ import { diatonic, staffStep } from '../music/staff';
  * giống nhau / bước (quãng 2) / nhảy (quãng 3) / … và lên hay xuống — đọc theo hình dáng, không thuộc lòng ngón↔phím.
  * landmark (v5): nhận các NỐT MỐC (Đô giữa, Sol khóa Sol, Fa khóa Fa, Đô cao/thấp, dòng kẻ phụ).
  */
-export type QuizVariant = 'updown' | 'stepskip' | 'identify' | 'read' | 'majorminor' | 'interval' | 'landmark';
+/**
+ * theory (OWNER duyệt 2026-10-12 — "Nhạc lý nhẹ nhàng"): "📘 Đố vui nhạc lý" — câu hỏi chọn đáp án về các khái niệm đã có
+ * thẻ "Biết thêm" (lessons/theory.ts, tuần ≤ theoryUpTo), kể cả "Quãng mấy?" trên khuông. `pool` để trống; màn riêng
+ * (ui/screens/theory.ts, nạp muộn) tự sinh câu hỏi — makeQuestion không dùng cho trò này. Không ghi APP_ASSESSMENT.
+ */
+export type QuizVariant = 'updown' | 'stepskip' | 'identify' | 'read' | 'majorminor' | 'interval' | 'landmark' | 'theory';
 
 export interface QuizSpec {
   variant: QuizVariant;
@@ -26,6 +31,8 @@ export interface QuizSpec {
   clef?: 'treble' | 'bass';
   /** interval: quãng lớn nhất được hỏi (2 = chỉ bước, 3 = bước/nhảy, 5 = tới quãng 5) */
   maxInterval?: 2 | 3 | 4 | 5;
+  /** theory: chỉ hỏi khái niệm có thẻ ở tuần ≤ theoryUpTo (mặc định: mọi khái niệm) */
+  theoryUpTo?: number;
 }
 
 export interface Choice {
@@ -248,6 +255,10 @@ function build(spec: QuizSpec, rng: Rng): Question {
         }),
       };
     }
+    case 'theory':
+      // Câu hỏi nhạc lý do màn ui/screens/theory.ts sinh (lessons/theory.ts — giữ dữ liệu ngoài gói chính).
+      // Ở đây chỉ trả câu GIẢ (cho mô phỏng buổi học — nextLesson.idealSession); màn thật không ghi APP_ASSESSMENT.
+      return { expected: 'theory', play: [] };
   }
 }
 

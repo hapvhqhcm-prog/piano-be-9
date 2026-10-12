@@ -115,6 +115,8 @@ export const WEEK11: WeekPlan = {
           intro: 'Khóa Fa: hai dấu chấm ôm vạch FA. Đô giữa ở trên.',
           quiz: { variant: 'landmark', pool: ['C4', 'F3', 'C3'], rounds: 6, clef: 'bass' },
         },
+        // (2026-10-12, OWNER duyệt) 📘 Biết thêm — nhạc lý nhẹ nhàng; THÊM VÀO CUỐI bài
+        { kind: 'theory', ids: ['bass-clef'] },
       ],
     },
     {
@@ -162,6 +164,8 @@ export const WEEK11: WeekPlan = {
         },
         song('swing_waltz', 'wait', 2, 'full', 'Xích đu đung đưa "MỘT-hai-ba" — đàn LIỀN nhé!'),
         song('swing_waltz', 'tempo', 2, 'names'),
+        // (2026-10-12, OWNER duyệt) 📘 Biết thêm — nhạc lý nhẹ nhàng; THÊM VÀO CUỐI bài
+        { kind: 'theory', ids: ['time-34'] },
       ],
     },
   ],
@@ -188,6 +192,8 @@ export const WEEK12: WeekPlan = {
       activities: [
         // Câu 2 (ô 3–4): 11 nốt tay phải chạy nhanh trong khi tay trái đổi nốt
         ...handsApart('hot_cross_buns_both', [2, 4], 2, 'Tay phải trước: "Bánh nóng" quen thuộc.', 'Tay trái: bấm rồi GIỮ thật lâu!'),
+        // (2026-10-12, OWNER duyệt) 📘 Biết thêm — nhạc lý nhẹ nhàng; THÊM VÀO CUỐI bài
+        { kind: 'theory', ids: ['staccato'] },
       ],
     },
     {
@@ -231,7 +237,8 @@ export const WEEK13: WeekPlan = {
   title: 'Củng cố hai tay',
   story: 'Trong Vườn Tháp Chuông, chuông lớn (tay trái) ngân dài, chuông nhỏ (tay phải) hát giai điệu. Hai tay cùng làm nên bản nhạc!',
   leftHand: true,
-  warmup: { variant: 'identify', pool: ['C3', 'D3', 'E3', 'F3', 'G3'], rounds: 6, reference: 'C3' },
+  // (2026-10-12, OWNER duyệt) khởi động THỈNH THOẢNG bằng "📘 Đố vui nhạc lý" — chỉ hỏi khái niệm đã có thẻ ở tuần trước
+  warmup: { variant: 'theory', pool: [], rounds: 6, theoryUpTo: 12 },
   teach: { emoji: '👨‍🏫', text: 'Con chỉ bố mẹ: tay trái giữ nốt nào, giữ bao lâu? Rồi đàn "Tháp chuông" một lần TO, một lần NHỎ.' },
   drills: ['wrist-circle', 'five-finger'],
   criterion: { text: 'Chơi trọn "Tháp chuông" hai tay theo nhịp — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
@@ -286,6 +293,8 @@ export const WEEK13: WeekPlan = {
           position: 'C',
           bars: 4,
         },
+        // (2026-10-12, OWNER duyệt) 📘 Biết thêm — nhạc lý nhẹ nhàng; THÊM VÀO CUỐI bài
+        { kind: 'theory', ids: ['interval-45'] },
       ],
     },
   ],
@@ -437,6 +446,8 @@ export const WEEK16: WeekPlan = {
           intro: 'Nghe kỹ tiếng Fa thăng nhé!',
           targets: [posEcho(['D4', 'E4', 'F#4'], 'RH', 'D'), posEcho(['A4', 'G4', 'F#4'], 'RH', 'D'), posEcho(['D4', 'F#4', 'A4'], 'RH', 'D')],
         }),
+        // (2026-10-12, OWNER duyệt) 📘 Biết thêm — nhạc lý nhẹ nhàng; THÊM VÀO CUỐI bài
+        { kind: 'theory', ids: ['sharp-flat'] },
       ],
     },
     pair('w16-l2', 16, 'Bài ca niềm vui — thế Rê', '🎶', 'ode_to_joy_d', 'names'),
@@ -467,6 +478,8 @@ export const WEEK16: WeekPlan = {
           ],
         }),
         song('frere_jacques_minor', 'wait', 2, 'names', 'Bài "Kìa con bướm vàng" nhưng ở giọng buồn — nghe lạ không?'),
+        // (2026-10-12, OWNER duyệt) 📘 Biết thêm — nhạc lý nhẹ nhàng; THÊM VÀO CUỐI bài
+        { kind: 'theory', ids: ['natural'] },
       ],
     },
   ],
@@ -504,6 +517,8 @@ export const WEEK17: WeekPlan = {
           ],
         },
         { kind: 'sight', title: 'Đọc nhạc có móc đơn', position: 'C', hand: 'RH', count: 2, rhythm: 2, hints: 'names' },
+        // (2026-10-12, OWNER duyệt) 📘 Biết thêm — nhạc lý nhẹ nhàng; THÊM VÀO CUỐI bài
+        { kind: 'theory', ids: ['dotted'] },
       ],
     },
     pair('w17-l2', 17, 'Bài ca niềm vui — bản gốc', '🎶', 'ode_to_joy_original', 'names'),
@@ -672,6 +687,8 @@ export const WEEK19: WeekPlan = {
         { kind: 'song', songId: 'cyclo_ride', mode: 'tempo', level: 3, hints: 'names', intro: 'Băng chuyền: xích lô chạy về vạch đỏ — "Chạy-Đi-chạy"!' },
         { kind: 'sight', title: 'Đọc nhạc có móc đơn & chấm dôi', position: 'C', hand: 'RH', count: 2, rhythm: 2, hints: 'names' },
         blackKeys('Phím đen lệch phách 🎨', 'App đàn nền. Con đàn phím đen "Chạy-Đi-chạy"!'),
+        // (2026-10-12, OWNER duyệt) 📘 Biết thêm — nhạc lý nhẹ nhàng; THÊM VÀO CUỐI bài
+        { kind: 'theory', ids: ['tie'] },
       ],
     },
   ],
@@ -706,7 +723,8 @@ export const WEEK20: WeekPlan = {
       pair('w20-l2', 20, 'Gam tay trái', '🌊', 'scale_c_lh', 'full', 'Tay trái lên: 5 → 1, rồi ngón 3 VẮT qua La!'),
       qa('Hỏi – Đáp về Đô 💬', 'App hỏi. Con đáp bằng bậc đi xuống về Đô!', 'C'),
     ),
-    pair('w20-l3', 20, 'Niềm vui cho thế giới', '🎄', 'joy_to_the_world', 'full', 'Bài này chính là gam đi xuống!'),
+    // (2026-10-12, OWNER duyệt) 📘 Biết thêm — cung & nửa cung (gam: Mi–Fa, Si–Đô) ở CUỐI bài
+    plus(pair('w20-l3', 20, 'Niềm vui cho thế giới', '🎄', 'joy_to_the_world', 'full', 'Bài này chính là gam đi xuống!'), { kind: 'theory', ids: ['half-whole'] }),
   ],
 };
 

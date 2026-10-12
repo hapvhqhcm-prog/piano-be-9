@@ -12,6 +12,7 @@ import { confetti } from './celebrate';
 import { speakChip } from './speakChip';
 import { stickerArt } from './art/stickerArt';
 import { cancelSpeech } from '../../audio/voice';
+import { deferOther, selfStudy } from '../selfStudy';
 import '../../styles/challenges.css';
 
 const libraryMod = lazy(() => import('../screens/library'));
@@ -130,7 +131,22 @@ export function openChallengeSheet(
       { class: 'dialog-actions' },
       button({ label: 'Đóng', onTap: close }),
       // (+ 2026-10-08) Thử thách "ngoài đời": bố mẹ xác nhận (nhấn giữ không cần — có hộp xác nhận)
-      c.selfReport && !c.done
+      // (+ 2026-10-12) 👦 Bé tự học: bé báo "đã làm" → hàng "🕑 Chờ bố mẹ xem" (cúp chỉ tính khi bố mẹ duyệt)
+      c.selfReport && !c.done && selfStudy(app)
+        ? app.store.reviews().some((r) => r.group === `challenge:${c.monday}`)
+          ? button({ icon: '🕑', label: 'Chờ bố mẹ xem', disabled: true, onTap: () => undefined })
+          : button({
+              icon: '✋',
+              label: 'Con đã làm — bố mẹ xem sau',
+              kind: 'good',
+              onTap: () => {
+                close();
+                deferOther(app, { kind: 'challenge', group: `challenge:${c.monday}`, label: `Thử thách tuần: ${c.title}`, challenge: c.id });
+                toast('👍 Bố mẹ sẽ xem lại nhé!');
+                opts.onConfirmed?.();
+              },
+            })
+        : c.selfReport && !c.done
         ? button({
             icon: '👪',
             label: 'Bố mẹ: con đã làm',

@@ -237,6 +237,7 @@ export function warmupTitle(q: QuizSpec): string {
     majorminor: 'Vui hay buồn? 😊😢',
     interval: 'Bước hay nhảy trên khuông? 👣🐸',
     landmark: 'Nốt mốc 🏠',
+    theory: 'Đố vui nhạc lý 📘',
   }[q.variant];
 }
 
@@ -249,5 +250,6 @@ export function warmupIntro(q: QuizSpec): string {
     majorminor: 'App rải một hợp âm. Nghe VUI (trưởng) hay BUỒN (thứ)?',
     interval: 'Khuông hiện 2 nốt. Nốt sau GIỐNG, BƯỚC hay NHẢY so với nốt trước — đi lên hay đi xuống?',
     landmark: 'Nhìn nốt trên khuông — đó là nốt mốc nào? Chọn tên hoặc chạm phím.',
+    theory: 'Nhớ lại điều con đã biết — chọn đáp án đúng!',
   }[q.variant];
 }
