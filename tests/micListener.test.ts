@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { MicListener, MIC_MUTE_GRACE_MS, MIC_RESUME_TIMEOUT_MS, MIC_STALE_MS, type MicState } from '../src/audio/MicListener';
+import { MicListener, MIC_KEEP_ALIVE_MS, MIC_MUTE_GRACE_MS, MIC_RESUME_TIMEOUT_MS, MIC_STALE_MS, type MicState } from '../src/audio/MicListener';
 import { MicAnalyzer } from '../src/audio/micAnalyzer';
 import type { AudioEngine, EngineState } from '../src/audio/AudioEngine';
 
@@ -74,7 +74,7 @@ function setup() {
     doc.visibilityState = visible ? 'visible' : 'hidden';
     docListeners.forEach((fn) => fn());
   };
-  return { mic, fill, ctx, tracks, getUserMedia, states, engineState, showApp, docListeners };
+  return { mic, fill, ctx, tracks, getUserMedia, states, engineState, showApp, docListeners, audio };
 }
 
 beforeEach(() => {
@@ -287,5 +287,62 @@ describe('MicListener: bộ lọc iOS thật sự áp dụng, luồng cho "Nghe 
     mic.stop();
     await mic.start();
     expect(mic.stats.frames).toBe(0);
+  });
+});
+
+describe('MicListener: giữ luồng micro giữa các màn (iPad không hỏi quyền lại — OWNER 2026-10-12)', () => {
+  it('micro bật trong Cài đặt: stop() rồi start() dùng lại luồng cũ, KHÔNG gọi getUserMedia lần 2', async () => {
+    const { mic, getUserMedia, tracks, audio } = setup();
+    (audio as unknown as { recordSessionWanted: () => boolean }).recordSessionWanted = () => true;
+    expect(await mic.start()).toBe('on');
+    mic.stop();
+    expect(mic.state).toBe('off');
+    expect(mic.keepingAlive).toBe(true);
+    expect(tracks[0].readyState).toBe('live');
+    expect(await mic.start()).toBe('on');
+    expect(getUserMedia).toHaveBeenCalledTimes(1);
+    mic.stop();
+  });
+
+  it('micro TẮT trong Cài đặt: stop() tắt hẳn track (như cũ)', async () => {
+    const { mic, getUserMedia, tracks } = setup();
+    await mic.start();
+    mic.stop();
+    expect(mic.keepingAlive).toBe(false);
+    expect(tracks[0].readyState).toBe('ended');
+    await mic.start();
+    expect(getUserMedia).toHaveBeenCalledTimes(2);
+    mic.stop();
+  });
+
+  it('luồng giữ lại bị iOS "mute" / hết hạn → xin luồng mới; releaseKept() tắt track', async () => {
+    const { mic, getUserMedia, tracks, audio } = setup();
+    (audio as unknown as { recordSessionWanted: () => boolean }).recordSessionWanted = () => true;
+    await mic.start();
+    mic.stop();
+    tracks[0].muted = true;
+    await mic.start();
+    expect(getUserMedia).toHaveBeenCalledTimes(2);
+    expect(tracks[0].readyState).toBe('ended');
+    mic.stop();
+    expect(mic.keepingAlive).toBe(true);
+    mic.releaseKept();
+    expect(mic.keepingAlive).toBe(false);
+    expect(tracks[1].readyState).toBe('ended');
+  });
+
+  it('tự tắt hẳn sau MIC_KEEP_ALIVE_MS', async () => {
+    vi.useFakeTimers();
+    try {
+      const { mic, tracks, audio } = setup();
+      (audio as unknown as { recordSessionWanted: () => boolean }).recordSessionWanted = () => true;
+      await mic.start();
+      mic.stop();
+      vi.advanceTimersByTime(MIC_KEEP_ALIVE_MS + 1);
+      expect(mic.keepingAlive).toBe(false);
+      expect(tracks[0].readyState).toBe('ended');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

@@ -807,3 +807,11 @@ Có ba chuyên gia đánh giá: sư phạm, động lực cho trẻ và kỹ thu
   - Bố mẹ bấm "Đạt" thì kết quả được ghi lại đúng phiên và đúng giờ gốc, nên tiêu chí "2 ngày khác nhau" vẫn tính đúng.
   - Phiên còn mục chờ duyệt sẽ không bị gộp (compaction).
   - Mặc định vẫn là "Có bố mẹ".
+
+## 43. Micro không hỏi quyền lại mỗi lần đổi màn (OWNER 2026-10-12)
+- **Lỗi bố mẹ báo:** "đã cho phép rồi mà cứ hỏi hoài".
+- **Nguyên nhân:** mỗi khi rời màn, `stop()` tắt track micro. Màn kế lại gọi `getUserMedia` lần nữa, và app chạy từ màn hình chính iPad thì hỏi quyền lại mỗi lần như vậy.
+- **Sửa:**
+  - `stop()` không tắt track nữa mà giữ luồng `MIC_KEEP_ALIVE_MS` = 10 phút, nếu micro đang bật trong Cài đặt và luồng còn sống. `start()` dùng lại luồng này, không xin quyền lần nữa.
+  - Luồng bị tắt hẳn khi: hết 10 phút, track bị iOS mute hoặc kết thúc, tắt micro trong Cài đặt, hoặc `pagehide`.
+  - Có test trong `tests/micListener.test.ts`.

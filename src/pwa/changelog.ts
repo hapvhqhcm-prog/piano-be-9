@@ -22,6 +22,14 @@ export const CHANGELOG_BASELINE = '0.15.0';
 
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
+    version: '0.23.1',
+    date: '2026-10-12',
+    items: [
+      'Micro không hỏi quyền lại mỗi khi đổi màn: app giữ micro trong lúc dùng (tối đa 10 phút rảnh).',
+      'Tắt micro trong Cài đặt hoặc rời app thì micro tắt hẳn ngay.',
+    ],
+  },
+  {
     version: '0.23.0',
     date: '2026-10-12',
     items: [

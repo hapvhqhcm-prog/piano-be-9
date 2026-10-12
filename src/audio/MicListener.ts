@@ -43,6 +43,12 @@ export const MIC_MUTE_GRACE_MS = 1000;
  * micro kẹt 'starting' (mọi lần chạm sau bị bỏ qua). Giống AudioEngine.unlock() (1500 ms).
  */
 export const MIC_RESUME_TIMEOUT_MS = 1500;
+/**
+ * (OWNER 2026-10-12: "đã cho phép rồi mà cứ hỏi hoài") Rời màn → KHÔNG tắt hẳn micro mà giữ luồng micro (đã được cho phép)
+ * thêm chừng này để màn kế dùng lại — iPad (app trên màn hình chính) hỏi quyền LẠI mỗi lần gọi getUserMedia sau khi đã tắt.
+ * Chỉ giữ khi micro đang bật trong Cài đặt; hết hạn / ẩn app lâu / tắt micro → tắt hẳn.
+ */
+export const MIC_KEEP_ALIVE_MS = 10 * 60_000;
 /** Thông tin micro THẬT SỰ được áp dụng (để nhật ký chẩn đoán). */
 export interface MicTrackInfo {
   /** Bộ lọc xử lý giọng nói mà trình duyệt báo là đang BẬT (undefined = trình duyệt không báo) */
@@ -139,6 +145,9 @@ interface ChordRequest {
 
 export class MicListener {
   private stream: MediaStream | null = null;
+  /** Luồng micro giữ lại sau stop() (chưa tắt track) — start() dùng lại, không hỏi quyền lần nữa */
+  private kept: MediaStream | null = null;
+  private keptTimer: ReturnType<typeof setTimeout> | undefined;
   private source: MediaStreamAudioSourceNode | null = null;
   private analyser: AnalyserNode | null = null;
   private buf: Float32Array<ArrayBuffer> | null = null;
@@ -458,6 +467,9 @@ export class MicListener {
     let stream: MediaStream;
     try {
       this.audio.setMicActive(true);
+      const reuse = this.takeKept();
+      if (reuse) stream = reuse;
+      else {
       this.usedFallback = false;
       try {
         stream = await navigator.mediaDevices.getUserMedia({ audio: MIC_CONSTRAINTS, video: false });
@@ -468,6 +480,7 @@ export class MicListener {
         if (myGen !== this.gen) throw e;
         this.usedFallback = true;
         stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      }
       }
     } catch (e) {
       if (myGen !== this.gen) return this._state;
@@ -677,12 +690,54 @@ export class MicListener {
   /** Màn hình không cần micro nữa: tắt hẳn (và thôi tự bật lại). */
   stop(): void {
     this._needsRestart = false;
-    this.teardown();
+    this.teardown(this.keepAliveOk());
     // Đồng bộ kiểu phiên âm thanh (vd vừa tắt micro trong Cài đặt → về 'playback')
     this.audio.setMicActive(false);
   }
 
-  private teardown(): void {
+  /** Có nên giữ luồng micro sau stop() không: micro bật trong Cài đặt + luồng còn sống, không bị iOS 'mute'. */
+  private keepAliveOk(): boolean {
+    let wanted = false;
+    try {
+      wanted = this.audio.recordSessionWanted();
+    } catch {
+      wanted = false;
+    }
+    const tracks = this.stream?.getAudioTracks() ?? [];
+    return wanted && tracks.length > 0 && tracks.every((t) => t.readyState === 'live' && !t.muted);
+  }
+
+  /** Lấy luồng đã giữ nếu còn dùng được (track sống, không 'mute'); không thì tắt hẳn nó. */
+  private takeKept(): MediaStream | null {
+    const s = this.kept;
+    this.kept = null;
+    clearTimeout(this.keptTimer);
+    this.keptTimer = undefined;
+    if (!s) return null;
+    const tracks = s.getAudioTracks();
+    if (tracks.length && tracks.every((t) => t.readyState === 'live' && !t.muted)) return s;
+    s.getTracks().forEach((t) => t.stop());
+    return null;
+  }
+
+  /** Tắt hẳn luồng đã giữ (hết hạn, ẩn app, tắt micro trong Cài đặt). */
+  releaseKept(): void {
+    clearTimeout(this.keptTimer);
+    this.keptTimer = undefined;
+    const s = this.kept;
+    this.kept = null;
+    s?.getTracks().forEach((t) => {
+      t.onended = null;
+      t.stop();
+    });
+  }
+
+  /** Đang giữ luồng micro chờ màn kế (test / chẩn đoán). */
+  get keepingAlive(): boolean {
+    return !!this.kept;
+  }
+
+  private teardown(keep = false): void {
     this.gen++;
     window.clearInterval(this.timer);
     this.timer = undefined;
@@ -697,13 +752,20 @@ export class MicListener {
     } catch {
       /* bỏ qua */
     }
-    this.stream?.getTracks().forEach((t) => {
+    const old = this.stream;
+    old?.getTracks().forEach((t) => {
       t.onended = null;
       t.onmute = null;
       t.onunmute = null;
-      t.stop();
+      if (!keep) t.stop();
     });
     this.stream = null;
+    if (keep && old) {
+      this.releaseKept();
+      this.kept = old;
+      old.getTracks().forEach((t) => (t.onended = () => this.kept === old && this.releaseKept()));
+      this.keptTimer = setTimeout(() => this.releaseKept(), MIC_KEEP_ALIVE_MS);
+    } else if (!keep) this.releaseKept();
     this.source = null;
     this.analyser = null;
     this.buf = null;

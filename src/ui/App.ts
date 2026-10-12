@@ -72,6 +72,12 @@ export class App {
     // (+ 2026-10-09) Tự học lệch dây đàn nhà (autoTune.ts): nạp kết quả đã lưu, lưu lại khi có số đo mới
     mic.loadAutoTune(this.store.settings.micAutoTune);
     mic.onAutoTune((st) => this.store.updateSettings({ micAutoTune: st }));
+    // (2026-10-12) Tắt micro trong Cài đặt → bỏ luồng micro đang giữ chờ màn kế (đèn micro iPad tắt ngay)
+    this.store.subscribe(() => {
+      if (!this.micWanted) mic.releaseKept();
+    });
+    // Rời app (tắt màn hình / chuyển app) → không giữ micro mở ngầm
+    window.addEventListener('pagehide', () => mic.releaseKept());
     return mic;
   }
 
