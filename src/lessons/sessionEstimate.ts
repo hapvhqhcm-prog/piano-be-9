@@ -12,6 +12,8 @@ export const SIGHT_DAILY_WEEK = 8;
 export const SIGHT_DAILY_MIN = 1;
 /** (2026-10-12) Ước lượng (phút) cho MỘT thẻ "📘 Biết thêm" (thẻ + 2 câu hỏi nhanh). */
 export const THEORY_CARD_MIN = 0.75;
+/** (2026-10-15) Ước lượng (phút) cho bước "Đọc nhịp trước" (một lượt vỗ + đọc mẫu nhịp của bài) — cờ `chant` của bài hát. */
+export const CHANT_MIN = 0.5;
 /** Trần ước lượng một buổi (phút) — test pacing; bước đọc nhạc mỗi ngày chỉ thêm khi còn chỗ. */
 export const MAX_SESSION_MINUTES = 12;
 
@@ -38,7 +40,7 @@ export function sightDailyFits(lesson: Lesson): boolean {
  * thêm giờ); + 1 phút "Đọc nhạc mỗi ngày" khi bài có chỗ (sightDailyFits).
  * Hoạt động: kỹ thuật 1 · từng nốt 0,3/việc · trò nghe/đọc 0,2/lượt · nhịp 0,4/mẫu · đọc nhạc 1/đoạn
  * · sáng tạo 2 (sáng tác 3) · sắc thái 0,3/lượt · bài hát chờ 3 giây/nốt (tách tay: chỉ nốt của tay đó; một câu: chỉ ô của câu) + 0,5
- * · theo nhịp 2 lượt cả bài + 0,5.
+ * · theo nhịp 2 lượt cả bài + 0,5 (+ 0,5 "Đọc nhịp trước" khi có cờ `chant`).
  */
 export function estimateLessonMinutes(lesson: Lesson): number {
   const m = baseLessonMinutes(lesson);
@@ -93,6 +95,7 @@ function baseLessonMinutes(lesson: Lesson): number {
         const notes = voice.filter((n) => !n.rest).length;
         const beats = t.notes.reduce((x, n) => x + n.beats, 0);
         m += a.mode === 'wait' ? (notes * 3) / 60 + 0.5 : (2 * beats) / Math.max(40, t.bpm) + 0.5;
+        if (a.chant) m += CHANT_MIN; // (2026-10-15) đọc nhịp trước lượt theo nhịp đầu tiên
         break;
       }
       default:

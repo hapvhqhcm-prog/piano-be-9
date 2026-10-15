@@ -79,6 +79,13 @@ export type Activity =
        * gõ lại; micro chấm riêng các nốt trong 2 ô im. Không có cờ: bài đã đạt theo nhịp (từ tuần 5) tự bật ở lượt sau.
        */
       pulseDrop?: boolean;
+      /**
+       * (2026-10-15, OWNER duyệt) ĐỌC NHỊP TO TRƯỚC KHI ĐÀN — đặt ở lượt THEO NHỊP của bài dạy một hình nhịp mới:
+       * lần đầu bé mở bài theo nhịp (chưa có lượt theo nhịp nào của bài), màn bài hát hiện trước một bước "Đọc nhịp trước"
+       * (màn Nhịp, MỘT lượt, mẫu rút từ câu 1 của chính bài — music/chant.ts; ui/screens/songChant.ts). Cờ chỉ THÊM
+       * thuộc tính, không thêm/chèn hoạt động → an toàn với tiến độ "<bài>#<i>" đã lưu của tuần 1–5.
+       */
+      chant?: boolean;
     }
   | { kind: 'rhythm'; title: string; intro: string; patterns: RhythmSymbol[][] }
   /** Đọc nhạc ngẫu nhiên: sinh `count` đoạn nhạc mới trong một thế tay */
@@ -190,6 +197,11 @@ export interface Lesson {
   activities: Activity[];
   /** Bài kiểm tra tiêu chí qua tuần */
   isWeekTest?: boolean;
+  /**
+   * (+ 2026-10-15) "Con làm thầy" RIÊNG của bài (màn kết). Không có → bài đầu tuần dùng WeekPlan.teach, các bài khác
+   * tự tạo từ nội dung bài (sessionPlan.lessonTeach) — để thẻ không lặp y hệt 4 lần một tuần.
+   */
+  teach?: { emoji: string; text: string };
 }
 
 export type CriterionWho = 'PARENT' | 'SELF' | 'APP' | 'PARENT/MIC';

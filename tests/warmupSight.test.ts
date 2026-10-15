@@ -74,11 +74,16 @@ describe('v5.2 — khởi động bằng nhạc (mở đầu mọi buổi)', () 
   });
 
   it('có bài đã thuộc → câu đầu (≤ 16 phách) theo nhịp; không trùng bài hôm nay; xoay vòng theo buổi', () => {
-    const st = store();
+    // (2026-10-15) thuộc = đạt ở 2 NGÀY: hôm qua + hôm nay
+    let t = T0 - 86_400_000;
+    const st = new ProgressStore(new MemoryStorage(), () => new Date(t));
     st.setCurrentWeek(4);
-    const s = st.startSession('w3-l1');
-    for (const id of ['mary_lamb', 'three_chicks', 'hot_cross_buns', 'snail_stroll']) if (findTune(id)) st.addSongRun(s.id, run(id));
-    st.finishSession(s.id);
+    for (let k = 0; k < 2; k++) {
+      const s = st.startSession('w3-l1');
+      for (const id of ['mary_lamb', 'three_chicks', 'hot_cross_buns', 'snail_stroll']) if (findTune(id)) st.addSongRun(s.id, run(id));
+      st.finishSession(s.id);
+      t = T0;
+    }
     const mastered = ['mary_lamb', 'three_chicks', 'hot_cross_buns', 'snail_stroll'].filter((id) => findTune(id));
     expect(mastered.length).toBeGreaterThanOrEqual(2);
     const lesson = findLesson('w4-l1')!;

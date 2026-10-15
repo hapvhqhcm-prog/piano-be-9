@@ -63,7 +63,11 @@ function mondayWith(data: Readonly<AppData>, from: string, id: ChallengeId): str
 function learner() {
   const c = clock(new Date(2026, 8, 1));
   c.st.setCurrentWeek(6);
-  sessionWith(c.st, 'w5-l1', ['frog_hop', 'hot_cross_buns', 'mary_lamb', 'jingle_bells'].map((songId) => run({ songId })));
+  // (2026-10-15) thuộc = đạt ở 2 ngày khác nhau
+  for (const d of ['2026-09-01', '2026-09-02']) {
+    c.at(d);
+    sessionWith(c.st, 'w5-l1', ['frog_hop', 'hot_cross_buns', 'mary_lamb', 'jingle_bells'].map((songId) => run({ songId })));
+  }
   return c;
 }
 

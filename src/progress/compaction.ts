@@ -16,7 +16,7 @@
  * (+ 2026-10-08) Nhật ký "🎤 Biểu diễn cho cả nhà" (AppData.concerts) nằm NGOÀI sessions → gộp không bao giờ đụng tới
  * (sticker "Buổi diễn" tính từ nhật ký đó, giữ nguyên sau khi gộp — tests/concert.test.ts).
  */
-import { forEachTargetOutcome, foldSongRun, weekPassed } from '../lessons/lessonEngine';
+import { forEachTargetOutcome, foldSongRun, masteryRuleFrom, weekPassed } from '../lessons/lessonEngine';
 import { DYNAMICS_ROUNDS, EFFORT_BY_DAYS_FROM, monotonicStickerIds } from '../lessons/stickers';
 import { isLessonSession } from '../lessons/bonusStickers';
 import { RATING_STARS, bumpDataRev, emptyHistory, foldParentStats, mondayKey, weekOfLessonId, weekdayIndex, type ParentStats } from './history';
@@ -83,7 +83,9 @@ export function compactData(data: AppData, now: Date, windowDays: number = COMPA
   // (+ 2026-10-07) 🏆 Lưu các tuần đã xong thử thách TRƯỚC khi gộp buổi của chúng (cúp tuần không mất)
   recordChallenges(data, localDateStr(now), now.getTime());
   const h = data.history ?? emptyHistory();
-  for (const s of data.sessions) if (fold.has(s)) foldSession(h, s);
+  // (+ 2026-10-15) mốc luật "thuộc = 2 ngày" (songStats.masteryRuleFrom) — gộp tính "đã thuộc" giống hệt lúc đọc trực tiếp
+  const ruleFrom = masteryRuleFrom(data);
+  for (const s of data.sessions) if (fold.has(s)) foldSession(h, s, ruleFrom);
   for (const w of newlyPassed) if (!h.passedWeeks.includes(w)) h.passedWeeks.push(w);
   h.passedWeeks.sort((a, b) => a - b);
   if (cutoff > h.compactedThrough) h.compactedThrough = cutoff;
@@ -111,7 +113,7 @@ const inc = (p: CountPair, ok: boolean) => {
 };
 
 /** Cộng MỘT buổi vào tổng hợp. */
-export function foldSession(h: History, s: Session): void {
+export function foldSession(h: History, s: Session, ruleFrom?: number): void {
   // Sticker bất ngờ: giữ tóm tắt tối thiểu của buổi bài học đã hoàn thành — sổ sticker tính lại theo thứ tự thời gian
   if (s.completed && isLessonSession(s)) (h.bonusStubs ??= []).push({ id: s.id, date: s.date, lessonId: s.lessonId, t: s.startedAt });
   h.sessions++;
@@ -141,7 +143,7 @@ export function foldSession(h: History, s: Session): void {
   }
   // Bài hát
   for (const r of s.songRuns) {
-    foldSongRun(h.songs, r);
+    foldSongRun(h.songs, r, ruleFrom);
     if (r.source === 'mic' && r.passed && !r.phrase && !r.hand && r.total > 0 && r.hits >= r.total) h.micPerfect = true;
   }
   // Trí nhớ nốt: giữ TARGET_KEEP lần gần nhất (theo ts) mỗi mã

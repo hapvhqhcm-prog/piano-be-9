@@ -2,6 +2,7 @@ import { wait } from '../../audio/AudioEngine';
 import { speak, speechBusy, cancelSpeech } from '../../audio/voice';
 import type { SingRound } from '../../lessons/types';
 import { SungNoteListener, matchSung, singFeedback, type SungEstimate } from '../../music/singMatch';
+import { judgeWait, pairFromHands, waitJudgeInit, type PairCheck } from '../../music/waitJudge';
 import { fingerOnKeyboard, type Hand } from '../../piano/fingering';
 import { PianoKeyboard, type KeyTarget } from '../../piano/PianoKeyboard';
 import { keyboardRangeFor, midiToPitch, pitchToMidi, viName, type Pitch } from '../../piano/pitchTable';
@@ -377,12 +378,55 @@ export function singScreen(app: App, hooks: SingHooks) {
           stage.querySelector('.mic-honest')?.remove();
           hint(self ? '✋ Đàn xong thì con chạm “Con xong rồi” nhé' : '👪 Bố mẹ nhìn con đàn rồi bấm Đúng rồi nhé', 'listen');
         };
+        playJudge = waitJudgeInit();
         unNote = app.mic.onNote((n) => {
           if (tk !== token) return;
           honesty.heard(); // micro nghe ra nốt (đúng hay sai) → micro vẫn nghe được
-          onPlayed(n.midi);
+          micPlayed(n.midi, n.at ?? -1);
         });
       }
+    }
+
+    /**
+     * (+ 2026-10-15) Bước ĐÀN của "Hát rồi đàn": bé vừa hát xong nên hay HÁT THEO khi đàn (mô phỏng: giọng ngân nga kéo
+     * dài nốt vừa đàn → mỗi nốt vài lần "Con vừa đàn …" oan). Nốt khác nốt chờ: bộ chấm "bé thật"
+     * (src/music/waitJudge.ts) — giọng hát kéo dài / tiếng vọng / tiếng lạ bỏ qua; chạm 2 phím, lệch quãng 8 → lời nhắc
+     * riêng. Bước này không tính điểm — chỉ đổi lời nhắc. (Hát ĐÚNG nốt đang chờ vẫn được tính là đã đàn — như trước.)
+     */
+    let playJudge = waitJudgeInit();
+    function micPlayed(midi: number, at: number, pair?: PairCheck): void {
+      const x = round();
+      if (playPos < 0 || playPos >= x.notes.length) return;
+      const pos = playPos;
+      const tk = token;
+      const want = pitchToMidi(x.notes[pos]);
+      const ask = (then: (p: PairCheck) => void, other = midi) =>
+        void app.mic.verifyHands({ RH: [want], LH: other === want ? [] : [other] }, at >= 0 ? at : undefined, true).then((r) => {
+          if (tk === token && playPos === pos && micStep === 'play') then(pairFromHands(r));
+        });
+      // Đúng nốt → bộ chấm trả 'ok' ngay (không hỏi micro). Đã thử hỏi micro "phím có vừa được gõ không" để không tính
+      // giọng hát: bộ kiểm tra hai tay không phân biệt được giọng ngân nga đứng yên với dây đàn → giữ như cũ.
+      const r = judgeWait(playJudge, { groups: x.notes.map((p) => [pitchToMidi(p)]), cur: pos, phraseStarts: [0], heard: midi, t: app.audio.now(), octaveGrace: 0, ...(pair !== undefined ? { pair } : {}) });
+      const v = r.verdict;
+      playJudge = r.state;
+      if (v.kind === 'check') return ask((p) => micPlayed(midi, at, p), v.other);
+      const heard = midiToPitch(midi);
+      if (v.kind === 'ok') return onPlayed(want);
+      // đàn một mạch nhanh hơn app: bắt kịp (bước này không tính điểm)
+      if (v.kind === 'ahead') {
+        for (let k = 0; k < v.advance && playPos >= 0 && playPos < x.notes.length; k++) onPlayed(pitchToMidi(x.notes[playPos]));
+        return;
+      }
+      if (v.kind === 'smudge') {
+        kb.setResult(heard, 'heard');
+        return hint(`Hình như con chạm 2 phím — đàn một ngón ${viName(x.notes[pos])} thôi nhé`, 'soft');
+      }
+      if (v.kind === 'octave') {
+        kb.setResult(heard, 'heard');
+        return hint(`Đúng tên nốt ${viName(x.notes[pos])} rồi! Nhưng ${v.up ? 'cao' : 'thấp'} hơn một quãng tám — phím đang sáng nhé`, 'soft');
+      }
+      if (v.kind === 'wrong') onPlayed(midi);
+      // echo / ghost / replay: giọng hát, tiếng vọng — không nói gì
     }
 
     function onPlayed(midi: number): void {

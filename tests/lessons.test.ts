@@ -417,12 +417,15 @@ describe('Cấp 2–3 & luyện tập mỗi ngày', () => {
     expect(weekPassed(29, st.get())).toBe(true);
   });
 
-  it('bài đã thuộc = trọn bài theo nhịp ≥ 60; xong tuần 31 (chưa sang Cấp 4) / xong tuần cuối → "Học tiếp" là luyện tập mỗi ngày', () => {
-    const st = store();
+  it('bài đã thuộc = trọn bài theo nhịp ≥ 60 ở 2 NGÀY (2026-10-15); xong tuần 31 (chưa sang Cấp 4) / xong tuần cuối → "Học tiếp" là luyện tập mỗi ngày', () => {
+    const { st, day } = clock();
     st.setCurrentWeek(31);
+    st.addSongRun(st.startSession('w31-stage').id, run({ songId: 'mary_lamb' }));
+    expect(songMastered(st.get(), 'mary_lamb')).toBe(false); // mới 1 ngày
+    day(1);
     const s = st.startSession('w31-stage');
     st.addSongRun(s.id, run({ songId: 'mary_lamb', bpm: 50 }));
-    expect(songMastered(st.get(), 'mary_lamb')).toBe(false);
+    expect(songMastered(st.get(), 'mary_lamb')).toBe(false); // tốc độ 50 không tính
     st.addSongRun(s.id, run({ songId: 'mary_lamb' }));
     expect(songMastered(st.get(), 'mary_lamb')).toBe(true);
     expect(nextLesson(st.get()).id).toBe('w31-stage');

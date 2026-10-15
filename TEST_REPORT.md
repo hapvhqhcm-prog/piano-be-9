@@ -889,3 +889,48 @@ Có ba chuyên gia đánh giá: sư phạm, động lực cho trẻ và kỹ thu
   - Bé Nốt có 11 trạng thái, chớp mắt / thở / nhép miệng khi đọc.
   - Bản đồ: sóng, mây, đảo nhấp nhô, sương phủ đảo chưa mở, đường đi tới đảo mới, thẻ đảo khi chạm, 43 chi tiết đảo riêng.
   - Cảnh đến đảo mới ≤ 3 s.
+
+## 48. Bé thật ngồi đàn — không chỉ "đàn đúng" (2026-10-15)
+Mô phỏng bé 9 tuổi THẬT qua đúng đường chấm của app, tuần 4–6 (`tests/childSim.ts`, `tests/childBehavior.test.ts`, `tests/childBehaviorTempo.test.ts`; đầy đủ mọi bài: `CHILD_SIM=full`). Bộ chấm chế độ chờ mới `src/music/waitJudge.ts` dùng chung cho songWait / practice / sing và cho mô phỏng (`tests/weekSim.ts` cũng chuyển sang nó; `WAIT_JUDGE=legacy` để so với cách cũ).
+
+Số lần "đàn sai" app báo trong 16 nốt đầu "Bài ca niềm vui" (chế độ chờ, đàn nhẹ):
+
+| Bé làm gì | Trước | Sau |
+|---|---|---|
+| Đàn cả bài lệch quãng 8 (Đô5 / Đô3 thay Đô4) | "sai" mãi, con trỏ đứng ở nốt 1, không giải thích | nốt đầu cho qua kèm "đúng tên nốt — nhưng cao hơn một quãng tám"; từ nốt 2 giữ con trỏ + phím sáng "dời tay xuống"; 0 lần "sai" |
+| Đàn vội 0,22 / 0,16 s một nốt, không chờ con trỏ | 2 / 10 lần "sai", kẹt ở nốt 2 | 0; con trỏ bắt kịp (nốt micro lỡ = "sót"), không đếm đôi |
+| Dừng 15 s giữa câu rồi đàn lại từ đầu câu (câu 1 / câu 2) | 6 / 2 | 0 ("🔁 Con đàn lại từ đầu câu — được nhé!") |
+| Chạm 2 phím một lúc (phím bên cạnh to hơn) | 6 | 0 ("Hình như con chạm 2 phím — đàn một ngón … thôi nhé") |
+| Đàn NHẦM phím bên cạnh (đối chứng) | 4/4 bắt được | 4/4 |
+| Tay đặt hờ, nốt khẽ vô tình | 4 | 0 |
+| Ngân nga theo giai điệu (giọng nhỏ / to) | 23 / 30 | 0 / 0 |
+| Anh chị / em nhỏ nói chuyện cạnh đàn | 8 / 11 | ≤ 1 / ≤ 2 |
+| Gõ nắp đàn theo nhịp (nhẹ / mạnh) | 16 / 25 | ≤ 1 |
+| Quạt / điều hòa; đàn to rồi nhỏ; quên chân pedal (mọi nốt ngân 4 s) | 0 | 0 |
+
+Cả 9 bài chờ tuần 4–6 (`CHILD_SIM=full`, 16 nốt đầu mỗi bài, cũ → mới): lệch quãng 8 "sai" 4 rồi kẹt → 0, đi hết bài; đàn vội 0,16 s/nốt 5–12 → 0–1 (bài nhiều nốt lặp như Mưa rơi vẫn có thể sót 2 nốt cuối); dừng rồi đàn lại từ đầu câu 6 → 0; chạm 2 phím 6–7 → 0; tay đặt hờ 0–5 → 0; ngân nga 16–43 → 0–4; anh chị nói chuyện 6–10 → 0–1; em nhỏ nói chuyện 8–11 → 1–3; gõ nắp đàn 11–29 → 0–3.
+
+- **Cách làm** (thứ tự xét trong `judgeWait`): đúng nốt → đi; nốt khớp nốt phía trước khi bé đàn liền tay → chờ nốt sau xác nhận "đàn vội" (không xác nhận = đàn sai thật, tính muộn một nốt); trùng nốt vừa nhận < 1,5 s = tiếng vọng (dây ngân, pedal, giọng ngân nga, tiếng gõ làm nốt cũ kêu lại) → bỏ qua; nốt đầu câu sau ≥ 3,5 s dừng → đàn lại từ đầu câu; nốt ở xa ≥ 8 nửa cung (không phải quãng 8) → tiếng lạ; còn lại hỏi micro hai phím (`verifyHands`, ~0,3 s): cả hai phím vừa gõ = chạm 2 phím, không phím nào = tiếng lạ, chỉ phím cần đàn = đúng; lệch quãng 8 → chính sách trên; còn lại = đàn sai như trước.
+- **Chính sách quãng 8 (mặc định hiền, OWNER đổi được `OCTAVE_GRACE`)**: chế độ chờ cho qua 1 nốt (không tính "đúng ngay"), giữ từ nốt thứ 2 liên tiếp; "Từng nốt" (luyện tìm phím) và "Hát rồi đàn" không cho qua — chỉ nói rõ "đúng tên nốt, sai chỗ". Không bao giờ tính là "đàn sai" mà không giải thích. Lời thầy sau bài: "Đúng tên nốt Mi rồi — nhưng cao quá một quãng tám, dời tay nhé!" (trước: "Nốt Mi hay bị nhầm thành Mi").
+- **Theo nhịp** (`timing.analyzePulse`): ghép nốt nghe theo thứ tự cao độ, khớp đường thẳng → bé đều mà chậm hơn máy ≥ 12 % / vào muộn / đúng / lung tung. Đều mà chậm: "Con đàn đều lắm — chỉ chậm hơn máy. Được! Thử tốc độ 50 nhé." (trước: "Câu 2 con hơi chậm — nghe tiếng tích…"); vào muộn 1,5 phách: "Con đàn đều lắm! Chỉ vào muộn — đếm 1-2-3-4 rồi vào ngay nhé." Điểm / tiêu chí tuần KHÔNG đổi.
+- **Sai mãi một nốt** (`missHelp`, chế độ chờ + Từng nốt): 1 nói phím vừa đàn · 2 app đàn mẫu nốt cần tìm · 3+ phím sáng + ngón (Từng nốt: bàn tay mờ — trước đây lời nhắc này bị câu "Con vừa đàn…" ghi đè ngay) · ≥ 5 lần VÀ ≥ 8 s → mời "Bỏ qua — mai ôn lại" / nút "👪 Bố mẹ: tiếp" nổi bật (trước: Từng nốt mời sau 5 lần dù bé bấm loạn trong 2 s; chế độ chờ không có trợ giúp nào, chỉ lặp một câu). "Micro nghe chưa rõ" không bật khi micro nghe ra nốt sai (đúng như trước).
+- **Ngập ngừng ở Từng nốt**: im 8 s mà micro không thấy lần gõ nào → "🙂 Con đàn Đô đi nhé" (trước: "App chưa nghe thấy — con đàn to hơn" và tính một lần "micro điếc").
+- **Đánh đổi đã đo** (`tests/weekSim.ts` "nhẹ, có lỗi", 9 bài chờ tuần 4–6): nhầm phím bên cạnh vẫn bắt 36/45 (trước 45/45) — 9 lần còn lại là bé đàn LẠI đúng phím vừa đàn trong 1,5 s (bị coi là tiếng vọng; con trỏ vẫn không đi); "đàn lại nốt trước" (nói lắp) không còn tính sai (2/18). Đúng ngay lần đầu 273/273, sai oan 0, đếm đôi 0 (như trước). `weekSongsMic`, `autoTuneBench` không đổi.
+- **Chưa làm được**: phân biệt giọng hát đứng yên với dây đàn (bộ kiểm tra hai tay không tách được) → ở "Hát rồi đàn", hát đúng nốt đang chờ vẫn được tính là đã đàn (như trước); bé ngân nga một giai điệu KHÁC lúc đàn vẫn có ~5 lần "sai" / 16 nốt (trước 19).
+
+## 49. Dạy như cô giáo nhiều kinh nghiệm (rà soát 2026-10-15, OWNER duyệt 6 thay đổi)
+- **Rà soát thực tế:** dự giờ 10 buổi tiếp theo của bé, có 70 ảnh chụp kèm lời đọc. Kết luận: app dễ dãi hơn cô thật.
+- **Tiêu chí tuần thật** (`weekCriteria.evidenceFrom`): chỉ tính các lượt chơi kể từ ngày bé mở bài học của tuần đó, áp dụng cho tuần 4, tuần 8 và các tuần khác. Không bao giờ hạ tuần của bé xuống.
+- **Bắt đầu chậm** (`startTempoBpm`): 50, hoặc 40 nếu bài có móc đơn hay đàn hai tay.
+- **"3 lần đúng"**
+  - Luyện chỗ khó theo nhịp chậm, chậm, rồi đúng tốc độ, và phải có ít nhất 1 lần đàn sạch.
+  - Sai 3 lần thì dừng nhẹ nhàng, chuyển sang "🌟 Đàn câu dễ", rồi khen.
+  - Thuộc bài nghĩa là 2 ngày khác nhau đều đạt cả bài ở tốc độ ≥ 60. Dữ liệu cũ giữ luật cũ (`masteryRuleFrom`).
+- **Từng câu rồi cả bài** (`phraseSteps.ts`): áp dụng cho 30 bài học từ tuần 6.
+- **Đọc nhịp to trước khi đàn** (`chant.ts`, `songChant.ts`): chèn trước lượt theo nhịp đầu tiên, chỉ ở 7 bài có nhịp mới.
+- **Bớt màu và tên nốt** (`readingAids.ts`)
+  - Bài đã quen: tắt màu khi chơi theo nhịp từ tuần 4, chỉ hiện khuông từ tuần 6.
+  - Bài có tay trái giữ tên nốt cho tới tuần 11 (lúc học khóa Fa).
+- **Sửa phần khởi động:** chỉ dùng bài bé đã thuộc.
+- **"Con làm thầy"** viết riêng cho từng bài; thêm **"📝 Bài tập về nhà"** (`homework.ts`), có trong báo cáo tuần.
+- **Hành vi trẻ thật** (§48, `waitJudge.ts`): đàn lệch quãng tám, đàn vội, đàn lại từ đầu câu, chạm 2 phím, tiếng ồn hoặc ngân nga, đàn đều nhưng chậm, sai nhiều lần.

@@ -187,6 +187,16 @@ export interface Settings {
   studyMode?: { mode: StudyMode; date: string };
   /** (+ 2026-10-12) Cách học mặc định khi chưa chọn hôm nay (màn Phụ huynh). Không có = 'parent' (như trước). */
   studyDefault?: StudyMode;
+  /**
+   * (+ 2026-10-15, OWNER duyệt) Lúc luật "thuộc bài = 2 ngày" bắt đầu có hiệu lực trên iPad này (ms) — lượt trước mốc giữ
+   * luật cũ (lessons/songStats.masteryRuleFrom). ProgressStore ghi khi mở / nhập dữ liệu chưa có. Không có = luật cũ.
+   */
+  masteryRuleFrom?: number;
+  /**
+   * (+ 2026-10-15) "📝 Bài tập về nhà" (lessons/homework.ts): chỗ thầy dặn luyện ở buổi gần nhất — hiện ở màn kết, đầu
+   * buổi sau (khởi động) và báo cáo tuần. Đọc MỀM (readHomework — mục hỏng bị bỏ qua). Không có / null = không có bài.
+   */
+  homework?: import('../lessons/homework').Homework | null;
 }
 
 /** (+ 2026-10-12) 👦 Con tự học / 👪 Có bố mẹ ngồi cùng */
@@ -377,8 +387,10 @@ export type CountPair = [number, number];
 
 /** (+) Tổng hợp một bài hát / mã lượt chơi từ các buổi đã gộp. */
 export interface SongAgg {
-  /** Lúc THUỘC bài (lượt sớm nhất chơi trọn theo nhịp ≥ 60 và đạt) — có = đã thuộc */
+  /** Lúc THUỘC bài (lượt sớm nhất chơi trọn theo nhịp ≥ 60 và đạt — từ 2026-10-15: lượt đạt ở ngày THỨ HAI) — có = đã thuộc */
   m?: number;
+  /** (+ 2026-10-15) Ngày (YYYY-MM-DD) của lượt đạt ĐẦU TIÊN theo luật "thuộc = 2 ngày" (chưa thuộc) — songStats.foldSongRun */
+  md?: string;
   /** Lần gần nhất chơi CẢ bài (không tính tập một câu) — ms */
   w?: number;
   /** Lượt gần nhất (mọi kiểu): [ts, đạt 1/0] — có = đã từng chơi */

@@ -27,7 +27,7 @@ export {
   MAX_QUIZ_ROUNDS,
   activityDoneId,
 } from './curriculum';
-export { passedWhole, foldSongRun, songStats, songMastered, songEverPlayed, masteredSongs, lastWholePlay } from './songStats';
+export { passedWhole, foldSongRun, songStats, songMastered, songEverPlayed, masteredSongs, lastWholePlay, masteryRuleFrom, startTempoBpm } from './songStats';
 export { FRESH_DAYS, FRESH_DAYS_AFTER_CURRICULUM, curriculumDone, freshDays, songFresh } from './freshness';
 export {
   EAR_WINDOW,

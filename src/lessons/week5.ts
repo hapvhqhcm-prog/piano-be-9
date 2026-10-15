@@ -40,7 +40,8 @@ export const WEEK5: WeekPlan = {
       emoji: '🌧️',
       activities: [
         { kind: 'song', songId: 'raindrops', mode: 'wait', hints: 'full', intro: 'Mưa rơi "Chạy-chạy" — đọc to trước khi đàn nhé!' },
-        { kind: 'song', songId: 'raindrops', mode: 'tempo', level: 2, hints: 'names' },
+        // (2026-10-15, OWNER duyệt) chant: lần đầu theo nhịp → "Đọc nhịp trước" ngay trong màn bài hát (CHỈ thêm cờ — chỉ số giữ nguyên)
+        { kind: 'song', songId: 'raindrops', mode: 'tempo', level: 2, hints: 'names', chant: true },
         // (2026-10-12, OWNER duyệt) 📘 Biết thêm — nhạc lý nhẹ nhàng; THÊM VÀO CUỐI bài
         { kind: 'theory', ids: ['time-44'] },
       ],

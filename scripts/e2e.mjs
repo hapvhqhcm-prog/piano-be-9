@@ -420,6 +420,9 @@ const screenKind = () => {
   if (q('.th-card')) return 'theory';
   if (q('.th-quiz')) return 'quiz:theory';
   if (q('.glossary-wrap')) return 'glossary';
+  // (2026-10-15) "Đọc nhịp trước": màn Nhịp MỘT lượt đứng trước lượt theo nhịp đầu tiên của bài có cờ "chant"
+  // (songChant.ts — cùng nút với màn Nhịp: Bắt đầu → Con vỗ → phiếu bố mẹ → Tiếp; có thêm "⏭ Bỏ qua") — không chặn buổi
+  if (q('.chant-pre')) return q('.rh-how') ? 'rhythm:chant' : 'chant';
   if (q('.rh-how')) return 'rhythm';
   if (q('.song-head') && /Ôn bài cũ/.test(txt(q('.song-status')))) return 'review-song';
   if (q('.song-head')) return q('.song-head .song-title') && /\(\d+\/\d+\)/.test(txt(q('.song-title'))) ? 'sight' : 'song';
@@ -453,6 +456,9 @@ const decide = () => {
   if (kind === 'dialog') { tap([...q('.dialog-backdrop').querySelectorAll('button')].find((b) => label(b) !== 'Hủy'), 'dialog-ok'); return out; }
   // Kết thúc buổi
   if (kind === 'session-end') { out.banner = txt(q('.screen .banner')); out.stickers = txt(q('.sticker-reveal-title')); tap(btn('Để mai học tiếp'), 'Để mai học tiếp'); return out; }
+  // (2026-10-15) "📝 Bài tập về nhà" đầu buổi (chỉ có khi buổi trước có lượt chưa đạt) → bỏ qua
+  if (kind === 'warmup' && txt(q('.warmup-tag')).includes('Bài tập về nhà')) { tap(q('.warmup-skip'), 'Bỏ qua bài tập về nhà'); return out; }
+  // (2026-10-15) Lượt chưa đạt → "Tiếp" mở màn dừng ("🌟 Đàn câu dễ" / "Tiếp") — runner chạm "Tiếp" (ORDER) như cũ
   // Phiếu chấm của bố mẹ: tích hết các ý rồi "Xong"
   const pc = qa('.pcheck-item');
   if (pc.length) {

@@ -16,6 +16,7 @@ import { WEEK7 } from './week7';
 import { WEEK8 } from './week8';
 import { WEEK9 } from './week9';
 import { WEEK10 } from './week10';
+import { withPhraseSteps } from './phraseSteps';
 
 /**
  * Giáo trình v5 (OWNER duyệt 2026-10-05, theo rà soát của chuyên gia sư phạm) — 3 cấp:
@@ -27,13 +28,20 @@ import { WEEK10 } from './week10';
  * Dữ liệu cũ (rev 1/2/3) đánh số lại ở progress/migrations.ts (bảng OLD→NEW).
  * Mục tiêu cuối nói thật: ≈ hoàn thành Faber cấp 1 / đầu cấp 2 (không phải "thành thạo" theo nghĩa nhạc viện).
  */
-export const WEEKS: readonly WeekPlan[] = [
+/** Dữ liệu tuần GỐC (như viết trong week*.ts / level*.ts) — chưa thêm bước "Từng câu rồi cả bài". */
+export const SOURCE_WEEKS: readonly WeekPlan[] = [
   WEEK1, WEEK2, WEEK3, WEEK4, WEEK5, WEEK6, WEEK7, WEEK8, WEEK9, WEEK10,
   ...LEVEL2_WEEKS,
   ...LEVEL3_WEEKS,
   // Cấp 4 (OWNER duyệt 2026-10-08): tuần 32–43 thêm ở CUỐI — mã tuần/bài cũ không đổi, không cần migration
   ...LEVEL4_WEEKS,
 ];
+
+/**
+ * (2026-10-15, OWNER duyệt) Giáo trình dùng trong app = dữ liệu gốc + bước "Câu 1 → Câu 2 → Cả bài" trước lượt theo nhịp
+ * ĐẦU TIÊN của bài mới từ tuần 6 (lessons/phraseSteps.ts — tuần 1–5 không đổi: tiến độ đã lưu theo chỉ số hoạt động).
+ */
+export const WEEKS: readonly WeekPlan[] = withPhraseSteps(SOURCE_WEEKS);
 
 export const LEVELS: readonly LevelInfo[] = [
   {

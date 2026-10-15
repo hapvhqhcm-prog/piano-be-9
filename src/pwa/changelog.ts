@@ -22,6 +22,16 @@ export const CHANGELOG_BASELINE = '0.15.0';
 
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
+    version: '0.26.0',
+    date: '2026-10-15',
+    items: [
+      'Dạy như cô giáo: bài mới tập chậm 40–50, từng câu rồi cả bài, đọc nhịp to trước khi đàn.',
+      'Đàn hỏng thì luyện chỗ khó tới khi sạch; sau 3 lần thì nghỉ, kết thúc bằng câu dễ.',
+      '"Thuộc bài" = đạt ở 2 ngày khác nhau; tuần 4 chỉ tính bài đàn trong tuần 4.',
+      '📝 Bài tập về nhà cụ thể sau mỗi buổi; micro hiểu khi bé đàn lệch quãng 8, vội, đàn lại từ đầu câu.',
+    ],
+  },
+  {
     version: '0.25.0',
     date: '2026-10-15',
     items: [

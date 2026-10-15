@@ -603,10 +603,13 @@ describe('độ "tươi" sau khi xong giáo trình', () => {
     const run = (songId: string) => ({ songId, mode: 'tempo' as const, level: 2 as const, bpm: 72, hints: 'names' as const, phrase: null, total: 10, hits: 10, source: 'mic' as const, passed: true });
     const ids = SONGS.filter((s) => !s.id.startsWith('sight')).slice(0, 4).map((s) => s.id);
     ids.forEach((id, i) => {
-      t += DAY;
-      const s = st.startSession(`w${MAX_WEEK}-song-${i}`);
-      st.addSongRun(s.id, run(id));
-      st.finishSession(s.id);
+      // (2026-10-15) thuộc = đạt ở 2 ngày khác nhau
+      for (let k = 0; k < 2; k++) {
+        t += DAY;
+        const s = st.startSession(`w${MAX_WEEK}-song-${i}`);
+        st.addSongRun(s.id, run(id));
+        st.finishSession(s.id);
+      }
     });
     const at = t + 30 * DAY;
     expect(freshDays(st.get())).toBe(FRESH_DAYS);

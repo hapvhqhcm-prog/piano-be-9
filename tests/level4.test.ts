@@ -13,6 +13,7 @@ import {
   weekPassed,
 } from '../src/lessons/lessonEngine';
 import { HAIRPIN_CHECK, LEVEL4_WEEKS, PEDAL_CHECK, RELAX_CHECKS } from '../src/lessons/level4';
+import { SOURCE_WEEKS } from '../src/lessons/curriculum';
 import { PARENT_TIPS } from '../src/lessons/parentTips';
 import { findTune } from '../src/music/exercises';
 import { SONGS, allTimed, beatsPerMeasure, measureCount, timeline, totalBeats, validateTune, type Tune } from '../src/music/tune';
@@ -45,7 +46,9 @@ const run = (songId: string, o: Partial<SongRun> = {}): Omit<SongRun, 'ts'> => (
 describe('cấu trúc Cấp 4', () => {
   it('12 tuần 32–43 ở CUỐI giáo trình; Cấp 4 = [32, 43]; MAX_WEEK 43; hòa nhạc (huy chương) tuần 43', () => {
     expect(LEVEL4_WEEKS.map((w) => w.week)).toEqual(Array.from({ length: 12 }, (_, i) => 32 + i));
-    expect(WEEKS.slice(31)).toEqual(LEVEL4_WEEKS);
+    // (2026-10-15) WEEKS = dữ liệu gốc + bước "Từng câu rồi cả bài" (phraseSteps.ts) → so với dữ liệu GỐC
+    expect(SOURCE_WEEKS.slice(31)).toEqual(LEVEL4_WEEKS);
+    expect(WEEKS.slice(31).map((w) => w.lessons.map((l) => l.id))).toEqual(LEVEL4_WEEKS.map((w) => w.lessons.map((l) => l.id)));
     expect(MAX_WEEK).toBe(43);
     expect(LEVELS[3]).toMatchObject({ level: 4, weeks: [32, 43] });
     expect(levelOf(32).name).toContain('Cấp 4');

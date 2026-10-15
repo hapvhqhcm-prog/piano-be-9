@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { WEEKS } from '../src/lessons/lessonEngine';
+import { WEEKS, findLesson } from '../src/lessons/lessonEngine';
 import { findSong, songsUpToWeek, totalBeats, validateTune, beatsPerMeasure, allTimed, measureCount, timeline, lhTimeline, phraseRanges, type Tune } from '../src/music/tune';
 import { beamGroups } from '../src/music/engrave';
 import { midiToPitch, pitchToMidi } from '../src/piano/pitchTable';
@@ -157,7 +157,9 @@ describe('dân ca — giai điệu & vị trí trong giáo trình', () => {
 
   it('"Cầu London — chấm dôi" (bài lặp) đã được thay bằng "Bắc kim thang"', () => {
     expect(findSong('london_bridge_dotted')).toBeUndefined();
-    expect(lessonSongs('w19-bkt')).toEqual(['bac_kim_thang', 'bac_kim_thang']);
+    // (2026-10-15, OWNER duyệt "Từng câu rồi cả bài") chờ → Câu 1 → Câu 2 → cả bài theo nhịp
+    expect(lessonSongs('w19-bkt')).toEqual(['bac_kim_thang', 'bac_kim_thang', 'bac_kim_thang', 'bac_kim_thang']);
+    expect(findLesson('w19-bkt')!.activities.filter((a) => a.kind === 'song' && !a.phrase)).toHaveLength(2);
   });
 });
 

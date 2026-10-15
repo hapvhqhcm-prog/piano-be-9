@@ -61,6 +61,85 @@ export function gradeTiming(
   );
 }
 
+/* ---------- (+ 2026-10-15) Bé giữ nhịp ĐỀU mà chậm hơn máy / vào muộn — hay đàn lung tung? ---------- */
+
+/**
+ * ontime = theo kịp máy · slow / fast = đều nhưng chậm / nhanh hơn máy (≥ 12 %) · late = đều, đúng tốc độ, nhưng vào
+ * muộn (cả bài lệch sau ≥ một cửa sổ chấm) · uneven = không đều · unknown = quá ít nốt để biết.
+ */
+export type PulseKind = 'ontime' | 'slow' | 'fast' | 'late' | 'uneven' | 'unknown';
+
+export interface PulseFit {
+  kind: PulseKind;
+  /** số nốt ghép được (theo thứ tự cao độ) */
+  n: number;
+  /** tốc độ bé / tốc độ máy (0,8 = bé chậm hơn 20 %) */
+  ratio: number;
+  /** bé vào lệch bao nhiêu phách ở đầu bài (dương = muộn) */
+  offset: number;
+  /** độ "run" quanh nhịp đều của chính bé (phách của bé, độ lệch chuẩn phần dư) */
+  jitter: number;
+}
+
+/** Độ run tối đa (phách của bé) vẫn là "đều" — trẻ 9 tuổi đàn đều tay thường run ±0,1 phách. */
+export const PULSE_STEADY = 0.18;
+/** Chậm / nhanh hơn máy từ tỉ lệ này mới nói (dưới đó: lệch nhỏ, cửa sổ chấm đã đủ rộng). */
+export const PULSE_TEMPO_DIFF = 0.12;
+
+/**
+ * Ghép các lần nghe với các nốt THEO THỨ TỰ CAO ĐỘ (không theo cửa sổ thời gian — bé chậm thì càng về cuối càng lệch xa
+ * cửa sổ), cho phép bỏ qua ≤ 2 nốt (bé sót / micro lỡ) và lần nghe lạ; rồi khớp đường thẳng "phách nghe = a + b × phách
+ * nốt". b > 1 = bé chậm hơn máy. Phần dư nhỏ = bé giữ nhịp đều (của chính bé).
+ */
+export function analyzePulse(notes: ReadonlyArray<{ start: number; midi: number[] }>, heard: ReadonlyArray<HeardEvent>, late = LATE): PulseFit {
+  const pairs: Array<[number, number]> = [];
+  let gi = 0;
+  for (const h of [...heard].sort((a, b) => a.beat - b.beat)) {
+    for (let j = gi; j < Math.min(notes.length, gi + 3); j++) {
+      if (matchHeard(h.midi, notes[j].midi) !== 'none') {
+        pairs.push([notes[j].start, h.beat]);
+        gi = j + 1;
+        break;
+      }
+    }
+  }
+  const n = pairs.length;
+  const none: PulseFit = { kind: 'unknown', n, ratio: 1, offset: 0, jitter: 0 };
+  if (n < 6 || n < notes.length * 0.5) return none;
+  const mx = pairs.reduce((s, p) => s + p[0], 0) / n;
+  const my = pairs.reduce((s, p) => s + p[1], 0) / n;
+  let sxx = 0;
+  let sxy = 0;
+  for (const [x, y] of pairs) {
+    sxx += (x - mx) ** 2;
+    sxy += (x - mx) * (y - my);
+  }
+  if (sxx < 1e-9) return none;
+  const b = sxy / sxx;
+  const a = my - b * mx;
+  if (!(b > 0.3 && b < 3)) return { ...none, kind: 'uneven' };
+  const res = Math.sqrt(pairs.reduce((s, [x, y]) => s + (y - a - b * x) ** 2, 0) / Math.max(1, n - 2));
+  const jitter = res / b;
+  const fit = { n, ratio: 1 / b, offset: a, jitter };
+  if (jitter > PULSE_STEADY) return { ...fit, kind: 'uneven' };
+  if (b > 1 + PULSE_TEMPO_DIFF) return { ...fit, kind: 'slow' };
+  if (b < 1 - PULSE_TEMPO_DIFF) return { ...fit, kind: 'fast' };
+  if (a > late) return { ...fit, kind: 'late' };
+  return { ...fit, kind: 'ontime' };
+}
+
+/**
+ * Ghi chú nhịp cho lời thầy (RunReview.pulse): bé đều mà chậm → gợi ý nấc tốc độ (thang `tempos`) không nhanh hơn tốc độ
+ * bé đang giữ — chỉ khi chậm hơn nấc hiện tại.
+ */
+export function pulseNote(p: PulseFit, bpm: number, tempos: readonly number[] = [40, 50, 60, 72]): { kind: PulseKind; suggestBpm?: number } {
+  if (p.kind !== 'slow') return { kind: p.kind };
+  const kid = bpm * p.ratio;
+  const fit = tempos.filter((t) => t <= kid + 2);
+  const s = fit.length ? fit[fit.length - 1] : tempos[0];
+  return s < bpm ? { kind: p.kind, suggestBpm: s } : { kind: p.kind };
+}
+
 export function score(verdicts: NoteVerdict[]): number {
   if (!verdicts.length) return 0;
   return verdicts.filter((v) => v.hit).length / verdicts.length;

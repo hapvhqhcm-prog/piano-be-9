@@ -8,7 +8,8 @@ import { handFocus, handPrinciple, readHandLook, type HandPrincipleId } from '..
 import { HAND_ICON_TEXT, handIcon } from '../components/handIcon';
 import { principleFigure } from '../components/handCards';
 import { practiceScreen } from './practice';
-import { songScreen } from './song';
+import { songScreen, type SongHooks } from './song';
+import type { Homework } from '../../lessons/homework';
 import '../../styles/warmup.css';
 
 /**
@@ -38,6 +39,45 @@ export function warmupScreen(app: App, w: WarmupMusic, hooks: { onDone(): void; 
       window.clearTimeout(bubbleTimer);
       cleanup?.();
     };
+  };
+}
+
+/**
+ * (+ 2026-10-15) "📝 BÀI TẬP VỀ NHÀ" đầu buổi (trước khởi động bằng nhạc): đúng chỗ thầy dặn ở buổi trước (lessons/homework.ts)
+ * — câu đó ở chế độ "🔁 Lặp 3 lần đúng" (Từng nốt) hoặc theo nhịp ở tốc độ chậm. Luôn có "Bỏ qua ⏭". Lượt chơi GHI vào buổi
+ * (`onRun`) như lượt thật: lượt một câu không đổi tiêu chí / "thuộc"; lượt đạt đúng chỗ dặn → bài tập xong (songResult).
+ */
+export function homeworkScreen(app: App, hw: Homework, hooks: { onRun: SongHooks['onRun']; onDone(): void; onBack(): void }): Screen {
+  const tune = findTune(hw.songId);
+  if (!tune) return () => void window.setTimeout(hooks.onDone, 0);
+  const loop = hw.mode === 'wait' && !!hw.phrase;
+  const inner = songScreen(
+    app,
+    tune,
+    {
+      mode: hw.mode,
+      level: 2,
+      hints: 'full',
+      intro: `📝 Bài tập về nhà: ${hw.text}`,
+      bpm: hw.bpm,
+      ...(hw.phrase ? { phrase: hw.phrase } : {}),
+      ...(loop ? { loop: true } : {}),
+      // tempo một câu: khoá câu như bước ôn (không hiện nút chọn câu); cả bài / lặp câu: như bài thường
+      ...(!loop && hw.phrase ? { review: true } : {}),
+    },
+    { onRun: hooks.onRun, onDone: hooks.onDone, onBack: hooks.onBack },
+  );
+  return (root) => {
+    const cleanup = inner(root);
+    let left = false;
+    const skip = h('button', { class: 'warmup-skip', type: 'button', 'aria-label': 'Bỏ qua bài tập về nhà' }, 'Bỏ qua ⏭');
+    skip.addEventListener('click', () => {
+      if (left) return;
+      left = true;
+      hooks.onDone();
+    });
+    root.append(h('div', { class: 'warmup-bar' }, h('span', { class: 'warmup-tag' }, '📝 Bài tập về nhà'), skip));
+    return () => cleanup?.();
   };
 }
 

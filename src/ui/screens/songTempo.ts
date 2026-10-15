@@ -7,6 +7,8 @@ import type { HandsResult } from '../../audio/twoHand';
 import { gradeHandsTempo, type HandNoteResult, type HandsProbe } from '../../music/handGrade';
 import {
   PASS_SCORE,
+  analyzePulse,
+  pulseNote,
   countInBeats,
   countInLabel,
   gradePulseDrop,
@@ -228,6 +230,8 @@ function finishTempo(
       c,
       gs.map((g, i) => ({ g, ...tv[i] })),
     );
+    // (+ 2026-10-15) Bé giữ nhịp đều mà chậm hơn máy / vào muộn? → thầy nói "đều nhưng chậm hơn máy — được" (teacher.ts)
+    if (c.review) c.review.pulse = pulseNote(analyzePulse(gradeInput, heard, win.late), c.bpm);
     if (handRes.size)
       c.lastHands = handsRun(
         'tempo',

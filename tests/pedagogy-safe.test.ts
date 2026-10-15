@@ -65,11 +65,12 @@ describe('1. Tập tách tay (bài hai tay)', () => {
   it('lượt TÁCH TAY không tính "đã thuộc" / tiêu chí tuần 12; lượt hai tay thì tính (v5: ở 2 ngày)', () => {
     const { st, at } = clockStore();
     st.setCurrentWeek(12);
+    // (2026-10-15) bằng chứng tính từ ngày học bài có "Bài ca niềm vui hai tay" (w12-l3)
     // v5: lượt bố mẹ phải có phiếu 3 ý đều đạt
     const ok = { checklist: { notes: true, beat: true, fingers: true } };
     for (const day of [0, 1]) {
       at(day);
-      const s = st.startSession('w12-l1');
+      const s = st.startSession('w12-l3');
       st.addSongRun(s.id, run('ode_to_joy_both', { hand: 'RH', ...ok }));
       st.addSongRun(s.id, run('ode_to_joy_both', { hand: 'LH', ...ok }));
     }
@@ -77,11 +78,13 @@ describe('1. Tập tách tay (bài hai tay)', () => {
     expect(songMastered(st.get(), 'ode_to_joy_both')).toBe(false);
     expect(weekPassed(12, st.get())).toBe(false);
     at(0);
-    st.addSongRun(st.startSession('w12-l1').id, run('ode_to_joy_both', ok));
-    expect(songMastered(st.get(), 'ode_to_joy_both')).toBe(true);
+    st.addSongRun(st.startSession('w12-l3').id, run('ode_to_joy_both', ok));
+    // (2026-10-15) "thuộc" cũng cần 2 ngày như tiêu chí tuần
+    expect(songMastered(st.get(), 'ode_to_joy_both')).toBe(false);
     expect(weekPassed(12, st.get())).toBe(false); // mới 1 ngày
     at(1);
-    st.addSongRun(st.startSession('w12-l1').id, run('ode_to_joy_both', ok));
+    st.addSongRun(st.startSession('w12-l3').id, run('ode_to_joy_both', ok));
+    expect(songMastered(st.get(), 'ode_to_joy_both')).toBe(true);
     expect(weekPassed(12, st.get())).toBe(true);
   });
 
@@ -207,6 +210,8 @@ describe('4. Ôn bài cũ trong buổi', () => {
     at2(0);
     const old = st2.startSession(`w${lesson.week}-song-a`);
     st2.addSongRun(old.id, run(a.id));
+    at2(1); // (2026-10-15) thuộc = đạt ở 2 ngày
+    st2.addSongRun(st2.startSession(`w${lesson.week}-song-a`).id, run(a.id));
     at2(40);
     const now = st2.startSession(`w${lesson.week}-song-x`);
     for (const c of cands) if (c.id !== a.id) st2.addSongRun(now.id, run(c.id, { mode: 'wait', bpm: 40, passed: c.id !== b.id }));
@@ -237,6 +242,9 @@ describe('4. Ôn bài cũ trong buổi', () => {
 describe('5. Độ "tươi" của bài đã thuộc', () => {
   it(`thuộc + chơi cả bài trong ${FRESH_DAYS} ngày = tươi; lâu hơn = phai (vẫn "đã từng thuộc")`, () => {
     const { st, at } = clockStore();
+    st.addSongRun(st.startSession('w3-l1').id, run('mary_lamb'));
+    expect(songMastered(st.get(), 'mary_lamb')).toBe(false); // (2026-10-15) mới 1 ngày
+    at(1);
     const s = st.startSession('w3-l1');
     st.addSongRun(s.id, run('mary_lamb'));
     expect(songFresh('mary_lamb', st.get(), T0 + 10 * DAY)).toBe(true);
@@ -257,6 +265,8 @@ describe('5. Độ "tươi" của bài đã thuộc', () => {
     st.setCurrentWeek(25);
     const old = st.startSession('w25-song-a');
     st.addSongRun(old.id, run('mary_lamb'));
+    at(1);
+    st.addSongRun(st.startSession('w25-song-a').id, run('mary_lamb'));
     at(40);
     const s = st.startSession('w25-song-b');
     for (const id of ['hot_cross_buns', 'au_clair', 'lightly_row']) st.addSongRun(s.id, run(id));

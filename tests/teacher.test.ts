@@ -243,13 +243,15 @@ describe('🎯 Luyện ngay chỗ này — chậm trước, rồi đúng tốc �
     expect(slowerBpm(64)).toBe(60);
     expect(slowerBpm(40)).toBe(30);
   });
-  it('Theo nhịp: chậm → đúng tốc độ; Từng nốt: thầy đàn mẫu chậm → bé đàn', () => {
+  it('(2026-10-15 "3 lần đúng") Theo nhịp: chậm ×2 → đúng tốc độ ×1; Từng nốt: thầy đàn mẫu chậm → bé đàn ×2', () => {
     expect(focusPlan('tempo', 60)).toEqual([
+      { kind: 'play', mode: 'tempo', bpm: 50 },
       { kind: 'play', mode: 'tempo', bpm: 50 },
       { kind: 'play', mode: 'tempo', bpm: 60 },
     ]);
     expect(focusPlan('wait', 60)).toEqual([
       { kind: 'demo', mode: 'wait', bpm: 50 },
+      { kind: 'play', mode: 'wait', bpm: 60 },
       { kind: 'play', mode: 'wait', bpm: 60 },
     ]);
   });

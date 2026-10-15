@@ -16,6 +16,9 @@ import type { WeekPlan } from './types';
  *  · tuần 11–15: chờ 'full' chỉ khi có cái MỚI (thế tay mới, khóa Fa, hai tay cùng lúc); theo nhịp 'names';
  *    tuần 15 bài thế Đô quen tay: chờ 'names', theo nhịp 'staff'. Từ tuần 16: mặc định 'names', băng chuyền 'staff' (level2/3.ts).
  *  · tuần 4 có tiến độ đã lưu: chỉ ĐỔI hints của hoạt động cũ (mã "<bài>#<i>" giữ nguyên) và THÊM bước vào CUỐI bài.
+ *  · (2026-10-15, OWNER duyệt — "Bớt màu & tên nốt sớm hơn") lúc CHẠY, theo lịch sử của bé (ui/components/noteColors.ts):
+ *    lượt THEO NHỊP của bài QUEN (bé đã đạt trọn bài) không tô "Nốt màu" từ tuần 4, và chỉ hiện khuông ('staff') từ tuần 6
+ *    — gợi ý ghi ở đây là cho lần đầu chưa quen. Lượt chờ lần đầu gặp bài giữ màu + tên nốt.
  */
 export const WEEK4: WeekPlan = {
   week: 4,
@@ -71,7 +74,8 @@ export const WEEK4: WeekPlan = {
         // (2026-10-08, OWNER duyệt) luyện "Chạy-chạy" theo nhịp bằng bài 8 ô. THÊM VÀO CUỐI bài (không chèn giữa):
         // mã đã lưu "w4-l3#0" vẫn trỏ đúng Bánh nóng; bài đã xong vẫn xong (lessonsCompleted giữ "w4-l3").
         { kind: 'song', songId: 'choo_choo_train', mode: 'wait', hints: 'full', intro: 'Tàu chạy "Chạy-chạy-chạy-chạy" — đọc to trước khi đàn nhé!' },
-        { kind: 'song', songId: 'choo_choo_train', mode: 'tempo', level: 2, hints: 'names', intro: 'Tàu chạy theo nhịp — nhìn tên nốt nhé!' },
+        // (2026-10-15, OWNER duyệt) chant: lần đầu theo nhịp → "Đọc nhịp trước" ngay trong màn bài hát (CHỈ thêm cờ — chỉ số giữ nguyên)
+        { kind: 'song', songId: 'choo_choo_train', mode: 'tempo', level: 2, hints: 'names', intro: 'Tàu chạy theo nhịp — nhìn tên nốt nhé!', chant: true },
       ],
     },
     {

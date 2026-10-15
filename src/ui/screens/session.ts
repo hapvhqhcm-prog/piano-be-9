@@ -16,7 +16,8 @@ import { sessionEndScreen } from './sessionEnd';
 import { songScreen } from './song';
 import { sightDailyScreen } from './sightDaily';
 import { techniqueScreen } from './technique';
-import { warmupScreen } from './warmup';
+import { homeworkScreen, warmupScreen } from './warmup';
+import { pendingHomework, readHomework } from '../../lessons/homework';
 import { weekHeld } from './weekHold';
 import { lazy, lazyScreen } from '../lazy';
 
@@ -248,6 +249,11 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
         // → v5.1: MỘT bài khởi động tay ~30 giây. Cả ba trên cùng một chấm tiến trình. Khởi động bằng nhạc không ghi gì;
         // khởi động tay ghi PARENT_ASSESSMENT `tech:${drill}` như trước.
         const music = (): void => show(warmupScreen(app, step.warmup, { onDone: afterMusic, onBack: back }));
+        // (+ 2026-10-15) 📝 Bài tập về nhà của buổi trước (ngày trước) → mời tập TRƯỚC khởi động (bỏ qua được)
+        const hw = opts.replay ? null : pendingHomework(store.settings, store.today());
+        if (hw) {
+          return show(homeworkScreen(app, hw, { onRun: (run) => store.addSongRun(session.id, run), onDone: music, onBack: back }));
+        }
         const posture = (): void => show(postureScreen(app, { onDone: drill, onBack: music }));
         const afterMusic = (): void => (step.full ? posture() : drill());
         const drill = (): void =>
@@ -312,6 +318,8 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
         return show(
           closingScreen(app, {
             teach: step.teach,
+            // (+ 2026-10-15) 📝 dòng "Bài tập về nhà" cho bố mẹ: chỗ thầy dặn trong buổi HÔM NAY
+            homework: ((hw) => (hw && hw.date === store.today() ? hw.text : null))(readHomework(store.settings)),
             onTaught: () => store.addParentAssessment(session.id, 'teach-back', 'correct'),
             onRate: (r) => store.setSelfRating(session.id, r),
             onDone: finish,

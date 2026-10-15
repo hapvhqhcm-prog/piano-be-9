@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LEVELS, WEEKS, buildSessionPlan, estimateLessonMinutes, sessionDrill, weekPassed } from '../src/lessons/lessonEngine';
+import { LEVELS, WEEKS, buildSessionPlan, criterionLesson, estimateLessonMinutes, sessionDrill, weekPassed } from '../src/lessons/lessonEngine';
 import type { Activity, Lesson, RhythmSymbol, TechniqueDrill } from '../src/lessons/types';
 import { findTune } from '../src/music/exercises';
 import { gradeTiming, TIMING_WINDOWS } from '../src/music/timing';
@@ -358,7 +358,8 @@ describe('TIÊU CHÍ TUẦN cần 2 NGÀY (bài hát)', () => {
   /** Chơi đạt MỌI bài của tuần (và vài đoạn đọc nhạc) trong một ngày. */
   function playWeek(st: ProgressStore, week: number): void {
     const w = WEEKS[week - 1];
-    const s = st.startSession(w.lessons[0].id);
+    // (2026-10-15) bằng chứng tính từ ngày học bài DẠY điều tiêu chí đo (tuần 4: bài theo nhịp; tuần 8: bài nhìn khuông)
+    const s = st.startSession((criterionLesson(week, st.get()) ?? w.lessons[0]).id);
     const songs = new Set(w.lessons.flatMap((l) => l.activities.flatMap((a) => (a.kind === 'song' ? [a.songId] : []))));
     for (const id of songs) st.addSongRun(s.id, run(id));
     // Cấp 4: thẻ bố mẹ xác nhận (phiếu xem tay, pedal sạch…) — chạm "Đúng rồi"

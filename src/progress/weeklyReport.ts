@@ -14,6 +14,7 @@ import { CHALLENGE_INFO, completedChallengeWeeks, weeklyChallenge } from '../les
 import { AUDIENCE_CHIPS, concertLog } from '../lessons/concert';
 import { MAX_WEEK, criterionProgress, songStats, weekComplete, weekPassed, weekPlan } from '../lessons/lessonEngine';
 import { findTune } from '../music/exercises';
+import { readHomework } from '../lessons/homework';
 import { customTuneTitle } from '../practice/parentSongs';
 import { topStruggles } from '../ui/screens/tonight';
 import { sessionAnswers } from './answers';
@@ -100,6 +101,8 @@ export interface WeeklySummary {
   mic: MicNote | null;
   praise: string[];
   help: string;
+  /** (+ 2026-10-15) 📝 Bài tập về nhà thầy giao trong tuần (còn chưa xong — lessons/homework.ts); null = không có */
+  homework: string | null;
 }
 
 /* ---------------- Ngày ---------------- */
@@ -461,6 +464,7 @@ export function buildWeeklySummary(d: Readonly<AppData>, monday: string, now: Da
     wholeSongs,
     praise: praiseFor(base),
     help: helpFor(base),
+    homework: ((hw) => (hw && hw.date >= mon && hw.date < end ? hw.text : null))(readHomework(d.settings)),
   };
 }
 
@@ -545,6 +549,7 @@ export function weeklyText(s: WeeklySummary): string {
   if (s.handsPct !== null) L.push(`🙌 Hai tay cùng lúc: ${s.handsPct}% nốt đúng`);
   for (const p of s.praise) L.push(`👏 Nên khen: ${p}`);
   L.push(`🤝 Bố mẹ giúp: ${s.help}`);
+  if (s.homework) L.push(`📝 Bài tập về nhà: ${s.homework}`);
   if (s.mic) L.push(`🎙️ ${s.mic.text}`);
   if (s.detail !== 'full') L.push('(Tuần cũ: app đã gộp bớt chi tiết để tiết kiệm bộ nhớ — chỉ còn ngày tập, bài thuộc, biểu diễn, thử thách.)');
   return L.join('\n');

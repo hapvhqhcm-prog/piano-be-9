@@ -64,7 +64,8 @@ describe('nhịp độ giáo trình (rà soát 2026-10-05)', () => {
     if (q && q.kind === 'quiz' && w9) expect(q.quiz).not.toEqual(w9);
     // Sau khi học bài đầu → các bài sau dùng khởi động của tuần 9
     st.markLessonCompleted(first.id);
-    const second = weekPlan(9).lessons[1];
+    // (2026-10-15) bài có ≥ 3 lượt bài hát (vd thêm "Câu 1 → Câu 2 → cả bài") không có khởi động → lấy bài sau đầu tiên còn khởi động
+    const second = weekPlan(9).lessons.slice(1).find((l) => l.activities.filter((a) => a.kind === 'song').length < 3)!;
     const q2 = buildSessionPlan(second, st.get()).find((s) => s.kind === 'quiz');
     if (w9) expect(q2 && q2.kind === 'quiz' && q2.quiz.variant).toBe(w9.variant);
   });
@@ -152,11 +153,12 @@ describe('v5.1 — buổi ngắn: ≤ 7 màn, ≤ 12 phút', () => {
 
   it('ước lượng mỗi buổi ≤ 12 phút (bộ ba lượt chờ → nhịp → băng chuyền đã được tách)', () => {
     for (const w of WEEKS) for (const l of w.lessons) expect(estimateLessonMinutes(l), l.id).toBeLessThanOrEqual(12);
-    // Không còn bài nào có ≥ 3 lượt cùng một bài hát (trừ bài tách tay: tay phải, tay trái, hai tay…)
+    // Không còn bài nào có ≥ 3 lượt cùng một bài hát (trừ bài tách tay: tay phải, tay trái, hai tay…
+    // và — 2026-10-15, OWNER duyệt "Từng câu rồi cả bài" — các lượt MỘT CÂU ngắn trước lượt theo nhịp đầu tiên)
     for (const w of WEEKS)
       for (const l of w.lessons) {
         const per = new Map<string, number>();
-        for (const a of l.activities) if (a.kind === 'song' && !a.hand) per.set(a.songId, (per.get(a.songId) ?? 0) + 1);
+        for (const a of l.activities) if (a.kind === 'song' && !a.hand && !a.phrase) per.set(a.songId, (per.get(a.songId) ?? 0) + 1);
         for (const [id, n] of per) expect(n, `${l.id} ${id}`).toBeLessThanOrEqual(2);
       }
   });
@@ -167,6 +169,8 @@ describe('v5.1 — buổi ngắn: ≤ 7 màn, ≤ 12 phút', () => {
       for (const l of w.lessons) {
         const songs = l.activities.filter((a) => a.kind === 'song').length;
         if (songs < 3) continue;
+        // bài đã có trò cùng kiểu với khởi động → khởi động luôn bỏ (khỏi hỏi một thứ hai lần liền — sessionPlan.ts)
+        if (l.activities.some((a) => a.kind === 'quiz' && a.quiz.variant === w.warmup!.variant)) continue;
         const st = storeAt(w.week, w.lessons.filter((x) => x !== l).map((x) => x.id));
         const hasWarm = buildSessionPlan(l, st.get()).some((x) => x.kind === 'quiz' && x.warmup);
         expect(hasWarm, l.id).toBe(w.criterion.who === 'APP');

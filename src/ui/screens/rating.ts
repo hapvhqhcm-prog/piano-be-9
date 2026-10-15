@@ -36,6 +36,8 @@ function sessionStars(app: App): 1 | 2 | 3 {
 export interface ClosingHooks {
   /** Thẻ "Con làm thầy" ở đầu màn; null = chỉ tự chấm (chơi lại / sân khấu) */
   teach: { emoji: string; text: string } | null;
+  /** (+ 2026-10-15) Dòng "📝 Bài tập về nhà" cho BỐ MẸ (chỗ thầy dặn hôm nay — lessons/homework.ts); null/không có = không hiện */
+  homework?: string | null;
   /** Bố mẹ bấm "Bố mẹ đã học xong" (PARENT_ASSESSMENT 'teach-back') — tối đa một lần */
   onTaught(): void;
   onRate(r: SelfRating): void;
@@ -73,6 +75,7 @@ export function closingScreen(app: App, hooks: ClosingHooks) {
       });
       stage.replaceChildren(
         ...(card ? [card] : []),
+        hooks.homework ? h('p', { class: 'closing-homework' }, h('b', {}, '📝 Bài tập về nhà (bố mẹ): '), hooks.homework) : '',
         h('h1', { class: 'title' }, QUESTION, speakChip(app, QUESTION)),
         h('p', { class: 'lead' }, 'Con chọn câu nào cũng được sao — nói thật nhé!'),
         h('div', { class: 'rating-options' }, ...options),

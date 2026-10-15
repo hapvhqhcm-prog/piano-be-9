@@ -76,7 +76,7 @@ export function skillsCard(d: Readonly<AppData>, skills: ParentStats['skills']):
     h('p', {}, `⭐ Bài đã thuộc: `, h('b', {}, `${mastered.length}/${SONGS.length}`)),
     mastered.length
       ? h('p', { class: 'muted' }, mastered.map((id) => findTune(id)?.titleVi ?? id).join(' · '))
-      : h('p', { class: 'muted' }, '"Thuộc" = đàn trọn bài theo nhịp, tốc độ từ 60 trở lên, và đạt.'),
+      : h('p', { class: 'muted' }, '"Thuộc" = đàn trọn bài theo nhịp, tốc độ từ 60 trở lên, và đạt — ở 2 ngày khác nhau.'),
   );
 }
 

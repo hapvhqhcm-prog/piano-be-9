@@ -51,7 +51,8 @@ describe('bản sao lưu "corrupt-*" không được đè lên dữ liệu thậ
     a.resetAll();
     const b = new ProgressStore(kv, fixedNow);
     expect(b.recoveredFromBackup).toBe(false);
-    expect(b.get()).toEqual(defaultData(fixedNow()));
+    // (2026-10-15) + mốc luật "thuộc = 2 ngày" (ProgressStore ghi khi đặt lại)
+    expect(b.get()).toEqual({ ...defaultData(fixedNow()), settings: { ...defaultData(fixedNow()).settings, masteryRuleFrom: fixedNow().getTime() } });
   });
 
   it('đặt lại toàn bộ → lần mở sau KHÔNG tự khôi phục bản corrupt-* cũ', () => {

@@ -121,10 +121,12 @@ export function warmupMusic(
   if (data) {
     const stats = songStats(data);
     const skip = new Set([...exclude, ...lesson.activities.flatMap((a) => (a.kind === 'song' ? [a.songId] : []))]);
-    const known = SONGS.filter((t) => {
-      const a = stats[t.id];
-      return !!a && !t.id.startsWith('sight') && !skip.has(t.id) && (a.m !== undefined || ((a.s ?? 0) >= 3 && a.h === 1));
-    }).sort((x, y) => {
+    /** "Thuộc" = đã thuộc, hoặc 3 sao và đã từng chơi trọn đạt — khởi động phải là một lần THẮNG dễ */
+    const isKnown = (id: string) => {
+      const a = stats[id];
+      return !!a && !id.startsWith('sight') && !skip.has(id) && (a.m !== undefined || ((a.s ?? 0) >= 3 && a.h === 1));
+    };
+    const known = SONGS.filter((t) => isKnown(t.id)).sort((x, y) => {
       const a = stats[x.id];
       const b = stats[y.id];
       return (
@@ -134,7 +136,9 @@ export function warmupMusic(
         (b.r?.[0] ?? 0) - (a.r?.[0] ?? 0)
       );
     });
-    const preferred = prefer && !skip.has(prefer) && stats[prefer] ? SONGS.find((t) => t.id === prefer) : undefined;
+    // (+ 2026-10-15, sửa lỗi) bài "nên dùng" (bài Ôn bài cũ bị bỏ vì quá số màn) cũng phải qua bộ lọc "thuộc" — trước đây
+    // bài CHƯA đạt được mời khởi động với lời dẫn "bài con đã thuộc" (khởi động thành thất bại đầu buổi)
+    const preferred = prefer && isKnown(prefer) ? SONGS.find((t) => t.id === prefer) : undefined;
     if (preferred || known.length) {
       const top = known.slice(0, WARMUP_SONGS_ROTATION);
       const t = preferred ?? top[n % top.length];

@@ -209,7 +209,7 @@ export function libraryScreen(app: App, filter?: 'all' | 'vn') {
         h(
           'div',
           { class: 'library-wrap scrollable' },
-          h('p', { class: 'muted lib-note' }, `⭐ Đã thuộc ${SONGS.filter((x) => songMastered(data, x.id)).length}/${SONGS.length} bài — thuộc = đàn trọn bài theo nhịp, tốc độ từ 60 trở lên.`),
+          h('p', { class: 'muted lib-note' }, `⭐ Đã thuộc ${SONGS.filter((x) => songMastered(data, x.id)).length}/${SONGS.length} bài — thuộc = đàn trọn bài theo nhịp, tốc độ từ 60 trở lên, đạt ở 2 ngày khác nhau.`),
           // (+ 2026-10-08) 🎧 Album của con: bản thu hay nhất của mỗi bài (chỉ trên iPad này)
           // (+ 2026-10-12) 📘 Từ điển nhạc nhỏ: mọi khái niệm nhạc lý con đã học (thẻ "Biết thêm")
           h(

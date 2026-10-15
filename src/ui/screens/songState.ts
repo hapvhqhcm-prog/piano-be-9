@@ -25,6 +25,7 @@ import {
   type Tune,
 } from '../../music/tune';
 import type { RunReview, TeacherPoint, WaitLog, FocusStep } from '../../music/teacher';
+import type { WaitJudgeState } from '../../music/waitJudge';
 import type { Hand } from '../../piano/fingering';
 import type { PianoKeyboard, KeyTarget } from '../../piano/PianoKeyboard';
 import { midiToFreq, pitchToMidi } from '../../piano/pitchTable';
@@ -34,6 +35,7 @@ import { PEDAL_DOWN_S, PEDAL_UP_S } from '../components/demo';
 import { h } from '../components/dom';
 import { StaffView } from '../components/staffView';
 import { noteColorMode, noteColorsOn } from '../components/noteColors';
+import { songFamiliar } from '../../lessons/readingAids';
 import type { HandOverlay } from '../components/demo';
 import type { MicHonestyWatch } from '../components/micHonesty';
 import type { SongHead } from './songHead';
@@ -68,7 +70,10 @@ export interface FocusRun {
   back: ResultBack;
   /** Lời nhắn nhỏ giữa hai bước ("✓ Xong lượt chậm!") */
   note: string;
-  /** Lượt đàn gần nhất có sạch không (null = không biết — micro tắt) */
+  /**
+   * Kết quả luyện: true = có ÍT NHẤT MỘT lượt sạch (+ 2026-10-15: điều kiện "xong"); false = đã đàn mà không lượt nào
+   * sạch; null = không biết (micro tắt).
+   */
   clean: boolean | null;
 }
 
@@ -117,6 +122,13 @@ export interface SongCtx {
   streak: number;
   /** v5.1 — Đang lặp "câu khó" (mở từ màn kết quả): nhớ cách chơi / câu cũ để quay về cả bài */
   hardBack: { mode: SongOptions['mode']; phrase: [number, number] | null; range: [number, number] } | null;
+  /**
+   * (+ 2026-10-15, OWNER duyệt — "3 lần đúng") Số lần THỬ CHƯA ĐƯỢC trong lần mở màn này (lượt chưa đạt, hoặc luyện chỗ khó
+   * mà không lượt nào sạch). Đủ MAX_TRIES → dừng nhẹ nhàng ("Hôm nay con cố gắng lắm rồi…") + kết thúc bằng câu dễ.
+   */
+  fails: number;
+  /** (+ 2026-10-15) Đang đàn "câu dễ" để kết thúc bằng thành công (songResult.startEasyEnd) */
+  easyEnd: boolean;
   /** v5.1 — Số lỗi theo ô nhịp của lượt đang chơi (chờ: đàn sai; theo nhịp: nốt trượt) */
   readonly missByMeasure: Map<number, number>;
   /**
@@ -172,6 +184,12 @@ export interface SongCtx {
   handsAskedAt: number;
   /** Lần gõ phím đã hỏi kiểm tra hợp âm — một lần gõ có thể cho nhiều nốt nghe được */
   chordAskedAt: number;
+  /**
+   * (+ 2026-10-15) BÉ THẬT ở chế độ chờ (src/music/waitJudge.ts): trạng thái bộ chấm (đàn lại từ đầu câu, lệch quãng 8,
+   * đàn vội…) và lúc đàn sai LẦN ĐẦU ở nhóm đang chờ (performance.now(), −1 = chưa) — trợ giúp tăng dần (missHelp).
+   */
+  wJudge: WaitJudgeState;
+  wFirstWrongAt: number;
 }
 
 // ---------------- Hàm thuần: nhóm nốt / hai tay ----------------
@@ -256,8 +274,15 @@ export function buildStaff(c: SongCtx, pageMode = false): void {
   }
 }
 
-/** (+ 2026-10-15) 🎨 Nốt màu: theo chế độ đã chọn (Tự động = tuần 1–8); không dùng ở sân khấu */
-const colorsOn = (c: SongCtx): boolean => !c.opts.stage && noteColorsOn(noteColorMode(), c.app.store.get().progress.currentWeek);
+/**
+ * (+ 2026-10-15) 🎨 Nốt màu: theo chế độ đã chọn (Tự động = tuần 1–8); không dùng ở sân khấu.
+ * (2026-10-15, OWNER duyệt) Tự động: lượt THEO NHỊP của bài QUEN không tô màu từ tuần 4 (noteColors.ts).
+ */
+const colorsOn = (c: SongCtx): boolean => {
+  if (c.opts.stage) return false;
+  const data = c.app.store.get();
+  return noteColorsOn(noteColorMode(), data.progress.currentWeek, { tempo: c.mode === 'tempo', familiar: songFamiliar(data, c.full.id) });
+};
 const colorHooked = new WeakSet<HTMLElement>();
 
 /**

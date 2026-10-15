@@ -4,6 +4,7 @@ import { COMPACT_WINDOW_DAYS, EMERGENCY_WINDOW_DAYS, compactData, recordMonotoni
 import { RATING_STARS, bumpDataRev, hist, sessionCount } from './history';
 import { confirmSelfChallenge, recordChallenges } from '../lessons/challenges';
 import { upsertConcert } from '../lessons/concert';
+import { stampMasteryRule } from '../lessons/songStats';
 import {
   addReview,
   approveAll,
@@ -171,6 +172,8 @@ export class ProgressStore {
     this.windowDays = opts.compactWindowDays ?? COMPACT_WINDOW_DAYS;
     this.mirror = opts.mirror ?? null;
     this.data = this.load();
+    // (+ 2026-10-15) mốc luật "thuộc = 2 ngày" — chỉ trong bộ nhớ (lần lưu kế tiếp ghi xuống); lượt cũ giữ luật cũ
+    if (!this.futureVersion) stampMasteryRule(this.data, this.now().getTime());
     pruneUnreadableCorrupt(this.kv);
     bumpDataRev(this.data);
     // (+ 2026-10-12) Mục chờ bố mẹ xem quá 14 ngày → bỏ (trước khi gộp lịch sử: buổi của chúng hết bị giữ lại)
@@ -798,6 +801,7 @@ export class ProgressStore {
     this.lastArchiveKey = arch.key;
     const prev = this.beginReplace();
     this.data = d;
+    stampMasteryRule(this.data, this.now().getTime()); // (+ 2026-10-15) dữ liệu nhập chưa có mốc → lượt cũ giữ luật cũ
     this.recomputePracticeDays();
     this.compact();
     archiveCorrupt(this.kv); // dữ liệu nhập là ý muốn của phụ huynh → bản sao lưu cũ không được đè lên
@@ -842,6 +846,7 @@ export class ProgressStore {
     this.lastArchiveKey = arch.key;
     const prev = this.beginReplace();
     this.data = defaultData(this.now());
+    stampMasteryRule(this.data, this.now().getTime());
     archiveCorrupt(this.kv); // đặt lại có chủ ý → lần mở sau không được tự khôi phục bản cũ
     pruneArchives(this.kv);
     return this.commitReplace(prev);

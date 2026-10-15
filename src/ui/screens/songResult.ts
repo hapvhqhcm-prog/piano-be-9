@@ -15,6 +15,7 @@ import { kindsPresent, outcomeOf, placeLabel, reviewUsable, teach, type NoteKind
 import { TEMPOS, hardestPhrase } from './songShared';
 import { buildRun, buildStaff, micOn, record, setBar, solo, type ResultBack, type SongCtx } from './songState';
 import { SELF_PRAISE, deferSong, selfStudy } from '../selfStudy';
+import { homeworkDone, makeHomework, readHomework } from '../../lessons/homework';
 
 const pick = <T,>(a: T[]): T => a[Math.floor(Math.random() * a.length)];
 
@@ -71,9 +72,18 @@ export function showResult(
 ): void {
   const { app, opts, full, take, hooks } = c;
   c.state = 'result';
+  // (+ 2026-10-15) Vừa đàn xong "câu dễ" để kết thúc bằng thành công → màn khen + "Tiếp"
+  if (c.easyEnd) return easyEndCard(c);
   const stars = starsFor(s);
   // pending (bé tự học, chờ bố mẹ xem): không sao, không "Gần được rồi" — chỉ "Con đàn xong rồi! 👏"
   const passedNow = !pending && s >= PASS_SCORE;
+  // (+ 2026-10-15, OWNER duyệt — "3 lần đúng") Bài của BUỔI HỌC (không Thư viện / sân khấu / bước ôn / khởi động):
+  // đếm lần thử chưa được; đủ MAX_TRIES → dừng nhẹ nhàng + kết thúc bằng câu dễ
+  const lessonFlow = !opts.stage && !opts.free && !opts.review;
+  const failedNow = !pending && !passedNow && !opts.stage;
+  if (!back && failedNow) c.fails++;
+  if (back?.practiced && back.clean === false) c.fails++;
+  const tired = lessonFlow && c.fails >= MAX_TRIES && ((!back && failedNow) || (!!back?.practiced && back.clean === false));
   // Quay về từ "🎯 Luyện ngay chỗ này": vẽ lại màn kết quả cũ, không chúc mừng / đọc / lưu Album lần nữa
   if (passedNow && !back) {
     void app.audio.chime();
@@ -88,7 +98,16 @@ export function showResult(
   if (rv) showReview(c, rv, point);
   const focusRange = point?.focus && rv && !opts.stage && !c.hardBack ? point.focus : null;
   const place = focusRange && rv ? placeLabel(rv, focusRange) : '';
-  const afterPractice = back?.practiced ? `Luyện xong ${place.toLowerCase()}! Giờ chơi lại ${c.phrase ? 'nhé' : 'cả bài nhé'}!` : '';
+  // (+ 2026-10-15) 📝 Bài tập về nhà: giao chỗ thầy dặn (lượt chưa đạt / có chỗ cần luyện), xóa khi đã đạt chỗ đó
+  if (!back && !pending) homeworkAfterRun(c, passedNow, point, focusRange, place);
+  if (tired) return stopCard(c, 'tired');
+  // (+ 2026-10-15) "xong" luyện chỗ khó cần ÍT NHẤT MỘT lượt sạch — chưa sạch lượt nào thì luyện tiếp (nút chính vẫn là 🎯)
+  const notClean = !!back?.practiced && back.clean === false;
+  const afterPractice = back?.practiced
+    ? notClean
+      ? `${place} chưa sạch lần nào — mình luyện thêm chút nhé!`
+      : `Luyện xong ${place.toLowerCase()}! Giờ chơi lại ${c.phrase ? 'nhé' : 'cả bài nhé'}!`
+    : '';
   // Thang tốc độ: đạt ở tốc độ chậm → gợi ý lên nấc tiếp (40 → 50 → 60 → 72)
   const nextTempo = TEMPOS.find((t) => t > c.bpm);
   // Thầy nhắc một chỗ cần sửa → luyện chỗ đó trước ("🎯"), chưa gợi ý nhanh hơn (thanh nút tối đa 4 nút)
@@ -140,15 +159,16 @@ export function showResult(
   const again = button({
     icon: '↻',
     label: c.hardBack ? 'Lặp lại' : 'Chơi lại',
-    kind: (retryCard && !hard && !focusRange) || back ? 'primary' : undefined,
+    kind: (retryCard && !hard && !focusRange) || (back && !notClean) ? 'primary' : undefined,
     onTap: reset,
   });
   const practice =
     focusRange && rv && point && !faster
       ? button({
           icon: '🎯',
-          label: back ? 'Luyện lại chỗ này' : 'Luyện ngay chỗ này',
-          kind: retryCard && !back ? 'primary' : undefined,
+          // (+ 2026-10-15, OWNER duyệt) chưa đạt → nút CHÍNH: chậm 2 lượt rồi đúng tốc độ 1 lượt (teacher.focusPlan)
+          label: back ? 'Luyện lại chỗ khó' : 'Luyện chỗ khó',
+          kind: (retryCard && !back) || notClean ? 'primary' : undefined,
           onTap: () => c.act.startFocus({ s, text, mode: c.mode, phrase: c.phrase, bpm: c.bpm, review: rv, point }, focusRange, place),
         })
       : null;
@@ -162,8 +182,151 @@ export function showResult(
     practice,
     c.hardBack ? button({ icon: '↩', label: 'Cả bài', onTap: () => ((c.phrase = c.hardBack?.phrase ?? null), reset()) }) : null,
     // Chưa đạt: "Tiếp" vẫn có (không khóa bé) nhưng là nút phụ — nút chính là luyện lại
-    c.hardBack ? null : button({ icon: '▶', label: 'Tiếp', kind: retryCard || back ? undefined : 'primary', onTap: hooks.onDone }),
+    // (+ 2026-10-15) Bài của buổi học: "Tiếp" sau lượt chưa đạt → kết thúc bằng một câu dễ trước (stopCard), không dừng ở thất bại
+    c.hardBack
+      ? null
+      : button({ icon: '▶', label: 'Tiếp', kind: retryCard || back ? undefined : 'primary', onTap: lessonFlow && retryCard ? () => stopCard(c, 'skip') : hooks.onDone }),
   );
+}
+
+/* ---------------- (+ 2026-10-15, OWNER duyệt — rà soát của giáo viên) "3 lần đúng" · dừng ở thành công ---------------- */
+
+/** Thử chưa được ngần này lần trong một lần mở bài (lượt chưa đạt / luyện chỗ khó không lượt nào sạch) → dừng nhẹ nhàng. */
+export const MAX_TRIES = 3;
+
+/** Lời dừng nhẹ nhàng sau MAX_TRIES lần thử chưa được */
+export const KIND_STOP = 'Hôm nay con cố gắng lắm rồi — mai mình luyện tiếp nhé!';
+/** Lời cho BỐ MẸ (vùng nhắc bố mẹ): dừng ở đây, kết thúc bằng thành công */
+export const PARENT_STOP = '👪 Bố mẹ: dừng ở đây — bé đã cố gắng. Cho bé đàn một câu dễ để kết thúc vui; chỗ khó để buổi sau (📝 bài tập về nhà).';
+
+/**
+ * Màn DỪNG: 'tired' = đủ MAX_TRIES lần thử chưa được ("Hôm nay con cố gắng lắm rồi…"); 'skip' = bé chạm "Tiếp" sau lượt
+ * chưa đạt. Nút chính "🌟 Đàn câu dễ" (kết thúc bằng thành công); "Tiếp" vẫn có. Lượt chưa đạt vẫn KHÔNG đạt (tiêu chí /
+ * "thuộc" không đổi); hoạt động được tính là đã LÀM (buổi học đi tiếp).
+ */
+export function stopCard(c: SongCtx, why: 'tired' | 'skip'): void {
+  c.state = 'result';
+  const head = why === 'tired' ? `${KIND_STOP} 💛` : 'Mình tạm dừng bài này nhé! 💛';
+  c.status.replaceChildren(
+    h(
+      'div',
+      { class: 'song-result is-stop' },
+      h('div', { class: 'song-result-mascot react-bounce' }, mascot(cue('praise'), 64)),
+      h(
+        'div',
+        { class: 'song-lines' },
+        h('div', { class: 'song-result-head' }, head),
+        h('div', { class: 'song-result-sub' }, 'Mình kết thúc bằng một câu con đàn hay nhất nhé 🌟'),
+        h('div', { class: 'song-result-parent' }, PARENT_STOP),
+      ),
+    ),
+  );
+  void speak(c.app, why === 'tired' ? KIND_STOP : 'Mình tạm dừng bài này nhé! Kết thúc bằng một câu con đàn hay nhất nào.');
+  setBar(
+    c,
+    backButton(() => c.hooks.onBack()),
+    button({ icon: '🌟', label: 'Đàn câu dễ', kind: 'primary', onTap: () => startEasyEnd(c) }),
+    button({ icon: '▶', label: 'Tiếp', onTap: c.hooks.onDone }),
+  );
+}
+
+/** Câu dễ để kết thúc: câu (phraseRanges) ít lỗi nhất ở lượt vừa chơi (hoà → câu đầu), tối đa 2 ô nhịp. */
+export function easyRange(ranges: ReadonlyArray<[number, number]>, missByMeasure: ReadonlyMap<number, number>): [number, number] {
+  let best: { r: [number, number]; misses: number } | null = null;
+  for (const r of ranges) {
+    let misses = 0;
+    for (const [m, n] of missByMeasure) if (m >= r[0] && m < r[1]) misses += n;
+    if (!best || misses < best.misses) best = { r, misses };
+  }
+  const [a, b] = best?.r ?? [0, 1];
+  return [a, Math.max(a + 1, Math.min(b, a + 2))];
+}
+
+/** Đàn "câu dễ" (Từng nốt, phím sáng; bài hai tay → một tay): lượt ghi phrase ≠ null → không đổi tiêu chí / "thuộc". */
+function startEasyEnd(c: SongCtx): void {
+  const range = easyRange(phraseRanges(c.full), c.missByMeasure);
+  c.focus = null;
+  c.hardBack = null;
+  c.loop3 = false;
+  c.easyEnd = true;
+  c.mode = 'wait';
+  c.hints = 'full';
+  c.phrase = range;
+  if (c.twoHand) c.handSel = 'RH';
+  c.act.reset();
+  void c.act.start();
+}
+
+/** Xong "câu dễ": khen (thành công) + nhắc bố mẹ dừng ở đây → "Tiếp" là nút chính. */
+function easyEndCard(c: SongCtx): void {
+  c.state = 'result';
+  c.easyEnd = false;
+  void c.app.audio.chime();
+  confetti();
+  c.status.replaceChildren(
+    h(
+      'div',
+      { class: 'song-result is-pass' },
+      h('div', { class: 'song-result-mascot react-bounce' }, mascot(cue('praise'), 64)),
+      h(
+        'div',
+        { class: 'song-lines' },
+        h('div', { class: 'song-result-head' }, 'Đẹp lắm! 🌟'),
+        h('div', { class: 'song-result-sub' }, 'Con kết thúc bằng một câu thật hay — giỏi lắm!'),
+        h('div', { class: 'song-result-parent' }, '👪 Bố mẹ: dừng ở đây — bé đã cố gắng. Khen bé một câu rồi sang phần tiếp nhé.'),
+      ),
+    ),
+  );
+  void speak(c.app, 'Đẹp lắm! Con kết thúc bằng một câu thật hay — giỏi lắm!');
+  setBar(c, backButton(() => c.hooks.onBack()), button({ icon: '▶', label: 'Tiếp', kind: 'primary', onTap: c.hooks.onDone }));
+}
+
+/**
+ * 📝 Bài tập về nhà sau một lượt của BUỔI HỌC: chưa đạt / thầy chỉ ra chỗ cần luyện → giao (chỗ đó, chậm hơn một nấc);
+ * lượt ĐẠT đúng chỗ đã giao (cả bài, hoặc câu chứa chỗ đó) → xóa. Không giao ở Thư viện / sân khấu / bước ôn / đọc nhạc.
+ */
+function homeworkAfterRun(c: SongCtx, passed: boolean, point: TeacherPoint | null, focus: [number, number] | null, place: string): void {
+  const { app, opts, full } = c;
+  if (opts.stage || full.id.startsWith('sight')) return;
+  const store = app.store;
+  const cur = readHomework(store.settings);
+  if (passed && cur && homeworkDone(cur, { songId: full.id, passed: true, phrase: c.phrase, hand: solo(c) ?? undefined }, Date.now()) && !(point && !point.praise && focus)) {
+    store.updateSettings({ homework: null });
+    return;
+  }
+  if (opts.free || opts.review || c.easyEnd) return;
+  const needs = !passed || (!!point && !point.praise && !!focus);
+  if (!needs) return;
+  const off = c.phrase ? c.phrase[0] : 0;
+  const ranges = phraseRanges(full);
+  let phrase: [number, number] | null = c.phrase;
+  let where = '';
+  if (focus) {
+    phrase = [focus[0] + off, focus[1] + off];
+    where = place;
+  } else if (!c.phrase) {
+    const hard = hardestPhrase(ranges, c.missByMeasure);
+    if (hard) {
+      phrase = hard.range;
+      where = `Câu ${hard.index + 1}`;
+    }
+  }
+  if (!where) {
+    const k = phrase ? ranges.findIndex(([a, b]) => a === phrase![0] && b === phrase![1]) : -1;
+    where = !phrase ? 'Cả bài' : k >= 0 ? `Câu ${k + 1}` : `Ô ${phrase[0] + 1}–${phrase[1]}`;
+  }
+  store.updateSettings({
+    homework: makeHomework({
+      songId: full.id,
+      title: full.titleVi || full.title,
+      phrase,
+      place: where,
+      mode: c.mode,
+      bpm: c.bpm,
+      date: store.today(),
+      at: Date.now(),
+    }),
+  });
 }
 
 // ---------------- (+ 2026-10-09) Nhận xét kiểu thầy giáo ----------------

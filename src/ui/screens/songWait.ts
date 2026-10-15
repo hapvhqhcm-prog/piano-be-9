@@ -7,8 +7,9 @@ import { wait } from '../../audio/AudioEngine';
 import { matchHeard } from '../../audio/match';
 import type { HandsResult } from '../../audio/twoHand';
 import { PASS_SCORE, loopStreak } from '../../music/timing';
-import { pitchesOf, type Onset } from '../../music/tune';
+import { phraseRanges, pitchesOf, type Onset } from '../../music/tune';
 import { handsOutcome, waitOutcome } from '../../music/teacher';
+import { judgeWait, missHelp, pairFromHands, phraseStartsFrom, waitJudgeInit, type MissHelp, type PairCheck } from '../../music/waitJudge';
 import type { Hand } from '../../piano/fingering';
 import { midiToPitch, pitchToMidi, viName } from '../../piano/pitchTable';
 import { backButton, button, h } from '../components/dom';
@@ -51,10 +52,17 @@ export function startWait(c: SongCtx): void {
   c.wHandFails = 0;
   c.lastHands = null;
   c.review = null;
+  c.wJudge = waitJudgeInit();
+  c.wFirstWrongAt = -1;
   c.staff.clearMarks();
   c.app.mic.resetTracker();
   if (!c.loop3) c.take.start();
   showWaitNote(c);
+}
+
+/** Bước trợ giúp hiện tại của nhóm đang chờ (bé đàn sai nốt này mấy lần, từ bao giờ) */
+function helpNow(c: SongCtx): MissHelp | null {
+  return c.wWrongThis > 0 && c.wFirstWrongAt >= 0 ? missHelp(c.wWrongThis, performance.now() - c.wFirstWrongAt) : null;
 }
 
 export function showWaitNote(c: SongCtx): void {
@@ -90,7 +98,8 @@ function waitBar(c: SongCtx, g: Onset): void {
     // (+ 2026-10-12) 👦 Bé tự học: nút của BÉ ("✋ Con đàn xong") — cả lượt vào hàng chờ bố mẹ xem (songResult.askParent)
     button({
       ...(selfStudy(c.app) ? SELF_DONE : { icon: '👪', label: 'Bố mẹ: tiếp' }),
-      kind: c.parentRun || c.wHandFails >= 3 ? 'primary' : 'good',
+      // (+ 2026-10-15) đàn sai mãi một nốt (≥ 5 lần, ≥ 8 s — missHelp 'skip') → cũng nổi bật: bố mẹ cho qua, luyện sau
+      kind: c.parentRun || c.wHandFails >= 3 || helpNow(c) === 'skip' ? 'primary' : 'good',
       onTap: () => onWaitInput(c, midisOf(g)[0], 'parent'),
     }),
   );
@@ -120,6 +129,7 @@ export function onWaitInput(c: SongCtx, midi: number, from: 'mic' | 'tap' | 'par
     if (match === 'exact') c.kb.setResult(midiToPitch(midi), 'good');
     c.wIdx++;
     c.wWrongThis = 0;
+    c.wFirstWrongAt = -1;
     // Tập tách tay: app đàn khẽ các nốt tay kia từ nhóm này tới nhóm sau
     if (solo(c)) playOther(c, g.start, groups(c)[c.wIdx]?.start ?? Infinity, c.app.audio.now() + 0.02, 60 / c.bpm);
     if (from === 'mic') c.app.mic.resetTracker();
@@ -137,10 +147,123 @@ export function onWaitInput(c: SongCtx, midi: number, from: 'mic' | 'tap' | 'par
       addMiss(c, g);
       log.wrong++;
       log.played ??= midi;
+      if (c.wFirstWrongAt < 0) c.wFirstWrongAt = performance.now();
     }
     const heard = midiToPitch(midi);
     c.kb.setResult(heard, 'heard');
-    c.status.textContent = `🎤 Con vừa đàn ${viName(heard)} — tìm ${viName(g.pitches[0])} nhé`;
+    const want = viName(g.pitches[0]);
+    const say = `🎤 Con vừa đàn ${viName(heard)} — tìm ${want} nhé`;
+    // (+ 2026-10-15) Sai mãi MỘT nốt → trợ giúp tăng dần (src/music/waitJudge.ts missHelp): nghe nốt mẫu → chỉ phím + ngón
+    // → mời bố mẹ cho qua (luyện sau). Trước đây: lặp mãi một câu "Con vừa đàn … — tìm … nhé".
+    const help = midisOf(g).length < 2 ? helpNow(c) : null;
+    const finger = g.notes[0]?.finger;
+    if (help === 'listen') {
+      c.status.textContent = `${say} · 🔊 Nghe nốt ${want} nè`;
+      void c.app.audio.playPitch(g.pitches[0], 0.8);
+    } else if (help === 'show') {
+      lightOnset(c, g, true);
+      c.status.textContent = `💡 ${want} là phím đang sáng${finger ? ` — ngón ${finger}` : ''} nhé`;
+    } else if (help === 'skip') {
+      lightOnset(c, g, true);
+      c.status.textContent = `💡 ${want} là phím đang sáng — nốt này khó, ${selfStudy(c.app) ? 'con chạm "Con đàn xong" để đi tiếp' : 'bố mẹ bấm "tiếp" được'}, mình luyện sau nhé`;
+      waitBar(c, g);
+    } else c.status.textContent = say;
+  }
+}
+
+/** Đi tiếp qua nhóm đang chờ mà KHÔNG tính "đúng ngay" (đàn vội — micro lỡ nốt; lệch quãng 8 được cho qua). */
+function passGroup(c: SongCtx, why: 'skip' | 'octave', played?: number): void {
+  const g = groups(c)[c.wIdx];
+  if (!g) return;
+  const log = (c.wLog[c.wIdx] ??= { wrong: 0 });
+  log.via ??= why === 'skip' ? 'skip' : 'mic';
+  if (why === 'octave' && played !== undefined) log.octave ??= played;
+  if (handsOn(c)) c.wHands[c.wIdx] ??= sameVerdict(g, 'parent');
+  for (const i of idxOf(g)) c.staff.mark(i, 'parent');
+  c.wIdx++;
+  c.wWrongThis = 0;
+  c.wFirstWrongAt = -1;
+}
+
+/**
+ * (+ 2026-10-15) Micro nghe một nốt ở nhóm MỘT nốt (chế độ chờ) — bé thật, không chỉ "đàn đúng" (src/music/waitJudge.ts):
+ * đúng → như trước; đàn vội (micro lỡ một nốt) → con trỏ bắt kịp; tiếng vọng / ngân nga / gõ nắp đàn / nói chuyện → bỏ
+ * qua; đàn lại từ đầu câu → để bé đàn; chạm 2 phím → "chưa rõ"; lệch quãng 8 → nhắc dời tay; còn lại → đàn sai.
+ * Nốt "lạ" được hỏi micro hai phím (verifyHands, ~0,3 s) trước khi tính là sai.
+ */
+export function onWaitMic(c: SongCtx, midi: number, at: number, pair?: PairCheck): void {
+  const gs = groups(c);
+  const g = gs[c.wIdx];
+  if (!g) return;
+  const r = judgeWait(c.wJudge, {
+    groups: gs.map(midisOf),
+    cur: c.wIdx,
+    phraseStarts: phraseStartsFrom(
+      gs.map((x) => x.notes[0].measure),
+      phraseRanges(c.tune),
+    ),
+    heard: midi,
+    t: c.app.audio.now(),
+    ...(pair !== undefined ? { pair } : {}),
+  });
+  const v = r.verdict;
+  c.wJudge = r.state;
+  // Nốt "đàn vội?" trước đó hóa ra là đàn sai thật → tính sai (như trước) rồi mới xét nốt này
+  if (v.lateWrong !== undefined) onWaitInput(c, v.lateWrong, 'mic');
+  if (v.kind === 'check') {
+    const tk = c.token;
+    const idx = c.wIdx;
+    void c.app.mic.verifyHands({ RH: [v.want], LH: [v.other] }, at >= 0 ? at : undefined, true).then((res) => {
+      if (tk !== c.token || idx !== c.wIdx || c.state !== 'playing' || c.mode !== 'wait' || c.parentRun) return;
+      onWaitMic(c, midi, at, pairFromHands(res));
+    });
+    return;
+  }
+  const name = (m: number) => viName(midiToPitch(m));
+  const want = midisOf(g)[0];
+  switch (v.kind) {
+    case 'ok':
+      return onWaitInput(c, want, 'mic');
+    case 'ahead': {
+      // Bé đàn một mạch nhanh hơn con trỏ, micro lỡ nốt: bắt kịp — nốt lỡ "sót" (không "đúng ngay", không "sai"),
+      // hai nốt nghe được thì nhận
+      for (let k = 0; k < v.advance; k++) {
+        const gk = groups(c)[c.wIdx];
+        if (!gk) break;
+        if (k === v.hit || k === v.advance - 1) onWaitInput(c, midisOf(gk)[0], 'mic');
+        else passGroup(c, 'skip');
+      }
+      return;
+    }
+    case 'pending':
+    case 'echo':
+    case 'ghost':
+      return; // tiếng vọng / ngân nga / gõ nắp đàn / nói chuyện — không phải phím bé vừa đàn
+    case 'replay':
+      // Đàn lại từ đầu câu: để bé đàn, không tính sai (chỉ nhắc một lần)
+      if (!c.status.textContent?.startsWith('🔁')) c.status.textContent = `🔁 Con đàn lại từ đầu câu — được nhé! Đàn tới nốt đang sáng (${name(want)}) thì đi tiếp`;
+      return;
+    case 'smudge':
+      c.kb.setResult(midiToPitch(midi), 'heard');
+      c.status.textContent = `🎤 Hình như con chạm 2 phím (${name(want)} và ${name(midi)}) — đàn một ngón ${name(want)} thôi nhé`;
+      return;
+    case 'octave': {
+      const dir = v.up ? 'cao' : 'thấp';
+      if (v.accept) {
+        passGroup(c, 'octave', midi);
+        c.app.mic.resetTracker();
+        showWaitNote(c);
+        c.status.append(` · ✓ Đúng tên nốt ${name(want)} — nhưng ${dir} hơn một quãng tám, lần sau đàn ở phím sáng nhé`);
+        return;
+      }
+      // Lệch quãng 8 liên tiếp: GIỮ con trỏ, chỉ phím đúng (không tính là đàn sai)
+      lightOnset(c, g, true);
+      c.kb.setResult(midiToPitch(midi), 'heard');
+      c.status.textContent = `🎵 Đúng tên nốt ${name(want)} rồi! Nhưng con đang đàn ${dir} hơn một quãng tám — dời tay ${v.up ? 'xuống' : 'lên'} phím đang sáng nhé ${v.up ? '👇' : '👆'}`;
+      return;
+    }
+    case 'wrong':
+      return onWaitInput(c, midi, 'mic');
   }
 }
 

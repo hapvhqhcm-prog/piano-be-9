@@ -30,7 +30,8 @@ function applyFocusStep(c: SongCtx): void {
 export function focusIdle(c: SongCtx): void {
   const f = c.focus!;
   const st = f.steps[f.i];
-  const slow = f.i === 0 && f.steps.length > 1;
+  // (+ 2026-10-15) theo nhịp: 2 lượt chậm rồi 1 lượt đúng tốc độ — mọi bước chậm hơn bước cuối là "đàn chậm"
+  const slow = st.bpm < f.steps[f.steps.length - 1].bpm;
   const what =
     st.kind === 'demo'
       ? '🐢 Nghe thầy đàn chậm — nhìn ngón tay nhé'
@@ -63,10 +64,12 @@ export function focusStepDone(c: SongCtx, clean: boolean | null = null): void {
   if (!f) return;
   const prev = f.steps[f.i];
   f.i++;
-  if (clean !== null) f.clean = clean;
+  // (+ 2026-10-15, OWNER duyệt) "xong" cần ÍT NHẤT MỘT lượt sạch: true giữ nguyên khi đã có; false chỉ khi chưa có lượt sạch nào
+  if (clean === true) f.clean = true;
+  else if (clean === false && f.clean !== true) f.clean = false;
   if (f.i >= f.steps.length) return endFocus(c, true);
   if (clean) void c.app.audio.chime();
-  f.note = prev.kind === 'demo' ? '✓ Xem xong rồi!' : clean === false ? '👍 Tốt lắm, thêm lần nữa nào!' : '✓ Xong lượt chậm!';
+  f.note = prev.kind === 'demo' ? '✓ Xem xong rồi!' : clean === false ? '👍 Tốt lắm, thêm lần nữa nào!' : clean ? '✓ Sạch rồi — giỏi quá!' : '✓ Xong lượt chậm!';
   applyFocusStep(c);
 }
 

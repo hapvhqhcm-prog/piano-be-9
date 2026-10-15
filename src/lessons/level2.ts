@@ -48,6 +48,15 @@ const pair = (
   activities: [song(songId, 'wait', 2, hints, intro), song(songId, 'tempo', 2, tempoHints)],
 });
 
+/**
+ * (2026-10-15, OWNER duyệt) "Đọc nhịp to trước khi đàn": cờ `chant` ở lượt theo nhịp của bài dạy hình nhịp mới
+ * (lần đầu theo nhịp → màn bài hát hiện trước một lượt vỗ + đọc nhịp của chính bài — ui/screens/songChant.ts).
+ */
+const chantTempo = (lesson: Lesson): Lesson => ({
+  ...lesson,
+  activities: lesson.activities.map((a) => (a.kind === 'song' && a.mode === 'tempo' ? { ...a, chant: true } : a)),
+});
+
 /** (2026-10-08) thêm hoạt động (ứng tấu 1 phút) vào cuối bài */
 const plus = (lesson: Lesson, ...extra: Activity[]): Lesson => ({ ...lesson, activities: [...lesson.activities, ...extra] });
 
@@ -521,7 +530,8 @@ export const WEEK17: WeekPlan = {
         { kind: 'theory', ids: ['dotted'] },
       ],
     },
-    pair('w17-l2', 17, 'Bài ca niềm vui — bản gốc', '🎶', 'ode_to_joy_original', 'names'),
+    // (2026-10-15) bài đầu tiên có "Đi-chấm chạy" → đọc nhịp trước lượt theo nhịp đầu tiên
+    chantTempo(pair('w17-l2', 17, 'Bài ca niềm vui — bản gốc', '🎶', 'ode_to_joy_original', 'names')),
     // v5: "Bắc kim thang" (có móc kép) dời sang tuần 18 — sau bài "móc kép"
     {
       id: 'w17-l4',
@@ -593,10 +603,10 @@ export const WEEK18: WeekPlan = {
       title: 'Thỏ con & Lý cây đa',
       emoji: '🌳',
       activities: [
-        { kind: 'song', songId: 'rabbit_run', mode: 'tempo', level: 2, hints: 'names', intro: 'Bắt đầu chậm — đọc thầm "Chạy-chạy-chạy-chạy"!' },
+        { kind: 'song', songId: 'rabbit_run', mode: 'tempo', level: 2, hints: 'names', intro: 'Bắt đầu chậm — đọc thầm "Chạy-chạy-chạy-chạy"!', chant: true },
         // Dân ca Việt Nam (OWNER yêu cầu 2026-10-05): chỉ Đô Rê Mi — v5: dời từ tuần 2 (sau khi học móc đơn & móc kép)
         { kind: 'song', songId: 'ly_cay_da', mode: 'wait', hints: 'names', intro: 'Chỉ Đô, Rê, Mi! Nhớ "Chạy chạy-chạy"; ô đầu chờ một chút.' },
-        { kind: 'song', songId: 'ly_cay_da', mode: 'tempo', level: 2, hints: 'names' },
+        { kind: 'song', songId: 'ly_cay_da', mode: 'tempo', level: 2, hints: 'names', chant: true },
       ],
     },
     {
@@ -663,7 +673,7 @@ export const WEEK19: WeekPlan = {
           ],
         },
         { kind: 'song', songId: 'cyclo_ride', mode: 'wait', hints: 'names', intro: 'Xích lô "Chạy-Đi-chạy" — nghe mẫu trước nhé!' },
-        { kind: 'song', songId: 'cyclo_ride', mode: 'tempo', level: 2, hints: 'names' },
+        { kind: 'song', songId: 'cyclo_ride', mode: 'tempo', level: 2, hints: 'names', chant: true },
       ],
     },
     {
@@ -675,7 +685,7 @@ export const WEEK19: WeekPlan = {
       activities: [
         // OWNER yêu cầu 2026-10-05: dân ca Việt Nam có "Tập-tễnh" & móc kép
         song('bac_kim_thang', 'wait', 2, 'names', 'Tay ngũ cung như "Xòe hoa" — có "Tập-tễnh"!'),
-        song('bac_kim_thang', 'tempo', 2, 'names'),
+        { kind: 'song', songId: 'bac_kim_thang', mode: 'tempo', level: 2, hints: 'names', chant: true },
       ],
     },
     {

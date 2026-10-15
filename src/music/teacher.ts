@@ -13,7 +13,7 @@
 import { matchHeard } from '../audio/match';
 import type { Hand } from '../piano/fingering';
 import { midiToPitch, viName } from '../piano/pitchTable';
-import type { HeardEvent, NoteVerdict } from './timing';
+import type { HeardEvent, NoteVerdict, PulseKind } from './timing';
 
 /** ok = đúng · wrong = nhầm nốt · missed = sót (không nghe thấy) · early/late = đúng nốt nhưng ngoài cửa sổ nhịp · helped = bố mẹ bấm "tiếp" */
 export type NoteKind = 'ok' | 'wrong' | 'missed' | 'early' | 'late' | 'helped';
@@ -62,6 +62,11 @@ export interface RunReview {
   /** Ô đầu của lượt trong cả bài (lượt một câu) — để gọi đúng "ô 5" */
   measureOffset: number;
   hints: 'full' | 'names' | 'staff';
+  /**
+   * (+ 2026-10-15) Theo nhịp: bé giữ nhịp thế nào (timing.analyzePulse) — đều mà chậm hơn máy / vào muộn / không đều.
+   * suggestBpm: nấc tốc độ (≤ tốc độ bé đang giữ) nên thử.
+   */
+  pulse?: { kind: PulseKind; suggestBpm?: number };
 }
 
 /** Kết quả của nốt `n` trong nhóm `r` (theo tay nếu có kết quả riêng tay). */
@@ -84,10 +89,15 @@ export interface WaitLog {
   played?: number;
   /** Hợp âm / hai tay: tay bị thiếu nốt ở lần đàn đầu (micro kiểm hợp âm) */
   missingHands?: Hand[];
-  /** Ai cho qua nốt: micro / chạm phím ảo / bố mẹ bấm "tiếp" */
-  via?: 'mic' | 'tap' | 'parent';
+  /**
+   * Ai cho qua nốt: micro / chạm phím ảo / bố mẹ bấm "tiếp" / (+ 2026-10-15) 'skip' = bé đàn vội, micro lỡ nốt này
+   * và con trỏ bắt kịp (src/music/waitJudge.ts 'ahead') → "sót"
+   */
+  via?: 'mic' | 'tap' | 'parent' | 'skip';
   /** Kết quả RIÊNG từng tay ở lần đàn đầu (micro chấm hai tay — xem `handsOutcome`); có thì dùng thay `missingHands` */
   hands?: Partial<Record<Hand, HandOutcome>>;
+  /** (+ 2026-10-15) Nốt được cho qua dù bé đàn LỆCH QUÃNG 8 (midi bé đàn) — waitJudge.OCTAVE_GRACE */
+  octave?: number;
 }
 
 /**
@@ -112,9 +122,11 @@ export function handsOutcome(r: { conclusive: boolean; RH?: HandCheckLike; LH?: 
 
 export function waitOutcome(log: WaitLog | undefined, hands: Hand[]): Pick<NoteReview, 'kind' | 'played' | 'wrongTries' | 'hands'> {
   if (!log || log.via === 'parent' || !log.via) return { kind: 'helped' };
-  const kind: NoteKind = log.wrong > 0 ? 'wrong' : 'ok';
+  if (log.via === 'skip') return { kind: 'missed', wrongTries: log.wrong };
+  const kind: NoteKind = log.wrong > 0 || log.octave !== undefined ? 'wrong' : 'ok';
   const out: Pick<NoteReview, 'kind' | 'played' | 'wrongTries' | 'hands'> = { kind, wrongTries: log.wrong };
   if (log.played !== undefined) out.played = log.played;
+  else if (log.octave !== undefined) out.played = log.octave;
   const uniq = [...new Set(hands)];
   if (log.hands && uniq.length > 1) {
     out.hands = log.hands;
@@ -190,7 +202,23 @@ export function analyzeTempo(
 
 /* ---------------- Thầy giáo: MỘT lời nhắn chính ---------------- */
 
-export type TeacherRule = 'perfect' | 'improved' | 'near' | 'hands' | 'confusion' | 'hold' | 'rush' | 'drag' | 'wrongs' | 'missed';
+/**
+ * (+ 2026-10-15) 'octave' = đúng tên nốt nhưng lệch quãng 8 (trước đây thành "Nốt Mi hay bị nhầm thành Mi") ·
+ * 'steady' = theo nhịp: đều tay nhưng chậm hơn máy / vào muộn (analyzePulse — "đều nhưng chậm hơn máy — được").
+ */
+export type TeacherRule =
+  | 'perfect'
+  | 'improved'
+  | 'near'
+  | 'steady'
+  | 'octave'
+  | 'hands'
+  | 'confusion'
+  | 'hold'
+  | 'rush'
+  | 'drag'
+  | 'wrongs'
+  | 'missed';
 
 export interface TeacherPoint {
   rule: TeacherRule;
@@ -202,7 +230,7 @@ export interface TeacherPoint {
 }
 
 /** Thứ tự ưu tiên khi hai loại lỗi bằng số lần */
-export const RULE_PRIORITY: readonly TeacherRule[] = ['hands', 'confusion', 'hold', 'rush', 'drag', 'wrongs', 'missed'];
+export const RULE_PRIORITY: readonly TeacherRule[] = ['octave', 'hands', 'confusion', 'hold', 'rush', 'drag', 'wrongs', 'missed'];
 
 /** Nốt đúng nhưng lệch ≥ chừng này phách vẫn tính là "hơi vội / hơi chậm" (không tô màu — chỉ để thầy nhận xét) */
 export const SOFT_EARLY = 0.3;
@@ -250,7 +278,10 @@ function issuesOf(r: RunReview): Issue[] {
     else if (n.kind === 'wrong') {
       const target = n.notes[0]?.midi[0];
       const single = n.notes.length === 1 && n.notes[0].midi.length === 1;
-      out.push(single && n.played !== undefined && target !== undefined ? { rule: 'confusion', measure: m, key: `${target}>${n.played}` } : { rule: 'wrongs', measure: m });
+      const d = single && n.played !== undefined && target !== undefined ? n.played - target : 0;
+      // Đúng tên nốt, lệch quãng 8 → không phải "nhầm nốt" (key: nốt đích > nốt bé đàn)
+      if (d !== 0 && d % 12 === 0) out.push({ rule: 'octave', measure: m, key: `${target}>${n.played}` });
+      else out.push(single && n.played !== undefined && target !== undefined ? { rule: 'confusion', measure: m, key: `${target}>${n.played}` } : { rule: 'wrongs', measure: m });
     } else if (n.kind === 'missed') out.push({ rule: 'missed', measure: m });
   });
   return out;
@@ -322,6 +353,16 @@ export function teach(r: RunReview, prev: TeacherPoint | null = null): TeacherPo
       focus: null,
     };
   }
+  // (+ 2026-10-15) Theo nhịp: bé giữ nhịp ĐỀU nhưng chậm hơn máy / vào muộn (timing.analyzePulse) — nhiều nốt "trượt"
+  // không phải vì đàn lung tung. Thầy nói: "đều nhưng chậm hơn máy — được", không chê "con hơi chậm" từng chỗ.
+  const pulse = r.mode === 'tempo' ? r.pulse : undefined;
+  if (pulse && (pulse.kind === 'slow' || pulse.kind === 'late') && okRatio < 0.9 && !byRule.has('octave')) {
+    const text =
+      pulse.kind === 'slow'
+        ? `Con đàn đều lắm — chỉ chậm hơn máy. Được!${pulse.suggestBpm ? ` Thử tốc độ ${pulse.suggestBpm} nhé.` : ''}`
+        : `Con đàn đều lắm! Chỉ vào muộn — đếm ${countWordsVi(r.beatsPerMeasure)} rồi vào ngay nhé.`;
+    return { rule: 'steady', text, praise: true, focus: null };
+  }
   if (okRatio >= 0.9 && hard <= 2 && maxCount < 2) {
     const ms = issues.map((i) => i.measure);
     const focus = focusOf(r, ms);
@@ -366,6 +407,11 @@ export function teach(r: RunReview, prev: TeacherPoint | null = null): TeacherPo
     case 'missed':
       text = `${place} còn sót ${list.length} nốt — mình đàn chậm chỗ này nhé!`;
       break;
+    case 'octave': {
+      const [target, played] = list[0].key!.split('>').map(Number);
+      text = `Đúng tên nốt ${name(target)} rồi — nhưng ${played > target ? 'cao' : 'thấp'} quá một quãng tám, dời tay nhé!`;
+      break;
+    }
     default:
       text = `${place} còn nhầm vài nốt — ${r.hints === 'staff' ? 'nhìn kỹ nốt trên khuông' : 'đọc tên nốt rồi đàn'} nhé!`;
   }
@@ -389,17 +435,21 @@ export function slowerBpm(bpm: number, tempos: readonly number[] = [40, 50, 60, 
 
 /**
  * Kế hoạch luyện nhanh một chỗ: CHẬM trước, rồi ĐÚNG tốc độ.
- * Theo nhịp: đàn chậm một lượt → đàn đúng tốc độ một lượt. Từng nốt: thầy đàn mẫu chậm → bé đàn từng nốt.
+ * (+ 2026-10-15, OWNER duyệt — "3 lần đúng" của giáo viên) Theo nhịp: đàn chậm HAI lượt → đàn đúng tốc độ một lượt.
+ * Từng nốt: thầy đàn mẫu chậm → bé đàn từng nốt HAI lượt. Chỗ luyện chỉ tính "xong" khi có ít nhất MỘT lượt sạch
+ * (songFocus.ts — không sạch lượt nào = một lần thử chưa được).
  */
 export function focusPlan(mode: 'wait' | 'tempo', bpm: number, tempos?: readonly number[]): FocusStep[] {
   const slow = slowerBpm(bpm, tempos);
   return mode === 'tempo'
     ? [
         { kind: 'play', mode: 'tempo', bpm: slow },
+        { kind: 'play', mode: 'tempo', bpm: slow },
         { kind: 'play', mode: 'tempo', bpm },
       ]
     : [
         { kind: 'demo', mode: 'wait', bpm: slow },
+        { kind: 'play', mode: 'wait', bpm },
         { kind: 'play', mode: 'wait', bpm },
       ];
 }

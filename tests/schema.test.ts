@@ -135,7 +135,8 @@ describe('ProgressStore', () => {
     const st = new ProgressStore(new MemoryStorage(), fixedNow);
     st.startSession('w1-l1');
     st.resetAll();
-    expect(st.get()).toEqual(defaultData(fixedNow()));
+    // (2026-10-15) + mốc luật "thuộc = 2 ngày" (dữ liệu mới: mọi lượt theo luật mới)
+    expect(st.get()).toEqual({ ...defaultData(fixedNow()), settings: { ...defaultData(fixedNow()).settings, masteryRuleFrom: fixedNow().getTime() } });
   });
 
   it('dữ liệu hỏng được sao lưu sang khóa khác, app vẫn khởi động', () => {

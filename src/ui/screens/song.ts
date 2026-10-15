@@ -13,11 +13,15 @@ import { LOOP_TARGET, fingerMap, idxOf, midisOf, shortIntro, type HandSel, type 
 import { TakeReplay } from './songTake';
 import { MicHonestyWatch, micHonestyBox } from '../components/micHonesty';
 import { selfStudy } from '../selfStudy';
-import { songEverPlayed, songMastered } from '../../lessons/lessonEngine';
+import { songEverPlayed, songMastered, startTempoBpm } from '../../lessons/lessonEngine';
 import { buildStaff, groupAt, groups, halt, handsOn, lightOnset, micOn, pulseWindow, scheduleAccomp, setBar, solo, together, type SongCtx, type SongHooks } from './songState';
-import { onWaitChord, onWaitHands, onWaitInput, showWaitNote, startWait } from './songWait';
+import { onWaitChord, onWaitHands, onWaitInput, onWaitMic, showWaitNote, startWait } from './songWait';
+import { waitJudgeInit } from '../../music/waitJudge';
 import { startTempo } from './songTempo';
 import { focusIdle, startFocus } from './songFocus';
+import { songFamiliar } from '../../lessons/readingAids';
+import { readingHints } from '../components/noteColors';
+import { withChant } from './songChant';
 import '../../styles/pedagogy.css';
 import '../../styles/teacher.css';
 import '../../styles/kidux.css';
@@ -38,6 +42,18 @@ export type { SongHooks } from './songState';
 const SLOW_DEMO = 0.6;
 
 export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongHooks) {
+  // (2026-10-15, OWNER duyệt — rà soát của thầy giáo) bài QUEN, theo nhịp, từ tuần 6 → chỉ khuông (noteColors.ts readingHints);
+  // Thư viện (free) / sân khấu / đọc nhạc ngẫu nhiên giữ gợi ý đã chọn
+  const data = app.store.get();
+  const eff: SongOptions =
+    opts.free || opts.stage || full.id.startsWith('sight')
+      ? opts
+      : { ...opts, hints: readingHints(opts.hints, data.progress.currentWeek, { tempo: opts.mode === 'tempo', familiar: songFamiliar(data, full.id), bass: full.hand !== 'RH' }) };
+  // (2026-10-15, OWNER duyệt) "Đọc nhịp trước" — trước lượt theo nhịp đầu tiên của bài có cờ `chant` (songChant.ts)
+  return withChant(app, full, eff, hooks.onBack, songMount(app, full, eff, hooks));
+}
+
+function songMount(app: App, full: Tune, opts: SongOptions, hooks: SongHooks) {
   return (root: HTMLElement) => {
     const settings = app.store.settings;
     // Độ khắt khe chấm nhịp (Cài đặt → mặc định "dễ")
@@ -172,12 +188,16 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
       mode: opts.mode,
       hints: opts.hints,
       level: opts.level ?? 2,
-      bpm: opts.bpm ?? full.bpm,
+      // (+ 2026-10-15, OWNER duyệt) BẮT ĐẦU CHẬM: lượt theo nhịp của bài chưa từng đạt theo nhịp → ≤ 50 (40 nếu có móc đơn /
+      // hai tay); sau đó thang 40 → 50 → 60 ("🐇 Nhanh hơn"). Sân khấu / bước ôn có tốc độ riêng.
+      bpm: opts.bpm ?? (opts.mode === 'tempo' && !opts.stage ? startTempoBpm(full, app.store.get()) : full.bpm),
       phrase: opts.phrase ?? null,
       handSel,
       loop3: false,
       streak: 0,
       hardBack: null,
+      fails: 0,
+      easyEnd: false,
       missByMeasure: new Map<number, number>(),
       wLog: [],
       lastHands: null,
@@ -206,6 +226,8 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
       lastHeard: null,
       handsAskedAt: -1,
       chordAskedAt: -1,
+      wJudge: waitJudgeInit(),
+      wFirstWrongAt: -1,
     };
 
     function reset(): void {
@@ -376,7 +398,8 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
         c.lastHeard = { midi: n.midi, at: n.at ?? -1 };
         if (n.at !== undefined && n.at >= 0) onWaitHands(c, n.at);
       } else if (g && midisOf(g).length >= 2) onWaitChord(c, n.midi, n.at ?? -1);
-      else onWaitInput(c, n.midi, 'mic');
+      // (+ 2026-10-15) bé thật: lệch quãng 8, đàn vội, đàn lại từ đầu câu, chạm 2 phím, tiếng lạ (src/music/waitJudge.ts)
+      else onWaitMic(c, n.midi, n.at ?? -1);
     });
     // (+ 2026-10-09) Micro tự học lệch dây đàn nhà (autoTune.ts): chỉ từ nốt đơn app đang chờ
     app.mic.expected = (n) => {

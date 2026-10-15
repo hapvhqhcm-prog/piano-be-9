@@ -169,3 +169,29 @@
   font-weight: 700;
   color: var(--ink-2, #4a4759);
 }
+
+/* (+ 2026-10-15) Dừng nhẹ nhàng / kết thúc bằng câu dễ — dòng nhắc BỐ MẸ (songResult.stopCard) */
+.song-result.is-stop .song-result-head {
+  font-size: 24px;
+  color: var(--violet-700, #4b2fa3);
+}
+.song-result-parent {
+  margin-top: 4px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: var(--sun-100, #fff4d6);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink-2, #4a4759);
+}
+/* (+ 2026-10-15) Màn kết: dòng "📝 Bài tập về nhà" cho bố mẹ (rating.closingScreen) */
+.closing-homework {
+  margin: 4px auto 8px;
+  max-width: 640px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: var(--sun-100, #fff4d6);
+  font-size: 17px;
+  color: var(--ink-2, #4a4759);
+  text-align: left;
+}

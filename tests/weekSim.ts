@@ -8,9 +8,11 @@
  */
 import { MicAnalyzer, type AppSound, type Sensitivity } from '../src/audio/micAnalyzer';
 import { TuningLearner, type TuningEstimator } from '../src/audio/autoTune';
+import { analyzeHands } from '../src/audio/twoHand';
 import { matchHeard } from '../src/audio/match';
+import { advanceOf, judgeWait, pairFromHands, phraseStartsFrom, waitJudgeInit, type PairCheck } from '../src/music/waitJudge';
 import { gradeTiming, TIMING_WINDOWS } from '../src/music/timing';
-import { handOnsets, totalBeats, type Tune } from '../src/music/tune';
+import { handOnsets, phraseRanges, totalBeats, type Tune } from '../src/music/tune';
 import { pitchToMidi } from '../src/piano/pitchTable';
 import { renderPiano, SIM_RATE, StreamNS, type SimNote, type SimOptions } from './pianoSim';
 
@@ -103,6 +105,9 @@ export interface Stats {
   mistakes: number;
   mistakesCaught: number;
   mistakeDoubles: number;
+  /** (+ 2026-10-15) riêng lỗi "nhầm phím bên cạnh" (không tính "đàn lại nốt trước" — nay là tiếng vọng, không tính sai) */
+  neighbourMistakes?: number;
+  neighbourCaught?: number;
   /** theo nhịp: nốt SAI cố ý mà app vẫn chấm "trúng" */
   falseHits: number;
   latency: number[];
@@ -134,6 +139,9 @@ function dbgFrame(t: number, f: ReturnType<MicAnalyzer['process']>): void {
   if (t < DBG.from || t > DBG.to) return;
   DBG.out.push(`${t.toFixed(3)} r ${f.rms.toExponential(2)} g ${f.gate.toExponential(2)} ${f.onset ? 'ON ' + f.onsetAt.toFixed(3) : ''} ${f.pitch ? `${(69 + 12 * Math.log2(f.pitch.freq / 440)).toFixed(2)} c${f.pitch.clarity.toFixed(2)}` : '-'} ${f.note ? 'NOTE ' + f.note.midi + ' at ' + f.note.at?.toFixed(3) : ''}`);
 }
+/** WAIT_JUDGE=legacy: chấm chế độ chờ kiểu cũ (trước 2026-10-15) — để so sánh */
+export const LEGACY_WAIT = (globalThis as { process?: { env: Record<string, string | undefined> } }).process?.env.WAIT_JUDGE === 'legacy';
+const DBGJ = !!(globalThis as { process?: { env: Record<string, string | undefined> } }).process?.env.DBGJ;
 const tick = () => new Promise((r) => setTimeout(r, 0));
 
 async function render(strikes: SimNote[], seconds: number, c: Cond, extra: SimOptions = {}): Promise<Float32Array> {
@@ -165,7 +173,7 @@ interface Action {
  * Tín hiệu micro DẠNG DÒNG cho vòng kín: bé quyết định bấm phím dựa trên những gì app đã làm tới lúc đó, nên nốt được
  * thêm dần (luôn bắt đầu SAU phần đã xử lý). Cùng mô hình với renderPiano (dây, vang phòng, ồn, ù, lọc ồn iOS).
  */
-class StreamSignal {
+export class StreamSignal {
   readonly total: number;
   private dry: Float32Array;
   private pre: Float32Array;
@@ -191,6 +199,18 @@ class StreamSignal {
     if (s0 < this.built) throw new Error(`addNote: nốt lúc ${n.start} nằm trong phần đã xử lý`);
     const one = renderPiano([{ ...n, start: 0 }], n.dur + 1.3, { ...this.o, reverb: 0, noise: 0, hum: 0, ns: undefined, agc: undefined, seed: this.c.seed * 977 + ++this.count });
     for (let i = 0; i < one.length && s0 + i < this.total; i++) this.dry[s0 + i] += one[i];
+  }
+  /** (+ 2026-10-15) Cộng một tín hiệu khác vào micro từ mẫu `at` (giọng ngân nga, gõ nắp đàn, quạt…) — trước khi xử lý. */
+  addRaw(buf: Float32Array, at = 0): void {
+    if (at < this.built) throw new Error('addRaw: nằm trong phần đã xử lý');
+    for (let i = 0; i < buf.length && at + i < this.total; i++) this.dry[at + i] += buf[i];
+  }
+  /** (+ 2026-10-15) Đoạn tín hiệu micro đã xử lý [from, to) (mẫu) — để kiểm tra hai tay / hợp âm quanh một lần gõ. */
+  slice(from: number, to: number): Float32Array {
+    const src = this.ns ? this.ns.out : this.pre;
+    const out = new Float32Array(Math.max(0, to - from));
+    for (let i = 0; i < out.length; i++) out[i] = src[from + i] ?? 0;
+    return out;
   }
   /** Khung 2048 mẫu kết thúc ở mẫu `end` (xử lý thêm khi cần). */
   frame(end: number): Float32Array {
@@ -278,6 +298,50 @@ export async function simulateWait(t: Tune, c: Cond): Promise<Stats> {
     lastStart = st.start;
   };
   DBG.out = [];
+  const G = groups.map((g) => g.midi);
+  const PS = phraseStartsFrom(handOnsets(t, null).map((o) => o.notes[0].measure), phraseRanges(t));
+  let js = waitJudgeInit();
+  /** lúc nghe nốt "đàn vội?" (để gán lần đàn sai muộn đúng lần bấm) */
+  let pendT = 0;
+  const checks: Array<{ midi: number; t: number; at: number; cur: number; want: number; ready: number }> = [];
+  const pairAt = (want: number, other: number, at: number): PairCheck => {
+    const idx = Math.round(at * SIM_RATE);
+    const from = idx - Math.round(0.35 * SIM_RATE);
+    if (from < 0) return 'unknown';
+    const seg = sig.slice(from, idx + Math.round(0.3 * SIM_RATE));
+    return pairFromHands(analyzeHands(seg, SIM_RATE, idx - from, { RH: [want], LH: [other] }, 0, true));
+  };
+  const judge = (midi: number, heardT: number, now: number, pair: PairCheck | undefined, at = heardT - 0.07) => {
+    if (LEGACY_WAIT) {
+      // trước 2026-10-15: khác nốt đang chờ = đàn sai
+      const ok = matchHeard(midi, G[cur]) !== 'none';
+      res.evals.push({ t: now, midi, g: cur, ok });
+      if (ok) {
+        res.creditAt[cur] = now;
+        cur++;
+        an.reset(true);
+      }
+      return;
+    }
+    const r = judgeWait(js, { groups: G, cur, phraseStarts: PS, heard: midi, t: heardT, ...(pair !== undefined ? { pair } : {}) });
+    js = r.state;
+    const v = r.verdict;
+    if (DBGJ) console.log('J', heardT.toFixed(2), midi, '#' + cur, G[cur]?.join('+'), v.kind, JSON.stringify(js));
+    // nốt "đàn vội?" trước đó hóa ra là đàn sai thật → tính sai cho nhóm đang chờ
+    if (v.lateWrong !== undefined) res.evals.push({ t: pendT, midi: v.lateWrong, g: cur, ok: false });
+    if (v.kind === 'pending') pendT = now;
+    if (v.kind === 'check') return void checks.push({ midi, t: heardT, at, cur, want: v.want, ready: at + 0.33 });
+    const adv = advanceOf(v);
+    if (adv === 0 && v.kind !== 'wrong' && !(v.kind === 'octave' && !v.accept)) return; // vọng / đàn lại / tiếng lạ / chạm 2 phím
+    const got = v.kind === 'ahead' ? cur + v.advance - 1 : cur;
+    res.evals.push({ t: now, midi, g: got, ok: adv > 0 });
+    if (adv > 0) {
+      res.creditAt[got] = now;
+      if (v.kind === 'ahead') res.creditAt[cur + v.hit] ??= now;
+      cur = Math.min(groups.length, cur + adv);
+      an.reset(true); // app.mic.resetTracker()
+    }
+  };
   const hop = Math.round(HOP * SIM_RATE);
   for (let i = FRAME, k = 0; i < sig.total; i += hop, k++) {
     if (k % 100 === 99) await tick();
@@ -318,15 +382,16 @@ export async function simulateWait(t: Tune, c: Cond): Promise<Stats> {
     const fr = an.process(sig.frame(i), SIM_RATE, now);
     dbgFrame(now, fr);
     learn(fr, () => (groups[cur] && groups[cur].midi.length === 1 ? groups[cur].midi : null));
+    // (+ 2026-10-15) Bộ chấm THẬT của app (src/music/waitJudge.ts — như songWait.ts): nốt "lạ" được hỏi micro hai phím
+    // (verifyHands ~0,3 s sau lần gõ) trước khi tính là đàn sai; vọng / đàn lại / tiếng lạ không tính sai
+    while (checks.length && checks[0].ready <= now) {
+      const q = checks.shift()!;
+      if (q.cur !== cur) continue; // con trỏ đã đi (app: kết quả cũ bị bỏ)
+      judge(q.midi, q.t, now, pairAt(q.want, q.midi, q.at));
+    }
     const n = fr.note;
     if (!n || cur >= groups.length) continue;
-    const ok = matchHeard(n.midi, groups[cur].midi) !== 'none';
-    res.evals.push({ t: now, midi: n.midi, g: cur, ok });
-    if (ok) {
-      res.creditAt[cur] = now;
-      cur++;
-      an.reset(true); // app.mic.resetTracker()
-    }
+    judge(n.midi, now, now, undefined, n.at ?? now - 0.07);
   }
   stats.slow = slow.size;
   return finishWait(res, strikes, stats);
@@ -369,6 +434,8 @@ function finishWait(res: WaitRun, strikes: Strike[], s: Stats): Stats {
       s.log.push(`sai oan t=${e.t.toFixed(3)} nghe ${e.midi} chờ #${e.g}; đang kêu: ${strikes.filter((x) => x.start <= e.t + 0.01 && x.start + x.dur + 0.3 > e.t).map((x) => `${x.midi}@${x.start.toFixed(2)}+${x.dur.toFixed(2)} v${x.vel!.toFixed(2)} ${x.kind}`).join(', ')}; chấm: ${res.evals.filter((x) => Math.abs(x.t - e.t) < 2).map((x) => `${x.midi}@${x.t.toFixed(3)}→#${x.g}${x.ok ? '✓' : '✗'}`).join(' ')}; lần bấm: ${strikes.filter((x) => Math.abs(x.start - e.t) < 2).map((x) => `${x.midi}@${x.start.toFixed(2)}#${x.intent}`).join(' ')}`);
     }
   }
+  s.neighbourMistakes = [...mistakeHits.keys()].filter((k) => strikes[k].kind === 'wrong').length;
+  s.neighbourCaught = [...mistakeHits.entries()].filter(([k, n]) => strikes[k].kind === 'wrong' && n === 1).length;
   for (const n of mistakeHits.values()) {
     if (n === 1) s.mistakesCaught++;
     if (n > 1) s.mistakeDoubles++;

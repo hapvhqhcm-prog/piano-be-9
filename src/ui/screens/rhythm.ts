@@ -60,6 +60,17 @@ export interface RhythmHooks {
   patterns: RhythmSymbol[][];
   /** PARENT_ASSESSMENT: bố mẹ xác nhận bé vỗ đều */
   record(noteId: string, result: ParentResult): void;
+  /**
+   * (2026-10-15) "Đọc nhịp trước" (songChant.ts): mỗi mẫu chỉ MỘT lượt (không lặp đôi) — mẫu dài vài ô rút từ bài hát.
+   * Không có: mỗi mẫu (1 ô) chơi 2 lần liền như cũ.
+   */
+  once?: boolean;
+  /** (2026-10-15) Số phách mỗi ô để đếm (mẫu dài nhiều ô); không có → đoán theo độ dài mẫu (2 / 3 / 4) */
+  meter?: number;
+  /** (2026-10-15) Nhãn nhỏ trên tiêu đề (mặc định "Nhịp") */
+  tag?: string;
+  /** (2026-10-15) Nút "⏭ Bỏ qua" (bước phụ — không bao giờ chặn bé); không có → không có nút */
+  skip?: () => void;
   onDone(): void;
   onBack(): void;
 }
@@ -83,6 +94,7 @@ export function rhythmScreen(app: App, hooks: RhythmHooks) {
 
     /** Số phách mỗi ô của mẫu hiện tại: mẫu 2 phách (nhịp 2/4) → đếm "1 – 2", 3 phách → "1 – 2 – 3" */
     const meterOf = (p: RhythmSymbol[]) => {
+      if (hooks.meter) return hooks.meter;
       const b = p.reduce((a, sym) => a + SYMBOL[sym].beats, 0);
       return b === 2 || b === 3 ? b : 4;
     };
@@ -104,7 +116,7 @@ export function rhythmScreen(app: App, hooks: RhythmHooks) {
     function cells(p: RhythmSymbol[]): { row: HTMLElement; els: HTMLElement[]; starts: number[] } {
       const els: HTMLElement[] = [];
       const starts: number[] = [];
-      const seq = [...p, ...p];
+      const seq = hooks.once ? [...p] : [...p, ...p];
       let b = 0;
       for (const sym of seq) {
         starts.push(b);
@@ -128,11 +140,11 @@ export function rhythmScreen(app: App, hooks: RhythmHooks) {
     function intro(): void {
       token++;
       stage.replaceChildren(
-        h('div', { class: 'step-tag' }, 'Nhịp'),
+        h('div', { class: 'step-tag' }, hooks.tag ?? 'Nhịp'),
         h('h1', { class: 'title' }, hooks.title),
         h('p', { class: 'lead' }, hooks.intro),
       );
-      setBar(backButton(hooks.onBack), button({ icon: '▶', label: 'Bắt đầu', kind: 'primary', onTap: () => show() }));
+      setBar(backButton(hooks.onBack), skipBtn(), button({ icon: '▶', label: 'Bắt đầu', kind: 'primary', onTap: () => show() }));
     }
 
     function show(): void {
@@ -156,8 +168,25 @@ export function rhythmScreen(app: App, hooks: RhythmHooks) {
       setBar(
         backButton(() => (i > 0 ? ((i -= 1), show()) : intro())),
         button({ icon: '🔊', label: 'Nghe mẫu', onTap: () => void play(true) }),
+        skipBtn(),
         button({ icon: '👏', label: 'Con vỗ', kind: 'primary', onTap: () => void play(false) }),
       );
+    }
+
+    /** (2026-10-15) "⏭ Bỏ qua" — chỉ khi màn được mở như bước phụ (hooks.skip) */
+    function skipBtn(): HTMLElement | null {
+      const skip = hooks.skip;
+      if (!skip) return null;
+      return button({
+        icon: '⏭',
+        label: 'Bỏ qua',
+        onTap: () => {
+          token++;
+          cancelSpeech();
+          app.audio.stopAll();
+          skip();
+        },
+      });
     }
 
     /**
@@ -189,7 +218,7 @@ export function rhythmScreen(app: App, hooks: RhythmHooks) {
       // Đếm vào 1 ô (4 tiếng) — nhịp 2/4 đếm vào 2 ô ("1 2 1 2") cho đủ 4 tiếng
       const countIn = meter === 2 ? 4 : meter;
       const t0 = app.audio.now() + 0.4 + countIn * spb;
-      const seq = [...p, ...p];
+      const seq = hooks.once ? [...p] : [...p, ...p];
       const total = starts.length ? starts[starts.length - 1] + SYMBOL[seq[starts.length - 1]].beats : 4;
       // Đếm vào 4 tiếng; khi micro chấm thì phần sau chỉ có nhịp nháy (không tiếng tích)
       for (let b = -countIn; b < (useMic ? 0 : total); b++) app.audio.click(t0 + b * spb, ((b % meter) + meter) % meter === 0);

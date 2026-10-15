@@ -104,6 +104,7 @@ export function weeklySheet(s: WeeklySummary): HTMLElement {
         {},
         ...s.praise.map((t) => h('li', { class: 'good' }, h('span', { 'aria-hidden': 'true' }, '👏'), t)),
         h('li', { class: 'next' }, h('span', { 'aria-hidden': 'true' }, '🤝'), s.help),
+        s.homework ? h('li', { class: 'next' }, h('span', { 'aria-hidden': 'true' }, '📝'), `Bài tập về nhà: ${s.homework}`) : null,
       ),
     ),
     s.mic ? h('p', { class: 'wr-mic' }, `🎙️ ${s.mic.text}`) : null,

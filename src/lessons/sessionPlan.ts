@@ -9,6 +9,7 @@ import type { Hand, PositionId } from '../piano/fingering';
 import { MAX_QUIZ_ROUNDS, activityDoneId, weekPlan } from './curriculum';
 import { reviewSegment } from './targetMemory';
 import { sightDailyFits } from './sessionEstimate';
+import { findTune } from '../music/exercises';
 import {
   postureFull,
   reviewSongStep,
@@ -163,7 +164,7 @@ export function buildSessionPlan(
   let teach: { emoji: string; text: string } | null = null;
   if (!opts.replay && !isStage) {
     const daily = lesson.id.endsWith('-daily');
-    teach = daily ? DAILY_TEACH[(data ? sessionCount(data) : 0) % DAILY_TEACH.length] : plan.teach;
+    teach = daily ? DAILY_TEACH[(data ? sessionCount(data) : 0) % DAILY_TEACH.length] : lessonTeach(lesson);
   }
   steps.push({ kind: 'closing', teach: teach ? { ...teach } : null });
   // v5.1 — giới hạn số màn: bỏ bước PHỤ theo thứ tự (ôn bài cũ → khởi động không phải tiêu chí → ôn nhanh)
@@ -182,6 +183,51 @@ export function buildSessionPlan(
     opening.warmup = warmupMusic(lesson, data, keptReview ? [reviewSongId!] : [], keptReview ? null : reviewSongId);
   }
   return steps;
+}
+
+/**
+ * (+ 2026-10-15, rà soát của giáo viên: thẻ "Con làm thầy" lặp y hệt 4 buổi một tuần) "Con làm thầy" của MỘT bài:
+ * Lesson.teach (nếu dữ liệu có) → bài ĐẦU tuần: WeekPlan.teach → các bài khác: tạo từ nội dung chính của bài
+ * (bài hát → nhịp → nốt mới → sắc thái → hát → sáng tạo → trò nghe → đọc nhạc). Không tạo được → WeekPlan.teach.
+ */
+export function lessonTeach(lesson: Lesson): { emoji: string; text: string } {
+  if (lesson.teach) return lesson.teach;
+  const plan = weekPlan(lesson.week);
+  if (plan.lessons.findIndex((l) => l.id === lesson.id) <= 0) return plan.teach;
+  return derivedTeach(lesson) ?? plan.teach;
+}
+
+const QUIZ_TEACH: Partial<Record<QuizSpec['variant'], string>> = {
+  updown: 'Con đàn 2 nốt, đố bố mẹ: nốt sau CAO hơn hay THẤP hơn?',
+  stepskip: 'Con đàn 2 nốt, đố bố mẹ: BƯỚC hay NHẢY?',
+  identify: 'Con đàn nốt Đô làm mốc rồi một nốt bí ẩn — đố bố mẹ đoán tên nốt!',
+  read: 'Con chỉ một nốt trên khuông, đố bố mẹ đọc tên nốt đó.',
+  majorminor: 'Con đàn một hợp âm — đố bố mẹ nghe: VUI hay BUỒN?',
+};
+
+function derivedTeach(lesson: Lesson): { emoji: string; text: string } | null {
+  const acts = lesson.activities;
+  const last = <K extends Activity['kind']>(k: K) => [...acts].reverse().find((a): a is Extract<Activity, { kind: K }> => a.kind === k);
+  const song = [...acts].reverse().find((a): a is Extract<Activity, { kind: 'song' }> => a.kind === 'song' && !a.songId.startsWith('sight') && !!findTune(a.songId));
+  if (song) {
+    const t = findTune(song.songId)!;
+    const title = t.titleVi || t.title;
+    const tempo = acts.some((a) => a.kind === 'song' && a.songId === song.songId && a.mode === 'tempo');
+    return tempo
+      ? { emoji: '🥁', text: `Con đếm vào "1-2-3-4" rồi đàn “${title}” theo nhịp — bố mẹ vỗ tay giữ nhịp cùng con.` }
+      : { emoji: '🎹', text: `Con đàn câu đầu bài “${title}” cho bố mẹ nghe, rồi chỉ bố mẹ ngón bắt đầu.` };
+  }
+  if (last('rhythm')) return { emoji: '👏', text: 'Con đọc to và vỗ một mẫu nhịp hôm nay học — rồi bắt bố mẹ vỗ lại.' };
+  const notes = last('notes');
+  if (notes) return { emoji: '🖐️', text: `Con dạy bố mẹ “${notes.segment.title}”: con làm mẫu trước, bố mẹ làm theo.` };
+  if (last('dynamics')) return { emoji: '🦁', text: 'Con đàn một câu thật TO rồi thật NHỎ — bố mẹ đoán xem câu nào to?' };
+  if (last('sing')) return { emoji: '🎤', text: 'Con hát tên 3 nốt rồi đàn lại — bố mẹ hát theo con.' };
+  if (last('improv')) return { emoji: '🎨', text: 'Con đàn cho bố mẹ nghe một đoạn con tự nghĩ ra — bố mẹ đặt tên cho bài nhé!' };
+  const quiz = last('quiz');
+  const qt = quiz ? QUIZ_TEACH[quiz.quiz.variant] : undefined;
+  if (qt) return { emoji: '👂', text: qt };
+  if (last('sight')) return { emoji: '🎼', text: 'Con chỉ cho bố mẹ một nốt trên khuông và nói tên nốt đó.' };
+  return null;
 }
 
 /** "Con làm thầy" cho buổi luyện tập mỗi ngày — xoay vòng. */

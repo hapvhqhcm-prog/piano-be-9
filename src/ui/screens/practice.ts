@@ -1,5 +1,6 @@
 import { meterPct } from '../../audio/MicListener';
 import { matchHeard } from '../../audio/match';
+import { FAR, judgeWait, missHelp, pairFromHands, waitJudgeInit, type PairCheck } from '../../music/waitJudge';
 import type { Segment, Target } from '../../lessons/types';
 import { cue, mascot } from '../components/mascot';
 import { confetti } from '../components/celebrate';
@@ -79,9 +80,11 @@ const INTRO_MOODS = ['wave', 'happy', 'cheer', 'love'] as const;
 const CORRECT_ADVANCE_SEC = 1.5;
 /** Buổi đã qua màn "Con sẵn sàng chưa?" — từ phần thứ 2 của cùng buổi thì bỏ qua màn này. */
 let readySessionId: string | null = null;
-/** Số lần "Thử lại" (bố mẹ) / nốt sai (micro) trên cùng một nốt thì mới cho "Bỏ qua — mai ôn lại". */
+/**
+ * Số lần "Thử lại" (bố mẹ) trên cùng một nốt thì mới cho "Bỏ qua — mai ôn lại". Micro nghe sai: ≥ 5 lần VÀ ≥ 8 s
+ * (src/music/waitJudge.ts missHelp — trước 2026-10-15: 5 lần, bé bấm loạn 2 giây đã được mời bỏ qua).
+ */
 const SKIP_AFTER_RETRIES = 3;
-const SKIP_AFTER_MIC_WRONG = 5;
 /** Micro bật mà gần như im lặng bấy lâu → nhắc "App chưa nghe thấy". */
 const SILENCE_HELP_MS = 8000;
 /** Bố mẹ chấm giúp một nốt (micro nghe chưa rõ) */
@@ -168,6 +171,8 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
     let spokenIndex = -1;
     /** Đếm im lặng khi micro đang chờ bé đàn */
     let quietSince = Date.now();
+    /** (+ 2026-10-15) Lần cuối micro thấy bé gõ phím / "suýt nghe" (Date.now()) — phân biệt "đàn khẽ quá" với "chưa đàn" */
+    let lastActivity = 0;
     let silenceShown = false;
     let lastHintSpokenAt = 0;
     /** Số nốt liên tiếp đúng ngay lần đầu (để mừng mốc 3, 6, 9…) */
@@ -188,6 +193,8 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
       seqPos = 0;
       firstHeard = null;
       wrongCount = 0;
+      firstWrongAt = -1;
+      pJudge = waitJudgeInit();
     };
     /**
      * Đọc to rồi "xóa trí nhớ" micro: micro KHÔNG tự bỏ qua giọng đọc (chỉ bỏ qua tiếng đàn của app) →
@@ -252,6 +259,16 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
     };
     /** Micro bật mà im lặng lâu: có thể đàn quá nhỏ / micro xa → chỉ cách, không để bé ngồi chờ mãi */
     const showSilenceHelp = () => {
+      // (+ 2026-10-15) Bé chưa đàn gì cả (ngập ngừng / đang nghĩ — micro không thấy lần gõ phím nào): KHÔNG nói "đàn to
+      // hơn" và không tính là "micro nghe chưa rõ" — chỉ mời nhẹ nhàng
+      if (lastActivity < quietSince) {
+        const t = target();
+        const name = t.keys.length === 1 ? noteLabel(t.keys[0]).split(' / ')[0] : 'phím đang sáng';
+        micHint(`🙂 Con đàn ${name} đi nhé — phím đang sáng`, 'listen');
+        lastHintSpokenAt = Date.now();
+        void say(`Con đàn ${name} đi nhé.`);
+        return;
+      }
       honesty.timeout();
       micHint(self ? '🎤 App chưa nghe thấy — con đàn to hơn, hoặc chạm ✋ Con đàn xong' : '🎤 App chưa nghe thấy — con đàn to hơn, hoặc nhờ bố mẹ bấm 👪 Đúng rồi', 'wrong');
       lastHintSpokenAt = Date.now();
@@ -272,7 +289,8 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
       return `Đúng rồi — ${plainTitle(t)}!`;
     };
     const skipOffered = (index: number) =>
-      (retries.get(index) ?? 0) >= SKIP_AFTER_RETRIES || (micForIndex === index && wrongCount >= SKIP_AFTER_MIC_WRONG);
+      (retries.get(index) ?? 0) >= SKIP_AFTER_RETRIES ||
+      (micForIndex === index && firstWrongAt >= 0 && missHelp(wrongCount, performance.now() - firstWrongAt) === 'skip');
     const skipButton = () => button({ icon: '⏭', label: 'Bỏ qua — mai ôn lại', onTap: () => send('SKIP') });
     /** Đúng một nốt: chuông; 3 nốt liền đúng ngay lần đầu → pháo giấy + câu mừng riêng. */
     const celebrateCorrect = (firstTry: boolean) => {
@@ -703,12 +721,11 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
           if (seqPos >= t.keys.length) send('HEARD');
           else micHint(`🎤 Đúng rồi! Tiếp theo…`, 'good');
         } else {
-          wrongCount++;
-          if (wrongCount === 3) showHelpHand(t);
-          if (wrongCount === SKIP_AFTER_MIC_WRONG) offerSkipInline();
+          // (+ 2026-10-15) Nốt ở quá xa mọi nốt của câu (giọng nói / gõ nắp đàn / nốt ảo) → không phải bé đàn, bỏ qua
+          if (Math.min(...t.keys.map((k) => Math.abs(pitchToMidi(k) - n.midi))) >= FAR && (n.midi - pitchToMidi(want)) % 12 !== 0) return;
           seqPos = samePitch(heard, t.keys[0]) ? 1 : 0;
           kb.setResult(heard, 'heard');
-          micHint(`🎤 Gần đúng! Đàn lại từ ${noteLabel(t.keys[0]).split(' / ')[0]} nhé`, 'wrong', true);
+          micWrong(t, `🎤 Gần đúng! Đàn lại từ ${noteLabel(t.keys[0]).split(' / ')[0]} nhé`);
         }
         return;
       }
@@ -734,7 +751,7 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
         });
         return;
       }
-      micChordLegacy(t, n.midi);
+      practiceMic(t, n.midi, n.at ?? -1);
     });
     /** Lần gõ phím đã hỏi kiểm tra hợp âm (đồng hồ AudioContext) — một lần gõ có thể cho nhiều nốt nghe được */
     let chordAskedAt = -1;
@@ -755,13 +772,66 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
         else micHint(`🎤 Đúng rồi! Còn ${t.keys.length - heardKeys.size} phím nữa`, 'good');
       } else {
         // Hợp âm: micro hay nghe lẫn khi các nốt chưa đều tay → không tính là sai
-        if (t.keys.length < 2) wrongCount++;
-        kb.setResult(heard, 'heard');
-        if (wrongCount === 3) showHelpHand(t);
-        if (wrongCount === SKIP_AFTER_MIC_WRONG) offerSkipInline();
-        // Không có âm thanh/chữ tiêu cực — chỉ nhắc nhẹ phím vừa nghe (§10); đọc to vài lần đầu
         const want = t.keys.length === 1 ? noteLabel(t.keys[0]).split(' / ')[0] : 'phím đang sáng';
-        micHint(`🎤 Con vừa đàn ${noteLabel(heard).split(' / ')[0]} — tìm ${want} nhé`, 'wrong', wrongCount <= 3);
+        kb.setResult(heard, 'heard');
+        if (t.keys.length >= 2) return micHint(`🎤 Con vừa đàn ${noteLabel(heard).split(' / ')[0]} — tìm ${want} nhé`, 'wrong', true);
+        // Không có âm thanh/chữ tiêu cực — chỉ nhắc nhẹ phím vừa nghe (§10) + trợ giúp tăng dần
+        micWrong(t, `🎤 Con vừa đàn ${noteLabel(heard).split(' / ')[0]} — tìm ${want} nhé`);
+      }
+    }
+    /** Lúc micro nghe sai LẦN ĐẦU ở nốt đang chờ (performance.now(); −1 = chưa) — trợ giúp tăng dần (missHelp) */
+    let firstWrongAt = -1;
+    /**
+     * (+ 2026-10-15) Micro nghe nốt SAI thật (một phím / nhại lại): trợ giúp TĂNG DẦN (src/music/waitJudge.ts missHelp) —
+     * 1: nói phím vừa đàn · 2: app đàn mẫu nốt cần tìm · 3: bàn tay mờ chỉ phím + ngón (trước đây lời nhắc này bị câu
+     * "Con vừa đàn…" ghi đè ngay) · ≥ 5 lần VÀ ≥ 8 s: mời "Bỏ qua — mai ôn lại" (không mời quá sớm khi bé bấm loạn).
+     */
+    function micWrong(t: Target, say: string): void {
+      wrongCount++;
+      if (firstWrongAt < 0) firstWrongAt = performance.now();
+      const help = missHelp(wrongCount, performance.now() - firstWrongAt);
+      if (help === 'skip') offerSkipInline();
+      if (help === 'show' && wrongCount === 3) return showHelpHand(t);
+      if (help === 'listen' && t.keys.length) {
+        micHint(`${say} · 🔊 Nghe nè`, 'wrong', true);
+        void app.audio.playPitch(t.sequence ? t.keys[0] : t.keys[0], 0.8);
+        return;
+      }
+      micHint(help === 'say' ? say : `${say} · 👋 theo bàn tay mờ nhé`, 'wrong', wrongCount <= 3);
+    }
+    /** (+ 2026-10-15) Bộ chấm "bé thật" cho nốt đơn (src/music/waitJudge.ts) — luyện tìm phím: KHÔNG cho qua lệch quãng 8 */
+    let pJudge = waitJudgeInit();
+    /**
+     * Nốt đơn (không nhại lại): tiếng lạ (ngân nga, gõ nắp đàn, nói chuyện, nốt ảo xa) → bỏ qua; chạm 2 phím → "chưa rõ";
+     * lệch quãng 8 → "đúng tên nốt, sai chỗ" (vẫn là chưa đúng); nốt lạ hỏi micro hai phím (~0,3 s) trước khi tính sai.
+     */
+    function practiceMic(t: Target, midi: number, at: number, pair?: PairCheck): void {
+      const want = pitchToMidi(t.keys[0]);
+      const r = judgeWait(pJudge, { groups: [[want]], cur: 0, phraseStarts: [0], heard: midi, t: app.audio.now(), octaveGrace: 0, ...(pair !== undefined ? { pair } : {}) });
+      const v = r.verdict;
+      pJudge = r.state;
+      if (v.kind === 'check') {
+        const tk = token;
+        void app.mic.verifyHands({ RH: [v.want], LH: [v.other] }, at >= 0 ? at : undefined, true).then((res) => {
+          if (tk !== token || sm.snapshot.state !== 'WAIT_PARENT' || target() !== t || parentStep === sm.snapshot.index) return;
+          practiceMic(t, midi, at, pairFromHands(res));
+        });
+        return;
+      }
+      const name = noteLabel(t.keys[0]).split(' / ')[0];
+      switch (v.kind) {
+        case 'ok':
+          return micChordLegacy(t, want);
+        case 'smudge':
+          kb.setResult(midiToPitch(midi), 'heard');
+          return micHint(`🎤 Hình như con chạm 2 phím — đàn một ngón ${name} thôi nhé`, 'wrong', true);
+        case 'octave':
+          kb.setResult(midiToPitch(midi), 'heard');
+          return micWrong(t, `🎵 Đúng tên nốt ${name} rồi! Nhưng ${v.up ? 'cao' : 'thấp'} hơn một quãng tám — ${name} này ở phím đang sáng nhé ${v.up ? '👇' : '👆'}`);
+        case 'wrong':
+          return micChordLegacy(t, midi);
+        default:
+          return; // tiếng vọng / tiếng lạ — không phải phím bé vừa đàn
       }
     }
     // Thanh âm lượng: cho bé/bố mẹ thấy app "đang nghe"
@@ -772,6 +842,7 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
       // Đếm im lặng: chỉ khi đang chờ bé đàn; tiếng app / giọng đọc / tiếng đàn đủ to đều đặt lại đồng hồ
       if (sm.snapshot.state !== 'WAIT_PARENT' || target().keys.length === 0) return;
       const now = Date.now();
+      if (f.app === 'quiet' && !speechBusy() && (f.onset || f.nearMiss)) lastActivity = now;
       if (pct >= 30 || f.app !== 'quiet' || speechBusy()) quietSince = now;
       else if (!silenceShown && now - quietSince > SILENCE_HELP_MS) {
         silenceShown = true;
