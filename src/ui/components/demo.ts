@@ -1,6 +1,6 @@
 import type { AudioEngine } from '../../audio/AudioEngine';
 import type { Target } from '../../lessons/types';
-import { expressionUsed, noteStyles, onsets, tunePedal, type Tune } from '../../music/tune';
+import { STAC_FRACTION, expressionUsed, noteStyles, onsets, tunePedal, type Tune } from '../../music/tune';
 import type { Hand } from '../../piano/fingering';
 import type { PianoKeyboard } from '../../piano/PianoKeyboard';
 import { pitchFreq, pitchToMidi, viName, type Pitch } from '../../piano/pitchTable';
@@ -11,6 +11,11 @@ import { FINGER_NAMES } from './handDiagram';
  * "VIDEO MINH HỌA" — hoạt hình thầy đàn mẫu, sinh tự động cho mọi bài học / bài hát:
  * bàn tay hoạt hình trượt trên chính bàn phím của màn hình, nhấn đúng NGÓN vào đúng PHÍM, có tiếng và phụ đề.
  * Không dùng file video → app vẫn nhẹ, chạy offline.
+ *
+ * (+ 2026-10-15) Mặc định chính BÀN TAY MỜ trên bàn phím (keyboardHand.ts) đàn mẫu — demoHands.ts (nạp muộn): đúng
+ * ngón nhấn đúng phím lúc nốt kêu, đổi thế / luồn ngón đi trước, hai tay, ngắt / luyến, chân pedal; hình chạy theo
+ * đồng hồ AudioContext trong MỘT vòng requestAnimationFrame. Bàn tay hoạt hình cũ (HandOverlay) chỉ còn là đường dự
+ * phòng (`hand: 'teacher'`, hoặc không nạp được demoHands).
  */
 
 export interface DemoNote {
@@ -23,6 +28,10 @@ export interface DemoNote {
   len?: number;
   /** (+ 2026-10-12) Cấp 4 — pedal giữ tiếng (len tính tới lúc thay / nhả pedal) */
   pedal?: boolean;
+  /** (+ 2026-10-15) Độ dài GIỮ PHÍM (phách) — khác `len` khi có pedal (tiếng ngân tiếp sau khi nhấc tay) */
+  key?: number;
+  /** (+ 2026-10-15) Ngắt tiếng (staccato) — bàn tay mẫu nhấc ngón nhanh, nảy nhẹ */
+  stac?: boolean;
 }
 
 export interface DemoEvent {
@@ -45,7 +54,11 @@ export function eventsFromTune(t: Tune): DemoEvent[] {
   return onsets(t).map((o) => {
     const notes: DemoNote[] = o.notes.flatMap((n) => {
       const st = styles.get(n.index);
-      const style = st ? { vol: st.vol, len: st.len, ...(st.pedal ? { pedal: true } : {}) } : {};
+      // Có pedal: tiếng ngân tới lúc thay pedal nhưng TAY nhấc theo độ dài nốt
+      const key = st?.pedal ? n.beats * (n.stac ? STAC_FRACTION : st.slurred ? 1.02 : 0.95) : st?.len;
+      const style = st
+        ? { vol: st.vol, len: st.len, ...(st.pedal ? { pedal: true } : {}), ...(key !== undefined ? { key } : {}), ...(n.stac ? { stac: true } : {}) }
+        : {};
       return [
         { pitch: n.pitch!, finger: n.finger, hand: n.hand, ...style },
         ...(n.also ?? []).map((a) => ({ pitch: a.pitch, finger: a.finger, hand: n.hand, ...style })),
@@ -234,6 +247,21 @@ export interface DemoOptions {
   sound?: boolean;
   /** (+ 2026-10-12) Cấp 4 — các khoảng pedal đạp (phách, xem pedalOfTune) */
   pedal?: ReadonlyArray<readonly [number, number]>;
+  /**
+   * (+ 2026-10-15) Ai đàn mẫu: 'ghost' (mặc định) = bàn tay mờ trên bàn phím đàn cả bài (demoHands.ts);
+   * 'teacher' = bàn tay hoạt hình cũ (HandOverlay).
+   */
+  hand?: 'ghost' | 'teacher';
+  /** (+ 2026-10-15) Giờ bắt đầu (đồng hồ AudioContext) — mặc định now + 0.35 s (để nhạc đệm hẹn cùng mốc) */
+  t0?: number;
+}
+
+/** Hình vẽ ra màn hình chậm hơn lệnh vẽ khoảng một khung hình → bàn tay đi trước chừng ấy để khớp tiếng */
+export const FRAME_LEAD_S = 1 / 60;
+
+/** Giờ "đang nghe thấy" theo đồng hồ âm thanh: currentTime − độ trễ ra loa + một khung hình. */
+export function heardClock(audio: Pick<AudioEngine, 'now'> & { outputLatency?: number }): number {
+  return audio.now() - (audio.outputLatency || 0) + FRAME_LEAD_S;
 }
 
 /**
@@ -248,68 +276,101 @@ export function playDemo(
   o: DemoOptions = {},
 ): { cancel: () => void; done: Promise<void> } {
   let cancelled = false;
+  let finished = false;
   const timers: number[] = [];
   const spb = 60 / (o.bpm ?? 60);
-  const t0 = audio.now() + 0.35;
-  const wall0 = performance.now() + 350;
-  // Đặt tay sẵn ở vị trí đầu tiên của mỗi tay
-  for (const hand of ['RH', 'LH'] as Hand[]) {
-    const first = events.flatMap((e) => e.notes).find((n) => n.hand === hand && n.finger);
-    if (first) overlay.place(hand, first.pitch, first.finger!, true);
-  }
-  if (o.sound !== false) playPlan(audio, soundPlan(events, spb, t0, o.pedal));
-  for (const ev of events) {
-    const at = ev.time * spb * 1000;
-    // Ngắt tiếng: phím sáng / ngón nhấn ngắn theo đúng độ dài kêu
-    const lenOf = (n: DemoNote) => Math.min(ev.dur * 0.9, n.len ?? ev.dur);
-    timers.push(
-      window.setTimeout(() => {
-        if (cancelled) return;
-        for (const n of ev.notes) {
-          if (n.finger) {
-            overlay.place(n.hand, n.pitch, n.finger);
-            overlay.press(n.hand, n.finger, Math.max(140, lenOf(n) * spb * 890));
-          }
-          kb.flash(n.pitch, true);
-        }
-        if (ev.caption) o.onCaption?.(ev.caption, ev);
-      }, Math.max(0, wall0 - performance.now() + at)),
-    );
-    for (const n of ev.notes) {
-      timers.push(
-        window.setTimeout(() => kb.flash(n.pitch, false), Math.max(0, wall0 - performance.now() + at + lenOf(n) * spb * 1000)),
-      );
-    }
-  }
+  const t0 = o.t0 ?? audio.now() + 0.35;
+  const wall0 = performance.now() + (t0 - audio.now()) * 1000;
+  const plan = soundPlan(events, spb, t0, o.pedal);
+  if (o.sound !== false) playPlan(audio, plan);
   const end = events.length ? Math.max(...events.map((e) => e.time + e.dur)) : 0;
+  const endT = t0 + end * spb;
+  const ghost = o.hand !== 'teacher';
+  let hands: { tick(t: number): void; stop(): void } | null = null;
   let raf = 0;
+  let resolveDone: () => void = () => undefined;
+  const done = new Promise<void>((resolve) => (resolveDone = resolve));
+
+  const finish = () => {
+    if (finished) return;
+    finished = true;
+    cancelAnimationFrame(raf);
+    timers.forEach((t) => window.clearTimeout(t));
+    hands?.stop();
+    overlay.release('RH');
+    overlay.release('LH');
+    resolveDone();
+  };
+
+  /** Đường cũ: bàn tay hoạt hình (HandOverlay) + phím sáng hẹn bằng setTimeout. */
+  const teacher = () => {
+    for (const hand of ['RH', 'LH'] as Hand[]) {
+      const first = events.flatMap((e) => e.notes).find((n) => n.hand === hand && n.finger);
+      if (first) overlay.place(hand, first.pitch, first.finger!, true);
+    }
+    for (const ev of events) {
+      const at = ev.time * spb * 1000;
+      // Ngắt tiếng: phím sáng / ngón nhấn ngắn theo đúng độ dài kêu
+      const lenOf = (n: DemoNote) => Math.min(ev.dur * 0.9, n.key ?? n.len ?? ev.dur);
+      timers.push(
+        window.setTimeout(() => {
+          if (cancelled) return;
+          for (const n of ev.notes) {
+            if (n.finger) {
+              overlay.place(n.hand, n.pitch, n.finger);
+              overlay.press(n.hand, n.finger, Math.max(140, lenOf(n) * spb * 890));
+            }
+            kb.flash(n.pitch, true);
+          }
+          if (ev.caption) o.onCaption?.(ev.caption, ev);
+        }, Math.max(0, wall0 - performance.now() + at)),
+      );
+      for (const n of ev.notes) {
+        timers.push(
+          window.setTimeout(() => kb.flash(n.pitch, false), Math.max(0, wall0 - performance.now() + at + lenOf(n) * spb * 1000)),
+        );
+      }
+    }
+  };
+
+  // MỘT vòng rAF: bàn tay mẫu + con trỏ khuông nhạc theo đồng hồ âm thanh; hết bài → xong
   const loop = () => {
-    if (cancelled) return;
-    o.onBeat?.((audio.now() - t0) / spb);
+    if (cancelled || finished) return;
+    const t = heardClock(audio);
+    hands?.tick(t);
+    o.onBeat?.((t - t0) / spb);
+    if (ghost && t > endT + 0.4) return finish();
     raf = requestAnimationFrame(loop);
   };
-  if (o.onBeat) raf = requestAnimationFrame(loop);
-  let resolveDone: () => void = () => undefined;
-  const done = new Promise<void>((resolve) => {
-    resolveDone = resolve;
-    timers.push(
-      window.setTimeout(() => {
-        cancelAnimationFrame(raf);
-        overlay.release('RH');
-        overlay.release('LH');
-        resolve();
-      }, Math.max(0, wall0 - performance.now() + end * spb * 1000 + 400)),
-    );
-  });
+  if (ghost || o.onBeat) raf = requestAnimationFrame(loop);
+
+  if (ghost) {
+    void import('./demoHands')
+      .then((m) => {
+        if (cancelled || finished) return;
+        hands = m.startDemoHands(kb, events, plan, spb, { onCaption: o.onCaption });
+        hands.tick(heardClock(audio));
+      })
+      .catch(() => {
+        if (!cancelled && !finished) teacher(); // không nạp được → bàn tay hoạt hình cũ
+      });
+  } else teacher();
+
+  // Dự phòng (tab ẩn → rAF dừng): vẫn xong theo đồng hồ tường
+  timers.push(window.setTimeout(finish, Math.max(0, wall0 - performance.now() + end * spb * 1000 + (ghost ? 1500 : 400))));
   return {
     done,
     cancel() {
+      if (cancelled) return;
       cancelled = true;
       timers.forEach((t) => window.clearTimeout(t));
       cancelAnimationFrame(raf);
       audio.stopAll();
+      hands?.stop();
+      hands = null;
       overlay.hide();
       kb.clear();
+      finished = true;
       resolveDone();
     },
   };

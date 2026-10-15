@@ -163,12 +163,14 @@ export function makeSpacing(
   pxPerBeat: number,
   minGap: number,
   padBefore: (t: number) => number = () => 0,
+  /** (+ 2026-10-15) Bề rộng "tự nhiên" của một khoảng `dt` phách (mặc định tuyến tính dt × pxPerBeat) */
+  gapOf: (dt: number) => number = (dt) => dt * pxPerBeat,
 ): Spacing {
   const t = [...new Set(times.map((v) => Math.round(v * 1e6) / 1e6))].sort((a, b) => a - b);
   if (!t.length || t[0] > 0) t.unshift(0);
   const x = [0];
   for (let i = 1; i < t.length; i++) {
-    x.push(x[i - 1] + Math.max((t[i] - t[i - 1]) * pxPerBeat, minGap + padBefore(t[i])));
+    x.push(x[i - 1] + Math.max(gapOf(t[i] - t[i - 1]), minGap + padBefore(t[i])));
   }
   return { t, x, pxPerBeat };
 }
@@ -187,4 +189,151 @@ export function spaceAt(s: Spacing, beat: number): number {
     else hi = mid;
   }
   return x[lo] + ((beat - t[lo]) / (t[hi] - t[lo])) * (x[hi] - x[lo]);
+}
+
+/**
+ * (+ 2026-10-15) Giãn cách tỉ lệ theo trường độ kiểu bản in (không tuyến tính): khoảng sau một nốt = pxPerQuarter × d^0.72
+ * (d tính theo nốt đen) — nốt trắng ≈ 1,65 × nốt đen, nốt tròn ≈ 2,7 × (thay vì 2× / 4×) → trang gọn, khuông to hơn.
+ * Băng chuyền không dùng (cần tốc độ trôi đều = tuyến tính).
+ */
+export const SPACING_POWER = 0.72;
+export function durationGap(quarters: number, pxPerQuarter: number, power = SPACING_POWER): number {
+  return quarters <= 0 ? 0 : pxPerQuarter * quarters ** power;
+}
+
+// ---------------- Khóa nhạc: hình vẽ bằng đường viền (không phụ thuộc phông chữ) ----------------
+
+/** Điểm đường tâm [x, y, độ dày] tính theo khoảng cách 2 vạch; y = 0 ở vạch dưới cùng, hướng LÊN. */
+type Pt = [number, number, number];
+const TREBLE_CL: Pt[] = [
+  [0.25, 1.02, 0.1], [0.72, 1.4, 0.15], [0.62, 2.02, 0.22], [-0.05, 2.18, 0.28], [-0.78, 1.58, 0.38],
+  [-0.78, 0.5, 0.44], [0.05, -0.08, 0.32], [1.05, 0.25, 0.22], [1.38, 1.12, 0.17], [1.05, 2.02, 0.22],
+  [0.25, 2.85, 0.32], [-0.38, 3.85, 0.38], [-0.25, 5.0, 0.26], [0.32, 5.62, 0.16], [0.7, 5.15, 0.15],
+  [0.55, 4.35, 0.15], [0.28, 3.4, 0.15], [0.28, 1.5, 0.15], [0.45, -0.6, 0.16], [0.42, -1.38, 0.19],
+  [0, -1.75, 0.19], [-0.4, -1.5, 0.2],
+];
+const BASS_CL: Pt[] = [
+  [0.35, 3, 0.1], [0.55, 3.55, 0.22], [1.15, 3.95, 0.3], [1.95, 3.55, 0.4], [2.05, 2.55, 0.42],
+  [1.55, 1.4, 0.34], [0.8, 0.55, 0.22], [0.05, 0.02, 0.1],
+];
+/** Chấm tròn của khóa: [x, y, bán kính] */
+const TREBLE_DOTS: Array<[number, number, number]> = [[-0.38, -1.42, 0.38], [0.22, 1.02, 0.08]];
+const BASS_DOTS: Array<[number, number, number]> = [[0.52, 3, 0.48], [2.75, 3.5, 0.2], [2.75, 2.5, 0.2]];
+
+/** Đường viền nét bút có độ dày thay đổi quanh một đường cong Catmull-Rom (đơn vị: khoảng 2 vạch, y hướng lên). */
+function strokeOutline(pts: Pt[], n = 8): Array<[number, number]> {
+  const c: Pt[] = [];
+  for (let i = 0; i < pts.length - 1; i++) {
+    const [p0, p1, p2, p3] = [pts[Math.max(0, i - 1)], pts[i], pts[i + 1], pts[Math.min(pts.length - 1, i + 2)]];
+    for (let k = 0; k < n; k++) {
+      const t = k / n;
+      const f = (a: number, b: number, cc: number, d: number) =>
+        0.5 * (2 * b + (-a + cc) * t + (2 * a - 5 * b + 4 * cc - d) * t * t + (-a + 3 * b - 3 * cc + d) * t * t * t);
+      c.push([f(p0[0], p1[0], p2[0], p3[0]), f(p0[1], p1[1], p2[1], p3[1]), p1[2] + (p2[2] - p1[2]) * t]);
+    }
+  }
+  c.push(pts[pts.length - 1]);
+  const L: Array<[number, number]> = [];
+  const R: Array<[number, number]> = [];
+  c.forEach((p, i) => {
+    const a = c[Math.max(0, i - 1)];
+    const b = c[Math.min(c.length - 1, i + 1)];
+    const len = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+    const nx = -(b[1] - a[1]) / len;
+    const ny = (b[0] - a[0]) / len;
+    L.push([p[0] + (nx * p[2]) / 2, p[1] + (ny * p[2]) / 2]);
+    R.push([p[0] - (nx * p[2]) / 2, p[1] - (ny * p[2]) / 2]);
+  });
+  return [...L, ...R.reverse()];
+}
+
+const clefCache = new Map<string, string>();
+/**
+ * Khóa Sol / khóa Fa dạng đường viền tô kín (một <path>, fill), gốc toạ độ (0, 0) = vạch dưới cùng tại thân khóa,
+ * y hướng XUỐNG như SVG. `space` = khoảng cách 2 vạch (px). Khóa Sol cuộn quanh vạch 2 (Sol4), khóa Fa ôm vạch 4 (Fa3).
+ */
+export function clefPath(clef: 'treble' | 'bass', space = 14): string {
+  const key = `${clef}${space}`;
+  const hit = clefCache.get(key);
+  if (hit) return hit;
+  const r = (v: number) => Math.round(v * space * 10) / 10;
+  const poly = strokeOutline(clef === 'treble' ? TREBLE_CL : BASS_CL);
+  // Chấm tròn quay CÙNG chiều với đường viền (luật tô nonzero: chỗ chồng nhau không bị thủng)
+  const area = poly.reduce((a, p, i) => {
+    const q = poly[(i + 1) % poly.length];
+    return a + p[0] * -q[1] - q[0] * -p[1];
+  }, 0);
+  const sweep = area > 0 ? 1 : 0;
+  let d = `M${poly.map(([x, y]) => `${r(x)},${r(-y)}`).join('L')}Z`;
+  for (const [x, y, rad] of clef === 'treble' ? TREBLE_DOTS : BASS_DOTS) {
+    const R = r(rad);
+    d += `M${r(x) - R},${r(-y)}a${R},${R} 0 1 ${sweep} ${2 * R},0a${R},${R} 0 1 ${sweep} ${-2 * R},0Z`;
+  }
+  clefCache.set(key, d);
+  return d;
+}
+
+/** Dấu thăng / giáng dạng hình vẽ (tô kín), tâm (cx, cy) = tâm dấu; `s` = khoảng cách 2 vạch. */
+export function accidentalPath(kind: '#' | 'b', cx: number, cy: number, s = 14): string {
+  const f = (v: number) => Math.round(v * 10) / 10;
+  if (kind === '#') {
+    const w = 0.13 * s; // nét đứng
+    const t = 0.3 * s; // nét ngang (dày, nghiêng lên phải)
+    const xl = cx - 0.24 * s;
+    const xr = cx + 0.2 * s;
+    const bar = (y: number) =>
+      `M${f(cx - 0.55 * s)},${f(y + 0.14 * s)}L${f(cx + 0.55 * s)},${f(y - 0.14 * s)}L${f(cx + 0.55 * s)},${f(y - 0.14 * s + t)}L${f(cx - 0.55 * s)},${f(y + 0.14 * s + t)}Z`;
+    return (
+      `M${f(xl - w / 2)},${f(cy - 1.3 * s)}h${f(w)}v${f(2.75 * s)}h${f(-w)}Z` +
+      `M${f(xr - w / 2)},${f(cy - 1.45 * s)}h${f(w)}v${f(2.75 * s)}h${f(-w)}Z` +
+      bar(cy - 0.62 * s) +
+      bar(cy + 0.32 * s)
+    );
+  }
+  // Giáng: thân đứng + bụng tròn hơi nhọn ở dưới (đầu nốt nằm ngang bụng)
+  const x = cx - 0.32 * s;
+  const w = 0.14 * s;
+  return (
+    `M${f(x)},${f(cy - 1.95 * s)}h${f(w)}v${f(2.5 * s)}h${f(-w)}Z` +
+    `M${f(x + w)},${f(cy + 0.55 * s)}C${f(cx + 0.95 * s)},${f(cy - 0.05 * s)} ${f(cx + 0.7 * s)},${f(cy - 0.85 * s)} ${f(x + w)},${f(cy - 0.25 * s)}` +
+    `L${f(x + w)},${f(cy + 0.02 * s)}C${f(cx + 0.35 * s)},${f(cy - 0.5 * s)} ${f(cx + 0.45 * s)},${f(cy - 0.05 * s)} ${f(x + w)},${f(cy + 0.36 * s)}Z`
+  );
+}
+
+/** Dấu ngoặc nhọn nối khuông kép (tô kín), mép phải ở x, từ y1 tới y2. */
+export function bracePath(x: number, y1: number, y2: number, w = 10): string {
+  const h = y2 - y1;
+  const m = (y1 + y2) / 2;
+  const f = (v: number) => Math.round(v * 10) / 10;
+  const L = x - w;
+  return (
+    `M${f(x)},${f(y1)}C${f(L - w * 0.1)},${f(y1 + h * 0.06)} ${f(x - w * 0.15)},${f(m - h * 0.2)} ${f(L)},${f(m)}` +
+    `C${f(x - w * 0.15)},${f(m + h * 0.2)} ${f(L - w * 0.1)},${f(y2 - h * 0.06)} ${f(x)},${f(y2)}` +
+    `C${f(L + w * 0.55)},${f(y2 - h * 0.09)} ${f(x + w * 0.35)},${f(m + h * 0.17)} ${f(L + w * 0.12)},${f(m)}` +
+    `C${f(x + w * 0.35)},${f(m - h * 0.17)} ${f(L + w * 0.55)},${f(y1 + h * 0.09)} ${f(x)},${f(y1)}Z`
+  );
+}
+
+// ---------------- Nốt màu (tuỳ chọn "🎨 Nốt màu") ----------------
+
+export type NoteLetter = 'C' | 'D' | 'E' | 'F' | 'G' | 'A' | 'B';
+export const NOTE_LETTERS: readonly NoteLetter[] = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+/**
+ * Bảng màu Okabe–Ito (an toàn cho người mù màu), xếp theo cầu vồng như chuông/ống màu trẻ em:
+ * Đô đỏ cam · Rê cam · Mi vàng · Fa xanh lục lam · Sol xanh da trời · La xanh dương · Si tím hồng.
+ * `text` = sắc đậm hơn cho chữ tên nốt (tương phản ≥ 4,5:1 trên nền trắng).
+ */
+export const NOTE_COLORS: Readonly<Record<NoteLetter, { fill: string; text: string }>> = {
+  C: { fill: '#D55E00', text: '#A84A00' },
+  D: { fill: '#E69F00', text: '#8F6200' },
+  E: { fill: '#F0E442', text: '#6E6800' },
+  F: { fill: '#009E73', text: '#00785A' },
+  G: { fill: '#56B4E9', text: '#1D6E9E' },
+  A: { fill: '#0072B2', text: '#0072B2' },
+  B: { fill: '#CC79A7', text: '#A0477A' },
+};
+/** Chữ cái của cao độ ("F#4" → "F", "Bb3" → "B"); không phải nốt → null. Nốt thăng/giáng mang màu chữ cái của nó. */
+export function noteLetter(pitch: string | undefined): NoteLetter | null {
+  const c = pitch?.[0]?.toUpperCase();
+  return c && (NOTE_LETTERS as readonly string[]).includes(c) ? (c as NoteLetter) : null;
 }

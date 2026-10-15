@@ -5,6 +5,7 @@
 import { phraseRanges, type Tune } from '../../music/tune';
 import { h } from '../components/dom';
 import { TEMPOS, expressionLegend, type HandSel, type SongOptions } from './songShared';
+import { noteColorMode, setNoteColorMode, type NoteColorMode } from '../components/noteColors';
 
 /** Các lựa chọn bé/bố mẹ đổi được trên đầu trang. */
 export interface SongChoices {
@@ -152,6 +153,20 @@ export class SongHead {
         return b;
       };
       section('✋ Hiện bàn tay', hgChip('Tự động', 'auto'), hgChip('Luôn hiện', 'on'), hgChip('Ẩn', 'off'));
+    }
+    if (!opts.stage) {
+      // (+ 2026-10-15) 🎨 Nốt màu: đổi ngay cả lúc đang chơi (chỉ đổi lớp CSS) — songState.buildStaff nghe sự kiện 'notecolors'
+      const cur = noteColorMode();
+      const ncChip = (label: string, m: NoteColorMode) => {
+        const b = h('button', { class: `seg-btn small${cur === m ? ' on' : ''}`, type: 'button' }, label);
+        b.addEventListener('click', () => {
+          setNoteColorMode(m);
+          this.refresh();
+          this.el.dispatchEvent(new CustomEvent('notecolors'));
+        });
+        return b;
+      };
+      section('🎨 Nốt màu', ncChip('Tự động', 'auto'), ncChip('Luôn hiện', 'on'), ncChip('Tắt', 'off'));
     }
     let pop: HTMLElement | null = null;
     if (sections.length) {

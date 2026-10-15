@@ -1,4 +1,5 @@
-import { mascot } from '../components/mascot';
+import { mascot, napWhenIdle } from '../components/mascot';
+import { islandCardText, readSeenWeek, seaLayers, trailDots, trailLayer, trailStart, writeSeenWeek } from '../components/mapMotion';
 import {
   daysThisWeek,
   MAX_SESSIONS_PER_DAY,
@@ -113,6 +114,13 @@ function islandMap(app: App): HTMLElement {
     return d;
   };
   const curIdx = weeks.findIndex((w) => w.week === cur);
+  // (+ 2026-10-15) Tiến độ đổi từ lần trước (vd vừa qua đảo) → chấm vàng "chạy" từ đảo cũ tới đảo mới (mapMotion.ts)
+  const from = trailStart(readSeenWeek(), cur, weeks.map((w) => w.week));
+  writeSeenWeek(cur);
+  const doneTo = from ?? curIdx;
+  const pxW = Math.max(320, (typeof innerWidth === 'number' && innerWidth > 0 ? innerWidth : 1080) - 32);
+  const pxH = typeof innerHeight === 'number' && innerHeight <= 760 ? 160 : 172; // chiều cao .map (theme.css)
+  const trail = from !== null ? trailLayer(trailDots(xs, ys, from, curIdx, { pxW, pxH })) : null;
   const svg = document.createElementNS(SVG_NS, 'svg');
   svg.setAttribute('class', 'map-path');
   svg.setAttribute('viewBox', '0 0 1000 150');
@@ -120,12 +128,64 @@ function islandMap(app: App): HTMLElement {
   svg.setAttribute('aria-hidden', 'true');
   svg.innerHTML =
     // Cả hành trình (chấm trắng) + phần đã đi tới đảo hiện tại (chấm vàng)
-    `<path d="${curve(n - 1)}" class="route"/>` + (curIdx > 0 ? `<path d="${curve(curIdx)}" class="route done"/>` : '');
+    `<path d="${curve(n - 1)}" class="route"/>` + (doneTo > 0 ? `<path d="${curve(doneTo)}" class="route done"/>` : '');
 
-  return h(
+  // (+ 2026-10-15) Chạm một đảo → thẻ nhỏ (tên + con học gì) ngay trên bản đồ — không chuyển màn. Chạm lại / chạm biển → đóng.
+  let card: HTMLElement | null = null;
+  let cardWeek = 0;
+  let cardTimer = 0;
+  const closeCard = () => {
+    window.clearTimeout(cardTimer);
+    card?.remove();
+    card = null;
+    cardWeek = 0;
+  };
+  const openCard = (i: number, state: 'done' | 'current' | 'locked') => {
+    const w = weeks[i];
+    const wasOpen = cardWeek === w.week;
+    closeCard();
+    if (wasOpen) return;
+    const t = islandCardText({ week: w.week, island: w.island, emoji: w.islandEmoji, title: w.title, state, teaser: teaserName(w.island) });
+    const W = map.clientWidth || 1000;
+    const x = (xs[i] / 1000) * W;
+    const cw = 260;
+    // Bên phải đảo (đảo ở nửa trái) hoặc bên trái (đảo ở nửa phải) — không che chính đảo vừa chạm
+    const left = x < W / 2 ? Math.min(W - cw - 8, x + 66) : Math.max(8, x - 66 - cw);
+    card = h(
+      'div',
+      { class: `island-card ${ys[i] > 50 ? 'top' : 'bottom'}`, role: 'status', style: { left: `${Math.round(left)}px` } },
+      h('div', { class: 'ic-head' }, h('span', {}, t.head), h('span', {}, t.tag)),
+      h('div', { class: 'ic-name' }, t.name),
+      h('div', { class: 'ic-body' }, t.body),
+    );
+    cardWeek = w.week;
+    map.append(card);
+    cardTimer = window.setTimeout(closeCard, 6000);
+  };
+
+  /** Ghim Bé Nốt trên đảo hiện tại; chấm đang chạy → Bé Nốt nhảy từ đảo cũ sang (--dx/--dy: đảo cũ so với đảo này, px). */
+  const islandPin = (i: number) => {
+    const pin = h('div', { class: `island-pin${from !== null ? ' traveling' : ''}`, 'aria-hidden': 'true' }, mascot('happy', 34));
+    if (from !== null) {
+      pin.style.setProperty('--dx', `${Math.round(((xs[from] - xs[i]) / 1000) * pxW)}px`);
+      pin.style.setProperty('--dy', `${Math.round(((ys[from] - ys[i]) / 100) * pxH)}px`);
+    }
+    return pin;
+  };
+
+  const map: HTMLElement = h(
     'div',
-    { class: 'map', role: 'list', 'aria-label': `Bản đồ ${lv.name}` },
+    {
+      class: 'map',
+      role: 'list',
+      'aria-label': `Bản đồ ${lv.name}`,
+      onClick: (e: Event) => {
+        if (!(e.target as Element | null)?.closest?.('.island-tap')) closeCard();
+      },
+    },
+    ...seaLayers(),
     svg,
+    trail,
     ...weeks.map((w, i) => {
       // Qua đảo: cùng quy tắc với sticker đảo (islandPassed — giữ nguyên sau khi gộp lịch sử / lùi tuần)
       const passed = islandPassed(w.week, data);
@@ -156,11 +216,25 @@ function islandMap(app: App): HTMLElement {
         art,
         // Không có tranh: tự thêm huy hiệu ✓ / 🔒 (tranh đã có sẵn ngôi sao / ổ khóa)
         !islandIcon && passed ? h('div', { class: 'island-badge' }, '★') : null,
-        here ? h('div', { class: 'island-pin', 'aria-hidden': 'true' }, mascot('happy', 34)) : null,
+        // Đảo chưa mở: sương mù mềm trôi nhẹ
+        later ? h('div', { class: 'island-fog', 'aria-hidden': 'true' }) : null,
+        here ? islandPin(i) : null,
         h('div', { class: 'island-name' }, later ? teaserName(w.island) : w.island),
+        h('button', {
+          class: 'island-tap',
+          type: 'button',
+          'aria-label': later ? `Tuần ${w.week}: đảo bí mật` : `Xem đảo ${w.island}`,
+          onClick: () => openCard(i, state),
+        }),
       );
     }),
   );
+  // Chi tiết riêng từng đảo (cua, hải âu, đèn lồng…) — nạp trễ sau khi bản đồ đã vẽ
+  if (islandIcon)
+    void import('../components/art/islandAccents')
+      .then((m) => map.isConnected && m.decorateIslands(map))
+      .catch(() => undefined);
+  return map;
 }
 
 export function homeScreen(app: App, banner?: string) {
@@ -319,6 +393,9 @@ export function homeScreen(app: App, banner?: string) {
     if (freshUnlocks.length) celebrations.mark();
 
     const gamesBtn = gamesDockButton(app);
+    // (+ 2026-10-15) Bé Nốt ngủ gật khi để lâu không chạm; chạm → giật mình rồi tỉnh (chỉ đổi hình)
+    const storyMood = missed ? 'wave' : 'happy';
+    const storyMascot = mascot(storyMood, 84);
     root.append(
       h(
         'div',
@@ -356,7 +433,7 @@ export function homeScreen(app: App, banner?: string) {
             h(
               'div',
               { class: 'story-row' },
-              mascot(missed ? 'wave' : 'happy', 84),
+              storyMascot,
               h('p', { class: `story bubble${missed ? ' welcome-back' : ''}` }, bubbleText, speakChip(app, bubbleText)),
             ),
             missed
@@ -452,8 +529,10 @@ export function homeScreen(app: App, banner?: string) {
       const st = storageStatus();
       if ((st.full || st.futureVersion) && !root.querySelector('.storage-alert')) app.show(homeScreen(app, banner));
     });
+    const unNap = napWhenIdle(storyMascot, storyMood, 84);
     return () => {
       unStore();
+      unNap();
       window.clearTimeout(storyTimer);
       window.clearTimeout(unlockTimer);
       cancelSpeech();

@@ -19,6 +19,7 @@ import { beatsPerMeasure, metronomeAccent, totalBeats, type Onset } from '../../
 import { analyzeTempo, handsOutcome, type NoteReview } from '../../music/teacher';
 import { button, h } from '../components/dom';
 import { MIC_LATENCY, idxOf, midisOf } from './songShared';
+import { GlideClock } from '../../music/playhead';
 import {
   addMiss,
   groupAt,
@@ -47,7 +48,8 @@ import { focusStepDone } from './songFocus';
 function follow(c: SongCtx, beat: number): Onset | undefined {
   const gs = groups(c);
   const cur = groupAt(gs, beat);
-  if (c.mode === 'tempo' && c.level === 3) c.staff.setTime(Math.max(0, beat));
+  // (+ 2026-10-15) Cả Mức 2 (trang: vạch con trỏ trượt) lẫn Mức 3 (băng chuyền)
+  if (c.mode === 'tempo') c.staff.setTime(Math.max(0, beat));
   if (cur) c.staff.setCursor(idxOf(cur));
   if (c.hints === 'full') {
     const upcoming = gs.find((g) => g.start >= beat - 0.05 && g.start - beat < 0.5) ?? cur;
@@ -134,9 +136,12 @@ export function startTempo(c: SongCtx): void {
   const playingLine = () => h('span', {}, micOn(c) ? '🎤 Đàn theo nhịp — app đang nghe' : '🎵 Đàn theo tiếng "tích"!');
   /** Đang hiện dòng "máy im" chưa (chỉ thay DOM khi đổi) */
   let silentShown = false;
-  const loop = () => {
+  // (+ 2026-10-15) Con trỏ / băng chuyền theo tiếng NGHE THẤY, mượt (đồng hồ âm thanh nhảy theo khối — music/playhead.ts)
+  const glide = new GlideClock(() => app.audio.now(), () => app.audio.outputLatency);
+  const loop = (frameMs?: number) => {
     if (tk !== c.token) return void c.unTempo();
     const beat = (app.audio.now() - t0) / spb;
+    const seen = (glide.now(frameMs ?? performance.now()) - t0) / spb;
     if (c.state === 'playing' && drop && muted(beat) !== silentShown) {
       silentShown = !silentShown;
       status.replaceChildren(
@@ -153,7 +158,7 @@ export function startTempo(c: SongCtx): void {
         take.start(); // hết đếm vào → bắt đầu ghi (chỉ khi micro bật)
         status.replaceChildren(playingLine());
       }
-      follow(c, beat);
+      follow(c, Math.max(seen, 0));
     }
     if (beat < total + 0.6) c.raf = requestAnimationFrame(loop);
     else {

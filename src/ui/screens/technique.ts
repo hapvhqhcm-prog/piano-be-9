@@ -13,6 +13,11 @@ import { techniqueArt } from '../components/techniqueArt';
 import { DRILL_PRINCIPLE, handPrinciple } from '../../lessons/handTechnique';
 import { principleFigure } from '../components/handCards';
 import { selfStudy } from '../selfStudy';
+import { lazy } from '../lazy';
+import type { TechniqueAnimHandle } from '../components/techniqueAnim';
+
+/** (+ 2026-10-15) Hoạt hình kỹ thuật TỪNG BƯỚC (chunk riêng); chưa nạp xong → tạm hiện tranh cũ (techniqueArt). */
+const techAnim = lazy(() => import('../components/techniqueAnim'));
 
 export interface TechniqueHooks {
   title: string;
@@ -103,6 +108,14 @@ export function techniqueScreen(app: App, hooks: TechniqueHooks) {
     let stopArt: () => void = () => undefined;
     let timer = 0;
     let demoRun: { cancel: () => void; done: Promise<void> } | null = null;
+    // hoạt hình từng bước của bài đang hiện + trạng thái giọng đọc vòng đầu (chờ / đọc / im — bé đang làm)
+    let anim: TechniqueAnimHandle | null = null;
+    let narr: 'wait' | 'go' | 'quiet' = 'wait';
+    techAnim.prefetch();
+    const startNarration = () => {
+      narr = 'go';
+      anim?.narrate((t) => speak(app, t));
+    };
 
     // Cùng dải C3–C5 như các màn khác → bàn tay thầy vừa cỡ phím
     const kb = new PianoKeyboard({ low: 'C3', high: 'C5', labels: 'c', onPress: (p) => void app.audio.playPitch(p) });
@@ -156,11 +169,14 @@ export function techniqueScreen(app: App, hooks: TechniqueHooks) {
         onCaption: (t) => cap && (cap.textContent = t),
       });
       demoRun = run;
+      anim?.setSound(false);
       void run.done.then(() => {
         if (tk !== token || demoRun !== run) return;
         demoRun = null;
         overlay.hide();
         if (cap) cap.textContent = ' ';
+        anim?.setSound(true);
+        if (narr === 'wait') startNarration();
       });
     }
 
@@ -171,12 +187,37 @@ export function techniqueScreen(app: App, hooks: TechniqueHooks) {
       const info = DRILL_INFO[d];
       const five = d === 'five-finger';
       kbWrap.hidden = !five;
-      let art: Element;
-      if (five) art = h('div', { class: 'tq-caption' }, ' ');
+      narr = 'wait';
+      const caption = five ? h('div', { class: 'tq-caption' }, ' ') : null;
+      const art = h('div', { class: `tq-art-box${five ? ' five' : ''}` });
+      const mount = (m: typeof import('../components/techniqueAnim')) => {
+        if (!art.isConnected && art.parentNode) return;
+        stopArt();
+        const a = m.mountTechniqueAnim(d, { click: (accent) => app.audio.click(0, accent) });
+        anim = a;
+        stopArt = () => {
+          a.stop();
+          if (anim === a) anim = null;
+        };
+        art.classList.add('ta-box');
+        art.replaceChildren(a.el, ...(caption ? [caption] : []));
+        if (demoRun) a.setSound(false);
+        if (narr === 'go') a.narrate((t) => speak(app, t));
+        else if (narr === 'quiet') a.quiet();
+      };
+      const ready = techAnim.loaded;
+      if (ready) mount(ready);
       else {
-        const a = techniqueArt(d);
-        art = a.el;
-        stopArt = a.stop;
+        if (caption) art.append(caption);
+        else {
+          const a = techniqueArt(d as Exclude<TechniqueDrill, 'five-finger'>);
+          art.append(a.el);
+          stopArt = a.stop;
+        }
+        techAnim.load().then(
+          (m) => art.isConnected && mount(m),
+          () => undefined,
+        );
       }
       const said = `${info.name}. ${info.how} Làm ${info.times} lần nhé.`;
       stage.replaceChildren(
@@ -185,7 +226,7 @@ export function techniqueScreen(app: App, hooks: TechniqueHooks) {
           : h('div', { class: 'progress' }, `Bài ${i + 1} / ${hooks.drills.length}`),
         h('h1', { class: 'title' }, `${info.emoji} ${info.name}`),
         // (+ 2026-10-15) cạnh hoạt hình bài tập: tranh NGUYÊN TẮC tay tương ứng (đúng ✓), suốt 30 giây bé làm
-        h('div', { class: `tq-row${five ? ' five' : ''}` }, h('div', { class: `tq-art-box${five ? ' five' : ''}` }, art), principleBox(d)),
+        h('div', { class: `tq-row${five ? ' five' : ''}` }, art, principleBox(d)),
         h('p', { class: 'lead tq-how' }, info.how, speakChip(app, said)),
         h('div', { class: 'tq-times' }, `Làm ${info.times} lần`),
       );
@@ -196,7 +237,11 @@ export function techniqueScreen(app: App, hooks: TechniqueHooks) {
         button({ icon: '▶', label: 'Con làm nào', kind: 'primary', onTap: () => run() }),
       );
       if (five) window.setTimeout(() => tk === token && demoFive(), 500);
-      else window.setTimeout(() => tk === token && void speak(app, said), 350);
+      else
+        window.setTimeout(
+          () => tk === token && void speak(app, said).then(() => tk === token && narr === 'wait' && startNarration()),
+          350,
+        );
     }
 
     /** Bé làm theo: đồng hồ nhẹ nhàng, chấm sáng dần "Làm 3 lần"; hết giờ (hoặc bấm Xong) → bố mẹ xác nhận. */
@@ -208,6 +253,9 @@ export function techniqueScreen(app: App, hooks: TechniqueHooks) {
         demoRun = null;
       }
       cancelSpeech();
+      // bé bắt đầu làm: thôi đọc, hoạt hình chạy tiếp với tiếng tích nhẹ theo phách
+      narr = 'quiet';
+      anim?.quiet();
       const tk = token;
       const info = DRILL_INFO[hooks.drills[i]];
       const dots = Array.from({ length: info.times }, (_, k) => h('i', { class: 'tq-dot' }, String(k + 1)));
@@ -244,6 +292,7 @@ export function techniqueScreen(app: App, hooks: TechniqueHooks) {
         return;
       }
       stage.querySelector('.tq-timer')?.classList.add('done');
+      anim?.setSound(false);
       const q = h('p', { class: 'lead tq-ask' }, '👪 Bố mẹ: bé làm đúng chưa?');
       stage.querySelector('.tq-ask')?.remove();
       stage.append(q);

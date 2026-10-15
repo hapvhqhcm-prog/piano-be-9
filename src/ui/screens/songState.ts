@@ -33,6 +33,7 @@ import type { App } from '../App';
 import { PEDAL_DOWN_S, PEDAL_UP_S } from '../components/demo';
 import { h } from '../components/dom';
 import { StaffView } from '../components/staffView';
+import { noteColorMode, noteColorsOn } from '../components/noteColors';
 import type { HandOverlay } from '../components/demo';
 import type { MicHonestyWatch } from '../components/micHonesty';
 import type { SongHead } from './songHead';
@@ -241,9 +242,23 @@ export function buildStaff(c: SongCtx, pageMode = false): void {
     mode: c.mode === 'tempo' && c.level === 3 && !pageMode ? 'scroll' : 'page',
     // Tập tách tay: bè kia vẽ mờ (app đàn thay)
     dimHand: solo(c) ? (solo(c) === 'RH' ? 'LH' : 'RH') : null,
+    colors: colorsOn(c),
   });
   c.staffBox.replaceChildren(c.staff.el);
+  c.kb.setNoteColors(colorsOn(c));
+  // 🎨 Nốt màu đổi trong ⚙️ Tùy chọn → tô lại khuông đang hiện + phím (không dựng lại màn)
+  if (!colorHooked.has(c.head.el)) {
+    colorHooked.add(c.head.el);
+    c.head.el.addEventListener('notecolors', () => {
+      c.staff.setColors(colorsOn(c));
+      c.kb.setNoteColors(colorsOn(c));
+    });
+  }
 }
+
+/** (+ 2026-10-15) 🎨 Nốt màu: theo chế độ đã chọn (Tự động = tuần 1–8); không dùng ở sân khấu */
+const colorsOn = (c: SongCtx): boolean => !c.opts.stage && noteColorsOn(noteColorMode(), c.app.store.get().progress.currentWeek);
+const colorHooked = new WeakSet<HTMLElement>();
 
 /**
  * Tập tách tay: app đàn khẽ nốt tay KIA bắt đầu trong [fromBeat, toBeat) — chỉ khi micro tắt.

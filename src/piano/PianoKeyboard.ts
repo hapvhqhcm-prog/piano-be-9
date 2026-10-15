@@ -88,6 +88,8 @@ export class PianoKeyboard {
         this.geom.set(info.midi, { center: (whiteIndex + 0.5) * whiteW, black: false });
         const labels = this.opts.labels ?? 'c';
         if (labels === 'all' || (labels === 'c' && info.letter === 'C')) key.setBaseLabel(viName(info.pitch));
+        // (+ 2026-10-15) 🎨 Nốt màu: lớp màu theo chữ cái — chỉ hiện khi bàn phím có lớp .ncol (setNoteColors)
+        key.el.classList.add(`nc-${info.letter}`);
       }
       this.keys.set(info.midi, key);
       this.el.append(key.el);
@@ -101,6 +103,11 @@ export class PianoKeyboard {
     this.high = high;
     this.build();
     this.emit({ type: 'range' });
+  }
+
+  /** (+ 2026-10-15) 🎨 Nốt màu: tô nhẹ chân phím trắng cùng màu nốt trên khuông (CSS theme.css .keyboard.ncol). */
+  setNoteColors(on: boolean): void {
+    this.el.classList.toggle('ncol', on);
   }
 
   /** Theo dõi phím đích / kết quả (lớp phủ). Trả về hàm bỏ theo dõi. */

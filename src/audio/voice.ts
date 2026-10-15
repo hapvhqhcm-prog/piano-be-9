@@ -134,12 +134,25 @@ export function speakable(text: string): string {
     .trim();
 }
 
+/**
+ * (+ 2026-10-15) Báo cho giao diện biết giọng đọc đang nói: lớp `bn-speaking` trên <html> → Bé Nốt mấp máy môi
+ * (styles/mascot.css). Chỉ là cờ hiển thị — không ảnh hưởng lúc nào đọc / micro bỏ qua.
+ */
+function speakingFlag(on: boolean): void {
+  try {
+    if (typeof document !== 'undefined') document.documentElement?.classList.toggle('bn-speaking', on);
+  } catch {
+    /* bỏ qua */
+  }
+}
+
 /** Dừng câu đang đọc (vd khi rời màn hình). */
 export function cancelSpeech(): void {
   gen++;
   const s = synth();
   if (speaking) lastEnd = Date.now();
   speaking = false;
+  speakingFlag(false);
   try {
     // Safari: cancel() khi đang rảnh có thể làm câu nói ngay sau bị nuốt → chỉ hủy khi thật sự đang đọc
     if (s && (s.speaking || s.pending)) s.cancel();
@@ -184,6 +197,7 @@ export async function speak(host: VoiceHost, text: string): Promise<void> {
       if (my === gen) {
         speaking = false;
         lastEnd = Date.now();
+        speakingFlag(false);
       }
       resolve();
     };
@@ -198,6 +212,7 @@ export async function speak(host: VoiceHost, text: string): Promise<void> {
       u.onend = finish;
       u.onerror = finish;
       speaking = true;
+      speakingFlag(true);
       s.speak(u);
     } catch {
       finish();

@@ -1004,7 +1004,7 @@ p {
   width: 100%;
   max-width: 1150px;
   height: 100%;
-  max-height: 230px;
+  max-height: 320px;
 }
 .staff svg {
   width: 100%;
@@ -1045,22 +1045,29 @@ p {
 .staff-bar,
 .staff-ledger {
   stroke: #3a3a44;
-  stroke-width: 1.6;
+  stroke-width: 1.7;
 }
-.staff-bar.end {
-  stroke-width: 4;
-}
-.staff-clef {
-  fill: none;
-  stroke: #3a3a44;
-  stroke-width: 3.2;
+.staff-ledger {
+  stroke-width: 2.4;
   stroke-linecap: round;
 }
+.staff-bar {
+  stroke-width: 2;
+}
+.staff-bar.end {
+  stroke-width: 5;
+}
+/* Khóa Sol / Fa, ngoặc khuông kép: hình vẽ tô kín (src/music/engrave.ts) */
+.staff-clef,
+.staff-brace {
+  fill: #2b2a33;
+  stroke: none;
+}
 .staff-time {
-  font-size: 26px;
+  font-size: 30px;
   font-weight: 900;
   text-anchor: middle;
-  fill: #3a3a44;
+  fill: #2b2a33;
 }
 .staff-head {
   fill: #2b2a33;
@@ -1069,13 +1076,18 @@ p {
 }
 .staff-head.hollow {
   fill: #fff;
-  stroke-width: 2.6;
+  stroke-width: 3;
 }
-.staff-stem,
-.staff-flag {
+.staff-stem {
   stroke: #2b2a33;
-  stroke-width: 2;
+  stroke-width: 2.6;
   fill: none;
+}
+.staff-flag {
+  fill: #2b2a33;
+  stroke: #2b2a33;
+  stroke-width: 1;
+  stroke-linejoin: round;
 }
 /* Gạch nối móc đơn / móc kép (như bản in) */
 .staff-beam {
@@ -1092,14 +1104,19 @@ p {
   fill: none;
 }
 .staff-finger {
-  font-size: 17px;
-  font-weight: 800;
+  font-size: 21px;
+  font-weight: 900;
   text-anchor: middle;
-  fill: var(--rh);
+  fill: #0f5ea8;
+  /* viền trắng: số ngón tách khỏi dòng kẻ / đuôi nốt */
+  paint-order: stroke;
+  stroke: #fff;
+  stroke-width: 4px;
+  stroke-linejoin: round;
 }
 .staff-name {
-  font-size: 16px;
-  font-weight: 700;
+  font-size: 18px;
+  font-weight: 800;
   text-anchor: middle;
   fill: var(--muted);
 }
@@ -1112,7 +1129,7 @@ p {
 }
 .staff-note.now .staff-name {
   fill: var(--primary);
-  font-size: 19px;
+  font-size: 20px;
 }
 .staff-note.hit .staff-head {
   fill: var(--good);
@@ -1267,19 +1284,17 @@ p {
   vertical-align: middle;
 }
 .staff-acc {
-  font-size: 22px;
-  font-weight: 700;
-  text-anchor: middle;
   fill: #2b2a33;
 }
 .staff-dot {
   fill: #2b2a33;
 }
+/* Tay trái: cam đậm (cam sáng --lh chỉ 2,6:1 trên nền trắng — khó đọc từ giá nhạc) */
 .staff-finger.lh {
-  fill: var(--lh);
+  fill: #a85500;
 }
 .staff.grand {
-  max-height: 330px;
+  max-height: 460px;
 }
 .song-staff.grand {
   flex-grow: 1.4;

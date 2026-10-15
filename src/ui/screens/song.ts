@@ -34,6 +34,9 @@ export type { SongHooks } from './songState';
  * Trạng thái dùng chung: songState.ts · Từng nốt: songWait.ts · Theo nhịp: songTempo.ts · Kết quả + nhận xét:
  * songResult.ts · 🎯 Luyện ngay chỗ này: songFocus.ts. File này: dựng màn, màn chờ, xem mẫu, bắt đầu, micro.
  */
+/** (+ 2026-10-15) "🐢 Xem chậm": thầy đàn mẫu ở 0.6× nhịp */
+const SLOW_DEMO = 0.6;
+
 export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongHooks) {
   return (root: HTMLElement) => {
     const settings = app.store.settings;
@@ -302,18 +305,37 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
     }
 
     // ---------------- Xem mẫu: "video" bàn tay thầy đàn ----------------
-    async function demo(after: () => void = reset): Promise<void> {
+    // (+ 2026-10-15) bàn tay mờ trên bàn phím đàn cả bài (demo.ts → demoHands.ts); 🐢 Xem chậm = 0.6× nhịp
+    async function demo(after: () => void = reset, speed = 1): Promise<void> {
       const tk = ++c.token;
       c.state = 'demo';
-      const spb = 60 / c.bpm;
+      const bpm = c.bpm * speed;
+      const spb = 60 / bpm;
       overlay.setGhost(false);
       kb.setTargets([]);
-      const caption = h('span', {}, '🎬 Xem thầy đàn mẫu — nhìn ngón tay nhé');
+      const caption = h('span', {}, speed < 1 ? '🐢 Thầy đàn chậm — nhìn ngón tay nhé' : '🎬 Xem thầy đàn mẫu — nhìn ngón tay nhé');
       status.replaceChildren(caption, firstTime ? h('div', { class: 'sing-prompt' }, '🎤 Hát tên nốt theo thầy nhé!') : '');
-      setBar(c, button({ icon: '⏹', label: 'Dừng', onTap: reset }));
-      scheduleAccomp(c, app.audio.now() + 0.35, spb);
+      setBar(
+        c,
+        button({ icon: '⏹', label: 'Dừng', onTap: reset }),
+        speed === 1
+          ? button({
+              icon: '🐢',
+              label: 'Xem chậm',
+              onTap: () => {
+                if (tk !== c.token) return;
+                c.demoRun?.cancel(); // tắt tiếng lượt đang xem TRƯỚC khi hẹn lượt chậm
+                c.demoRun = null;
+                void demo(after, SLOW_DEMO);
+              },
+            })
+          : null,
+      );
+      const t0 = app.audio.now() + 0.35;
+      scheduleAccomp(c, t0, spb);
       c.demoRun = playDemo(app.audio, kb, overlay, eventsFromTune(c.tune), {
-        bpm: c.bpm,
+        bpm,
+        t0,
         pedal: pedalOfTune(c.tune),
         onCaption: (t) => (caption.textContent = `🎬 ${t}`),
         onBeat: (beat) => {

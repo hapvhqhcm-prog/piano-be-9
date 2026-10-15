@@ -871,6 +871,102 @@ input[type='range']:focus-visible {
   stroke-width: 1.8;
   stroke-linejoin: round;
 }
+/* ---- (+ 2026-10-15) Khuông dễ đọc: số ô nhịp, quầng sáng con trỏ, vạch con trỏ trượt, nốt màu ---- */
+.staff-barno {
+  font-size: 13px;
+  font-weight: 700;
+  text-anchor: middle;
+  fill: #8f8aa3;
+}
+/* Quầng sáng sau nốt đang tới (lớp riêng dưới nốt — chỉ đổi khi con trỏ sang nhóm khác) */
+.staff-glow {
+  fill: var(--violet-500, #6d5bd0);
+  opacity: 0.2;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+/* Chế độ chờ: nốt sắp đàn "thở" nhẹ (theo nhịp: tắt — con trỏ đã trượt) */
+.staff.pulse .staff-glow {
+  animation: staff-pulse 1.6s ease-in-out infinite;
+}
+@keyframes staff-pulse {
+  0%,
+  100% {
+    opacity: 0.12;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 0.32;
+    transform: scale(1.12);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .staff.pulse .staff-glow {
+    animation: none;
+  }
+}
+/* Trang + theo nhịp: vạch con trỏ trượt theo tiếng đàn (chỉ đổi transform) */
+.staff-playhead.glide {
+  stroke: var(--violet-500, #6d5bd0);
+  stroke-width: 5;
+  stroke-dasharray: none;
+  stroke-linecap: round;
+  opacity: 0.45;
+}
+/* 🎨 Nốt màu (Okabe–Ito, an toàn cho người mù màu — engrave.ts NOTE_COLORS). Chỉ khi nốt chưa có trạng thái:
+   đang tới / đúng / trượt / bố mẹ / nhận xét luôn thắng (khuông đang nhận xét: staffView tắt hẳn lớp .ncol). */
+.staff.ncol .nc-C { --nc: #d55e00; --nct: #a84a00; }
+.staff.ncol .nc-D { --nc: #e69f00; --nct: #8f6200; }
+.staff.ncol .nc-E { --nc: #f0e442; --nct: #6e6800; }
+.staff.ncol .nc-F { --nc: #009e73; --nct: #00785a; }
+.staff.ncol .nc-G { --nc: #56b4e9; --nct: #1d6e9e; }
+.staff.ncol .nc-A { --nc: #0072b2; --nct: #0072b2; }
+.staff.ncol .nc-B { --nc: #cc79a7; --nct: #a0477a; }
+.staff.ncol .staff-note:not(.hit, .miss, .parent) .staff-head[class*='nc-'] {
+  fill: var(--nc);
+  stroke: #2b2a33;
+  stroke-width: 1.6;
+}
+.staff.ncol .staff-note:not(.hit, .miss, .parent) .staff-head.hollow[class*='nc-'] {
+  stroke: var(--nc);
+  stroke-width: 4;
+  fill: #fff;
+}
+.staff.ncol .staff-note:not(.hit, .miss, .parent) .staff-name[class*='nc-'] {
+  fill: var(--nct);
+}
+/* Đã đàn đúng ở chế độ màu: cả nốt (đầu + đuôi) xanh — khác hẳn nốt Fa xanh lục lam chưa đàn */
+.staff.ncol .staff-note.hit .staff-stem,
+.staff.ncol .staff-note.hit .staff-flag {
+  stroke: var(--good);
+}
+.staff.ncol .staff-note.hit .staff-head {
+  stroke-width: 3;
+}
+/* Trượt ở chế độ màu: viền cam đứt, ruột trắng (nốt Rê màu cam chưa đàn không bị nhầm là "trượt") */
+.staff.ncol .staff-note.miss .staff-head {
+  fill: #fff;
+  stroke: #e9a25a;
+  stroke-width: 3;
+  stroke-dasharray: 3.5 2.5;
+}
+/* Phím trắng của bàn phím ảo: dải màu nhạt ở chân phím, cùng màu với nốt (src/piano/PianoKeyboard.ts setNoteColors) */
+.keyboard.ncol .key.nc-C { --kc: rgba(213, 94, 0, 0.3); }
+.keyboard.ncol .key.nc-D { --kc: rgba(230, 159, 0, 0.32); }
+.keyboard.ncol .key.nc-E { --kc: rgba(240, 228, 66, 0.55); }
+.keyboard.ncol .key.nc-F { --kc: rgba(0, 158, 115, 0.28); }
+.keyboard.ncol .key.nc-G { --kc: rgba(86, 180, 233, 0.38); }
+.keyboard.ncol .key.nc-A { --kc: rgba(0, 114, 178, 0.26); }
+.keyboard.ncol .key.nc-B { --kc: rgba(204, 121, 167, 0.32); }
+.keyboard.ncol .key-white[class*='nc-']:not(.is-target, .is-pressed, .is-heard, .is-good, .is-show) {
+  box-shadow:
+    inset 0 -16px 0 var(--kc),
+    inset 0 1px 0 #fff;
+}
+/* Bài hai tay (khuông kép): bàn phím thấp hơn một chút → khuông kép đủ to để đọc từ giá nhạc */
+.keyboard-wrap.song-kb.short {
+  flex-basis: 23vh;
+}
 .song-legend {
   display: flex;
   flex-wrap: wrap;

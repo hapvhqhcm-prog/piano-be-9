@@ -9,7 +9,7 @@ import { midiToPitch, pitchToMidi, viName } from '../../piano/pitchTable';
 import { backButton, button, h } from '../components/dom';
 import { SONG_CHECKS, SONG_CHECKS_WAIT, parentChecklist, type CheckItem } from '../components/parentCheck';
 import { speak } from '../../audio/voice';
-import { mascot } from '../components/mascot';
+import { cue, mascot } from '../components/mascot';
 import type { ReviewMark } from '../components/staffView';
 import { kindsPresent, outcomeOf, placeLabel, reviewUsable, teach, type NoteKind, type NoteReview, type RunReview, type TeacherPoint } from '../../music/teacher';
 import { TEMPOS, hardestPhrase } from './songShared';
@@ -115,7 +115,7 @@ export function showResult(
     h(
       'div',
       { class: `song-result${retryCard ? ' is-retry' : ' is-pass'}` },
-      h('div', { class: `song-result-mascot ${retryCard ? 'react-scratch' : 'react-bounce'}` }, mascot(retryCard ? 'think' : 'cheer', 64)),
+      h('div', { class: `song-result-mascot ${retryCard ? 'react-scratch' : 'react-bounce'}` }, mascot(retryCard ? cue('retry') : cue('praise'), 64)),
       h(
         'div',
         { class: 'song-lines' },

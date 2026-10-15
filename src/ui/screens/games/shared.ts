@@ -7,7 +7,7 @@ import type { GameId } from '../../../practice/games/catalog';
 import type { App } from '../../App';
 import { backButton, button, h } from '../../components/dom';
 import { confetti } from '../../components/celebrate';
-import { mascot, type Mood } from '../../components/mascot';
+import { cue, mascot, type Mood } from '../../components/mascot';
 import { speakChip } from '../../components/speakChip';
 import '../../../styles/games.css';
 
@@ -35,7 +35,8 @@ export function mascotSlot(size = 96): { el: HTMLElement; react(m: Mood, bounce?
   return {
     el,
     react(m, bounce = true) {
-      el.replaceChildren(mascot(m, size));
+      // (2026-10-15) Hình theo tình huống: đúng → vỗ tay khen, sai → động viên (lúc phản ứng không đổi)
+      el.replaceChildren(mascot(m === 'cheer' ? cue('praise') : m === 'think' ? cue('retry') : m, size));
       el.classList.remove('react');
       if (bounce) {
         void el.offsetWidth;
@@ -111,7 +112,7 @@ export function showEnd(
   const r = app.store.recordGame(o.id, o.score, o.extra);
   const record = r.record && r.prevBest > 0;
   const first = r.record && r.prevBest === 0;
-  const mood: Mood = record || o.stars >= 3 ? 'cheer' : o.stars >= 1 ? 'happy' : 'love';
+  const mood: Mood = record ? cue('perform') : o.stars >= 3 ? cue('bigWin') : o.stars >= 1 ? cue('idle') : cue('retry');
   const praise = record
     ? 'Kỷ lục mới! 🎉'
     : o.stars >= 3

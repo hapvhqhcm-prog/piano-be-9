@@ -22,6 +22,16 @@ export const CHANGELOG_BASELINE = '0.15.0';
 
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
+    version: '0.25.0',
+    date: '2026-10-15',
+    items: [
+      '"Xem mẫu": bàn tay mờ tự đàn cả bài đúng ngón theo nhạc; có nút 🐢 Xem chậm.',
+      'Bài tập kỹ thuật có hoạt hình từng bước, đếm nhịp, chỉnh nhanh/chậm.',
+      'Khuông nhạc to, rõ hơn; tuỳ chọn "🎨 Nốt màu"; con trỏ chạy mượt.',
+      'Bé Nốt có thêm biểu cảm; bản đồ đảo có sóng, mây, đường đi tới đảo mới.',
+    ],
+  },
+  {
     version: '0.24.0',
     date: '2026-10-15',
     items: [

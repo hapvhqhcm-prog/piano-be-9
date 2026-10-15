@@ -21,10 +21,7 @@
   animation: kid-tilt 1.6s ease-in-out infinite;
   transform-origin: 50% 90%;
 }
-.react-scratch .mascot g:last-of-type {
-  transform-origin: 66px 113px;
-  animation: kid-scratch 0.35s ease-in-out 4 alternate;
-}
+/* (2026-10-15) gãi đầu: styles/mascot.css — `.react-scratch .mascot.mood-think .mn-arm-r` (trước: g:last-of-type, trúng cả trang phục) */
 @keyframes kid-tilt {
   0%, 100% { transform: rotate(0deg); }
   50% { transform: rotate(-6deg); }
@@ -265,7 +262,7 @@ button.bonus-card {
   max-width: 640px;
 }
 
-/* ---------- Cập bến đảo mới (~3 giây) ---------- */
+/* ---------- Cập bến đảo mới (≤ 3 giây; 2026-10-15: di chuyển 1,9 s, thuyền / máy bay, mây + sóng trôi) ---------- */
 .arrival {
   position: fixed;
   inset: 0;
@@ -338,18 +335,61 @@ button.bonus-card {
   top: 58%;
   left: 18%;
   transform: translate(-50%, -50%);
-  animation: arrival-x 2.3s cubic-bezier(0.45, 0, 0.4, 1) forwards;
+  animation: arrival-x 1.9s cubic-bezier(0.45, 0, 0.4, 1) forwards;
 }
 .arrival-bob {
   display: flex;
   flex-direction: column;
   align-items: center;
-  animation: arrival-y 2.3s ease-in-out forwards;
+  animation: arrival-y 1.9s ease-in-out forwards;
 }
-.arrival-bob .mascot {
+.arrival-rider {
+  line-height: 0;
   margin-bottom: -26px;
   position: relative;
   z-index: 1;
+}
+.arrival.by-plane .arrival-rider {
+  margin-bottom: -34px;
+}
+.arrival-hull.plane {
+  width: 150px;
+  height: 64px;
+}
+.arrival-prop {
+  transform-origin: 132px 32px;
+  animation: arrival-prop 0.12s linear infinite alternate;
+}
+@keyframes arrival-prop {
+  to { transform: scaleY(0.2); }
+}
+/* Mây + sóng (mapMotion.ts) trên toàn màn: nhanh hơn bản đồ để thấy rõ trong 3 giây */
+.arrival .sea-clouds {
+  top: 4%;
+  animation-duration: 14s;
+}
+.arrival.by-plane .sea-clouds {
+  top: 14%;
+  animation-duration: 7s;
+}
+.arrival .sea-waves.back {
+  top: 60%;
+  height: 40%;
+  animation-duration: 5s;
+}
+.arrival .sea-waves.front {
+  top: 66%;
+  height: 34%;
+  animation-duration: 3.6s;
+}
+/* "Giảm chuyển động": khung tĩnh — đã cập bến */
+.arrival.static .arrival-boat {
+  animation: none;
+  left: 69%;
+}
+.arrival.static .arrival-bob {
+  animation: none;
+  transform: translateY(5vh);
 }
 .arrival-hull {
   width: 120px;

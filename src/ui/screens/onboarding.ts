@@ -1,7 +1,7 @@
 import type { App, Screen } from '../App';
 import { P, checkBadge, noteGlyph, sparkle, starPath, svgRoot } from '../components/art/svgKit';
 import { append, button, h } from '../components/dom';
-import { mascot } from '../components/mascot';
+import { cue, mascot } from '../components/mascot';
 import { postureArt } from '../components/postureArt';
 import { whenCorrectBox } from '../components/whenCorrect';
 import { installCard } from '../components/installCard';
@@ -36,7 +36,7 @@ function artSession(): HTMLElement {
   return h(
     'div',
     { class: 'onb-mock' },
-    h('div', { class: 'onb-mock-row' }, mascot('wave', 92), h('div', { class: 'onb-mock-btn primary' }, '▶ Học tiếp')),
+    h('div', { class: 'onb-mock-row' }, mascot(cue('guide'), 92), h('div', { class: 'onb-mock-btn primary' }, '▶ Học tiếp')),
     h(
       'div',
       { class: 'onb-mock-row' },

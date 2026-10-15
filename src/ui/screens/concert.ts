@@ -5,6 +5,7 @@ import type { App } from '../App';
 import { stickerArt } from '../components/art/stickerArt';
 import { confetti } from '../components/celebrate';
 import { backButton, button, h } from '../components/dom';
+import { cue, mascot } from '../components/mascot';
 import { shortTitle, songEmoji } from '../components/songArt';
 import { cancelSpeech, speak } from '../../audio/voice';
 import { stageSongScreen } from './stage';
@@ -238,7 +239,7 @@ export function concertScreen(app: App, hooks: ConcertHooks) {
                 { class: 'concert-sticker' },
                 stickerArt({ id: `concert-w${w}`, kind: 'concert', title: `Buổi diễn tuần ${w}`, hint: '', earned: true, week: w }, true),
               )
-            : h('div', { class: 'hero-emoji huge' }, '🎤'),
+            : h('div', { class: 'hero-mascot' }, mascot(cue('perform'), 120)),
           h('h1', { class: 'hero-title' }, saved ? `Con nhận sticker "Buổi diễn tuần ${w}"!` : 'Buổi diễn tuyệt vời!'),
           saved ? h('p', { class: 'lead' }, 'Đã dán vào sổ sticker 📒 — mục 🎤 Buổi diễn') : null,
           h('div', { class: 'end-actions' }, button({ icon: '▶', label: 'Tiếp', kind: 'primary', big: true, onTap: hooks.onDone })),

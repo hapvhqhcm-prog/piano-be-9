@@ -1,0 +1,204 @@
+/* =========================================================
+   Bản đồ đảo sinh động (2026-10-15) — ui/components/mapMotion.ts
+   Mỗi lớp mây / sóng là MỘT thẻ div có nền lặp, trượt đúng một ô nền bằng transform (vòng lặp liền, GPU ghép lớp).
+   ========================================================= */
+.sea-layer {
+  position: absolute;
+  left: 0;
+  pointer-events: none;
+  background-repeat: repeat;
+  will-change: transform;
+}
+.sea-clouds {
+  top: 2px;
+  height: 46px;
+  width: calc(100% + 520px);
+  background-repeat: repeat-x;
+  background-size: 520px 46px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='520' height='46'%3E%3Cg fill='%23fff' opacity='.6'%3E%3Cellipse cx='70' cy='28' rx='34' ry='11'/%3E%3Cellipse cx='58' cy='21' rx='15' ry='12'/%3E%3Cellipse cx='82' cy='19' rx='19' ry='14'/%3E%3Cellipse cx='330' cy='22' rx='26' ry='8'/%3E%3Cellipse cx='322' cy='16' rx='11' ry='9'/%3E%3Cellipse cx='339' cy='15' rx='13' ry='10'/%3E%3C/g%3E%3C/svg%3E");
+  animation: sea-drift-520 110s linear infinite;
+}
+.sea-waves.back {
+  top: 22%;
+  height: 78%;
+  width: calc(100% + 140px);
+  background-size: 140px 46px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='46'%3E%3Cpath d='M12 20 q8 -5 16 0 t16 0' fill='none' stroke='%23fff' stroke-opacity='.55' stroke-width='2.2' stroke-linecap='round'/%3E%3C/svg%3E");
+  animation: sea-drift-140 16s linear infinite;
+}
+.sea-waves.front {
+  top: 30%;
+  height: 70%;
+  width: calc(100% + 180px);
+  left: -180px;
+  background-size: 180px 58px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='58'%3E%3Cpath d='M96 42 q10 -6 20 0 t20 0 t20 0' fill='none' stroke='%23fff' stroke-opacity='.7' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E");
+  animation: sea-drift-180r 11s linear infinite;
+}
+@keyframes sea-drift-520 {
+  to { transform: translateX(-520px); }
+}
+@keyframes sea-drift-140 {
+  to { transform: translateX(-140px); }
+}
+@keyframes sea-drift-180r {
+  to { transform: translateX(180px); }
+}
+
+/* ---- Chấm đường đi chạy từ đảo cũ tới đảo mới ---- */
+.map-trail {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.map-trail i {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  margin: -4.5px 0 0 -4.5px;
+  border-radius: 50%;
+  background: var(--sun-400, #ffcb3d);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.55);
+  animation: trail-pop 0.36s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+}
+@keyframes trail-pop {
+  from { transform: scale(0); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* ---- Bé Nốt (ghim) nhảy từ đảo cũ sang đảo mới cùng lúc chấm chạy (--dx/--dy: vị trí đảo cũ so với đảo mới) ---- */
+.island-pin.traveling {
+  animation:
+    pin-travel 1.4s ease-in-out 0.35s both,
+    bob 2.2s ease-in-out 1.75s infinite;
+}
+@keyframes pin-travel {
+  0% { transform: translate(var(--dx, 0px), var(--dy, 0px)); }
+  25% { transform: translate(calc(var(--dx, 0px) * 0.75), calc(var(--dy, 0px) * 0.75 - 16px)); }
+  50% { transform: translate(calc(var(--dx, 0px) * 0.5), calc(var(--dy, 0px) * 0.5)); }
+  75% { transform: translate(calc(var(--dx, 0px) * 0.25), calc(var(--dy, 0px) * 0.25 - 16px)); }
+  100% { transform: translate(0, 0); }
+}
+
+/* ---- Đảo hiện tại nhấp nhô nhẹ ---- */
+.island.here .island-art-wrap {
+  animation: isl-bob 3.4s ease-in-out infinite;
+}
+@keyframes isl-bob {
+  0%, 100% { transform: scale(1.12) translateY(0); }
+  50% { transform: scale(1.12) translateY(-3.5px); }
+}
+
+/* ---- Đảo chưa mở: sương mù mềm trôi nhẹ ---- */
+.island-fog {
+  position: absolute;
+  left: 50%;
+  top: 10px;
+  width: 100px;
+  height: 46px;
+  margin-left: -50px;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.28) 60%, rgba(255, 255, 255, 0));
+  animation: fog-drift 8s ease-in-out infinite alternate;
+}
+.island-fog::after {
+  content: '';
+  position: absolute;
+  left: 46%;
+  top: 34%;
+  width: 70px;
+  height: 30px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0));
+}
+@keyframes fog-drift {
+  from { transform: translateX(-5px); }
+  to { transform: translateX(5px); }
+}
+.island.later .mystery-q {
+  z-index: 2;
+}
+
+/* ---- Chạm đảo → thẻ nhỏ ---- */
+.island-tap {
+  position: absolute;
+  inset: -4px 10px 0;
+  z-index: 4;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 22px;
+  background: none;
+  box-shadow: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.island-tap:focus-visible {
+  outline: 3px solid var(--violet-500, #6c5cf0);
+  outline-offset: 2px;
+}
+.island-card {
+  position: absolute;
+  z-index: 6;
+  width: 260px;
+  padding: 8px 14px 9px;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 8px 22px rgba(44, 39, 82, 0.22);
+  color: var(--ink, #2c2752);
+  text-align: left;
+  pointer-events: none;
+  animation: isl-card-in 0.2s ease-out;
+}
+.island-card.top {
+  top: 8px;
+}
+.island-card.bottom {
+  bottom: 8px;
+}
+.island-card .ic-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--violet-600, #5b54d6);
+}
+.island-card .ic-name {
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 800;
+  line-height: 1.15;
+}
+.island-card .ic-body {
+  font-size: 16px;
+  line-height: 1.25;
+  color: var(--ink-2, #5a5480);
+}
+@keyframes isl-card-in {
+  from { transform: translateY(6px) scale(0.96); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sea-layer,
+  .map-trail i,
+  .island.here .island-art-wrap,
+  .island-fog,
+  .island-card,
+  .island-pin.traveling {
+    animation: none !important;
+  }
+  .map-trail i {
+    transform: none;
+    opacity: 1;
+  }
+}
+.anim-paused .sea-layer,
+.sea-layer.anim-paused {
+  animation-play-state: paused;
+}

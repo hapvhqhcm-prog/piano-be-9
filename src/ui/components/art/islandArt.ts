@@ -435,6 +435,7 @@ export function islandIcon(week: number, state: IslandState): SVGElement {
   }
   const svg = svgRoot('0 0 96 80', `island-art state-${state}`, inner);
   svg.setAttribute('data-week', String(week));
+  svg.setAttribute('aria-label', `Đảo tuần ${week}`);
   return svg;
 }
 

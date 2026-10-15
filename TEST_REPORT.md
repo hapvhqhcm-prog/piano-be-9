@@ -871,3 +871,21 @@ Có ba chuyên gia đánh giá: sư phạm, động lực cho trẻ và kỹ thu
   - Luôn hiện ở tuần ≤ 8.
   - Sau tuần 8, hiện khi gặp thế tay mới hoặc bài hai tay chưa thuộc.
   - Mờ dần khi đàn đúng 3 nốt liên tiếp, rồi 8 nốt liên tiếp.
+
+## 47. Đồ họa đợt 2: bàn tay đàn mẫu, hoạt hình kỹ thuật, khuông nhạc, Bé Nốt & bản đồ (2026-10-15)
+- **Xem mẫu: bàn tay mờ đàn cả bài** (`demoHands.ts`)
+  - Lịch hình được tính từ cùng `soundPlan` với âm thanh và chạy theo đồng hồ âm thanh trừ độ trễ đầu ra, trong một vòng rAF duy nhất.
+  - Có hiển thị: staccato / legato, dời thế tay báo trước 150 ms, ký hiệu pedal, và chế độ "Xem chậm" 0,6×.
+- **Hoạt hình kỹ thuật** (`techniqueAnim.ts`)
+  - 6 bài tập, mỗi bài 4–8 nhịp, có nhãn bước, tiếng tích, 5 mức tốc độ.
+  - Vòng đầu có lời đọc; khi giảm chuyển động thì hiện khung tĩnh kèm mũi tên.
+- **Khuông nhạc**
+  - Khóa và dấu hóa vẽ bằng path; khoảng cách nốt theo trường độ.
+  - Ô nhịp 3,2 mm trên iPad 10.2" (trước 2,5 mm).
+  - Không chồng chéo trên cả 150 bài (có test).
+  - Tùy chọn "Nốt màu" (bảng màu Okabe–Ito).
+  - `GlideClock` cho con trỏ mượt; khung nhạc ôm sát nội dung.
+- **Bé Nốt & bản đồ**
+  - Bé Nốt có 11 trạng thái, chớp mắt / thở / nhép miệng khi đọc.
+  - Bản đồ: sóng, mây, đảo nhấp nhô, sương phủ đảo chưa mở, đường đi tới đảo mới, thẻ đảo khi chạm, 43 chi tiết đảo riêng.
+  - Cảnh đến đảo mới ≤ 3 s.

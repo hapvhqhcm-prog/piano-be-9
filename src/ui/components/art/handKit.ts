@@ -82,6 +82,10 @@ export const HAND_POSES = {
   resting: [-118, -146, -170, 173, 179],
   /** Ngón cứng duỗi thẳng (ấn bằng ngón cứng). */
   stiff: [-150, -152, -160, 175, 179],
+  /** (+ 2026-10-15, hoạt hình kỹ thuật) Bàn tay xòe, ngón duỗi mềm (trên không, trước khi khum tròn). */
+  open: [-174, -176, -178, -174, 176],
+  /** (+ 2026-10-15) Tay thả lỏng buông thõng từ cổ tay (cẳng tay vừa nhấc lên — "cầu vồng"). */
+  hang: [-80, -105, -125, -140, 140],
 } as const satisfies Record<string, PoseAngles>;
 export type HandPose = keyof typeof HAND_POSES;
 
@@ -148,6 +152,31 @@ export function sideHand(o: SideHandOpts): SideHand {
   return { svg, pts };
 }
 
+/**
+ * (+ 2026-10-15) Góc "xuôi" (từ KHUỶU ra đầu ngón): [cẳng tay, mu bàn tay, đốt gốc, đốt giữa, đốt đầu].
+ * Dễ nghĩ hơn khi tay xoay quanh khuỷu (nhấc cẳng tay, ngón nhấc từ khớp gốc).
+ */
+export type ForwardAngles = readonly [number, number, number, number, number];
+
+/** Góc xuôi → góc ngược của PoseAngles (tính từ đầu ngón). */
+export function poseFromForward(f: ForwardAngles): PoseAngles {
+  const back = (d: number) => {
+    let a = d + 180;
+    while (a > 180) a -= 360;
+    while (a <= -180) a += 360;
+    return a;
+  };
+  return [back(f[4]), back(f[3]), back(f[2]), back(f[1]), back(f[0])];
+}
+
+/** Bàn tay nhìn ngang dựng từ KHUỶU cố định (cùng nét vẽ sideHand). */
+export function armHand(o: Omit<SideHandOpts, 'tip' | 'pose'> & { elbow: Pt; fwd: ForwardAngles }): SideHand {
+  const s = o.scale ?? 1;
+  const lens = [o.forearm ?? SEG_LEN[4], SEG_LEN[3], SEG_LEN[2], SEG_LEN[1], SEG_LEN[0]].map((l) => l * s);
+  const pts = chain(o.elbow, o.fwd.map((deg, i) => ({ len: lens[i], deg })));
+  return sideHand({ ...o, tip: pts[5], pose: poseFromForward(o.fwd) });
+}
+
 /** Nếp da nhỏ cắt ngang khớp `p` (vuông góc với đoạn p→q). */
 function crease(p: Pt, q: Pt, half: number): string {
   const dx = q[0] - p[0];
@@ -190,6 +219,8 @@ export interface SideKeysOpts {
   len: number;
   /** Phím đang được nhấn (xuống tới đáy) */
   pressed?: boolean;
+  /** (+ 2026-10-15) Độ nhấn liên tục 0..1 (hoạt hình); bị `pressed` ghi đè */
+  press?: number;
   /** Lớp CSS cho nhóm phím trắng (để làm hoạt hình nhấn) */
   keyClass?: string;
   /** Hiện nỉ đáy phím (key bed) có tô màu */
@@ -199,7 +230,8 @@ export interface SideKeysOpts {
 /** Phím đàn nhìn ngang: thân đàn, phím đen phía sau, phím trắng (có thể nhấn), nỉ đáy phím. */
 export function sideKeys(o: SideKeysOpts): string {
   const { x, y, len } = o;
-  const down = o.pressed ? 6 : 0;
+  // (+ 2026-10-15) `press` 0..1 = nhấn dần (hoạt hình); `pressed` = nhấn hẳn
+  const down = o.pressed ? 6 : Math.max(0, Math.min(1, Number.isFinite(o.press) ? (o.press as number) : 0)) * 6;
   const end = x + len + 60;
   const body = `<path d="M${n(x - 4)} ${n(y + 16)} H${n(end)} V${n(y + 90)} H${n(x - 4)} Z" fill="${P.wood}" stroke="${OUTLINE}" stroke-width="1.3"/>`;
   const rail = `<path d="M${n(x - 4)} ${n(y + 30)} H${n(end)}" stroke="${P.woodDark}" stroke-width="2" opacity=".5"/>`;

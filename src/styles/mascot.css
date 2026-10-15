@@ -1,0 +1,165 @@
+/* =========================================================
+   Bé Nốt sinh động (2026-10-15): nảy khi đổi trạng thái, thở khi nghỉ, chớp mắt, mấp máy môi khi giọng đọc nói,
+   cử chỉ riêng từng trạng thái. Thở / nhún / lắc đặt trên CHÍNH thẻ <svg> (GPU ghép lớp, không vẽ lại tranh);
+   cử chỉ tay chỉ lặp vài lần rồi dừng. Tranh khuất → .anim-paused (theme.css); "Giảm chuyển động" → tắt hết.
+   ========================================================= */
+svg.mascot.bn {
+  transform-origin: 50% 94%;
+  animation:
+    bn-in 0.32s cubic-bezier(0.3, 1.5, 0.5, 1),
+    bn-breathe 3.6s ease-in-out 0.32s infinite;
+}
+@keyframes bn-in {
+  from { transform: scale(0.88, 0.92); }
+  to { transform: scale(1, 1); }
+}
+@keyframes bn-breathe {
+  0%, 100% { transform: scale(1, 1); }
+  50% { transform: scale(1.012, 1.03); }
+}
+/* Chớp mắt (lớp .blink do một bộ hẹn giờ chung trong mascot.ts gắn ~170 ms) */
+.mascot .mn-eyes {
+  transform-origin: 56px 88px;
+  transition: transform 0.08s ease-in-out;
+}
+.mascot.blink .mn-eyes {
+  transform: scaleY(0.12);
+}
+
+/* Mấp máy môi khi giọng đọc đang nói (voice.ts gắn lớp bn-speaking lên <html>) */
+.mascot .mn-talk {
+  opacity: 0;
+  transform-origin: 55px 100px;
+}
+.bn-speaking .mascot .mn-talk {
+  opacity: 1;
+  animation: bn-talk 0.24s ease-in-out infinite alternate;
+}
+.bn-speaking .mascot:not(.mood-sleepy) .mn-mouth {
+  opacity: 0;
+}
+.bn-speaking .island-pin .mascot .mn-talk,
+.bn-speaking .arrival .mascot .mn-talk {
+  opacity: 0;
+  animation: none;
+}
+.bn-speaking .island-pin .mascot .mn-mouth,
+.bn-speaking .arrival .mascot .mn-mouth {
+  opacity: 1;
+}
+@keyframes bn-talk {
+  from { transform: scaleY(0.35); }
+  to { transform: scaleY(1); }
+}
+
+/* ---- Cử chỉ theo trạng thái ---- */
+.mascot .mn-clap-l {
+  animation: bn-clap-l 0.22s ease-in-out 0.3s 8 alternate;
+}
+.mascot .mn-clap-r {
+  animation: bn-clap-r 0.22s ease-in-out 0.3s 8 alternate;
+}
+@keyframes bn-clap-l {
+  to { transform: translate(4px, -1px); }
+}
+@keyframes bn-clap-r {
+  to { transform: translate(-4px, -1px); }
+}
+.mascot .mn-pop {
+  transform-origin: 57px 110px;
+  animation: bn-pop 0.44s ease-in-out 0.3s 4 alternate;
+}
+@keyframes bn-pop {
+  from { opacity: 0.35; }
+  to { opacity: 1; }
+}
+.mascot .mn-pump {
+  transform-origin: 86px 98px;
+  animation: bn-pump 0.36s ease-in-out 0.3s 6 alternate;
+}
+@keyframes bn-pump {
+  to { transform: rotate(-10deg) translateY(-2px); }
+}
+.mascot .mn-point {
+  animation: bn-point 0.4s ease-in-out 0.3s 6 alternate;
+}
+@keyframes bn-point {
+  to { transform: translateX(3px); }
+}
+svg.mascot.bn.mood-surprise {
+  animation: bn-jump 0.5s cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+@keyframes bn-jump {
+  0% { transform: translateY(0) scale(1.04, 0.92); }
+  45% { transform: translateY(-9%) scale(0.97, 1.05); }
+  100% { transform: translateY(0) scale(1, 1); }
+}
+/* Ngủ gật: nghiêng đầu, thở chậm; "Z z z" bay lên */
+svg.mascot.bn.mood-sleepy {
+  transform-origin: 50% 96%;
+  animation: bn-doze 4.4s ease-in-out infinite;
+}
+@keyframes bn-doze {
+  0%, 100% { transform: rotate(-4deg) scale(1, 1); }
+  50% { transform: rotate(-6deg) scale(1.015, 1.035); }
+}
+.mascot .mn-zzz {
+  animation: bn-zzz 2.8s ease-in-out infinite;
+}
+@keyframes bn-zzz {
+  0% { transform: translate(0, 4px); opacity: 0.2; }
+  40% { opacity: 1; }
+  100% { transform: translate(-3px, -6px); opacity: 0; }
+}
+/* Nhảy múa: lắc lư + nhún (svg) — tay & nốt nhạc nhún theo vài nhịp */
+svg.mascot.bn.mood-dance {
+  transform-origin: 50% 96%;
+  animation: bn-dance 0.9s ease-in-out infinite alternate;
+}
+@keyframes bn-dance {
+  0% { transform: rotate(-7deg) translateY(0); }
+  50% { transform: rotate(0deg) translateY(-5%); }
+  100% { transform: rotate(7deg) translateY(0); }
+}
+.mascot .mn-dance-l {
+  transform-origin: 28px 96px;
+  animation: bn-arm-l 0.45s ease-in-out 8 alternate;
+}
+.mascot .mn-dance-r {
+  transform-origin: 86px 96px;
+  animation: bn-arm-r 0.45s ease-in-out 8 alternate;
+}
+@keyframes bn-arm-l {
+  to { transform: rotate(14deg); }
+}
+@keyframes bn-arm-r {
+  to { transform: rotate(-14deg); }
+}
+.mascot .mn-notes {
+  animation: bn-notes 0.9s ease-in-out 4 alternate;
+}
+@keyframes bn-notes {
+  to { transform: translateY(-4px); }
+}
+/* Gãi đầu (kidux .react-scratch) — chỉ tay phải của trạng thái "suy nghĩ" */
+.react-scratch .mascot.mood-think .mn-arm-r {
+  transform-origin: 66px 113px;
+  animation: bn-scratch 0.35s ease-in-out 4 alternate;
+}
+@keyframes bn-scratch {
+  to { transform: translate(-3px, -4px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  svg.mascot.bn,
+  svg.mascot.bn *,
+  svg.mascot.bn.mood-dance,
+  svg.mascot.bn.mood-sleepy,
+  svg.mascot.bn.mood-surprise {
+    animation: none !important;
+    transition: none !important;
+  }
+  .mascot.blink .mn-eyes {
+    transform: none;
+  }
+}

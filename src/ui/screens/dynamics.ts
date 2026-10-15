@@ -16,7 +16,7 @@ import type { App } from '../App';
 import { confetti } from '../components/celebrate';
 import { HandOverlay, playDemo, type DemoEvent } from '../components/demo';
 import { backButton, button, h } from '../components/dom';
-import { mascot } from '../components/mascot';
+import { cue, mascot } from '../components/mascot';
 import { deferCheck, selfStudy } from '../selfStudy';
 import { principleFigure } from '../components/handCards';
 
@@ -365,7 +365,7 @@ export function dynamicsScreen(app: App, hooks: DynamicsHooks) {
             ? 'App chưa nghe thấy — nhỏ mà vẫn rõ tiếng nhé 🐭'
             : 'App chưa nghe đủ nốt — đàn lại nhé 🎹'
           : TRY[r.want];
-      stage.replaceChildren(h('div', { class: 'hero-mascot' }, mascot(ok ? 'cheer' : 'think', 90)), h('h1', { class: 'title' }, msg));
+      stage.replaceChildren(h('div', { class: 'hero-mascot' }, mascot(ok ? cue('praise') : cue('retry'), 90)), h('h1', { class: 'title' }, msg));
       if (extra) stage.append(extra);
       setBar(
         backButton(() => show(false)),

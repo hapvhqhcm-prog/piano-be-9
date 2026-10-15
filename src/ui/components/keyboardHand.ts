@@ -25,6 +25,8 @@
  * Mờ dần trong lúc chơi (ghostLevel): đúng 3 nốt liền → mờ hơn; đúng 8 nốt liền → gần như trong suốt;
  * đàn sai một nốt (micro nghe nốt khác) → rõ lại ngay; mỗi lần ĐỔI THẾ / luồn ngón → rõ lại cho nốt đó.
  * Chỉ hiện khi app đang làm sáng phím cần đàn (gợi ý "Đầy đủ"); ẩn khi thầy đàn mẫu (bàn tay hoạt hình) đang hiện.
+ * (+ 2026-10-15) "Xem mẫu": chính bàn tay này ĐÀN CẢ BÀI theo tiếng (demoHands.ts → demoBegin/demoKey/demoMove…;
+ * luôn rõ, không theo công tắc / mờ dần); hết mẫu → demoEnd() trả về như cũ.
  *
  * TRUNG THỰC: micro chỉ nghe được CAO ĐỘ — không biết bé dùng ngón nào → bàn tay chỉ là HƯỚNG DẪN, không bao giờ báo
  * "sai ngón". Không đụng tới chấm điểm / micro.
@@ -479,6 +481,7 @@ const CSS = `
 .keyboard.demo-hand-on .kb-hand{display:none}
 .kb-hand .kh-p{transition:transform .34s cubic-bezier(.3,.7,.25,1)}
 .kb-hand .kh-hand.shift .kh-p{transition-duration:.55s}
+.kb-hand.demo .kh-p{transition-duration:var(--kh-mv,.2s);transition-timing-function:cubic-bezier(.35,.1,.25,1)}
 .kb-hand .kh-hand.instant .kh-p{transition:none}
 .kb-hand .kh-skin{stroke-width:2.2px;vector-effect:non-scaling-stroke}
 .kb-hand .kh-line{fill:none;stroke-linecap:round;vector-effect:non-scaling-stroke}
@@ -500,6 +503,23 @@ const CSS = `
 .kb-hand .kh-hand.press .kh-palm>.kh-art{animation:kh-weight 1.8s ease-in-out infinite}
 .kb-hand .kh-hand.press .kh-keydown{animation:kh-keydown 1.8s ease-in-out infinite}
 }
+@media (prefers-reduced-motion:no-preference){
+.kb-hand.demo .kh-f>.kh-art{transition:transform .12s ease-out}
+.kb-hand.demo .kh-f.down>.kh-art{transform:translate(0,-100px) scale(.95,.86) translate(0,100px);transition-duration:.05s}
+.kb-hand.demo .kh-f.bA>.kh-art{animation:kh-bA .26s ease-out}
+.kb-hand.demo .kh-f.bB>.kh-art{animation:kh-bB .26s ease-out}
+.kb-hand.demo .kh-palm>.kh-art{transition:transform .22s ease-out}
+.kb-hand.demo .kh-hand.weight .kh-palm>.kh-art{transform:translate(0,-5px);transition-duration:.07s}
+.kh-pedal.down .kh-foot{transform:translate(0,5px) rotate(8deg)}
+.kh-pedal .kh-foot{transition:transform .08s ease-out}
+}
+@keyframes kh-bA{0%{transform:translate(0,-100px) scale(.95,.86) translate(0,100px)}40%{transform:translate(0,-100px) scale(1.03,1.1) translate(0,100px)}100%{transform:none}}
+@keyframes kh-bB{0%{transform:translate(0,-100px) scale(.95,.86) translate(0,100px)}40%{transform:translate(0,-100px) scale(1.03,1.1) translate(0,100px)}100%{transform:none}}
+.kh-pedal{position:absolute;right:6px;top:6px;z-index:6;pointer-events:none;display:flex;align-items:center;gap:4px;padding:3px 8px 3px 5px;border-radius:999px;background:rgba(255,255,255,.92);box-shadow:0 1px 4px rgba(27,22,64,.25);font:800 13px/1 var(--font-display,inherit);color:#5b5480}
+.kh-pedal svg{width:30px;height:30px;overflow:visible}
+.kh-pedal .kh-bar{fill:#c9c3dd}
+.kh-pedal.down{background:#fff4c2;color:#7a4b00}
+.kh-pedal.down .kh-bar{fill:#e8a400}
 @keyframes kh-press{0%,18%,100%{transform:translate(0,-100px) scale(1,1) translate(0,100px)}45%,66%{transform:translate(0,-100px) scale(.95,.88) translate(0,100px)}}
 @keyframes kh-weight{0%,18%,100%{transform:translate(0,0)}45%,66%{transform:translate(0,-5px)}}
 @keyframes kh-keydown{0%,18%,100%{opacity:0}45%,66%{opacity:.32}}
@@ -619,7 +639,12 @@ export interface KeyboardHandOptions {
   auto: (positions: PositionId[]) => boolean;
   /** Công tắc (mặc định đọc ghostMode()) */
   mode?: () => GhostMode;
+  /** (+ 2026-10-15) Chỉ dùng cho "Xem mẫu" (màn không có bàn tay mờ): bàn tay mờ của màn tạo sau sẽ thay nó */
+  demoOnly?: boolean;
 }
+
+/** Bàn tay mờ đang gắn với từng bàn phím (để "Xem mẫu" dùng lại đúng bàn tay của màn) */
+const live = new WeakMap<PianoKeyboard, KeyboardHand>();
 
 /** Lớp bàn tay mờ gắn vào một PianoKeyboard: tự theo phím đích (setTargets) và kết quả đàn (setResult). */
 export class KeyboardHand {
@@ -640,6 +665,9 @@ export class KeyboardHand {
     private readonly o: KeyboardHandOptions,
   ) {
     ensureStyle();
+    const old = live.get(kb);
+    if (old?.o.demoOnly && !old.demo) old.destroy();
+    live.set(kb, this);
     this.svg = el('svg', { class: 'kb-hand', 'aria-hidden': 'true', focusable: 'false' });
     const defs = el('defs', {}, this.svg);
     this.hands = { LH: buildHand(this.svg, defs, 'LH'), RH: buildHand(this.svg, defs, 'RH') };
@@ -664,7 +692,8 @@ export class KeyboardHand {
     if (typeof ResizeObserver !== 'undefined') {
       this.ro = new ResizeObserver(() => {
         this.measure();
-        this.schedule(true);
+        if (this.demo) this.demoRelayout();
+        else this.schedule(true);
       });
       this.ro.observe(kb.el);
     }
@@ -704,7 +733,7 @@ export class KeyboardHand {
   }
 
   private update(resized: boolean): void {
-    if (this.dead) return;
+    if (this.dead || this.demo) return;
     if (!this.W || !this.H) this.measure();
     const ts = this.targets.filter((t) => t.finger);
     if (!ts.length || !this.W) {
@@ -801,7 +830,7 @@ export class KeyboardHand {
     h.g.classList.toggle('instant', instant);
     h.g.classList.toggle('shift', moved && !cross);
     // Số ngón: cỡ theo phím
-    const r = Math.max(10, Math.min(15, 0.2 * u));
+    this.sizeNums(h, u);
     const applyPart = (i: number) => {
       h.parts[i].style.transform = tf(pose.fingers[i], dir);
       h.nums[i].style.transform = `translate(${pose.nums[i].x}px,${pose.nums[i].y}px)`;
@@ -810,13 +839,6 @@ export class KeyboardHand {
       for (let i = 0; i < 5; i++) applyPart(i);
       h.palm.style.transform = tf(pose.palm, dir);
     };
-    for (const ng of h.nums) {
-      const c = ng.firstChild as SVGCircleElement;
-      if (c.getAttribute('r') !== String(r)) {
-        c.setAttribute('r', String(r));
-        (ng.lastChild as SVGTextElement).setAttribute('font-size', String(Math.round(r * 1.3)));
-      }
-    }
     // Ngón luồn / vắt đi TRƯỚC, cả bàn tay theo sau
     const crossers = cross === 'under' ? [0] : cross === 'over' ? [1, 2, 3].filter((i) => frame[i] !== null && notes.some((n) => n.finger === i + 1)) : [];
     if (!instant && crossers.length) {
@@ -837,12 +859,7 @@ export class KeyboardHand {
       );
     } else applyAll();
     // Ngón đang cần đàn: sáng; một ngón mỗi tay → "nhấn" nhẹ + phím lún
-    for (let i = 0; i < 5; i++) {
-      const on = active.has(i + 1);
-      h.parts[i].classList.toggle('on', on);
-      h.nums[i].classList.toggle('on', on);
-      (h.nums[i].firstChild as SVGCircleElement).style.fill = on ? COLORS[hand].line : '';
-    }
+    for (let i = 0; i < 5; i++) this.light(h, hand, i, active.has(i + 1));
     const single = active.size === 1 ? notes.find((n) => active.has(n.finger)) : undefined;
     h.g.classList.toggle('press', !!single);
     if (single) {
@@ -866,9 +883,187 @@ export class KeyboardHand {
     }
   }
 
+  // ====================================================================================================================
+  // (+ 2026-10-15) "Bàn tay mẫu đàn cả bài" — demoHands.ts điều khiển theo đồng hồ âm thanh (không tự hẹn giờ)
+  // ====================================================================================================================
+
+  /** Bàn tay mờ của bàn phím này; chưa có (màn không bật bàn tay mờ) → tạo một bàn tay chỉ dùng cho "Xem mẫu". */
+  static of(kb: PianoKeyboard): KeyboardHand {
+    const cur = live.get(kb);
+    return cur && !cur.dead ? cur : new KeyboardHand(kb, { auto: () => false, mode: () => 'off', demoOnly: true });
+  }
+
+  private demo = false;
+  private pend: Partial<Record<Hand, { pose: HandPose; cls: string; idx: number }>> = {};
+  private pedalEl: HTMLDivElement | null = null;
+
+  /** Bắt đầu mẫu: hiện (các) bàn tay ở thế đầu bài — rõ, không mờ dần, không theo phím đích. */
+  demoBegin(start: Partial<Record<Hand, HandFrame>>, pedal: boolean): void {
+    if (this.dead) return;
+    this.demo = true;
+    cancelAnimationFrame(this.raf);
+    this.raf = 0;
+    this.svg.classList.add('demo');
+    this.kb.el.append(this.svg);
+    this.measure();
+    for (const hand of ['RH', 'LH'] as const) {
+      const h = this.hands[hand];
+      this.demoReset(h, hand);
+      const fr = start[hand];
+      if (fr) this.demoPose(hand, fr, null, 0, 0, true);
+    }
+    this.pedalEl?.remove();
+    this.pedalEl = null;
+    if (pedal) {
+      const p = document.createElement('div');
+      p.className = 'kh-pedal';
+      p.setAttribute('aria-hidden', 'true');
+      // bàn chân (nhìn nghiêng) trên bàn đạp
+      p.innerHTML =
+        '<svg viewBox="0 0 30 30"><rect class="kh-bar" x="2" y="22" width="26" height="6" rx="3"/>' +
+        '<g class="kh-foot"><path d="M7 4c3-2 7-1 8 3l1 9c4 0 9 1 11 3c1 1 0 3-2 3H8c-2 0-3-1-3-3l1-12c0-1 0-2 1-3z" fill="#f2c6a5" stroke="#b9805f" stroke-width="1.2"/></g></svg>' +
+        '<span>Pedal</span>';
+      this.kb.el.append(p);
+      this.pedalEl = p;
+    }
+  }
+
+  private demoReset(h: HandEls, hand: Hand): void {
+    this.hideHand(h);
+    h.g.classList.remove('lv1', 'lv2', 'shift', 'weight');
+    for (let i = 0; i < 5; i++) {
+      h.parts[i].classList.remove('down', 'bA', 'bB', 'kh-x-under', 'kh-x-over');
+      this.light(h, hand, i, false);
+    }
+    // ngón vắt có thể còn nằm sai thứ tự vẽ
+    for (let i = 1; i < 5; i++) h.g.insertBefore(h.parts[i], h.nums[0]);
+    delete this.pend[hand];
+  }
+
+  private light(h: HandEls, hand: Hand, i: number, on: boolean): void {
+    h.parts[i].classList.toggle('on', on);
+    h.nums[i].classList.toggle('on', on);
+    (h.nums[i].firstChild as SVGCircleElement).style.fill = on ? COLORS[hand].line : '';
+  }
+
+  private applyPose(h: HandEls, hand: Hand, pose: HandPose, only?: number[]): void {
+    const dir = dirOf(hand);
+    for (let i = 0; i < 5; i++) {
+      if (only && !only.includes(i)) continue;
+      h.parts[i].style.transform = tf(pose.fingers[i], dir);
+      h.nums[i].style.transform = `translate(${pose.nums[i].x}px,${pose.nums[i].y}px)`;
+    }
+    if (!only) h.palm.style.transform = tf(pose.palm, dir);
+  }
+
+  /**
+   * Đưa tay tới thế `frame` trong `durS` giây. Luồn / vắt (`cross`): chỉ ngón `finger` đi trước — cả bàn tay theo sau
+   * khi demoFollow().
+   */
+  demoPose(hand: Hand, frame: HandFrame, cross: Crossing, durS: number, finger: number, instant = false): void {
+    if (this.dead || !this.demo) return;
+    if (!this.W || !this.H) this.measure();
+    const h = this.hands[hand];
+    const tips = this.tipsOf(frame);
+    if (!this.W || tips.every((t) => !t)) return;
+    const u = (this.kb.whiteKeyWidth * this.W) / 100;
+    const pose = handPose(tips, hand, u, this.H);
+    this.sizeNums(h, u);
+    this.demoFollow(hand); // lần đi trước chưa theo xong → theo ngay
+    h.timers.forEach((t) => window.clearTimeout(t));
+    h.timers = [];
+    h.g.style.setProperty('--kh-mv', `${Math.max(0.06, durS).toFixed(3)}s`);
+    h.g.classList.toggle('instant', instant);
+    const idx = finger - 1;
+    if (!instant && cross && idx >= 0 && idx <= 3 && (cross === 'under' ? idx === 0 : idx >= 1)) {
+      const cls = cross === 'under' ? 'kh-x-under' : 'kh-x-over';
+      h.parts[idx].classList.add(cls);
+      if (cross === 'over') h.g.insertBefore(h.parts[idx], h.nums[0]); // vắt QUA: vẽ trên các ngón khác
+      this.applyPose(h, hand, pose, [idx]);
+      this.pend[hand] = { pose, cls, idx };
+    } else this.applyPose(h, hand, pose);
+    h.frame = frame;
+    h.shown = true;
+    h.g.classList.add('show');
+    if (instant) h.timers.push(window.setTimeout(() => h.g.classList.remove('instant'), 60));
+  }
+
+  demoMove(hand: Hand, frame: HandFrame, cross: Crossing, durS: number, finger: number): void {
+    this.demoPose(hand, frame, cross, durS, finger);
+  }
+
+  /** Cả bàn tay theo sau ngón luồn / vắt. */
+  demoFollow(hand: Hand): void {
+    const p = this.pend[hand];
+    if (!p) return;
+    delete this.pend[hand];
+    const h = this.hands[hand];
+    h.g.style.setProperty('--kh-mv', '.28s');
+    this.applyPose(h, hand, p.pose);
+    h.parts[p.idx].classList.remove(p.cls);
+    if (p.cls === 'kh-x-over') h.g.insertBefore(h.parts[p.idx], h.parts[p.idx + 1] ?? h.nums[0]);
+  }
+
+  /** Ngón `finger` nhấn (down) / nhả; nhả ngắt tiếng → nảy nhẹ. Mu bàn tay dồn sức khi có ngón đang giữ. */
+  demoKey(hand: Hand, finger: number, down: boolean, stac: boolean): void {
+    if (this.dead || !this.demo) return;
+    const h = this.hands[hand];
+    const i = finger - 1;
+    if (i < 0 || i > 4) return;
+    const p = h.parts[i];
+    p.classList.remove('bA', 'bB');
+    p.classList.toggle('down', down);
+    this.light(h, hand, i, down);
+    if (!down && stac) {
+      // hai tên hoạt hình luân phiên → chạy lại mà không cần đọc bố cục
+      const alt = h.g.dataset.b === 'A' ? 'B' : 'A';
+      h.g.dataset.b = alt;
+      p.classList.add(`b${alt}`);
+    }
+    h.g.classList.toggle('weight', h.parts.some((x) => x.classList.contains('down')));
+  }
+
+  demoPedal(down: boolean): void {
+    if (!this.pedalEl) return;
+    this.pedalEl.classList.toggle('down', down);
+    this.pedalEl.lastElementChild!.textContent = down ? 'Pedal ⬇' : 'Pedal';
+  }
+
+  /** Hết mẫu / dừng: bàn tay về chế độ thường (theo phím đích + công tắc). */
+  demoEnd(): void {
+    if (!this.demo) return;
+    this.demo = false;
+    this.svg.classList.remove('demo');
+    this.pedalEl?.remove();
+    this.pedalEl = null;
+    for (const hand of ['RH', 'LH'] as const) this.demoReset(this.hands[hand], hand);
+    this.schedule();
+  }
+
+  /** Xoay màn hình giữa lúc mẫu: đặt lại tay đang hiện theo kích thước mới. */
+  private demoRelayout(): void {
+    for (const hand of ['RH', 'LH'] as const) {
+      const h = this.hands[hand];
+      if (h.shown && h.frame) this.demoPose(hand, h.frame, null, 0, 0, true);
+    }
+  }
+
+  private sizeNums(h: HandEls, u: number): void {
+    const r = Math.max(10, Math.min(15, 0.2 * u));
+    for (const ng of h.nums) {
+      const c = ng.firstChild as SVGCircleElement;
+      if (c.getAttribute('r') !== String(r)) {
+        c.setAttribute('r', String(r));
+        (ng.lastChild as SVGTextElement).setAttribute('font-size', String(Math.round(r * 1.3)));
+      }
+    }
+  }
+
   destroy(): void {
     if (this.dead) return;
     this.dead = true;
+    if (live.get(this.kb) === this) live.delete(this.kb);
+    this.pedalEl?.remove();
     cancelAnimationFrame(this.raf);
     this.ro?.disconnect();
     this.unwatch();

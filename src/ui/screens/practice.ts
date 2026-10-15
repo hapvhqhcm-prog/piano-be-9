@@ -1,7 +1,7 @@
 import { meterPct } from '../../audio/MicListener';
 import { matchHeard } from '../../audio/match';
 import type { Segment, Target } from '../../lessons/types';
-import { mascot } from '../components/mascot';
+import { cue, mascot } from '../components/mascot';
 import { confetti } from '../components/celebrate';
 import { PianoKeyboard } from '../../piano/PianoKeyboard';
 import {
@@ -534,7 +534,7 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
           const t0 = target();
           stage.append(
             // Đúng: Bé Nốt nhảy cẫng lên. Thử lại: Bé Nốt gãi đầu suy nghĩ (không buồn, không nhíu mày) — sai là một phần của học
-            h('div', { class: `hero-mascot ${ok ? 'react-bounce' : 'react-scratch'}` }, mascot(ok ? 'cheer' : 'think', 110)),
+            h('div', { class: `hero-mascot ${ok ? 'react-bounce' : 'react-scratch'}` }, mascot(ok ? cue('praise') : needHelp ? cue('retry') : cue('puzzle'), 110)),
             h('h1', { class: 'title' }, ok ? praiseTitle(t0) : needHelp ? 'Mình xem thầy làm nhé!' : 'Thử lại nhé'),
             h(
               'p',

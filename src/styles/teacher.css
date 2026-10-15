@@ -55,6 +55,10 @@
   stroke-width: 4px;
   stroke-linejoin: round;
 }
+/* (+ 2026-10-15) Chữ nhận xét nằm ở hàng số ngón → số ngón của nốt đó ẩn (không chồng chữ) */
+.staff-note.rv-tagged .staff-finger {
+  display: none;
+}
 .staff-rv-tag.rv-wrong {
   fill: #c62f2f;
 }
