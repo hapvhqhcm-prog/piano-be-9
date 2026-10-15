@@ -18,6 +18,11 @@ import '../../styles/parenthelp.css';
 export const parentGuideMod = lazy(() => import('./parentGuide'));
 export const parentGuideScreen = (app: App): Screen => lazyScreen(parentGuideMod, (m) => m.parentGuideScreen(app));
 
+/** (+ 2026-10-15) ✋ Tư thế tay + 👀 phiếu "Bố mẹ xem tay con" — chunk riêng (handGuide.ts) */
+export const handGuideMod = lazy(() => import('./handGuide'));
+export const handGuideScreen = (app: App, opts: import('./handGuide').HandGuideOpts): Screen =>
+  lazyScreen(handGuideMod, (m) => m.handGuideScreen(app, opts));
+
 /** Dữ liệu đã từng dùng (người dùng CŨ cập nhật lên) — khác với cài mới. */
 export function hasHistory(d: Readonly<AppData>): boolean {
   return completedSessionCount(d) > 0 || d.settings.onboardedAt > 0 || d.sessions.length > 0;

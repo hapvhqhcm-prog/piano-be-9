@@ -18,6 +18,7 @@ import { HandOverlay, playDemo, type DemoEvent } from '../components/demo';
 import { backButton, button, h } from '../components/dom';
 import { mascot } from '../components/mascot';
 import { deferCheck, selfStudy } from '../selfStudy';
+import { principleFigure } from '../components/handCards';
 
 type DynActivity = Extract<Activity, { kind: 'dynamics' }>;
 export type DynRound = DynActivity['rounds'][number];
@@ -149,6 +150,8 @@ export function dynamicsScreen(app: App, hooks: DynamicsHooks) {
         h('div', { class: 'step-tag' }, loudSoft ? 'To – nhỏ' : pair.length === 1 && pair[0] === 'leg' ? 'Liền' : 'Ngắt – liền'),
         h('h1', { class: 'title' }, hooks.title),
         h('div', { class: 'dyn-pair' }, ...pair.map((w) => card(w, false))),
+        // (+ 2026-10-15) tranh thế tay: LIỀN = chuyển sức nặng ngón này sang ngón kia; NGẮT = nảy nhẹ từ cổ tay
+        loudSoft ? '' : h('div', { class: 'dyn-pics' }, ...pair.map((w) => h('div', { class: 'dyn-pic' }, principleFigure(w === 'stac' ? 'staccato' : 'legato', 'good')))),
         h('p', { class: 'lead' }, hooks.intro),
       );
       setBar(backButton(hooks.onBack), button({ icon: '▶', label: 'Bắt đầu', kind: 'primary', onTap: () => show() }));
@@ -167,7 +170,9 @@ export function dynamicsScreen(app: App, hooks: DynamicsHooks) {
       light(r);
       stage.replaceChildren(
         h('div', { class: 'progress' }, `Lượt ${i + 1} / ${hooks.rounds.length}`),
-        card(r.want),
+        loudSoft
+          ? card(r.want)
+          : h('div', { class: 'dyn-pics' }, card(r.want), h('div', { class: 'dyn-pic' }, principleFigure(r.want === 'stac' ? 'staccato' : 'legato', 'good'))),
         h('p', { class: 'lead' }, WANT[r.want].how),
       );
       setBar(

@@ -191,6 +191,8 @@ export class HandOverlay {
     h.at = [pitch, finger];
     h.placed = true;
     h.box.classList.add('show');
+    // (+ 2026-10-15) bàn tay mờ (keyboardHand.ts) ẩn khi thầy đàn mẫu đang hiện
+    this.kb.el.classList.add('demo-hand-on');
   }
 
   press(hand: Hand, finger: number, ms: number): void {
@@ -209,6 +211,7 @@ export class HandOverlay {
       h.art.setActive(null);
       h.placed = false;
     }
+    this.kb.el.classList.remove('demo-hand-on');
   }
 
   setGhost(on: boolean): void {

@@ -21,6 +21,8 @@ import { HandOverlay, eventsFromTargets, playDemo } from '../components/demo';
 import { MicHonestyWatch, micHonestyBox } from '../components/micHonesty';
 import { SELF_DONE, deferCheck, selfStudy } from '../selfStudy';
 import { isVisualNote } from '../../progress/reviewQueue';
+import { CHECK_PRINCIPLE } from '../../lessons/handTechnique';
+import { principleThumb } from '../components/handArtLazy';
 
 /**
  * Lời khen ĐÚNG MỨC (khoa học học tập): nốt đúng bình thường → chuông + câu khen NÓI RÕ kỹ năng
@@ -224,6 +226,16 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
       onPress: (p) => void app.audio.playPitch(p),
     });
     const overlay = new HandOverlay(kb);
+    // (+ 2026-10-15) ✋ Bàn tay mờ trên bàn phím (nạp muộn; quy tắc hiện / mờ dần: ui/components/keyboardHand.ts)
+    let ghost: { destroy(): void } | null = null;
+    let ghostGone = false;
+    void import('../components/keyboardHand')
+      .then((m) => {
+        if (ghostGone) return;
+        const week = app.store.get().progress.currentWeek;
+        ghost = new m.KeyboardHand(kb, { auto: (ps) => m.ghostAuto({ week, positions: ps }) });
+      })
+      .catch(() => undefined);
     /** Số lần "Thử lại" cho từng nốt — để biết khi nào cần thầy đàn mẫu lại */
     const retries = new Map<number, number>();
     /** Micro nghe sai 3 lần → bàn tay mờ hiện đúng chỗ (không phát tiếng, để micro vẫn nghe bé) */
@@ -326,7 +338,10 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
             ? h('div', { class: `finger-big hand-${(t.hand ?? 'RH').toLowerCase()}` }, `Ngón ${t.finger}`, handTag(t.hand ?? 'RH'))
             : fingerRow(t.finger, t.hand ?? 'RH')
           : t.emoji
-            ? h('div', { class: 'finger-big' }, t.emoji)
+            ? !t.keys.length && CHECK_PRINCIPLE[t.noteId]
+              ? // (+ 2026-10-15) thẻ xem tay / tư thế: kèm tranh "Đúng ✓" của nguyên tắc (nạp muộn)
+                h('div', { class: 'card-pic' }, h('span', { class: 'finger-big' }, t.emoji), principleThumb(CHECK_PRINCIPLE[t.noteId], 'good'))
+              : h('div', { class: 'finger-big' }, t.emoji)
             : null;
 
     const noteView = (t: Target) =>
@@ -804,6 +819,8 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
       unFrame();
       honesty.dispose();
       demo?.cancel();
+      ghostGone = true;
+      ghost?.destroy();
       overlay.destroy();
       kb.destroy();
     };

@@ -10,6 +10,8 @@ import { backButton, button, h } from '../components/dom';
 import { mascot } from '../components/mascot';
 import { speakChip } from '../components/speakChip';
 import { techniqueArt } from '../components/techniqueArt';
+import { DRILL_PRINCIPLE, handPrinciple } from '../../lessons/handTechnique';
+import { principleFigure } from '../components/handCards';
 import { selfStudy } from '../selfStudy';
 
 export interface TechniqueHooks {
@@ -64,6 +66,12 @@ export const DRILL_INFO: Record<TechniqueDrill, { emoji: string; name: string; h
     times: 3,
   },
 };
+
+/** (+ 2026-10-15) Tranh nguyên tắc tay của bài khởi động (DRILL_PRINCIPLE) — nạp muộn, có hoạt hình khi nguyên tắc cần. */
+function principleBox(d: TechniqueDrill): HTMLElement {
+  const p = handPrinciple(DRILL_PRINCIPLE[d]);
+  return h('div', { class: 'tq-principle', 'data-principle': p.id }, principleFigure(p.id, 'good', p.title), h('p', { class: 'hp-caption' }, p.caption));
+}
 
 const FIVE = ['C4', 'D4', 'E4', 'F4', 'G4', 'F4', 'E4', 'D4', 'C4'];
 
@@ -176,7 +184,8 @@ export function techniqueScreen(app: App, hooks: TechniqueHooks) {
           ? h('div', { class: 'step-tag' }, 'Khởi động tay · 30 giây')
           : h('div', { class: 'progress' }, `Bài ${i + 1} / ${hooks.drills.length}`),
         h('h1', { class: 'title' }, `${info.emoji} ${info.name}`),
-        h('div', { class: `tq-art-box${five ? ' five' : ''}` }, art),
+        // (+ 2026-10-15) cạnh hoạt hình bài tập: tranh NGUYÊN TẮC tay tương ứng (đúng ✓), suốt 30 giây bé làm
+        h('div', { class: `tq-row${five ? ' five' : ''}` }, h('div', { class: `tq-art-box${five ? ' five' : ''}` }, art), principleBox(d)),
         h('p', { class: 'lead tq-how' }, info.how, speakChip(app, said)),
         h('div', { class: 'tq-times' }, `Làm ${info.times} lần`),
       );

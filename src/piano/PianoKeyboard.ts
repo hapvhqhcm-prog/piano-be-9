@@ -23,6 +23,13 @@ export interface KeyTarget {
   label?: string;
 }
 
+/** (+ 2026-10-15) Sự kiện cho lớp phủ (bàn tay mờ — ui/components/keyboardHand.ts): phím đích / kết quả / đổi dải / hủy. */
+export type KeyboardEventInfo =
+  | { type: 'targets'; targets: KeyTarget[] }
+  | { type: 'result'; pitch: Pitch | null; kind: 'good' | 'show' | 'heard' | null }
+  | { type: 'range' }
+  | { type: 'destroy' };
+
 /**
  * Bàn phím ảo (mặc định C3–C5; đổi dải được để chơi thế Sol, gam, hai tay…).
  * Phím được tra theo MIDI nên "Bb4" và "A#4" là cùng một phím.
@@ -41,6 +48,8 @@ export class PianoKeyboard {
   private whiteW = 100 / 15;
   /** Đánh dấu "cần đánh" đang hiện trên từng phím (khóa so sánh) — để setTargets chỉ sửa phím thay đổi */
   private targetSig = new Map<number, string>();
+  private watchers = new Set<(e: KeyboardEventInfo) => void>();
+  private lit: KeyTarget[] = [];
 
   constructor(private readonly opts: KeyboardOptions = {}) {
     this.el = document.createElement('div');
@@ -91,6 +100,17 @@ export class PianoKeyboard {
     this.low = low;
     this.high = high;
     this.build();
+    this.emit({ type: 'range' });
+  }
+
+  /** Theo dõi phím đích / kết quả (lớp phủ). Trả về hàm bỏ theo dõi. */
+  watch(fn: (e: KeyboardEventInfo) => void): () => void {
+    this.watchers.add(fn);
+    return () => this.watchers.delete(fn);
+  }
+
+  private emit(e: KeyboardEventInfo): void {
+    this.watchers.forEach((fn) => fn(e));
   }
 
   /** Tâm phím theo % bề ngang bàn phím (undefined nếu ngoài dải). */
@@ -179,6 +199,13 @@ export class PianoKeyboard {
       this.targetSig.set(m, sig);
       k.setTarget(mark);
     });
+    this.lit = targets;
+    if (this.watchers.size) this.emit({ type: 'targets', targets });
+  }
+
+  /** Các phím đích đang sáng (lần setTargets gần nhất). */
+  get targets(): readonly KeyTarget[] {
+    return this.lit;
   }
 
   setGuides(pitches: Pitch[]): void {
@@ -189,6 +216,7 @@ export class PianoKeyboard {
   setResult(pitch: Pitch | null, kind: 'good' | 'show' | 'heard' | null): void {
     const target = pitch ? pitchToMidi(pitch) : -1;
     this.keys.forEach((k, m) => k.setResult(m === target ? kind : null));
+    if (this.watchers.size) this.emit({ type: 'result', pitch, kind });
   }
 
   /** Nháy phím khi app phát âm mẫu. */
@@ -204,12 +232,16 @@ export class PianoKeyboard {
       k.setResult(null);
       k.setPressed(false);
     });
+    this.lit = [];
+    if (this.watchers.size) this.emit({ type: 'targets', targets: [] });
   }
 
   destroy(): void {
     this.hideTimers.forEach((t) => window.clearTimeout(t));
     window.removeEventListener('pointerup', this.onUp);
     window.removeEventListener('pointercancel', this.onUp);
+    this.emit({ type: 'destroy' });
+    this.watchers.clear();
     this.el.remove();
   }
 }

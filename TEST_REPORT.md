@@ -841,3 +841,33 @@ Có ba chuyên gia đánh giá: sư phạm, động lực cho trẻ và kỹ thu
   - Silent Night: tối đa 9 nốt chồng nhau, 82 nút, 0 nốt rơi vào chế độ nhẹ.
   - Có test `tests/pedal.test.ts` (16 ca).
 - **Bàn phím:** đo trên 14 màn ở 4 cỡ màn hình, đáy phím đã cách mép dưới 90–116 px. Thêm biến `--safe-b` và luật dự phòng khi bàn phím là phần tử cuối.
+
+## 46. Đồ họa tư thế tay và ngón (OWNER 2026-10-15: "ngón tay phải đúng tư thế để đủ lực")
+- **Hình kỹ thuật:** 8 nguyên tắc, mỗi nguyên tắc có hình ✓/✗ (`src/ui/components/handTechniqueArt.ts`, `art/handKit.ts`):
+  - khớp gốc cao (cây cầu)
+  - đầu ngón đứng, không gãy đốt
+  - ngón cái chạm bằng cạnh
+  - cổ tay ngang
+  - lực từ sức nặng cánh tay
+  - ngón nghỉ nằm nhẹ
+  - tư thế ngồi (ghế, gối, kê chân)
+  - legato / staccato
+
+  Có test kiểm tra hình học: khớp gốc cao hơn cổ tay và khớp giữa, đốt cuối gần thẳng đứng, nhãn không đè lên huy hiệu.
+- **Chỗ dùng hình:**
+  - 4 thẻ tư thế đầu buổi (≤ 40 s, bỏ qua được)
+  - biểu tượng nhắc ở phần khởi động
+  - bài tập kỹ thuật
+  - trò Đàn liền / Đàn nảy
+  - trang "✋ Tư thế tay"
+  - "👀 Bố mẹ xem tay con" (lưu riêng, không tính vào tiêu chí)
+  - nhắc lại hình đúng lỗi bố mẹ vừa đánh dấu
+- **Bàn tay mờ trên bàn phím** (`src/ui/components/keyboardHand.ts`, nạp muộn):
+  - Ngón cong, có số ngón; ngón sắp đàn "nhấn" xuống.
+  - Đổi thế tay và luồn ngón có hình động.
+  - Bài hai tay vẽ hai màu.
+  - Không che phím cần đàn hay số ngón.
+- **Khi nào hiện bàn tay mờ:**
+  - Luôn hiện ở tuần ≤ 8.
+  - Sau tuần 8, hiện khi gặp thế tay mới hoặc bài hai tay chưa thuộc.
+  - Mờ dần khi đàn đúng 3 nốt liên tiếp, rồi 8 nốt liên tiếp.

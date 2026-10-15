@@ -22,6 +22,15 @@ export const CHANGELOG_BASELINE = '0.15.0';
 
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
+    version: '0.24.0',
+    date: '2026-10-15',
+    items: [
+      'Hình tư thế tay mới: so sánh Đúng ✓ / Chưa đúng ✗ (khớp gốc, đầu ngón, ngón cái, cổ tay, cánh tay).',
+      'Đầu buổi: 4 thẻ tư thế ngắn; trang "✋ Tư thế tay" và "👀 Bố mẹ xem tay con".',
+      '✋ Bàn tay mờ trên bàn phím chỉ ngón nào đàn phím nào; tắt được ở ⚙️ Tùy chọn.',
+    ],
+  },
+  {
     version: '0.23.3',
     date: '2026-10-12',
     items: [

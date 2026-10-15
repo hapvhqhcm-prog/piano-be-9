@@ -24,7 +24,7 @@ import { micSetupCard, readinessCard, tonightCard, weeklyReportCard } from './pa
 import { detailsCard, latestSessionCards, overviewCard, skillsCard } from './parentProgressCards';
 import { advancedSection } from './parentAdvanced';
 import { parentSongsCard } from './parentSongsCard';
-import { focusGuideAnchor, guideButton, parentGuideMod, parentGuideScreen, syncWhatsNew, tagGuide, takeGuideHint, whatsNewCard } from './parentHelp';
+import { focusGuideAnchor, guideButton, handGuideScreen, parentGuideMod, parentGuideScreen, syncWhatsNew, tagGuide, takeGuideHint, whatsNewCard } from './parentHelp';
 import { PARENT_ANCHORS, type GuideAnchor } from './parentGuideData';
 import { parentReviewScreen, reviewCard } from './parentReview';
 import { cleanReviewAudio } from '../selfStudy';
@@ -202,6 +202,8 @@ export function parentScreen(app: App, opts: { focus?: GuideAnchor } = {}) {
               return b;
             })(),
             guideButton(openGuide, guideHint),
+            // (+ 2026-10-15) 👀 Bố mẹ xem tay con: phiếu 3 ý có hình + tranh Tư thế tay
+            button({ icon: '👀', label: 'Xem tay', onTap: () => app.show(handGuideScreen(app, { parent: true, onBack: () => app.show(parentScreen(app)) })) }),
             button({ icon: '←', label: 'Về màn của bé', kind: 'primary', onTap: () => app.show(homeScreen(app)) }),
           ),
         ),

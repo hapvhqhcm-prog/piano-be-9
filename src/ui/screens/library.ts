@@ -20,6 +20,7 @@ import { newPillOn } from '../components/newBadge';
 const albumMod = lazy(() => import('./album'));
 // (+ 2026-10-12) 📘 Từ điển nhạc nhỏ — chunk riêng
 const glossaryMod = lazy(() => import('./glossary'));
+const handGuideMod = lazy(() => import('./handGuide'));
 
 /** Bộ lọc Thư viện (giữ trong lúc mở app): tất cả · 🇻🇳 Bài Việt Nam */
 let libFilter: 'all' | 'vn' = 'all';
@@ -220,6 +221,12 @@ export function libraryScreen(app: App, filter?: 'all' | 'vn') {
               label: 'Từ điển nhạc nhỏ',
               kind: 'primary',
               onTap: () => app.show(lazyScreen(glossaryMod, (m) => m.glossaryScreen(app, () => app.show(libraryScreen(app))))),
+            }),
+            // (+ 2026-10-15) ✋ Tư thế tay: tranh Đúng ✓ / Chưa đúng ✗ (chunk riêng)
+            button({
+              icon: '✋',
+              label: 'Tư thế tay',
+              onTap: () => app.show(lazyScreen(handGuideMod, (m) => m.handGuideScreen(app, { onBack: () => app.show(libraryScreen(app)) }))),
             }),
           ),
           filterBar,

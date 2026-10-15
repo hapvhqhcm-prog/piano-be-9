@@ -7,7 +7,11 @@ import { THEORY, theoryUnlocked, type TheoryConcept } from '../../lessons/theory
 import type { App, Screen } from '../App';
 import { actionBar, backButton, button, h } from '../components/dom';
 import { speakChip } from '../components/speakChip';
+import { lazy, lazyScreen } from '../lazy';
 import { playTheorySound, theoryPicEl, type TheoryPicView } from './theory';
+
+/** (+ 2026-10-15) ✋ Tư thế tay — trang tranh Đúng / Chưa đúng (chunk riêng) */
+const handGuideMod = lazy(() => import('./handGuide'));
 
 export function glossaryScreen(app: App, onBack: () => void): Screen {
   return (root) => {
@@ -48,6 +52,16 @@ export function glossaryScreen(app: App, onBack: () => void): Screen {
           'div',
           { class: 'glossary-wrap scrollable' },
           h('p', { class: 'muted lib-note' }, `Con đã biết ${learned.length} / ${THEORY.length} điều nhạc lý. Chạm 🔊 để nghe nhé!`),
+          h(
+            'div',
+            { class: 'lib-album-row' },
+            button({
+              icon: '✋',
+              label: 'Tư thế tay',
+              kind: 'primary',
+              onTap: () => app.show(lazyScreen(handGuideMod, (m) => m.handGuideScreen(app, { onBack: () => app.show(glossaryScreen(app, onBack)) }))),
+            }),
+          ),
           learned.length
             ? h('div', { class: 'gl-list' }, ...learned.map(item))
             : h('p', { class: 'lead' }, 'Học thẻ “📘 Biết thêm” trong bài, từ mới sẽ hiện ở đây!'),

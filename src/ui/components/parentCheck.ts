@@ -7,6 +7,8 @@ export interface CheckItem<K extends string> {
   label: string;
   /** Một dòng hướng dẫn chấm bằng lời thường cho bố mẹ không biết nhạc (rà soát 2026-10-06) */
   hint?: string;
+  /** (+ 2026-10-15) Hình thu nhỏ thay cho biểu tượng chữ (vd tranh "Tư thế tay") */
+  pic?: () => Node;
 }
 
 /**
@@ -25,7 +27,7 @@ export function parentChecklist<K extends string>(
       'button',
       { class: `pcheck-item${it.hint ? ' has-hint' : ''}`, type: 'button', 'aria-pressed': 'false' },
       h('span', { class: 'pcheck-box', 'aria-hidden': 'true' }, ''),
-      h('span', { class: 'pcheck-icon', 'aria-hidden': 'true' }, it.icon),
+      h('span', { class: 'pcheck-icon', 'aria-hidden': 'true' }, it.pic ? it.pic() : it.icon),
       it.hint
         ? h('span', { class: 'pcheck-text' }, h('span', { class: 'pcheck-label' }, it.label), h('span', { class: 'pcheck-hint' }, it.hint))
         : h('span', { class: 'pcheck-label' }, it.label),

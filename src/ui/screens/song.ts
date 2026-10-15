@@ -13,7 +13,7 @@ import { LOOP_TARGET, fingerMap, idxOf, midisOf, shortIntro, type HandSel, type 
 import { TakeReplay } from './songTake';
 import { MicHonestyWatch, micHonestyBox } from '../components/micHonesty';
 import { selfStudy } from '../selfStudy';
-import { songEverPlayed } from '../../lessons/lessonEngine';
+import { songEverPlayed, songMastered } from '../../lessons/lessonEngine';
 import { buildStaff, groupAt, groups, halt, handsOn, lightOnset, micOn, pulseWindow, scheduleAccomp, setBar, solo, together, type SongCtx, type SongHooks } from './songState';
 import { onWaitChord, onWaitHands, onWaitInput, showWaitNote, startWait } from './songWait';
 import { startTempo } from './songTempo';
@@ -86,6 +86,32 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
     const screenEl = h('div', { class: 'screen' }, head.el, staffBox, status, h('div', { class: `keyboard-wrap song-kb${full.lh ? ' short' : ''}` }, kb.el), bar);
     root.append(screenEl);
     head.closeOnOutsideTap(screenEl);
+
+    // (+ 2026-10-15) ✋ Bàn tay mờ trên bàn phím (nạp muộn; quy tắc hiện / mờ dần: ui/components/keyboardHand.ts)
+    let ghost: { refresh(): void; destroy(): void } | null = null;
+    if (!opts.stage) {
+      void import('../components/keyboardHand')
+        .then((m) => {
+          if (c.disposed) return;
+          const data = app.store.get();
+          const autoOn = m.ghostAuto({
+            week: data.progress.currentWeek,
+            positions: [full.position ?? 'C', full.lh ? full.lhPosition ?? 'C' : undefined],
+            mastered: songMastered(data, full.id),
+            bothHands: !!full.lh,
+          });
+          ghost = new m.KeyboardHand(kb, { plan: m.planFromTune(full), auto: () => autoOn });
+          head.handGuide = {
+            get: () => m.ghostMode(),
+            set: (v) => {
+              m.setGhostMode(v);
+              ghost?.refresh();
+            },
+          };
+          head.refresh();
+        })
+        .catch(() => undefined); // không nạp được → không có bàn tay mờ (màn vẫn chạy)
+    }
 
     // 🎧 Nghe lại con đàn (chỉ khi micro bật; chỉ trong bộ nhớ)
     // (+ 2026-10-08) lượt cả bài hay nhất → "🎧 Album của con" (chỉ trên iPad này; không lưu bài đọc nhạc ngẫu nhiên)
@@ -368,6 +394,7 @@ export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongH
       unWaitOnset();
       app.mic.expected = null;
       honesty.dispose();
+      ghost?.destroy();
       overlay.destroy();
       kb.destroy();
     };

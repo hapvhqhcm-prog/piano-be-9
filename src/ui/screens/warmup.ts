@@ -4,6 +4,9 @@ import type { Segment } from '../../lessons/types';
 import { findTune } from '../../music/exercises';
 import type { App, Screen } from '../App';
 import { h } from '../components/dom';
+import { handFocus, handPrinciple, readHandLook, type HandPrincipleId } from '../../lessons/handTechnique';
+import { HAND_ICON_TEXT, handIcon } from '../components/handIcon';
+import { principleFigure } from '../components/handCards';
 import { practiceScreen } from './practice';
 import { songScreen } from './song';
 import '../../styles/warmup.css';
@@ -28,12 +31,55 @@ export function warmupScreen(app: App, w: WarmupMusic, hooks: { onDone(): void; 
     });
     // Ẩn nhãn "🔁 ôn bài cũ" của màn bài hát (dùng chế độ khoá câu của bước ôn) — đây là khởi động
     root.classList.add('is-warmup');
-    root.append(h('div', { class: 'warmup-bar' }, h('span', { class: 'warmup-tag' }, '🎵 Khởi động'), skip));
+    const bar = h('div', { class: 'warmup-bar' }, h('span', { class: 'warmup-tag' }, '🎵 Khởi động'), handChip(app), skip);
+    root.append(bar);
     return () => {
       root.classList.remove('is-warmup');
+      window.clearTimeout(bubbleTimer);
       cleanup?.();
     };
   };
+}
+
+let bubbleTimer = 0;
+
+/**
+ * (+ 2026-10-15) Biểu tượng tí hon cạnh câu nhắc tư thế một dòng: chạm → bong bóng tranh "Đúng ✓" của nguyên tắc.
+ * Bố mẹ vừa nhắc một lỗi tay (handFocus: thẻ chấm "Làm lại" / phiếu bài hát / phiếu xem tay) → biểu tượng vàng của lỗi đó
+ * và bong bóng tự hiện ~6 giây đầu. Không ghi gì.
+ */
+function handChip(app: App): HTMLElement {
+  let flag: HandPrincipleId | null = null;
+  try {
+    flag = handFocus(app.store.get(), Date.now(), readHandLook());
+  } catch {
+    flag = null;
+  }
+  const id: HandPrincipleId = flag ?? 'tip';
+  const chip = h(
+    'button',
+    { class: `warmup-hand${flag ? ' flagged' : ''}`, type: 'button', 'aria-label': `Xem tranh: ${handPrinciple(id).title}` },
+    handIcon(!!flag),
+    flag ? HAND_ICON_TEXT[id] : 'ngón cong',
+  );
+  let bubble: HTMLElement | null = null;
+  const close = () => {
+    window.clearTimeout(bubbleTimer);
+    bubble?.remove();
+    bubble = null;
+  };
+  const open = (ms: number) => {
+    if (bubble) return close();
+    const p = handPrinciple(id);
+    bubble = h('div', { class: 'warmup-bubble', role: 'note' }, principleFigure(id, 'good', p.title), h('p', { class: 'hp-caption' }, p.caption));
+    bubble.addEventListener('click', close);
+    chip.after(bubble);
+    window.clearTimeout(bubbleTimer);
+    bubbleTimer = window.setTimeout(close, ms);
+  };
+  chip.addEventListener('click', () => open(8000));
+  if (flag) window.setTimeout(() => chip.isConnected && open(6000), 700);
+  return chip;
 }
 
 /** Lời dẫn (> 60 ký tự → màn bài hát hiện câu đầu = câu nhắc tư thế, và ĐỌC TO cả câu). */

@@ -25,10 +25,16 @@ export interface SongHeadDeps {
   pick(patch: Partial<SongChoices>): void;
 }
 
+/** (+ 2026-10-15) Công tắc "✋ Hiện bàn tay" (bàn tay mờ trên bàn phím — ui/components/keyboardHand.ts) */
+export type HandGuideMode = 'auto' | 'on' | 'off';
+
 export class SongHead {
   readonly el = h('div', { class: 'song-head' });
   /** Bảng "⚙️ Tuỳ chọn" đang mở hay không; giữ nguyên khi vẽ lại đầu trang. */
   private optsOpen = false;
+  /** (+ 2026-10-15) Có khi lớp bàn tay mờ đã nạp (song.ts gán) — đổi được cả lúc đang chơi */
+  handGuide: { get(): HandGuideMode; set(m: HandGuideMode): void } | null = null;
+  private last: SongChoices | null = null;
 
   constructor(private readonly d: SongHeadDeps) {}
 
@@ -50,7 +56,13 @@ export class SongHead {
     return b;
   }
 
+  /** Vẽ lại với lựa chọn gần nhất (vd sau khi lớp bàn tay mờ nạp xong). */
+  refresh(): void {
+    if (this.last) this.render(this.last);
+  }
+
   render(c: SongChoices): void {
+    this.last = c;
     const { full, opts } = this.d;
     const chip = this.chip.bind(this);
     const twoHand = !!full.lh;
@@ -127,6 +139,19 @@ export class SongHead {
         '⏱ Tốc độ',
         ...TEMPOS.map((t) => chip(`${t === TEMPOS[0] ? '🐢 ' : t === TEMPOS[TEMPOS.length - 1] ? '🐇 ' : ''}${t}`, c.bpm === t, { bpm: t })),
       );
+    }
+    const hg = this.handGuide;
+    if (hg && c.hints === 'full') {
+      const cur = hg.get();
+      const hgChip = (label: string, m: HandGuideMode) => {
+        const b = h('button', { class: `seg-btn small${cur === m ? ' on' : ''}`, type: 'button' }, label);
+        b.addEventListener('click', () => {
+          hg.set(m);
+          this.refresh();
+        });
+        return b;
+      };
+      section('✋ Hiện bàn tay', hgChip('Tự động', 'auto'), hgChip('Luôn hiện', 'on'), hgChip('Ẩn', 'off'));
     }
     let pop: HTMLElement | null = null;
     if (sections.length) {

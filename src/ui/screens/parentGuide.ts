@@ -11,6 +11,7 @@ import { homeScreen } from './home';
 import { onboardingScreen } from './onboarding';
 import { parentScreen } from './parent';
 import { micTestScreen, weeklyReportScreen } from './parentShared';
+import { handGuideScreen } from './parentHelp';
 import { GUIDE_SECTIONS, guideSummaryText, isParentAnchor, type GuideScreen, type GuideTarget } from './parentGuideData';
 import '../../styles/parentux.css';
 import '../../styles/parenthelp.css';
@@ -104,6 +105,24 @@ export function parentGuideScreen(app: App) {
           ),
           h('p', { class: 'guide-intro' }, 'Mỗi mục là một việc bố mẹ hay cần. Bấm “Mở ngay” để tới đúng chỗ trong app.'),
           h('div', { class: 'guide-grid' }, ...sections),
+          // (+ 2026-10-15) ✋ Thế tay trên đàn cơ: tranh Đúng ✓ / Chưa đúng ✗ + phiếu "Bố mẹ xem tay con"
+          h(
+            'section',
+            { class: 'card guide-sec', id: 'guide-hands' },
+            h('h2', {}, h('span', { class: 'guide-icon', 'aria-hidden': 'true' }, '✋'), 'Tư thế tay của con'),
+            h(
+              'ul',
+              {},
+              h('li', {}, 'Đàn cơ cần lực: sức nặng cánh tay đi qua ngón cong xuống phím.'),
+              h('li', {}, 'Lỗi hay gặp nhất: khớp đầu ngón bẹp vào → tiếng yếu.'),
+              h('li', {}, 'Phiếu 3 ý (đầu ngón · khớp gốc · cổ tay) — ý chưa được, lần sau app nhắc bằng tranh.'),
+            ),
+            h(
+              'div',
+              { class: 'row guide-go' },
+              button({ icon: '👀', label: 'Bố mẹ xem tay con', kind: 'primary', onTap: () => app.show(handGuideScreen(app, { parent: true, onBack: back })) }),
+            ),
+          ),
           h(
             'section',
             { class: 'card guide-summary' },

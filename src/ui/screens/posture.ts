@@ -1,6 +1,18 @@
+import { cancelSpeech, speak } from '../../audio/voice';
+import {
+  POSTURE_CARD_MS,
+  createPostureFlow,
+  handFocus,
+  handPrinciple,
+  postureOrder,
+  readHandLook,
+  type PostureCard,
+} from '../../lessons/handTechnique';
 import type { App } from '../App';
 import { backButton, button, h } from '../components/dom';
-import { postureArt, type PosturePart } from '../components/postureArt';
+import { principleFigure } from '../components/handCards';
+import { handArtMod } from '../components/handArtLazy';
+import { speakChip } from '../components/speakChip';
 import '../../styles/parentux.css';
 
 /** 👪 Ba câu ngắn bố mẹ nói khi bé vấp — thay cho chê / giục (rà soát hành trình phụ huynh 2026-10-06). */
@@ -15,45 +27,103 @@ function coachBox(): HTMLElement {
   );
 }
 
-const ALL_CARDS = [
-  { emoji: '🪑', part: 'back' as PosturePart, text: 'Ngồi thẳng lưng', sub: 'Ngồi nửa trước ghế' },
-  { emoji: '🦶', part: 'feet' as PosturePart, text: 'Hai bàn chân đặt vững', sub: 'Chạm sàn hoặc ghế kê chân' },
-  { emoji: '⚽', part: 'hands' as PosturePart, text: 'Tay tròn như ôm quả bóng', sub: 'Cổ tay thẳng, không gập' },
-];
+const TICK_MS = 250;
 
 /**
- * Tư thế ĐẦY ĐỦ (3 thẻ, ~1') — mỗi màn một việc (§4).
+ * Tư thế ĐẦY ĐỦ — (+ 2026-10-15, OWNER: "ngón tay phải đúng tư thế để đủ lực") dãy 4 THẺ CÓ TRANH ĐÚNG ✓ / CHƯA ĐÚNG ✗:
+ * ngồi (đo ghế, kê chân) · dáng tay ôm bóng · đầu ngón đứng vững · cổ tay ngang & thả sức nặng cánh tay.
+ * Mỗi thẻ tự sang thẻ sau sau ~9 giây (vuốt trái/phải hoặc "Tiếp" để nhanh hơn); thẻ cuối chờ "Xong rồi" → cả dãy ≤ 40 giây.
+ * Luôn có "Bỏ qua ⏭". Bố mẹ vừa nhắc một lỗi tay (handFocus) → thẻ đó lên đầu, có nhãn "👪 Bố mẹ vừa nhắc".
  * v5.2 (OWNER duyệt 2026-10-08): chỉ hiện ở bài tuần 1, buổi đầu mỗi tuần, hoặc khi bố mẹ bật "nhắc tư thế đầy đủ"
  * (lessonEngine.postureFull); các buổi khác chỉ có câu nhắc một dòng (POSTURE_CUE) trên màn khởi động bằng nhạc.
  */
-export function postureScreen(_app: App, hooks: { onDone(): void; onBack(): void }) {
+export function postureScreen(app: App, hooks: { onDone(): void; onBack(): void }) {
   return (root: HTMLElement) => {
-    const CARDS = ALL_CARDS;
-    let i = 0;
-    const stage = h('div', { class: 'stage scrollable' });
+    handArtMod.prefetch();
+    let flag: ReturnType<typeof handFocus> = null;
+    try {
+      flag = handFocus(app.store.get(), Date.now(), readHandLook());
+    } catch {
+      flag = null;
+    }
+    const cards: PostureCard[] = postureOrder(flag);
+    let left = false;
+    const leave = (fn: () => void) => {
+      if (left) return;
+      left = true;
+      window.clearInterval(timer);
+      cancelSpeech();
+      fn();
+    };
+    const flow = createPostureFlow(cards.length, () => leave(hooks.onDone), POSTURE_CARD_MS);
+    const stage = h('div', { class: 'stage scrollable pz-flow' });
     const bar = h('div', { class: 'actions' });
     root.append(h('div', { class: 'screen' }, stage, bar));
+    const fill = h('i');
+    let spent = 0;
 
     const render = () => {
-      const c = CARDS[i];
-      stage.replaceChildren(
-        h('div', { class: 'step-tag' }, `Tư thế · ${i + 1}/${CARDS.length}`),
-        h('div', { class: 'posture-wrap' }, postureArt(c.part)),
-        h('h1', { class: 'title' }, c.text),
-        h('p', { class: 'lead' }, c.sub),
+      if (left) return;
+      spent = 0;
+      fill.style.width = '0%';
+      const i = flow.index;
+      const c = cards[i];
+      const last = i === cards.length - 1;
+      const p = handPrinciple(c.principle);
+      const bad = p.panels.find((x) => x.variant !== 'good');
+      const said = `${c.text}. ${c.sub}`;
+      const parts: (HTMLElement | null)[] = [
+        h('div', { class: 'step-tag' }, `Tư thế · ${i + 1}/${cards.length}`),
+        h('div', { class: 'pz-dots', 'aria-hidden': 'true' }, ...cards.map((_, k) => h('i', { class: k === i ? 'on' : undefined }))),
+        last ? null : h('div', { class: 'pz-timebar', 'aria-hidden': 'true' }, fill),
+        flag && c.principle === flag && i === 0 ? h('div', { class: 'pz-flagnote' }, '👪 Bố mẹ vừa nhắc điều này') : null,
+        h(
+          'div',
+          { class: 'pz-pair' },
+          principleFigure(c.principle, 'good', p.panels[0].label),
+          bad ? principleFigure(c.principle, bad.variant, bad.label) : null,
+        ),
+        h('h1', { class: 'title' }, `${c.emoji} ${c.text}`),
+        h('p', { class: 'lead' }, c.sub, speakChip(app, said)),
         // Thẻ đầu (bé đang ngồi vào đàn): bố mẹ đọc nhanh 3 câu động viên
-        ...(i === 0 ? [coachBox()] : []),
-      );
+        i === 0 ? coachBox() : null,
+      ];
+      stage.replaceChildren(...parts.filter((x): x is HTMLElement => !!x));
       bar.replaceChildren(
-        backButton(() => (i > 0 ? (i--, render()) : hooks.onBack())),
-        button({
-          icon: '✓',
-          label: 'Xong rồi',
-          kind: 'good',
-          onTap: () => (i < CARDS.length - 1 ? (i++, render()) : hooks.onDone()),
-        }),
+        backButton(() => (flow.prev() ? render() : leave(hooks.onBack))),
+        button({ icon: '⏭', label: 'Bỏ qua', onTap: () => flow.skip() }),
+        last
+          ? button({ icon: '✓', label: 'Xong rồi', kind: 'good', onTap: () => flow.next() })
+          : button({ icon: '▶', label: 'Tiếp', kind: 'primary', onTap: () => (flow.next(), render()) }),
       );
+      cancelSpeech();
+      void speak(app, said);
     };
+
+    // Vuốt ngang trên thẻ: trái → thẻ sau, phải → thẻ trước
+    let x0: number | null = null;
+    stage.addEventListener('pointerdown', (e) => (x0 = e.clientX));
+    stage.addEventListener('pointerup', (e) => {
+      if (x0 === null) return;
+      const dx = e.clientX - x0;
+      x0 = null;
+      if (Math.abs(dx) < 60) return;
+      if (dx < 0 && flow.index < cards.length - 1) (flow.next(), render());
+      else if (dx > 0 && flow.prev()) render();
+    });
+    stage.addEventListener('pointercancel', () => (x0 = null));
+
+    const timer = window.setInterval(() => {
+      if (left || !root.isConnected) return window.clearInterval(timer);
+      spent += TICK_MS;
+      fill.style.width = `${Math.min(100, (spent / POSTURE_CARD_MS) * 100)}%`;
+      if (flow.tick(TICK_MS)) render();
+    }, TICK_MS);
     render();
+    return () => {
+      left = true;
+      window.clearInterval(timer);
+      cancelSpeech();
+    };
   };
 }

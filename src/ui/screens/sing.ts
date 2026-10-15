@@ -107,6 +107,16 @@ export function singScreen(app: App, hooks: SingHooks) {
     const stage = h('div', { class: 'stage scrollable sing-stage' });
     const bar = h('div', { class: 'actions' });
     root.append(h('div', { class: 'screen' }, stage, h('div', { class: 'keyboard-wrap sing-kb' }, kb.el), bar));
+    // (+ 2026-10-15) ✋ Bàn tay mờ trên bàn phím (nạp muộn; quy tắc hiện / mờ dần: ui/components/keyboardHand.ts)
+    let ghost: { destroy(): void } | null = null;
+    let ghostGone = false;
+    void import('../components/keyboardHand')
+      .then((m) => {
+        if (ghostGone) return;
+        const week = app.store.get().progress.currentWeek;
+        ghost = new m.KeyboardHand(kb, { auto: (ps) => m.ghostAuto({ week, positions: ps }) });
+      })
+      .catch(() => undefined);
     const setBar = (...b: (HTMLElement | null | false)[]) => bar.replaceChildren(...b.filter((x): x is HTMLElement => !!x));
 
     /** Bong bóng tên nốt của lượt — trạng thái: now / good / tried / again */
@@ -433,6 +443,8 @@ export function singScreen(app: App, hooks: SingHooks) {
       halt();
       honesty.dispose();
       cancelSpeech();
+      ghostGone = true;
+      ghost?.destroy();
       kb.destroy();
     };
   };
