@@ -20,6 +20,8 @@
  *   C  Thư viện (lọc 🇻🇳) → bài hát → Xem mẫu; Sổ sticker; cổng phụ huynh (giữ 2 giây + phép tính) → Nâng cao,
  *      💾 Sao lưu, 📊 Báo cáo, 🎤 Cài micro (3 bước); Soạn bài (gõ chữ → khuông); Đàn tự do → 🎵 Đàn theo thầy.
  *   B  Phụ huynh đổi tuần 12 / 19 / 29 (hộp xác nhận) → mỗi tuần một buổi "Học tiếp".
+ *   H  (+ 2026-10-16) Bài tập về nhà (như kịch bản F của e2e.mjs): w3-l3 lượt chưa đạt → bài tập + 🎁 bài thưởng; đồng hồ app
+ *      +1 ngày: 📍 Tìm Đô giữa → 📝 Bài tập về nhà → Bỏ qua → khởi động → … → màn kết; +2 ngày: đàn bài tập → … → màn kết.
  *   (+ 2026-10-10, cần bản build có móc kiểm thử PIANO_TEST_HOOKS=1 — script tự build như vậy; dữ liệu "bé thật tuần 4" =
  *    tests/fixtures/week4Child.ts nạp bằng Vite SSR)
  *   S  Bé tuần 4: một buổi "Học tiếp" + lời mời 🎤 Biểu diễn (chọn bài → mời → sân khấu); Thư viện → bài "🐢 Từng nốt"
@@ -67,7 +69,7 @@ const opt = (n) => {
   return i >= 0 ? argv[i + 1] : undefined;
 };
 const ENGINE = opt('--engine') ?? 'webkit'; // webkit | chromium (= Edge đã cài, kênh msedge) | chromium-bundled
-const ONLY = (opt('--only') ?? 'P,A,C,B,S,G,R,L,V,D').toUpperCase().split(',').map((s) => s.trim());
+const ONLY = (opt('--only') ?? 'P,A,C,B,H,S,G,R,L,V,D').toUpperCase().split(',').map((s) => s.trim());
 const SKIP_BUILD = flag('--skip-build');
 const HEADED = flag('--headed');
 const WEEKS = (opt('--weeks') ?? '12,19,29').split(',').map(Number).filter((n) => n >= 1);
@@ -304,6 +306,10 @@ const libMatch = /const LIB = String\.raw`([\s\S]*?)\n`;\n/.exec(e2eSrc);
 if (!libMatch) throw new Error('Không tìm thấy LIB trong scripts/e2e.mjs');
 const LIB = libMatch[1];
 const inPage = (body) => `(() => { ${LIB}\n${body}\n })()`;
+// (+ 2026-10-16) Đồng hồ giả của kịch bản "ngày sau" (H) — cũng lấy nguyên văn từ e2e.mjs; không có khoá 'e2e-clock-days' = không làm gì
+const clockMatch = /const CLOCK_SHIM = String\.raw`([\s\S]*?)\n`;\n/.exec(e2eSrc);
+if (!clockMatch) throw new Error('Không tìm thấy CLOCK_SHIM trong scripts/e2e.mjs');
+const CLOCK_SHIM = clockMatch[1];
 
 // ---------------- ghi nhận lỗi ----------------
 let currentScenario = 'setup';
@@ -349,6 +355,7 @@ async function launch() {
   });
   if (!NO_FAKE_AUDIO) await context.addInitScript(FAKE_AUDIO);
   await context.addInitScript(PROBE);
+  await context.addInitScript(CLOCK_SHIM);
   page = await context.newPage();
   page.on('console', (m) => {
     const text = m.text();
@@ -556,9 +563,11 @@ const STUCK_MS = 90_000;
  * (+ 2026-10-10) Bài hát chế độ "Từng nốt" (chờ): chạm PHÍM ẢO đang sáng thay vì "👪 Bố mẹ: tiếp" — app có dữ liệu từng
  * nốt → màn kết quả có nhận xét kiểu thầy giáo (khuông tô màu + lời nhắn). Nhóm nốt đầu mỗi bài: chạm nhầm một phím
  * trắng khác trước (để thầy có lỗi "nhầm" mà nhận xét). Không có phím sáng (gợi ý "nhìn khuông") → đường bố mẹ như cũ.
+ * Cờ window.__e2eFailSongs (kịch bản H) → đường bố mẹ (phiếu chấm thiếu ý = lượt chưa đạt).
  */
 const SONG_TAP = `
   const q = (s) => document.querySelector(s);
+  if (window.__e2eFailSongs > 0) return null;
   if (!q('.song-head') || !btn('Bố mẹ: tiếp') || !q('.song-progress')) return null;
   const keys = [...document.querySelectorAll('.key.is-target')].filter(vis);
   if (!keys.length) return null;
@@ -583,6 +592,11 @@ async function runSession(label, start, o = {}) {
   if (start === 'next') await tapTextStarts('Học tiếp:');
   else await tapSel(`[data-lesson="${start}"]`);
   log(`  ▶ buổi ${label}`);
+  // Màn buổi học tải lười: chờ rời màn chính (tối đa 10 s) — tránh tưởng buổi đã kết thúc ngay lần đọc đầu
+  for (let i = 0; i < 100; i++) {
+    if (!(await evaluate('!!document.querySelector(".screen.home")').catch(() => true))) break;
+    await sleep(100);
+  }
   const kinds = new Set();
   const seq = [];
   let lastSig = '';
@@ -618,6 +632,7 @@ async function runSession(label, start, o = {}) {
       pendingAnswer = null;
     }
     if (d.banner) banner = d.banner;
+    if (o.onStep) await o.onStep(d);
     if (d.home) break;
     // Bài hát "Từng nốt": chạm phím ảo đang sáng (xem SONG_TAP)
     if (d.kind === 'song' || d.kind === 'review-song') {
@@ -775,6 +790,14 @@ async function loadData(json) {
   return r;
 }
 const snap = () => evaluate(`window.__probe.snap()`);
+/** (+ 2026-10-16) Dời đồng hồ của app sang ngày +days (CLOCK_SHIM) rồi tải lại → màn chính; trả về ngày (YYYY-MM-DD) của app. */
+async function setClockDays(days) {
+  await evaluate(`localStorage.setItem('e2e-clock-days', '${days}')`);
+  await page.reload({ waitUntil: 'load', timeout: 20_000 });
+  await waitFor(`screenKind() === 'home' || screenKind() === 'start'`, `app mở lại ở ngày +${days}`, 20_000);
+  await toHome();
+  return evaluate(`(() => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); })()`);
+}
 
 // ---------------- kịch bản ----------------
 const results = [];
@@ -1077,6 +1100,64 @@ async function main() {
       await setWeek(w);
       const s = await runSession(`w${w}`, 'next');
       notes.push(`Tuần ${w}: ${s.seq.join(' → ')} (${(s.ms / 1000).toFixed(0)}s)`);
+    }
+  });
+
+  // ---------- H (+ 2026-10-16): bài tập về nhà → ngày sau (Tìm Đô giữa, Bỏ qua) → ngày sau nữa (đàn bài tập) + bài thưởng ----------
+  // Cùng luồng với kịch bản F của e2e.mjs (cờ trong LIB: __e2eFailSongs / __e2eReward / __e2eSkipWarmup / __e2eDoHomework;
+  // đồng hồ giả CLOCK_SHIM + __e2eClockExtraMs: nhảy 30 phút ở khởi động → app tự rút gọn buổi như khi hết giờ)
+  await scenario('H', 'Bài tập về nhà: lượt chưa đạt + bài thưởng → ngày sau: Tìm Đô giữa → Bỏ qua → khởi động → … → ngày sau nữa: đàn bài tập', async (notes) => {
+    await gotoApp();
+    await toHome();
+    const flags = (o) => evaluate(`Object.assign(window, ${JSON.stringify(o)}); true`);
+    const order = (seq, ...ks) => ks.every((k, i) => seq.indexOf(k) >= 0 && (i === 0 || seq.indexOf(k) > seq.indexOf(ks[i - 1])));
+    const jumpAtWarmup = () => {
+      let done = false;
+      return async (d) => {
+        if (done || d.kind !== 'warmup') return;
+        done = true;
+        await flags({ __e2eClockExtraMs: 30 * 60_000 });
+      };
+    };
+    try {
+      const d0 = await setClockDays(0);
+      // Ngày 0 — w3-l3: lượt "Chú cừu nhỏ" (phiếu bố mẹ thiếu ý) chưa đạt → bài tập; "Ốc sên" đạt → xong bài → 🎁 chọn bài → mở → quay ra
+      await setWeek(3);
+      await flags({ __e2eFailSongs: 1, __e2eSkipWarmup: true, __e2eReward: true });
+      const picked = {};
+      const s0 = await runSession('H-day0', 'w3-l3', {
+        onStep: (d) => {
+          if (d.rewardSong) picked.song = d.rewardSong;
+          if (d.rewardOpened) picked.opened = d.rewardOpened;
+        },
+      });
+      const hw0 = (await appData()).settings.homework ?? null;
+      notes.push(`Ngày 0 ${d0}: ${s0.seq.join(' → ')} (${(s0.ms / 1000).toFixed(0)}s) — bài tập: "${hw0?.text}"`);
+      assert(hw0 && hw0.songId === 'mary_lamb' && hw0.date === d0, `Lượt chưa đạt mà không có bài tập về nhà: ${JSON.stringify(hw0)}`);
+      assert(order(s0.seq, 'closing', 'session-end', 'reward') && picked.song && picked.opened, `Không mời / không mở được bài thưởng (${JSON.stringify(picked)})`);
+      notes.push(`Bài thưởng: "${picked.song}" → mở "${picked.opened}"`);
+      // Ngày +1 — tuần 4: 📍 Tìm Đô giữa → 📝 Bài tập về nhà → Bỏ qua → khởi động → … → màn kết
+      const d1 = await setClockDays(1);
+      assert(d1 > d0, `Đồng hồ giả chưa sang ngày mới (${d1} / ${d0})`);
+      await setWeek(4);
+      await flags({ __e2eSkipWarmup: true });
+      const s1 = await runSession('H-day1', 'next', { onStep: jumpAtWarmup() });
+      notes.push(`Ngày +1 ${d1} (Bỏ qua): ${s1.seq.join(' → ')} (${(s1.ms / 1000).toFixed(0)}s)`);
+      assert(order(s1.seq, 'middle-c', 'homework', 'warmup', 'closing', 'session-end'), 'Ngày +1: thiếu Tìm Đô giữa → Bài tập về nhà → khởi động → … → màn kết');
+      assert((await appData()).settings.homework?.at === hw0.at, 'Bỏ qua mà bài tập về nhà bị xóa / đổi');
+      // Ngày +2 — 📝 đàn bài tập (đạt) → bài tập xóa → khởi động → … → màn kết
+      const d2 = await setClockDays(2);
+      await flags({ __e2eDoHomework: true, __e2eSkipWarmup: true });
+      const s2 = await runSession('H-day2', 'next', { onStep: jumpAtWarmup() });
+      notes.push(`Ngày +2 ${d2} (đàn bài tập): ${s2.seq.join(' → ')} (${(s2.ms / 1000).toFixed(0)}s)`);
+      assert(order(s2.seq, 'homework', 'warmup', 'closing', 'session-end'), 'Ngày +2: thiếu Bài tập về nhà → khởi động → … → màn kết');
+      const data2 = await appData();
+      assert(!data2.settings.homework, `Đàn đạt bài tập mà settings.homework còn: ${JSON.stringify(data2.settings.homework)}`);
+      assert(data2.sessions.some((x) => x.date === d2 && x.songRuns.some((r) => r.songId === 'mary_lamb' && r.passed)), 'Không có lượt đạt bài tập ở ngày +2');
+    } finally {
+      // Trả đồng hồ thật cho các kịch bản sau (CLOCK_SHIM không làm gì khi không có khoá)
+      await evaluate(`localStorage.removeItem('e2e-clock-days')`).catch(() => undefined);
+      await gotoApp().catch(() => undefined);
     }
   });
 
