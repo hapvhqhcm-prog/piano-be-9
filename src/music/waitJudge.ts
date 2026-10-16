@@ -122,6 +122,23 @@ export function phraseStartsFrom(measures: readonly number[], phrases: ReadonlyA
   return [...out].sort((x, y) => x - y);
 }
 
+/**
+ * (+ 2026-10-16) Người nghe các lần bé đàn LỆCH QUÃNG 8 (bước 8) — app đăng ký một lần (session.ts → lessons/middleC.ts:
+ * nhật ký nhỏ trong máy để mời "📍 Tìm Đô giữa" đầu buổi sau). Mặc định không có → judgeWait vẫn là hàm thuần trong test /
+ * mô phỏng. Lỗi trong người nghe không bao giờ làm hỏng việc chấm.
+ */
+let octaveObserver: ((up: boolean) => void) | null = null;
+export function setOctaveObserver(fn: ((up: boolean) => void) | null): void {
+  octaveObserver = fn;
+}
+function notifyOctave(up: boolean): void {
+  try {
+    octaveObserver?.(up);
+  } catch {
+    /* chỉ là nhật ký */
+  }
+}
+
 export function judgeWait(s0: WaitJudgeState, inp: WaitJudgeInput): { state: WaitJudgeState; verdict: WaitVerdict } {
   const { groups, cur, heard, t } = inp;
   const want = groups[cur] ?? [];
@@ -206,6 +223,7 @@ export function judgeWait(s0: WaitJudgeState, inp: WaitJudgeInput): { state: Wai
   // 8. Lệch quãng 8
   if (octave) {
     const run = s.octaveRun + 1;
+    notifyOctave(d > 0);
     return done({ kind: 'octave', accept: run <= (inp.octaveGrace ?? OCTAVE_GRACE), up: d > 0 }, { octaveRun: run });
   }
   return done({ kind: 'wrong' });

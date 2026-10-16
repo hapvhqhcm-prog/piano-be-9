@@ -1,0 +1,27 @@
+/* (+ 2026-10-16) "🎁 Chọn 1 bài con thích" (screens/rewardSongs.ts) + nút mời ở màn kết buổi (screens/sessionEnd.ts) */
+.reward-wrap {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 16px;
+}
+.reward-lead {
+  font-size: 22px;
+  text-align: center;
+  margin: 12px 20px 4px;
+}
+.reward-wrap .library {
+  overflow: visible;
+}
+.reward-grid {
+  max-width: 980px;
+  margin: 0 auto;
+}
+.end-reward {
+  display: flex;
+  justify-content: center;
+  margin: -4px 0 4px;
+}
+.end-reward .btn {
+  min-height: 52px;
+}

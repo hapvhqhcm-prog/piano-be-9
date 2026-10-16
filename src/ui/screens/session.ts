@@ -20,6 +20,19 @@ import { homeworkScreen, warmupScreen } from './warmup';
 import { pendingHomework, readHomework } from '../../lessons/homework';
 import { weekHeld } from './weekHold';
 import { lazy, lazyScreen } from '../lazy';
+import { setOctaveObserver } from '../../music/waitJudge';
+import { noteOctaveEvent, octaveTrouble, readOctaveLog, type MiddleCReason } from '../../lessons/middleC';
+import { parentFocus, type ParentFocus } from '../../lessons/parentFocus';
+import { handFocus, readHandLook } from '../../lessons/handTechnique';
+import { rewardEligible } from '../../lessons/rewardSongs';
+
+// (+ 2026-10-16) Mỗi lần bé đàn LỆCH QUÃNG 8 (waitJudge bước 8) → nhật ký nhỏ trong máy → mời "📍 Tìm Đô giữa" đầu buổi sau
+setOctaveObserver(() => noteOctaveEvent());
+// (+ 2026-10-16, OWNER duyệt) "📍 Tìm Đô giữa" đầu buổi · "🎁 Chọn 1 bài con thích" sau buổi suôn sẻ — chunk riêng
+const middleCMod = lazy(() => import('./middleC'));
+const rewardMod = lazy(() => import('./rewardSongs'));
+const middleCScreen = (app: App, reason: MiddleCReason, hooks: { onDone(): void; onBack(): void }): Screen =>
+  lazyScreen(middleCMod, (m) => m.middleCScreen(app, reason, hooks));
 
 // Ít gặp trong buổi (sáng tạo / sân khấu) → chunk riêng, nạp trước ngay khi buổi học có bước đó.
 const improvMod = lazy(() => import('./improv'));
@@ -50,12 +63,35 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
   const session = store.startSession(lesson.id);
   // songReview: thêm bước "Ôn bài cũ" (một câu của bài 2–4 tuần trước) — không tính vào hoàn thành bài
   // sightRead (v5.2): thêm "Đọc nhạc 1 phút" từ tuần 8 — cũng không tính vào hoàn thành bài
-  const steps = buildSessionPlan(lesson, store.get(), { ...opts, songReview: true, sightRead: true, now: Date.now() });
+  const octaveLog = readOctaveLog();
+  const steps = buildSessionPlan(lesson, store.get(), {
+    ...opts,
+    songReview: true,
+    sightRead: true,
+    now: Date.now(),
+    octaveLog,
+    today: store.today(),
+  });
+  // (+ 2026-10-16, OWNER duyệt) "👪 Bố mẹ 30 giây — hôm nay để ý: …" (một dòng chữ nhỏ đầu buổi; không ghi gì)
+  let focus: ParentFocus | null = null;
+  if (!opts.replay) {
+    try {
+      const d = store.get();
+      focus = parentFocus(lesson, {
+        hand: handFocus(d, Date.now(), readHandLook()),
+        octave: octaveTrouble(octaveLog, Date.now()),
+        lessonDone: d.progress.lessonsCompleted.includes(lesson.id),
+      });
+    } catch {
+      focus = null;
+    }
+  }
   const wrapUp = steps.findIndex((s) => s.kind === 'closing');
   for (const s of steps) {
     if (s.kind === 'activity' && s.activity.kind === 'improv') improvMod.prefetch();
     if (s.kind === 'activity' && s.activity.kind === 'stage') stageMod.prefetch();
     if (s.kind === 'activity' && s.activity.kind === 'sing') singMod.prefetch();
+    if (s.kind === 'posture' && s.middleC) middleCMod.prefetch();
   }
   const deadline = Date.now() + store.settings.sessionMinutes * 60_000;
   let lessonFinished = false;
@@ -64,6 +100,11 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
     app.mic.stop();
     store.finishSession(session.id);
     if (lessonFinished) store.markLessonCompleted(lesson.id);
+    // (+ 2026-10-16, OWNER duyệt) Buổi suôn sẻ → nút "🎁 Chọn 1 bài con thích" ở màn kết (không phải màn mừng)
+    const done = store.get().sessions.find((s) => s.id === session.id);
+    const reward = rewardEligible({ session: done, lessonFinished, replay: opts.replay });
+    if (reward) rewardMod.prefetch();
+    const lessonSongs = lesson.activities.flatMap((a) => (a.kind === 'song' ? [a.songId] : []));
     let banner: string | undefined;
     const week = store.get().progress.currentWeek;
     // Sang tuần mới khi ĐẠT TIÊU CHÍ và đã HỌC HẾT các bài của tuần (không bỏ sót bài dạy điều mới)
@@ -85,6 +126,12 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
       sessionEndScreen(app, {
         banner,
         stickersBefore,
+        ...(reward
+          ? {
+              onReward: () =>
+                app.show(lazyScreen(rewardMod, (m) => m.rewardSongsScreen(app, { exclude: lessonSongs, onHome: () => app.show(homeScreen(app)) }))),
+            }
+          : {}),
         onReplay: () => startSession(app, lesson, { replay: true }),
         onHome: () => app.show(homeScreen(app)),
       }),
@@ -248,12 +295,12 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
         // v5.2 — MỞ ĐẦU BẰNG NHẠC (20–30 giây, bỏ qua được; câu nhắc tư thế một dòng) → thẻ tư thế ĐẦY ĐỦ chỉ khi step.full
         // → v5.1: MỘT bài khởi động tay ~30 giây. Cả ba trên cùng một chấm tiến trình. Khởi động bằng nhạc không ghi gì;
         // khởi động tay ghi PARENT_ASSESSMENT `tech:${drill}` như trước.
-        const music = (): void => show(warmupScreen(app, step.warmup, { onDone: afterMusic, onBack: back }));
-        // (+ 2026-10-15) 📝 Bài tập về nhà của buổi trước (ngày trước) → mời tập TRƯỚC khởi động (bỏ qua được)
-        const hw = opts.replay ? null : pendingHomework(store.settings, store.today());
-        if (hw) {
-          return show(homeworkScreen(app, hw, { onRun: (run) => store.addSongRun(session.id, run), onDone: music, onBack: back }));
-        }
+        // (+ 2026-10-16) Dải "👪 Hôm nay để ý" chỉ ở màn ĐẦU TIÊN có dải khởi động (bài tập về nhà, hoặc khởi động bằng nhạc)
+        let focusShown = false;
+        const takeFocus = (): ParentFocus | null => (focusShown ? null : ((focusShown = true), focus));
+        // (+ 2026-10-16, sửa lỗi) MỌI hàm của bước khai báo TRƯỚC khi rẽ nhánh: trước đây nhánh "📝 Bài tập về nhà" `return`
+        // trước khi `afterMusic` / `drill` được khai báo → xong bài tập về nhà, khởi động bằng nhạc gọi `afterMusic` →
+        // ReferenceError (TDZ) → buổi kẹt ở màn khởi động.
         const posture = (): void => show(postureScreen(app, { onDone: drill, onBack: music }));
         const afterMusic = (): void => (step.full ? posture() : drill());
         const drill = (): void =>
@@ -267,7 +314,14 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean 
               onBack: step.full ? posture : music,
             }),
           );
-        return music();
+        const music = (): void => show(warmupScreen(app, step.warmup, { onDone: afterMusic, onBack: back, focus: takeFocus() }));
+        // (+ 2026-10-15) 📝 Bài tập về nhà của buổi trước (ngày trước) → mời tập TRƯỚC khởi động (bỏ qua được)
+        const hw = opts.replay ? null : pendingHomework(store.settings, store.today());
+        const homework = (): void =>
+          hw ? show(homeworkScreen(app, hw, { onRun: (run) => store.addSongRun(session.id, run), onDone: music, onBack: back, focus: takeFocus() })) : music();
+        // (+ 2026-10-16, OWNER duyệt) 📍 Tìm Đô giữa trên đàn thật (≤ 20 giây, bỏ qua được) — TRƯỚC mọi thứ khác của buổi
+        if (step.middleC) return show(middleCScreen(app, step.middleC, { onDone: homework, onBack: back }));
+        return homework();
       }
       case 'sight-daily':
         // v5.2 — Đọc nhạc 1 phút (đoạn mới mỗi lần): không đánh dấu activityDoneId, không ghi lượt chơi

@@ -934,3 +934,15 @@ Cả 9 bài chờ tuần 4–6 (`CHILD_SIM=full`, 16 nốt đầu mỗi bài, c�
 - **Sửa phần khởi động:** chỉ dùng bài bé đã thuộc.
 - **"Con làm thầy"** viết riêng cho từng bài; thêm **"📝 Bài tập về nhà"** (`homework.ts`), có trong báo cáo tuần.
 - **Hành vi trẻ thật** (§48, `waitJudge.ts`): đàn lệch quãng tám, đàn vội, đàn lại từ đầu câu, chạm 2 phím, tiếng ồn hoặc ngân nga, đàn đều nhưng chậm, sai nhiều lần.
+
+## 50. Cô giáo, phần 2 (2026-10-16)
+- **Lỗi đang có ở v0.26.0 — đã sửa:** sau màn "Bài tập về nhà" (làm xong hoặc bấm Bỏ qua), phần khởi động bị ReferenceError (`afterMusic` được dùng trước khi khởi tạo), buổi học kẹt luôn.
+- **Đọc trước, nghe mẫu sau** (`readFirstDue`)
+  - Áp dụng từ tuần 8, cho bài chưa từng chơi.
+  - Nút "Nghe mẫu" bị mờ cho tới khi bé bấm Bắt đầu hoặc sau 20 s.
+  - Sai 2 lần ở cùng một chỗ thì hiện "Nghe mẫu câu này".
+- **Tự lùi tốc độ:** hỏng 2 lần liền sau khi tăng tốc độ thì lùi xuống 1 bậc (tối thiểu 40). Phải đạt 2 lần mới tăng lại.
+- **"Đàn liền" trong bài:** bỏ, vì micro không phân biệt được tiếng tắt dần tự nhiên với nhấc tay sớm (thử trên mô phỏng thì sai cả khi bé chơi đúng).
+- **📍 Tìm Đô giữa** (`middleC.ts`): hiện khi bé lệch quãng tám ≥ 2 lần trong 7 ngày, khi đổi thế tay, hoặc ở buổi đầu tuần (tuần ≤ 6). Micro xác nhận C4; không ảnh hưởng tiêu chí.
+- **Bố mẹ 30 giây** (`parentFocus.ts`): mỗi buổi chọn 1 điều cần để ý theo thứ tự ưu tiên bài học / lỗi gần đây.
+- **🎁 Bài con thích** (`rewardSongs.ts`): hiện khi buổi tốt. Chọn từ 3–6 bài (bài quen + 1 bài mới). Lượt `reward` không tính vào tiêu chí và không tính thuộc bài.

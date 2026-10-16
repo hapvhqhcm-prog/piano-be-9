@@ -10,6 +10,7 @@ import { principleFigure } from '../components/handCards';
 import { practiceScreen } from './practice';
 import { songScreen, type SongHooks } from './song';
 import type { Homework } from '../../lessons/homework';
+import type { ParentFocus } from '../../lessons/parentFocus';
 import '../../styles/warmup.css';
 
 /**
@@ -19,7 +20,7 @@ import '../../styles/warmup.css';
  * - 'riff': "thầy đàn — con đàn lại" 2 câu ngắn — dùng lại màn Từng nốt (practice.ts), trò Nhại lại.
  * Luôn có nút "Bỏ qua ⏭". KHÔNG ghi gì vào buổi (onRun / record là no-op) → không đổi tiến độ, tiêu chí, "đã thuộc".
  */
-export function warmupScreen(app: App, w: WarmupMusic, hooks: { onDone(): void; onBack(): void }): Screen {
+export function warmupScreen(app: App, w: WarmupMusic, hooks: { onDone(): void; onBack(): void; focus?: ParentFocus | null }): Screen {
   const inner = innerScreen(app, w, hooks);
   return (root) => {
     const cleanup = inner(root);
@@ -34,6 +35,8 @@ export function warmupScreen(app: App, w: WarmupMusic, hooks: { onDone(): void; 
     root.classList.add('is-warmup');
     const bar = h('div', { class: 'warmup-bar' }, h('span', { class: 'warmup-tag' }, '🎵 Khởi động'), handChip(app), skip);
     root.append(bar);
+    const chip = parentFocusChip(app, hooks.focus);
+    if (chip) root.append(chip);
     return () => {
       root.classList.remove('is-warmup');
       window.clearTimeout(bubbleTimer);
@@ -47,7 +50,11 @@ export function warmupScreen(app: App, w: WarmupMusic, hooks: { onDone(): void; 
  * — câu đó ở chế độ "🔁 Lặp 3 lần đúng" (Từng nốt) hoặc theo nhịp ở tốc độ chậm. Luôn có "Bỏ qua ⏭". Lượt chơi GHI vào buổi
  * (`onRun`) như lượt thật: lượt một câu không đổi tiêu chí / "thuộc"; lượt đạt đúng chỗ dặn → bài tập xong (songResult).
  */
-export function homeworkScreen(app: App, hw: Homework, hooks: { onRun: SongHooks['onRun']; onDone(): void; onBack(): void }): Screen {
+export function homeworkScreen(
+  app: App,
+  hw: Homework,
+  hooks: { onRun: SongHooks['onRun']; onDone(): void; onBack(): void; focus?: ParentFocus | null },
+): Screen {
   const tune = findTune(hw.songId);
   if (!tune) return () => void window.setTimeout(hooks.onDone, 0);
   const loop = hw.mode === 'wait' && !!hw.phrase;
@@ -77,11 +84,47 @@ export function homeworkScreen(app: App, hw: Homework, hooks: { onRun: SongHooks
       hooks.onDone();
     });
     root.append(h('div', { class: 'warmup-bar' }, h('span', { class: 'warmup-tag' }, '📝 Bài tập về nhà'), skip));
+    const chip = parentFocusChip(app, hooks.focus);
+    if (chip) root.append(chip);
     return () => cleanup?.();
   };
 }
 
 let bubbleTimer = 0;
+
+/** Ngày bố mẹ đã đóng dải "👪 Hôm nay để ý" (chỉ là tiện ích trong máy). */
+const FOCUS_HIDDEN_KEY = 'piano-be-9:parent-focus-hidden';
+
+/**
+ * (+ 2026-10-16, OWNER duyệt) "👪 Bố mẹ 30 giây — hôm nay để ý: …" — dải chữ NHỎ cho bố mẹ (không phải màn che, không đọc to)
+ * ở đầu buổi (khởi động / bài tập về nhà). Chạm ✕ → ẩn tới hết hôm nay. Luật chọn: lessons/parentFocus.ts.
+ */
+export function parentFocusChip(app: App, focus: ParentFocus | null | undefined): HTMLElement | null {
+  if (!focus) return null;
+  const today = app.store.today();
+  try {
+    if (localStorage.getItem(FOCUS_HIDDEN_KEY) === today) return null;
+  } catch {
+    /* không có bộ nhớ → vẫn hiện */
+  }
+  const close = h('button', { class: 'pfocus-x', type: 'button', 'aria-label': 'Ẩn lời nhắc cho bố mẹ hôm nay' }, '✕');
+  const chip = h(
+    'aside',
+    { class: 'pfocus-chip', 'aria-label': 'Lời nhắc cho bố mẹ', 'data-focus': focus.id },
+    h('span', { class: 'pfocus-who' }, '👪 Bố mẹ 30 giây'),
+    h('span', { class: 'pfocus-text' }, `${focus.icon} Hôm nay để ý: `, h('b', {}, focus.text)),
+    close,
+  );
+  close.addEventListener('click', () => {
+    chip.remove();
+    try {
+      localStorage.setItem(FOCUS_HIDDEN_KEY, today);
+    } catch {
+      /* bỏ qua */
+    }
+  });
+  return chip;
+}
 
 /**
  * (+ 2026-10-15) Biểu tượng tí hon cạnh câu nhắc tư thế một dòng: chạm → bong bóng tranh "Đúng ✓" của nguyên tắc.

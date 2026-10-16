@@ -16,6 +16,7 @@ import { TEMPOS, hardestPhrase } from './songShared';
 import { buildRun, buildStaff, micOn, record, setBar, solo, type ResultBack, type SongCtx } from './songState';
 import { SELF_PRAISE, deferSong, selfStudy } from '../selfStudy';
 import { homeworkDone, makeHomework, readHomework } from '../../lessons/homework';
+import { tempoAdvice, todayTempoOutcomes } from '../../lessons/songStats';
 
 const pick = <T,>(a: T[]): T => a[Math.floor(Math.random() * a.length)];
 
@@ -98,6 +99,13 @@ export function showResult(
   if (rv) showReview(c, rv, point);
   const focusRange = point?.focus && rv && !opts.stage && !c.hardBack ? point.focus : null;
   const place = focusRange && rv ? placeLabel(rv, focusRange) : '';
+  // (+ 2026-10-16, cách dạy của thầy) LÙI TỐC ĐỘ: vừa lên nấc mà 2 lượt liền chưa đạt → lùi một nấc (≥ 40), lượt sau mở sẵn
+  // tốc độ đó; ở tốc độ đã lùi phải đạt 2 lượt liền mới lại gợi ý "🐇 Nhanh hơn" (songStats.tempoAdvice)
+  const advice =
+    !pending && c.mode === 'tempo' && !opts.stage && !full.id.startsWith('sight') ? tempoAdvice(todayTempoOutcomes(app.store.get(), full.id, c.phrase)) : null;
+  const pullTo = !back && !passedNow && advice?.pullTo ? advice.pullTo : null;
+  if (pullTo) c.bpm = pullTo;
+  const pullText = pullTo ? `Mình về tốc độ ${pullTo} cho chắc tay nhé` : '';
   // (+ 2026-10-15) 📝 Bài tập về nhà: giao chỗ thầy dặn (lượt chưa đạt / có chỗ cần luyện), xóa khi đã đạt chỗ đó
   if (!back && !pending) homeworkAfterRun(c, passedNow, point, focusRange, place);
   if (tired) return stopCard(c, 'tired');
@@ -111,7 +119,7 @@ export function showResult(
   // Thang tốc độ: đạt ở tốc độ chậm → gợi ý lên nấc tiếp (40 → 50 → 60 → 72)
   const nextTempo = TEMPOS.find((t) => t > c.bpm);
   // Thầy nhắc một chỗ cần sửa → luyện chỗ đó trước ("🎯"), chưa gợi ý nhanh hơn (thanh nút tối đa 4 nút)
-  const faster = !opts.stage && c.mode === 'tempo' && passedNow && !(focusRange && point && !point.praise) ? nextTempo : undefined;
+  const faster = !opts.stage && c.mode === 'tempo' && passedNow && !(focusRange && point && !point.praise) && !advice?.hold ? nextTempo : undefined;
   // Lặp câu khó: chỉ khi vừa chơi CẢ bài có lỗi (thanh nút tối đa 4 nút → nhường chỗ cho "Nhanh hơn")
   // (2026-10-09) Thầy đã chỉ ra chỗ cần luyện → "🎯 Luyện ngay chỗ này" thay cho "Lặp câu khó"
   const hard = !focusRange && !opts.stage && !opts.review && !c.phrase && !faster ? hardestPhrase(phraseRanges(full), c.missByMeasure) : null;
@@ -120,7 +128,9 @@ export function showResult(
   const headline = retryCard ? 'Gần được rồi! 💪' : passedNow ? pick(['Tuyệt vời! 🎉', 'Siêu quá! 🦸', 'Đỉnh của chóp! 🚀']) : 'Con đàn xong rồi! 👏';
   const nextStep = afterPractice
     ? afterPractice
-    : point
+    : pullText
+      ? pullText
+      : point
       ? point.text
       : retryCard
         ? hard
@@ -141,7 +151,7 @@ export function showResult(
         h('div', { class: 'song-result-head' }, headline, ' ', pending ? '' : h('span', { class: 'stars small' }, '★'.repeat(stars), h('span', { class: 'stars-off' }, '★'.repeat(3 - stars)))),
         h('div', { class: 'song-result-sub' }, text),
         nextStep
-          ? h('div', { class: `song-result-next${point && !afterPractice ? ' teacher' : ''}` }, `${afterPractice ? '✅' : point ? '🧑‍🏫' : '👉'} ${nextStep}`)
+          ? h('div', { class: `song-result-next${(point || pullText) && !afterPractice ? ' teacher' : ''}` }, `${afterPractice ? '✅' : point || pullText ? '🧑‍🏫' : '👉'} ${nextStep}`)
           : null,
         take.makeSlot(),
       ),

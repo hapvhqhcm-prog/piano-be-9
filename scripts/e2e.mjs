@@ -408,6 +408,8 @@ const screenKind = () => {
   if (txt(q('.step-tag')) === 'Con làm thầy') return 'teach';
   // v5.2: mở đầu buổi bằng nhạc (bài đã thuộc theo nhịp, hoặc "thầy đàn — con đàn lại") — có nút "Bỏ qua ⏭"
   if (q('.warmup-bar')) return 'warmup';
+  // (2026-10-16) "Tìm Đô giữa" đầu buổi (khi bé hay lệch quãng 8 / thế tay mới / buổi đầu tuần 2-6): bỏ qua được, tự đi tiếp sau 20 giây
+  if (q('.mc-stage')) return 'middle-c';
   // v5.2: đọc nhạc 1 phút mỗi ngày (từ tuần 8)
   if (q('.sight-daily-tag')) return 'sight-daily';
   if (txt(q('.step-tag')).startsWith('Tư thế')) return 'posture';
@@ -458,6 +460,8 @@ const decide = () => {
   if (kind === 'session-end') { out.banner = txt(q('.screen .banner')); out.stickers = txt(q('.sticker-reveal-title')); tap(btn('Để mai học tiếp'), 'Để mai học tiếp'); return out; }
   // (2026-10-15) "📝 Bài tập về nhà" đầu buổi (chỉ có khi buổi trước có lượt chưa đạt) → bỏ qua
   if (kind === 'warmup' && txt(q('.warmup-tag')).includes('Bài tập về nhà')) { tap(q('.warmup-skip'), 'Bỏ qua bài tập về nhà'); return out; }
+  // (2026-10-16) "Tìm Đô giữa" (micro tắt): bố mẹ chạm "Đã tìm đúng" (màn tự đi tiếp sau ~1,4 giây)
+  if (kind === 'middle-c') { tap(btn('Đã tìm đúng') || btn('Bỏ qua'), 'Đã tìm đúng (Đô giữa)'); return out; }
   // (2026-10-15) Lượt chưa đạt → "Tiếp" mở màn dừng ("🌟 Đàn câu dễ" / "Tiếp") — runner chạm "Tiếp" (ORDER) như cũ
   // Phiếu chấm của bố mẹ: tích hết các ý rồi "Xong"
   const pc = qa('.pcheck-item');

@@ -195,3 +195,9 @@
   color: var(--ink-2, #4a4759);
   text-align: left;
 }
+
+/* (+ 2026-10-16) "Đọc trước, nghe mẫu sau": nút 🎧 Nghe mẫu mờ (vẫn chạm được → nhắc "con thử tự đọc trước") */
+.btn.btn-locked {
+  opacity: 0.5;
+  filter: saturate(0.6);
+}

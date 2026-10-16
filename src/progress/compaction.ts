@@ -17,6 +17,7 @@
  * (sticker "Buổi diễn" tính từ nhật ký đó, giữ nguyên sau khi gộp — tests/concert.test.ts).
  */
 import { forEachTargetOutcome, foldSongRun, masteryRuleFrom, weekPassed } from '../lessons/lessonEngine';
+import { isRewardLessonId } from '../lessons/songStats';
 import { DYNAMICS_ROUNDS, EFFORT_BY_DAYS_FROM, monotonicStickerIds } from '../lessons/stickers';
 import { isLessonSession } from '../lessons/bonusStickers';
 import { RATING_STARS, bumpDataRev, emptyHistory, foldParentStats, mondayKey, weekOfLessonId, weekdayIndex, type ParentStats } from './history';
@@ -143,7 +144,7 @@ export function foldSession(h: History, s: Session, ruleFrom?: number): void {
   }
   // Bài hát
   for (const r of s.songRuns) {
-    foldSongRun(h.songs, r, ruleFrom);
+    foldSongRun(h.songs, r, ruleFrom, isRewardLessonId(s.lessonId));
     if (r.source === 'mic' && r.passed && !r.phrase && !r.hand && r.total > 0 && r.hits >= r.total) h.micPerfect = true;
   }
   // Trí nhớ nốt: giữ TARGET_KEEP lần gần nhất (theo ts) mỗi mã

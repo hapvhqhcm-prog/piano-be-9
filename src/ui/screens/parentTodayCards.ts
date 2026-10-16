@@ -6,6 +6,25 @@ import { button, h } from '../components/dom';
 import { readiness, tonightPlan, type TonightPractice } from './tonight';
 import { diagnosticsScreen, micTestScreen, segmented, weeklyReportScreen, type ParentCtx } from './parentShared';
 import { addDays, weeklyReportDue } from '../../progress/weeklyReportDue';
+import { nextLesson } from '../../lessons/nextLesson';
+import { parentFocus, type ParentFocus } from '../../lessons/parentFocus';
+import { handFocus, readHandLook } from '../../lessons/handTechnique';
+import { octaveTrouble, readOctaveLog } from '../../lessons/middleC';
+
+/** (+ 2026-10-16, OWNER duyệt) "👪 Bố mẹ 30 giây" cho buổi tới (bài "Học tiếp") — null nếu không tính được. */
+export function todayFocus(d: Readonly<AppData>, now: Date): ParentFocus | null {
+  try {
+    const lesson = nextLesson(d, () => 0, now);
+    const t = now.getTime();
+    return parentFocus(lesson, {
+      hand: handFocus(d, t, readHandLook()),
+      octave: octaveTrouble(readOctaveLog(), t),
+      lessonDone: d.progress.lessonsCompleted.includes(lesson.id),
+    });
+  } catch {
+    return null;
+  }
+}
 
 /**
  * "Việc cần làm tối nay" (đầu trang): 1 việc cụ thể + "▶ Làm ngay (5')" + 3 chỗ khó + tiêu chí tuần.
@@ -22,6 +41,7 @@ export function tonightCard(d: Readonly<AppData>, now: Date, onPractice: (p: Ton
     { class: `card todo-card${t.welcomeBack ? ' welcome' : ''}` },
     h('h2', {}, t.welcomeBack ? `👋 Mừng bé quay lại (nghỉ ${t.daysAway} ngày)` : '📝 Việc cần làm tối nay'),
     h('p', { class: 'todo-action' }, t.action),
+    ((f) => (f ? h('p', { class: 'todo-focus' }, h('b', {}, `👪 30 giây hôm nay — để ý: ${f.icon} `), f.detail) : null))(todayFocus(d, now)),
     t.practice
       ? h(
           'div',

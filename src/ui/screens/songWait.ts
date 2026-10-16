@@ -37,6 +37,7 @@ import {
 import { askParent, makeReview, showResult } from './songResult';
 import { focusStepDone } from './songFocus';
 import { SELF_DONE, selfStudy } from '../selfStudy';
+import { READ_FIRST_WRONG_SPOT } from '../../lessons/readingAids';
 
 export function startWait(c: SongCtx): void {
   c.token++;
@@ -89,11 +90,19 @@ export function showWaitNote(c: SongCtx): void {
   waitBar(c, g);
 }
 
+/**
+ * (+ 2026-10-16, OWNER duyệt) Bài đang "đọc trước, nghe mẫu sau": bé đàn sai ≥ 2 lần ở cùng chỗ → mời "🎧 Nghe mẫu câu này"
+ * (không ở "Lặp 3 lần", luyện chỗ khó, câu dễ kết thúc, bố mẹ chấm giúp).
+ */
+const listenOffer = (c: SongCtx): boolean =>
+  !!c.readFirst && c.wWrongThis >= READ_FIRST_WRONG_SPOT && !c.loop3 && !c.focus && !c.easyEnd && !c.parentRun;
+
 function waitBar(c: SongCtx, g: Onset): void {
   setBar(
     c,
     backButton(() => c.act.reset()),
     c.hints !== 'full' ? button({ icon: '💡', label: 'Gợi ý', onTap: () => hint(c, g) }) : null,
+    listenOffer(c) ? button({ icon: '🎧', label: 'Nghe mẫu câu này', onTap: () => c.act.listenHere() }) : null,
     // Luôn có nút cho bố mẹ (kể cả khi micro bật) — phòng micro không nhận ra nốt; micro chưa nghe đủ hai tay 3 lần → nổi bật
     // (+ 2026-10-12) 👦 Bé tự học: nút của BÉ ("✋ Con đàn xong") — cả lượt vào hàng chờ bố mẹ xem (songResult.askParent)
     button({
@@ -148,6 +157,7 @@ export function onWaitInput(c: SongCtx, midi: number, from: 'mic' | 'tap' | 'par
       log.wrong++;
       log.played ??= midi;
       if (c.wFirstWrongAt < 0) c.wFirstWrongAt = performance.now();
+      if (c.wWrongThis === READ_FIRST_WRONG_SPOT && listenOffer(c)) waitBar(c, g);
     }
     const heard = midiToPitch(midi);
     c.kb.setResult(heard, 'heard');
@@ -437,7 +447,7 @@ export function onWaitHands(c: SongCtx, at: number): void {
       if (x?.heard !== undefined) kb.setResult(midiToPitch(x.heard), 'heard');
     }
     c.status.textContent = handsMessage(c, g, res);
-    if (c.wHandFails === 3) waitBar(c, g);
+    if (c.wHandFails === 3 || (c.wWrongThis === READ_FIRST_WRONG_SPOT && listenOffer(c))) waitBar(c, g);
   })();
 }
 

@@ -22,6 +22,16 @@ export const CHANGELOG_BASELINE = '0.15.0';
 
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
+    version: '0.27.0',
+    date: '2026-10-16',
+    items: [
+      'Sửa lỗi: sau màn "Bài tập về nhà" buổi học bị kẹt ở phần khởi động.',
+      'Từ tuần 8: bài mới cho bé tự đọc trước, nghe mẫu sau; vấp thì nghe mẫu đúng câu đó.',
+      '📍 Tìm Đô giữa trên đàn thật khi hay đàn lệch quãng 8; tốc độ tự lùi khi hỏng 2 lần.',
+      '👪 "Hôm nay để ý…" cho bố mẹ; 🎁 làm tốt được chọn 1 bài con thích cuối buổi.',
+    ],
+  },
+  {
     version: '0.26.0',
     date: '2026-10-15',
     items: [

@@ -86,6 +86,8 @@ export interface SongActions {
   openHard(range: [number, number]): void;
   /** "🎯 Luyện ngay chỗ này" */
   startFocus(back: ResultBack, local: [number, number], place: string): void;
+  /** (+ 2026-10-16) "🎧 Nghe mẫu câu này" giữa lượt Từng nốt (bài đang "đọc trước"): thầy đàn câu đang chờ rồi bé đàn tiếp */
+  listenHere(): void;
 }
 
 /** Trạng thái của MỘT lần mở màn bài hát (song.ts dựng) */
@@ -190,6 +192,11 @@ export interface SongCtx {
    */
   wJudge: WaitJudgeState;
   wFirstWrongAt: number;
+  /**
+   * (+ 2026-10-16, OWNER duyệt) "ĐỌC TRƯỚC, NGHE MẪU SAU" (lessons/readingAids.ts readFirstDue): null = không áp dụng;
+   * locked = nút "🎧 Nghe mẫu" còn mờ (bé chưa thử, chưa đủ 20 giây). Lượt Từng nốt đàn sai 2 lần một chỗ → mời nghe câu đó.
+   */
+  readFirst: { locked: boolean } | null;
 }
 
 // ---------------- Hàm thuần: nhóm nốt / hai tay ----------------

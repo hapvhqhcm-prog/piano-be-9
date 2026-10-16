@@ -2,12 +2,13 @@
  * Kế hoạch MỘT buổi học (các bước, giới hạn số màn). Nội dung các bước phụ: sessionSelectors.ts, targetMemory.ts.
  */
 import type { QuizSpec } from '../practice/quiz';
-import type { AppData } from '../progress/schema';
+import { localDateStr, type AppData } from '../progress/schema';
 import { sessionCount } from '../progress/history';
 import type { Activity, Lesson, Segment, TechniqueDrill } from './types';
 import type { Hand, PositionId } from '../piano/fingering';
 import { MAX_QUIZ_ROUNDS, activityDoneId, weekPlan } from './curriculum';
 import { reviewSegment } from './targetMemory';
+import { middleCReason, type MiddleCReason, type OctaveLog } from './middleC';
 import { sightDailyFits } from './sessionEstimate';
 import { findTune } from '../music/exercises';
 import {
@@ -26,7 +27,17 @@ export type SessionStep =
    * Bước MỞ ĐẦU (một chấm tiến trình): v5.2 — khởi động bằng nhạc (`warmup`, kèm câu nhắc tư thế một dòng) →
    * thẻ tư thế ĐẦY ĐỦ chỉ khi `full` (postureFull) → v5.1: MỘT bài khởi động kỹ thuật ~30 giây (`drill`, xoay vòng — sessionDrill).
    */
-  | { kind: 'posture'; full: boolean; drill: TechniqueDrill; warmup: WarmupMusic }
+  | {
+      kind: 'posture';
+      full: boolean;
+      drill: TechniqueDrill;
+      warmup: WarmupMusic;
+      /**
+       * (+ 2026-10-16, OWNER duyệt) "📍 Tìm Đô giữa trên đàn thật" ≤ 20 giây ĐẦU buổi (cùng chấm tiến trình — không thêm màn):
+       * lý do hiện (lessons/middleC.ts middleCReason); null = không hiện. Không ghi gì vào buổi / tiêu chí.
+       */
+      middleC: MiddleCReason | null;
+    }
   | { kind: 'review'; segment: Segment }
   | { kind: 'quiz'; title: string; intro: string; quiz: QuizSpec; warmup: boolean }
   | { kind: 'activity'; activity: Activity; last: boolean; /** vị trí trong lesson.activities */ index: number }
@@ -95,6 +106,12 @@ export function buildSessionPlan(
     songReview?: boolean;
     /** v5.2 — Thêm bước "Đọc nhạc 1 phút" (kind 'sight-daily'); BẬT TƯỜNG MINH như songReview. Mặc định tắt. */
     sightRead?: boolean;
+    /**
+     * (+ 2026-10-16) Nhật ký lệch quãng 8 trong máy (lessons/middleC.ts readOctaveLog) + ngày hôm nay — cho bước "📍 Tìm Đô giữa".
+     * Không truyền → chỉ xét thế tay mới / buổi đầu tuần ≤ 6 (ngày hôm nay suy từ `now`).
+     */
+    octaveLog?: OctaveLog | null;
+    today?: string;
   } = {},
 ): SessionStep[] {
   const now = opts.now === undefined ? Date.now() : typeof opts.now === 'number' ? opts.now : opts.now.getTime();
@@ -140,6 +157,7 @@ export function buildSessionPlan(
       full: postureFull(lesson, data, now),
       drill: sessionDrill(lesson.week, data ? sessionCount(data) : 0),
       warmup: { kind: 'riff', position: 'C', hand: 'RH', riffs: [] },
+      middleC: middleCReason(lesson, data, { now, today: opts.today ?? localDateStr(new Date(now)), log: opts.octaveLog }),
     };
     steps.push(opening);
     // Bài kiểm tra tuần: KHÔNG ôn nhanh (để kết quả ôn không lẫn vào tiêu chí, vd C4 10/10)

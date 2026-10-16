@@ -70,3 +70,47 @@
     display: none;
   }
 }
+
+/* (+ 2026-10-16) "👪 Bố mẹ 30 giây — hôm nay để ý: …" (screens/warmup.ts parentFocusChip): dải chữ nhỏ cho bố mẹ, đóng được */
+.pfocus-chip {
+  position: fixed;
+  top: calc(env(safe-area-inset-top) + 66px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 44;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: min(760px, calc(100vw - 32px));
+  padding: 3px 4px 3px 12px;
+  font-size: 15px;
+  line-height: 1.25;
+  color: var(--sun-800);
+  background: var(--sun-50);
+  border: 1px solid var(--sun-300);
+  border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(61, 52, 102, 0.12);
+}
+.pfocus-who {
+  font-weight: 800;
+  white-space: nowrap;
+}
+.pfocus-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pfocus-x {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--sun-800);
+  font-size: 15px;
+  cursor: pointer;
+}
+.pfocus-x:active {
+  background: var(--sun-100);
+}

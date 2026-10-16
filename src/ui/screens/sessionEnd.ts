@@ -16,6 +16,7 @@ import { weeklyChallenge, type WeeklyChallenge } from '../../lessons/challenges'
 import { concertOfferWeek } from '../../lessons/concert';
 import { lazy, lazyScreen } from '../lazy';
 import '../../styles/concert.css';
+import '../../styles/rewardSongs.css';
 import { celebrations } from '../celebrationQueue';
 
 // (+ 2026-10-08) 🎤 Biểu diễn cho cả nhà — chunk riêng (kéo theo sân khấu), nạp trước khi màn kết có lời mời
@@ -145,6 +146,11 @@ export function sessionEndScreen(
     sessionId?: string;
     /** Tuần TRƯỚC buổi này — có và khác tuần hiện tại → cảnh "cập bến đảo mới" (mặc định: suy ra từ banner) */
     weekBefore?: number;
+    /**
+     * (+ 2026-10-16, OWNER duyệt) Buổi suôn sẻ → nút "🎁 Chọn 1 bài con thích" (lessons/rewardSongs.ts) — một NÚT, không phải
+     * màn mừng (celebrationQueue không đổi). Không có → không hiện.
+     */
+    onReward?: () => void;
     onReplay(): void;
     onHome(): void;
   },
@@ -193,6 +199,9 @@ export function sessionEndScreen(
                 fresh.length ? stickerReveal(app, fresh, bonus || cheer ? 2 : 3) : null,
                 bonus ? bonusCard(app, bonus) : null,
               )
+            : null,
+          o.onReward
+            ? h('div', { class: 'end-reward' }, button({ icon: '🎁', label: 'Chọn 1 bài con thích', kind: 'sun', onTap: o.onReward }))
             : null,
           // (+ 2026-10-09) Có lời mời biểu diễn → MỘT hàng 3 nút (trước đây hàng thứ hai tràn xuống dải phím trang trí
           // trên iPad mini khi có nhiều phần thưởng); "Chơi lại" rút gọn chữ cho vừa

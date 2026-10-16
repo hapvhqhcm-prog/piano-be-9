@@ -1,10 +1,10 @@
 import { TIMING_WINDOWS } from '../../music/timing';
-import { phraseRanges, tuneRange, type Tune } from '../../music/tune';
+import { phraseRanges, slice, tuneRange, type Tune } from '../../music/tune';
 import { PianoKeyboard } from '../../piano/PianoKeyboard';
 import { pitchToMidi } from '../../piano/pitchTable';
 import type { StaffView } from '../components/staffView';
 import type { App } from '../App';
-import { backButton, button, h } from '../components/dom';
+import { backButton, button, h, toast } from '../components/dom';
 import { HandOverlay, eventsFromTune, pedalOfTune, playDemo } from '../components/demo';
 import { speakChip } from '../components/speakChip';
 import { cancelSpeech, speak } from '../../audio/voice';
@@ -14,12 +14,13 @@ import { TakeReplay } from './songTake';
 import { MicHonestyWatch, micHonestyBox } from '../components/micHonesty';
 import { selfStudy } from '../selfStudy';
 import { songEverPlayed, songMastered, startTempoBpm } from '../../lessons/lessonEngine';
+import { tempoAdvice, todayTempoOutcomes } from '../../lessons/songStats';
 import { buildStaff, groupAt, groups, halt, handsOn, lightOnset, micOn, pulseWindow, scheduleAccomp, setBar, solo, together, type SongCtx, type SongHooks } from './songState';
 import { onWaitChord, onWaitHands, onWaitInput, onWaitMic, showWaitNote, startWait } from './songWait';
+import { READ_FIRST_IDLE_MS, READ_FIRST_TEXT, readFirstDue, songFamiliar } from '../../lessons/readingAids';
 import { waitJudgeInit } from '../../music/waitJudge';
 import { startTempo } from './songTempo';
 import { focusIdle, startFocus } from './songFocus';
-import { songFamiliar } from '../../lessons/readingAids';
 import { readingHints } from '../components/noteColors';
 import { withChant } from './songChant';
 import '../../styles/pedagogy.css';
@@ -40,6 +41,19 @@ export type { SongHooks } from './songState';
  */
 /** (+ 2026-10-15) "🐢 Xem chậm": thầy đàn mẫu ở 0.6× nhịp */
 const SLOW_DEMO = 0.6;
+
+/**
+ * Tốc độ mở sẵn cho lượt THEO NHỊP (lượt của buổi học / Thư viện; sân khấu và bước có tốc độ riêng thì không dùng):
+ * BẮT ĐẦU CHẬM (songStats.startTempoBpm) và (+ 2026-10-16) LÙI TỐC ĐỘ — hôm nay vừa lùi một nấc mà chưa đạt 2 lượt liền ở
+ * tốc độ đó → mở sẵn tốc độ đã lùi (songStats.tempoAdvice).
+ */
+function openTempoBpm(full: Tune, app: App, phrase: [number, number] | null): number {
+  const data = app.store.get();
+  const start = startTempoBpm(full, data);
+  if (full.id.startsWith('sight')) return start;
+  const hold = tempoAdvice(todayTempoOutcomes(data, full.id, phrase)).hold;
+  return hold !== null ? Math.min(start, hold) : start;
+}
 
 export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongHooks) {
   // (2026-10-15, OWNER duyệt — rà soát của thầy giáo) bài QUEN, theo nhịp, từ tuần 6 → chỉ khuông (noteColors.ts readingHints);
@@ -184,13 +198,15 @@ function songMount(app: App, full: Tune, opts: SongOptions, hooks: SongHooks) {
         demo: (after) => demo(after),
         openHard: (range) => openHard(range),
         startFocus: (back, local, place) => startFocus(c, back, local, place),
+        listenHere: () => listenHere(),
       },
       mode: opts.mode,
       hints: opts.hints,
       level: opts.level ?? 2,
       // (+ 2026-10-15, OWNER duyệt) BẮT ĐẦU CHẬM: lượt theo nhịp của bài chưa từng đạt theo nhịp → ≤ 50 (40 nếu có móc đơn /
       // hai tay); sau đó thang 40 → 50 → 60 ("🐇 Nhanh hơn"). Sân khấu / bước ôn có tốc độ riêng.
-      bpm: opts.bpm ?? (opts.mode === 'tempo' && !opts.stage ? startTempoBpm(full, app.store.get()) : full.bpm),
+      // (+ 2026-10-16) …và LÙI TỐC ĐỘ: vừa lùi một nấc hôm nay → mở sẵn tốc độ đã lùi tới khi đạt 2 lượt liền
+      bpm: opts.bpm ?? (opts.mode === 'tempo' && !opts.stage ? openTempoBpm(full, app, opts.phrase ?? null) : full.bpm),
       phrase: opts.phrase ?? null,
       handSel,
       loop3: false,
@@ -228,6 +244,8 @@ function songMount(app: App, full: Tune, opts: SongOptions, hooks: SongHooks) {
       chordAskedAt: -1,
       wJudge: waitJudgeInit(),
       wFirstWrongAt: -1,
+      // (+ 2026-10-16, OWNER duyệt) ĐỌC TRƯỚC, NGHE MẪU SAU: từ tuần 8, bài gặp lần đầu trong buổi học (readingAids.ts)
+      readFirst: readFirstDue(app.store.get(), full, opts) ? { locked: true } : null,
     };
 
     function reset(): void {
@@ -283,6 +301,11 @@ function songMount(app: App, full: Tune, opts: SongOptions, hooks: SongHooks) {
             sh ? `${sh === 'RH' ? '🫱 Tập tay PHẢI' : '🫲 Tập tay TRÁI'} — ${micOn(c) ? 'tay kia để nghỉ' : 'app đàn khẽ tay kia'}. ` : '',
             hardBack
               ? '' // Lặp câu khó: dòng "🔁 Câu N — đàn đúng 3 lần liền" ở trên đã đủ (không có nút Bắt đầu)
+              : c.readFirst?.locked
+              ? // (+ 2026-10-16) Đọc trước, nghe mẫu sau
+                `📖 ${READ_FIRST_TEXT}${mode === 'tempo' ? ` Đếm vào rồi đàn theo tiếng "tích" (${bpm} nhịp/phút).` : ''}`
+              : c.readFirst && mode === 'wait' && firstTime
+              ? '🎧 Giờ con nghe mẫu được rồi — nghe xong Bắt đầu đàn lại nhé.'
               : mode === 'wait'
               ? // Bài mới: nghe – hát – rồi mới đàn (gộp một dòng cho gọn)
                 firstTime
@@ -300,10 +323,57 @@ function songMount(app: App, full: Tune, opts: SongOptions, hooks: SongHooks) {
         backButton(() => hooks.onBack()),
         hardBack
           ? button({ icon: '↩', label: 'Cả bài', onTap: () => ((c.phrase = c.hardBack?.phrase ?? null), reset()) })
-          : button({ icon: '🎬', label: 'Xem mẫu', onTap: () => void demo() }),
+          : c.readFirst
+            ? listenButton()
+            : button({ icon: '🎬', label: 'Xem mẫu', onTap: () => void demo() }),
         canLoop ? button({ icon: '🔁', label: `Lặp ${LOOP_TARGET} lần đúng`, kind: hardBack ? 'primary' : undefined, onTap: () => void startLoop() }) : null,
         hardBack ? null : button({ icon: '▶', label: 'Bắt đầu', kind: 'primary', onTap: () => void start() }),
       );
+    }
+
+    /**
+     * (+ 2026-10-16, OWNER duyệt) "🎧 Nghe mẫu" của bài đang "đọc trước": mờ (chạm → nhắc con tự đọc trước) tới khi bé
+     * thử lần đầu / đã chờ 20 giây; sau đó như "Xem mẫu".
+     */
+    function listenButton(): HTMLButtonElement {
+      const locked = !!c.readFirst?.locked;
+      const b = button({
+        icon: '🎧',
+        label: 'Nghe mẫu',
+        onTap: () => {
+          if (!c.readFirst?.locked) return void demo();
+          toast(READ_FIRST_TEXT, 2600);
+          void speak(app, READ_FIRST_TEXT);
+        },
+      });
+      if (locked) {
+        b.classList.add('btn-locked');
+        b.setAttribute('aria-disabled', 'true');
+      }
+      return b;
+    }
+
+    /**
+     * (+ 2026-10-16) "🎧 Nghe mẫu câu này" (lượt Từng nốt, đàn sai 2 lần một chỗ): thầy đàn CÂU chứa nốt đang chờ, xong bé
+     * đàn tiếp đúng chỗ đang chờ (lượt không bị hủy; nốt này không còn tính "đúng ngay").
+     */
+    function listenHere(): void {
+      if (c.state !== 'playing' || c.mode !== 'wait') return;
+      const g = groups(c)[c.wIdx];
+      if (!g) return;
+      const m = g.notes[0].measure;
+      const range = phraseRanges(c.tune).find(([a, b]) => m >= a && m < b) ?? [m, m + 1];
+      if (c.readFirst) c.readFirst.locked = false;
+      const resume = () => {
+        if (c.disposed) return;
+        c.state = 'playing';
+        c.wWrongThis = 0;
+        c.wFirstWrongAt = -1;
+        c.wJudge = waitJudgeInit();
+        app.mic.resetTracker();
+        showWaitNote(c);
+      };
+      void demo(resume, 1, range);
     }
 
     /** v5.1 — "🔁 Lặp câu khó": mở câu có nhiều lỗi nhất ở chế độ lặp 3 lần đúng (chờ từng nốt). */
@@ -328,19 +398,34 @@ function songMount(app: App, full: Tune, opts: SongOptions, hooks: SongHooks) {
 
     // ---------------- Xem mẫu: "video" bàn tay thầy đàn ----------------
     // (+ 2026-10-15) bàn tay mờ trên bàn phím đàn cả bài (demo.ts → demoHands.ts); 🐢 Xem chậm = 0.6× nhịp
-    async function demo(after: () => void = reset, speed = 1): Promise<void> {
+    // (+ 2026-10-16) range = chỉ đàn một câu (ô [đầu, cuối) của lượt đang mở — "🎧 Nghe mẫu câu này"), Dừng → `after`
+    async function demo(after: () => void = reset, speed = 1, range: [number, number] | null = null): Promise<void> {
       const tk = ++c.token;
       c.state = 'demo';
       const bpm = c.bpm * speed;
       const spb = 60 / bpm;
       overlay.setGhost(false);
       kb.setTargets([]);
-      const caption = h('span', {}, speed < 1 ? '🐢 Thầy đàn chậm — nhìn ngón tay nhé' : '🎬 Xem thầy đàn mẫu — nhìn ngón tay nhé');
-      status.replaceChildren(caption, firstTime ? h('div', { class: 'sing-prompt' }, '🎤 Hát tên nốt theo thầy nhé!') : '');
+      const caption = h(
+        'span',
+        {},
+        range ? '🎧 Nghe thầy đàn câu này — rồi con đàn tiếp nhé' : speed < 1 ? '🐢 Thầy đàn chậm — nhìn ngón tay nhé' : '🎬 Xem thầy đàn mẫu — nhìn ngón tay nhé',
+      );
+      status.replaceChildren(caption, firstTime && !range ? h('div', { class: 'sing-prompt' }, '🎤 Hát tên nốt theo thầy nhé!') : '');
+      const stop = range
+        ? () => {
+            if (tk !== c.token) return;
+            c.token++;
+            c.demoRun?.cancel();
+            c.demoRun = null;
+            overlay.hide();
+            after();
+          }
+        : reset;
       setBar(
         c,
-        button({ icon: '⏹', label: 'Dừng', onTap: reset }),
-        speed === 1
+        button({ icon: '⏹', label: 'Dừng', onTap: stop }),
+        speed === 1 && !range
           ? button({
               icon: '🐢',
               label: 'Xem chậm',
@@ -354,20 +439,26 @@ function songMount(app: App, full: Tune, opts: SongOptions, hooks: SongHooks) {
           : null,
       );
       const t0 = app.audio.now() + 0.35;
-      scheduleAccomp(c, t0, spb);
-      c.demoRun = playDemo(app.audio, kb, overlay, eventsFromTune(c.tune), {
+      const tune = range ? slice(c.tune, range[0], range[1]) : c.tune;
+      if (!range) scheduleAccomp(c, t0, spb);
+      c.demoRun = playDemo(app.audio, kb, overlay, eventsFromTune(tune), {
         bpm,
         t0,
-        pedal: pedalOfTune(c.tune),
+        pedal: pedalOfTune(tune),
         onCaption: (t) => (caption.textContent = `🎬 ${t}`),
-        onBeat: (beat) => {
-          if (c.mode === 'tempo' && c.level === 3) c.staff.setTime(Math.max(0, beat));
-          const cur = groupAt(groups(c), beat);
-          if (cur) c.staff.setCursor(idxOf(cur));
-        },
+        onBeat: range
+          ? undefined
+          : (beat) => {
+              if (c.mode === 'tempo' && c.level === 3) c.staff.setTime(Math.max(0, beat));
+              const cur = groupAt(groups(c), beat);
+              if (cur) c.staff.setCursor(idxOf(cur));
+            },
       });
       await c.demoRun.done;
-      if (tk === c.token) after();
+      if (tk === c.token) {
+        if (range) overlay.hide();
+        after();
+      }
     }
 
     // ---------------- Bắt đầu ----------------
@@ -383,6 +474,8 @@ function songMount(app: App, full: Tune, opts: SongOptions, hooks: SongHooks) {
       }
       // Rời màn / bấm Dừng trong lúc chờ micro → không bắt đầu nữa
       if (tk !== c.token || c.disposed) return;
+      // (+ 2026-10-16) Đọc trước, nghe mẫu sau: bé đã THỬ → mở nút nghe mẫu
+      if (c.readFirst) c.readFirst.locked = false;
       if (c.mode === 'wait') startWait(c);
       else startTempo(c);
     }
@@ -425,6 +518,14 @@ function songMount(app: App, full: Tune, opts: SongOptions, hooks: SongHooks) {
       c.hardBack = { mode: 'wait', phrase: null, range: opts.phrase };
     }
     reset();
+    /** (+ 2026-10-16) Đọc trước: bé chưa thử sau 20 giây → mở nút nghe mẫu (không để bé kẹt) */
+    const readFirstTimer = c.readFirst?.locked
+      ? window.setTimeout(() => {
+          if (c.disposed || !c.readFirst?.locked) return;
+          c.readFirst.locked = false;
+          if (c.state === 'idle' && !c.focus && !c.hardBack) reset();
+        }, READ_FIRST_IDLE_MS)
+      : 0;
     // v5.1: lời dẫn dài chỉ hiện một dòng → đọc to cả câu một lần khi mở màn
     const introFull = opts.intro?.trim() ?? '';
     const introSpoken = !!introFull && showIntroFor(c.phrase) && shortIntro(introFull) !== introFull;
@@ -432,6 +533,7 @@ function songMount(app: App, full: Tune, opts: SongOptions, hooks: SongHooks) {
     return () => {
       c.disposed = true;
       window.clearTimeout(introTimer);
+      window.clearTimeout(readFirstTimer);
       cancelSpeech();
       take.drop();
       halt(c);

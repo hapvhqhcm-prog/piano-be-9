@@ -7,6 +7,12 @@ import { localDateStr, type AppData, type Session, type SongAgg } from '../progr
 import { hist, memo } from '../progress/history';
 
 export type Run = Session['songRuns'][number];
+/**
+ * (+ 2026-10-16) Mã buổi của lượt chơi "🎁 bài thưởng" ở màn kết buổi (lessons/rewardSongs.ts): `reward-song-<bài>`.
+ * Không bắt đầu bằng "w<tuần>-" → không vào tiêu chí tuần; lượt trong đó không tính "đã thuộc" (foldSongRun `reward`).
+ */
+export const REWARD_LESSON_PREFIX = 'reward-song-';
+export const isRewardLessonId = (lessonId: string): boolean => lessonId.startsWith(REWARD_LESSON_PREFIX);
 /** Lượt chơi đủ tay (không phải tập tách tay một bè của bài hai tay). */
 export const together = (r: Run) => !r.hand;
 /** Lượt chơi đạt cả bài (không phải tập một câu, không phải tập tách tay). */
@@ -17,11 +23,12 @@ export const passedWhole = (r: Run, songId: string, tempo = false, minBpm = 0): 
  * (+ 2026-10-06) Cộng một lượt chơi vào tổng hợp của bài (dùng chung cho đọc trực tiếp và gộp lịch sử — compaction.ts).
  * Gọi theo THỨ TỰ buổi / lượt: lượt sau cùng ts thắng ở "lượt gần nhất" (như vòng lặp cũ `r.ts >= lastRun.ts`).
  */
-export function foldSongRun(stats: Record<string, SongAgg>, r: Run, ruleFrom?: number): void {
+export function foldSongRun(stats: Record<string, SongAgg>, r: Run, ruleFrom?: number, reward = false): void {
   const a = (stats[r.songId] ??= {});
   if (!a.r || r.ts >= a.r[0]) a.r = [r.ts, r.passed ? 1 : 0];
   if (!r.phrase && r.ts > (a.w ?? 0)) a.w = r.ts;
-  if (passedWhole(r, r.songId, true, 60)) {
+  // (+ 2026-10-16) Lượt của bài thưởng ("🎁 Chọn 1 bài con thích" — buổi `reward-song-…`): không tính "đã thuộc"
+  if (!reward && passedWhole(r, r.songId, true, 60)) {
     if (ruleFrom === undefined || r.ts < ruleFrom) {
       // Luật CŨ (lượt trước khi luật 2 ngày có hiệu lực — "giữ nguyên quyền"): MỘT lượt đạt là thuộc
       if (a.m === undefined || r.ts < a.m) a.m = r.ts;
@@ -49,7 +56,7 @@ export function songStats(data: Readonly<AppData>): Readonly<Record<string, Read
     const out: Record<string, SongAgg> = {};
     for (const [id, a] of Object.entries(hist(data).songs)) out[id] = { ...a, ...(a.r ? { r: [a.r[0], a.r[1]] } : {}) };
     const ruleFrom = masteryRuleFrom(data);
-    for (const s of data.sessions) for (const r of s.songRuns) foldSongRun(out, r, ruleFrom);
+    for (const s of data.sessions) for (const r of s.songRuns) foldSongRun(out, r, ruleFrom, isRewardLessonId(s.lessonId));
     return out;
   });
 }
@@ -118,4 +125,81 @@ export function stampMasteryRule(data: AppData, now: number): boolean {
   if (masteryRuleFrom(data) !== undefined) return false;
   (data.settings as { masteryRuleFrom?: number }).masteryRuleFrom = now;
   return true;
+}
+
+/* ---------- (+ 2026-10-16, cách dạy của thầy) LÙI TỐC ĐỘ KHI VỪA LÊN NẤC MÀ CHƯA CHẮC TAY ---------- */
+
+/** Thang tốc độ (giống TEMPOS ở màn bài hát) và tốc độ thấp nhất khi lùi. */
+export const TEMPO_LADDER: readonly number[] = [40, 50, 60, 72];
+export const TEMPO_FLOOR = 40;
+/** Số lượt ĐẠT liền ở tốc độ đã lùi trước khi lại được gợi ý "🐇 Nhanh hơn" (không nhảy lên xuống). */
+export const PULLBACK_GOOD = 2;
+
+export interface TempoOutcome {
+  bpm: number;
+  passed: boolean;
+}
+
+export interface TempoAdvice {
+  /** Lượt CUỐI vừa làm bé lùi tốc độ: tốc độ mới (null = không) — "Mình về tốc độ X cho chắc tay nhé" */
+  pullTo: number | null;
+  /** Đang củng cố ở tốc độ đã lùi (chưa đủ PULLBACK_GOOD lượt đạt liền): mở sẵn tốc độ này, chưa gợi ý nhanh hơn */
+  hold: number | null;
+}
+
+/** Nấc chậm hơn `bpm` một bậc trên thang, không dưới TEMPO_FLOOR. */
+export function notchBelow(bpm: number, ladder: readonly number[] = TEMPO_LADDER): number {
+  const lower = ladder.filter((t) => t < bpm);
+  return Math.max(TEMPO_FLOOR, lower.length ? lower[lower.length - 1] : TEMPO_FLOOR);
+}
+
+/**
+ * Lượt THEO NHỊP của bài trong HÔM NAY (theo thứ tự): cùng câu đang mở (`phrase`, null = cả bài), đủ tay; bỏ lượt bố mẹ
+ * chấm của bé tự học (chưa chấm). Chỉ đọc dữ liệu buổi còn giữ (lượt mới ghi ngay khi chơi — ProgressStore.addSongRun).
+ */
+export function todayTempoOutcomes(
+  data: Readonly<AppData>,
+  songId: string,
+  phrase: [number, number] | null = null,
+  now = Date.now(),
+): TempoOutcome[] {
+  const day = localDateStr(new Date(now));
+  const key = phrase ? `${phrase[0]}-${phrase[1]}` : '';
+  const runs: Run[] = [];
+  for (const s of data.sessions)
+    for (const r of s.songRuns)
+      if (r.songId === songId && r.mode === 'tempo' && together(r) && (r.phrase ? `${r.phrase[0]}-${r.phrase[1]}` : '') === key && localDateStr(new Date(r.ts)) === day)
+        runs.push(r);
+  return runs.sort((a, b) => a.ts - b.ts).map((r) => ({ bpm: r.bpm, passed: r.passed }));
+}
+
+/**
+ * (+ 2026-10-16) LÙI TỐC ĐỘ như thầy dạy: vừa LÊN tốc độ (đã có lượt đạt ở tốc độ chậm hơn) mà 2 lượt LIỀN ở tốc độ mới
+ * chưa đạt → lùi một nấc (≥ 40) "cho chắc tay"; ở tốc độ đã lùi phải ĐẠT 2 lượt liền mới gợi ý nhanh hơn lại (không
+ * nhảy lên xuống). Lượt đạt ở tốc độ cao hơn tốc độ đã lùi (bé tự chọn) cũng thôi giữ.
+ */
+export function tempoAdvice(outs: readonly TempoOutcome[], ladder: readonly number[] = TEMPO_LADDER): TempoAdvice {
+  let hold: number | null = null;
+  let good = 0;
+  let pullTo: number | null = null;
+  outs.forEach((o, i) => {
+    pullTo = null;
+    if (hold !== null) {
+      if (o.passed && o.bpm >= hold) {
+        good = o.bpm > hold ? PULLBACK_GOOD : good + 1;
+        if (good >= PULLBACK_GOOD) hold = null;
+      } else if (o.bpm === hold) good = 0;
+    }
+    const prev = outs[i - 1];
+    if (!o.passed && prev && !prev.passed && prev.bpm === o.bpm && o.bpm > TEMPO_FLOOR) {
+      const movedUp = outs.slice(0, i - 1).some((x) => x.passed && x.bpm < o.bpm);
+      const to = notchBelow(o.bpm, ladder);
+      if (movedUp && to < o.bpm) {
+        pullTo = to;
+        hold = to;
+        good = 0;
+      }
+    }
+  });
+  return { pullTo, hold };
 }

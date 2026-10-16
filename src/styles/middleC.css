@@ -1,0 +1,76 @@
+/* (+ 2026-10-16) "📍 Tìm Đô giữa trên đàn thật" (screens/middleC.ts) — vừa một màn iPad 10.2" / mini ngang */
+.mc-stage {
+  gap: 10px;
+}
+.mc-title {
+  font-size: 30px;
+  text-align: center;
+  max-width: 900px;
+}
+.mc-lead {
+  margin: 0;
+  max-width: 820px;
+  text-align: center;
+  font-size: 20px;
+}
+.mc-art-box {
+  width: min(640px, 92vw);
+  flex: 0 0 auto;
+}
+.mc-art {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 40vh;
+}
+.mc-art .mc-key {
+  animation: mc-glow 1.6s ease-in-out infinite;
+}
+@keyframes mc-glow {
+  50% {
+    opacity: 0.78;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mc-art .mc-key {
+    animation: none;
+  }
+}
+.mc-status {
+  margin: 0;
+  min-height: 1.4em;
+  font-size: 21px;
+  font-weight: 700;
+  color: var(--violet-600);
+  text-align: center;
+  max-width: 860px;
+}
+.mc-status.ok {
+  color: var(--mint-700);
+}
+.mc-timebar {
+  width: min(420px, 70vw);
+  height: 6px;
+  border-radius: 999px;
+  background: var(--violet-100);
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+.mc-timebar i {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--violet-400);
+  transition: width 0.25s linear;
+}
+@media (max-height: 760px) {
+  .mc-title {
+    font-size: 26px;
+  }
+  .mc-lead {
+    font-size: 18px;
+  }
+  .mc-art {
+    max-height: 36vh;
+  }
+}
