@@ -1,7 +1,6 @@
-import { mascot, napWhenIdle } from '../components/mascot';
+import { mascot } from '../components/mascot';
 import { islandCardText, readSeenWeek, seaLayers, trailDots, trailLayer, trailStart, writeSeenWeek } from '../components/mapMotion';
 import {
-  daysThisWeek,
   MAX_SESSIONS_PER_DAY,
   WEEKS,
   criterionProgress,
@@ -20,26 +19,30 @@ import { button, h, toast } from '../components/dom';
 import { parentButton } from '../components/longPress';
 import { lazy, lazyScreen, prefetchLater, withLazy } from '../lazy';
 import { parentGateScreen } from './parentGate';
-import { BUSY_WEEK_DAYS, earnedStickerIds, islandPassed } from '../../lessons/stickers';
+import { earnedStickerIds, islandPassed } from '../../lessons/stickers';
 import { storageStatus } from '../../progress/ProgressStore';
-import { backupNudge } from '../components/backupNudge';
-import { weeklyNudge } from '../components/weeklyNudge';
+import { parentPill } from '../components/parentPill';
+import { healthNow } from '../healthEnv';
 import { cancelSpeech, speak } from '../../audio/voice';
 import { speakChip } from '../components/speakChip';
 import { challengeLine } from '../components/challengeSheet';
 import { weeklyChallenge } from '../../lessons/challenges';
 import { markSafePoint } from '../../pwa/updater';
 import type { AppData } from '../../progress/schema';
-import { playableSongCount, welcomeBack } from '../../lessons/shortSession';
+import { welcomeBack } from '../../lessons/shortSession';
 import { applyCosmetics, showUnlockCelebration, takeFreshUnlocks } from '../components/unlocksUi';
 import { celebrations } from '../celebrationQueue';
 import { gameKey, hasUnseen, newGameIds, newSongIds, songKey } from '../../lessons/discovery';
 import { newDotOn } from '../components/newBadge';
 import { SONGS } from '../../music/tune';
-import { reviewPill, studyModeRow } from '../selfStudy';
+import { enterGuest, guestHomeScreen } from '../guest';
 import '../../styles/pedagogy.css';
 import '../../styles/longterm.css';
 import '../../styles/kidux.css';
+import '../../styles/kidhome.css';
+import { playLabel } from '../../lessons/todayLabel';
+import { stepTitle } from '../../lessons/stepTitle';
+import { markSurpriseDay, readSurpriseDay, surpriseFree } from '../../lessons/kidRewards';
 
 // Màn chính chỉ nạp phần cần để VẼ màn chính; các màn khác là chunk riêng (src/ui/lazy.ts).
 // Buổi học (đường chính) được nạp ngầm ngay sau khi màn chính vẽ xong.
@@ -237,7 +240,19 @@ function islandMap(app: App): HTMLElement {
   return map;
 }
 
+/** Tên nút ▶ hôm nay (lessons/todayLabel.playLabel) — dùng chung với dòng "Ngày mai" ở màn kết buổi. */
+export const homePlayLabel = (l: Lesson, data: Readonly<AppData>) => playLabel(l, data, { stepTitle });
+
+/**
+ * (2026-10-17, OWNER duyệt "Màn chính: 1 nút to + bản đồ") MÀN CHÍNH CỦA BÉ: bản đồ đảo + MỘT nút ▶ to mang tên bài
+ * hát / hoạt động hôm nay + hàng nhỏ 🎵 Bài hát · 🎮 Trò chơi · 🌟 Sticker. Mọi thứ khác (danh sách bài, Luyện tập mỗi
+ * ngày, 🎹 Đàn tự do, mục tiêu đảo, thử thách tuần, 👤 Khách chơi) nằm sau link nhỏ "Xem các bài". Bé Nốt đứng trên
+ * đảo hiện tại của bản đồ (không còn bong bóng chuyện). Bố mẹ: MỘT viên nhắc (parentPill) + nút Phụ huynh.
+ * Kiểm thử: nút ▶ có data-test="continue"; link có data-test="lessons-toggle" (scripts/e2e.mjs, webkit-smoke.mjs).
+ */
 export function homeScreen(app: App, banner?: string) {
+  // (+ 2026-10-17) 👤 Khách chơi: màn chính riêng (Bài hát / Đàn tự do / Trò chơi) — không có bài học của bé
+  if (app.store.guest) return guestHomeScreen(app);
   return (root: HTMLElement) => {
     app.mic.stop(); // ở màn chính không cần nghe
     markSafePoint(true); // có bản mới thì cập nhật ngay tại đây
@@ -250,6 +265,7 @@ export function homeScreen(app: App, banner?: string) {
     const todayCount = sessionsToday(data, today).filter((s) => s.completed).length;
     const limit = data.settings.dailyLimit;
     const overLimit = limit !== 'none' && minutesToday(data, today) >= limit;
+    const label = homePlayLabel(next, data);
 
     /** Hết chỗ lưu / dữ liệu của bản app mới hơn → băng CHẶN nổi bật: tiến độ mới sẽ không được lưu — nhờ bố mẹ */
     const storageBanner = (): HTMLElement | null => {
@@ -282,56 +298,28 @@ export function homeScreen(app: App, banner?: string) {
             : null,
       );
 
-    // Mục tiêu TUẦN (§1: 4–5 NGÀY/tuần — v5.1 đếm ngày, hai buổi cùng ngày = một ngày) + mục tiêu qua đảo.
-    // Không hiện chuỗi ngày liền với bé: chuỗi bị "đứt" làm trẻ nản — nghỉ một ngày không sao, chỉ cần đủ ngày trong tuần.
-    const now = new Date();
-    const weekDone = daysThisWeek(data, now);
-    // Đạt tiêu chí nhưng còn bài chưa học → tuần chưa qua; nhắc nhẹ còn mấy bài
+    // Mục tiêu đảo (lời của BÉ — kidGoal; chưa có thì lời tiêu chí) + chấm NGÀY: chỉ trong phần "Xem các bài".
+    // Không hiện chuỗi ngày liền với bé: chuỗi bị "đứt" làm trẻ nản.
     const leftLessons = plan.lessons.filter((l) => !l.isWeekTest && !done.has(l.id)).length;
     const goalMetNotDone = weekPassed(plan.week, data) && !weekComplete(plan.week, data) && leftLessons > 0;
-    // v5.1: mục tiêu bằng lời của BÉ (kidGoal); chưa có thì lời tiêu chí. Lời đầy đủ + tiến độ ở màn Phụ huynh.
     const gd = goalDays(plan.week, data, today);
     const goalText = plan.kidGoal ? (gd ? stripKidDays(plan.kidGoal) : plan.kidGoal) : gd ? stripDaysTail(plan.criterion.text) : plan.criterion.text;
-    const daysEl = gd && !goalMetNotDone
-      ? h(
-          'span',
-          {
-            class: 'goal-days',
-            'aria-label': `Đã đạt ${Math.min(gd.days, gd.needDays)} trên ${gd.needDays} ngày${gd.doneToday ? ', hôm nay đã đạt' : ''}`,
-          },
-          h('span', { 'aria-hidden': 'true' }, '🎯'),
-          ...Array.from({ length: gd.needDays }, (_, i) => h('span', { class: `gd${i < gd.days ? ' on' : ''}`, 'aria-hidden': 'true' })),
-          gd.doneToday
-            ? h('span', { class: 'gd-note today' }, 'hôm nay ✓')
-            : gd.days < gd.needDays
-              ? h('span', { class: 'gd-note' }, `còn ${gd.needDays - gd.days} hôm`)
-              : null,
-        )
-      : null;
-    // (+ 2026-10-08, OWNER duyệt "màn chính đơn giản hơn") Hàng chính: chấm NGÀY tuần này + 🎵 "Con chơi được N bài"
-    const songsN = playableSongCount(data);
-    const goalRow = h(
-      'div',
-      { class: 'goal-row' },
-      h(
-        'div',
-        { class: 'goal-dots', title: 'Mục tiêu: 4–5 ngày mỗi tuần', 'aria-label': `Tuần này đã học ${weekDone} trên 5 ngày` },
-        h('span', { class: 'goal-label' }, 'Tuần này'),
-        ...[0, 1, 2, 3, 4].map((i) => h('span', { class: `dot${i < weekDone ? ' on' : ''}` })),
-      ),
-      weekDone >= BUSY_WEEK_DAYS ? h('div', { class: 'streak week-star' }, '🌟 Tuần chăm chỉ!') : null,
-      h(
-        'button',
-        {
-          class: 'songs-stat',
-          type: 'button',
-          'aria-label': `Con chơi được ${songsN} bài. Chạm để mở Bài hát`,
-          onClick: () => app.show(libraryScreen(app)),
-        },
-        h('span', { 'aria-hidden': 'true' }, '🎵'),
-        songsN ? ` Con chơi được ${songsN} bài` : ' Bài đầu tiên đang chờ con!',
-      ),
-    );
+    const daysEl =
+      gd && !goalMetNotDone
+        ? h(
+            'span',
+            {
+              class: 'goal-days',
+              'aria-label': `Đã đạt ${Math.min(gd.days, gd.needDays)} trên ${gd.needDays} ngày${gd.doneToday ? ', hôm nay đã đạt' : ''}`,
+            },
+            ...Array.from({ length: gd.needDays }, (_, i) => h('span', { class: `gd${i < gd.days ? ' on' : ''}`, 'aria-hidden': 'true' })),
+            gd.doneToday
+              ? h('span', { class: 'gd-note today' }, 'hôm nay ✓')
+              : gd.days < gd.needDays
+                ? h('span', { class: 'gd-note' }, `còn ${gd.needDays - gd.days} hôm`)
+                : null,
+          )
+        : null;
     // (+ 2026-10-07) 🏆 Thử thách tuần: lưu tuần đã xong / chụp mốc kỷ lục trò chơi (chỉ ghi khi có đổi)
     app.store.recordChallenges();
     const wc = weeklyChallenge(app.store.get(), today);
@@ -340,66 +328,106 @@ export function homeScreen(app: App, banner?: string) {
       onBlocked: restToast,
       onConfirmed: () => app.show(homeScreen(app, banner)),
     });
-    // (+ 2026-10-08) Mục tiêu đảo + thử thách tuần GỘP vào MỘT hàng chạm-để-mở (mỗi lần về màn chính: gọn — "Học tiếp" luôn thấy)
+    // (+ 2026-10-08) 👋 Nghỉ ≥ 3 ngày: Bé Nốt chào "nhớ con" + chip Buổi ngắn 5 phút (bài con thích + 1 bài ôn)
+    const now = new Date();
+    const missed = welcomeBack(data, now) && !overLimit;
+    const sayText = missed ? '👋 Bé Nốt nhớ con! Hôm nay mình chơi bài con thích nhé' : `Hôm nay mình chơi ${label.text} nhé!`;
+    // 🎁 Quà mở khóa theo đảo: món mới → mặc luôn trang phục mới (Bé Nốt trên bản đồ đã mặc), màn mừng hiện sau khi vẽ.
+    // (+ 2026-10-09) Mỗi lần mở app tối đa MỘT màn mừng (celebrationQueue). (+ 2026-10-17) MỘT BẤT NGỜ MỖI NGÀY
+    // (lessons/kidRewards): hôm nay đã mở trứng ở màn kết → quà để dành (vẫn "chưa xem") tới ngày sau.
+    const giftOk = celebrations.canShow() && surpriseFree(readSurpriseDay(), today);
+    const freshUnlocks = giftOk ? takeFreshUnlocks(app) : (applyCosmetics(app.store.get()), []);
+    if (freshUnlocks.length) {
+      celebrations.mark();
+      markSurpriseDay(today);
+    }
+
+    // Phần "Xem các bài" (thu gọn — bé không cần thấy hằng ngày)
     let moreOpen = false;
-    const miniDots = (have: number, need: number) =>
-      h('span', { class: 'mini-dots', 'aria-hidden': 'true' }, ...Array.from({ length: need }, (_, i) => h('span', { class: `md${i < have ? ' on' : ''}` })));
-    const goalSummary = goalMetNotDone
-      ? h('span', { class: 'more-goal met' }, '🎯 ✓')
-      : h('span', { class: 'more-goal' }, '🎯', gd ? miniDots(Math.min(gd.days, gd.needDays), gd.needDays) : null);
-    const chalSummary = h('span', { class: 'more-chal' }, '🏆', wc.done ? ' ✓' : miniDots(wc.have, wc.need));
-    const moreBody = h(
-      'div',
-      { class: 'more-body', id: 'home-more-body', hidden: !moreOpen },
-      goalMetNotDone
-        ? h('div', { class: 'goal-target met' }, `🎯 Đạt mục tiêu rồi! Còn ${leftLessons} bài nữa là qua đảo`)
-        : h(
-            'div',
-            { class: 'goal-target', title: plan.criterion.text },
-            h('span', { 'aria-hidden': 'true' }, '🎯'),
-            h('span', { class: 'goal-text' }, goalText),
-          ),
-      daysEl,
+    const panel = h(
+      'section',
+      { class: 'home-lessons', id: 'home-lessons', hidden: true, 'aria-label': 'Các bài của tuần' },
+      h('h2', { class: 'card-kicker' }, `${plan.islandEmoji} Bài trong tuần`),
+      h('p', { class: 'home-story' }, plan.story),
+      h(
+        'div',
+        { class: 'lesson-list' },
+        ...plan.lessons.map(lessonRow),
+        // Từ Cấp 2 (tuần 11, giáo trình v5): luyện tập mỗi ngày (bài đang tập + ôn bài đã thuộc + đọc nhạc mới)
+        plan.week >= 11 && next.id !== `w${plan.week}-daily`
+          ? h(
+              'button',
+              {
+                class: 'lesson-row daily',
+                type: 'button',
+                onClick: () => (overLimit ? restToast() : startSession(app, dailyLesson(app.store.get()))),
+              },
+              h('span', { class: 'lesson-emoji', 'aria-hidden': 'true' }, '🔁'),
+              h('span', { class: 'lesson-title' }, 'Luyện tập mỗi ngày'),
+            )
+          : null,
+      ),
+      h(
+        'div',
+        { class: 'home-goal' },
+        goalMetNotDone
+          ? h('div', { class: 'goal-target met' }, `🎯 Đạt mục tiêu rồi! Còn ${leftLessons} bài nữa là qua đảo`)
+          : h('div', { class: 'goal-target', title: plan.criterion.text }, h('span', { 'aria-hidden': 'true' }, '🎯 '), h('span', { class: 'goal-text' }, goalText)),
+        daysEl,
+      ),
       chalLine,
+      h(
+        'div',
+        { class: 'home-extra' },
+        button({ icon: '🎹', label: 'Đàn tự do', kind: 'mint', onTap: () => app.show(freePlayScreen(app)) }),
+        // (+ 2026-10-17, OWNER duyệt) 👤 Khách chơi (anh chị em / bạn bè) — dễ tìm nhưng không nổi bật; không lưu gì
+        ((b) => (b.classList.add('home-guest-entry'), b))(button({ icon: '👤', label: 'Khách chơi (không lưu)', onTap: () => enterGuest(app) })),
+      ),
     );
-    const moreBtn: HTMLButtonElement = h(
+    const toggle: HTMLButtonElement = h(
       'button',
       {
-        class: `home-more${moreOpen ? ' open' : ''}`,
+        class: 'home-link lessons-toggle',
         type: 'button',
-        'aria-expanded': String(moreOpen),
-        'aria-controls': 'home-more-body',
-        'aria-label': `Mục tiêu đảo và thử thách tuần ${wc.title}. Chạm để ${moreOpen ? 'thu gọn' : 'xem'}`,
+        'data-test': 'lessons-toggle',
+        'aria-expanded': 'false',
+        'aria-controls': 'home-lessons',
         onClick: () => {
           moreOpen = !moreOpen;
-          moreBody.hidden = !moreOpen;
-          moreBtn.classList.toggle('open', moreOpen);
-          moreBtn.setAttribute('aria-expanded', String(moreOpen));
+          panel.hidden = !moreOpen;
+          toggle.setAttribute('aria-expanded', String(moreOpen));
+          toggle.querySelector('.home-link-text')!.textContent = moreOpen ? 'Thu gọn' : 'Xem các bài';
+          if (moreOpen) panel.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
         },
       },
-      h('span', { class: 'more-label' }, 'Mục tiêu & thử thách'),
-      goalSummary,
-      chalSummary,
-      h('span', { class: 'more-caret', 'aria-hidden': 'true' }, '›'),
+      h('span', { 'aria-hidden': 'true' }, '📋 '),
+      h('span', { class: 'home-link-text' }, 'Xem các bài'),
     );
-    // (+ 2026-10-08) 👋 Nghỉ ≥ 3 ngày: Bé Nốt chào "nhớ con" + nút Buổi ngắn 5 phút (bài con thích + 1 bài ôn)
-    const missed = welcomeBack(data, now) && !overLimit;
-    const greet = '👋 Bé Nốt nhớ con! Hôm nay mình chơi bài con thích nhé';
-    const bubbleText = missed ? greet : plan.story;
-    // 🎁 Quà mở khóa theo đảo: món mới → mặc luôn trang phục mới (Bé Nốt vẽ bên dưới đã mặc), màn mừng hiện sau khi vẽ.
-    // (+ 2026-10-09) Mỗi lần mở app tối đa MỘT màn mừng (celebrationQueue): lần mở này đã mừng (vd màn kết buổi có
-    // sticker / cập bến đảo mới) → để dành quà (vẫn "chưa xem") tới lần mở sau.
-    const freshUnlocks = celebrations.canShow() ? takeFreshUnlocks(app) : (applyCosmetics(app.store.get()), []);
-    if (freshUnlocks.length) celebrations.mark();
+
+    // NÚT ▶ TO: tên bài hát / hoạt động hôm nay. aria-label giữ "Học tiếp: …" cho trình đọc màn hình.
+    const play = overLimit
+      ? h('div', { class: 'banner rest' }, '🌙 Hôm nay con học đủ rồi. Mai mình học tiếp nhé!')
+      : ((b) => {
+          b.classList.add('home-play');
+          b.setAttribute('data-test', 'continue');
+          b.setAttribute('data-lesson-next', next.id);
+          b.setAttribute('aria-label', `Học tiếp: ${label.text}`);
+          return b;
+        })(
+          button({
+            icon: '▶',
+            label: `${label.icon} ${label.text}`,
+            kind: 'primary',
+            big: true,
+            onTap: () => startSession(app, next),
+          }),
+        );
 
     const gamesBtn = gamesDockButton(app);
-    // (+ 2026-10-15) Bé Nốt ngủ gật khi để lâu không chạm; chạm → giật mình rồi tỉnh (chỉ đổi hình)
-    const storyMood = missed ? 'wave' : 'happy';
-    const storyMascot = mascot(storyMood, 84);
     root.append(
       h(
         'div',
-        { class: 'screen home' },
+        { class: 'screen home kid-home' },
         h(
           'header',
           { class: 'topbar' },
@@ -412,87 +440,51 @@ export function homeScreen(app: App, banner?: string) {
           h(
             'div',
             { class: 'topbar-side' },
-            // (+ 2026-10-09) Nhắc sao lưu: viên nhỏ cạnh nút Phụ huynh (trước đây là một hàng riêng đẩy nút "Học tiếp" xuống dưới mép màn)
-            // (+ 2026-10-09) 📊 Báo cáo tuần đã sẵn sàng (viên nhỏ cho bố mẹ) — nhường chỗ cho nhắc sao lưu nếu đang có
-            backupNudge(app, () => app.show(parentGateScreen(app))) ?? weeklyNudge(app, () => app.show(parentGateScreen(app))),
-            // (+ 2026-10-12) 🕑 Chờ bố mẹ xem (N): việc bé tự học cần bố mẹ nghe lại — viên nhỏ cho bố mẹ (không phải màn phủ)
-            reviewPill(app, () => app.show(parentGateScreen(app))),
+            // (2026-10-17) MỘT viên cho bố mẹ: 🕑 Chờ bố mẹ xem → ⚠️ sao lưu (quá 30 ngày) → 📊 Báo cáo tuần (parentPill.ts)
+            parentPill(app, () => app.show(parentGateScreen(app))),
             todayStars ? h('div', { class: 'today-stars', 'aria-label': `Hôm nay được ${todayStars} sao` }, `⭐ ${Math.min(todayStars, 99)}`) : null,
-            parentButton(() => app.show(parentGateScreen(app))),
+            // (+ 2026-10-17) ⚠️ trên nút Phụ huynh khi có điều cần bố mẹ chú ý (pwa/healthCheck.ts healthFlags)
+            ((b) => {
+              const n = healthNow(data).flags.length;
+              if (n) {
+                b.classList.add('attn');
+                b.append(h('span', { class: 'parent-attn', 'aria-hidden': 'true' }, '⚠️'));
+                b.setAttribute('aria-label', `Phụ huynh — nhấn giữ 2 giây (có ${n} điều cần chú ý)`);
+              }
+              return b;
+            })(parentButton(() => app.show(parentGateScreen(app)))),
           ),
         ),
         islandMap(app),
         h(
           'div',
-          { class: 'home-main scrollable' },
+          { class: 'home-main kid-main scrollable' },
           storageBanner(),
           banner ? h('div', { class: 'banner home-banner' }, banner) : null,
           h(
             'section',
-            { class: 'quest-card' },
+            { class: 'home-today' },
+            h('div', { class: 'home-today-k' }, missed ? '👋 Bé Nốt nhớ con!' : 'Hôm nay', speakChip(app, sayText)),
+            play,
             h(
               'div',
-              { class: 'story-row' },
-              storyMascot,
-              h('p', { class: `story bubble${missed ? ' welcome-back' : ''}` }, bubbleText, speakChip(app, bubbleText)),
+              { class: 'home-subrow' },
+              // (+ 2026-10-12) 👪 Có bố mẹ / 👦 Con tự học — MỘT chip nhỏ, chạm để đổi (nhớ tới hết ngày)
+              overLimit ? null : studyModeChip(app, () => app.show(homeScreen(app, banner))),
+              missed
+                ? ((b) => (b.classList.add('home-short'), b))(
+                    button({ icon: '⏱', label: 'Buổi ngắn 5 phút', kind: 'sun', onTap: () => withLazy(shortMod, (m) => m.startShortSession(app)) }),
+                  )
+                : null,
+              toggle,
             ),
-            missed
-              ? button({
-                  icon: '⏱',
-                  label: 'Buổi ngắn 5 phút',
-                  kind: 'sun',
-                  onTap: () => withLazy(shortMod, (m) => m.startShortSession(app)),
-                })
-              : null,
-            h('div', { class: 'goal-panel has-chal simple' }, goalRow, moreBtn, moreBody),
-            // (+ 2026-10-12) 👪 Có bố mẹ ngồi cùng / 👦 Con tự học — một chạm, nhớ tới hết ngày (mặc định: có bố mẹ)
-            overLimit ? null : studyModeRow(app, () => app.show(homeScreen(app, banner))),
-            overLimit
-              ? h('div', { class: 'banner rest' }, '🌙 Hôm nay con học đủ rồi. Mai mình học tiếp nhé!')
-              : button({
-                  icon: '▶',
-                  label: `Học tiếp: ${next.emoji} ${next.title}`,
-                  kind: 'primary',
-                  big: true,
-                  onTap: () => startSession(app, next),
-                }),
-            // Mẹo cho bố mẹ nằm ở màn Phụ huynh — màn chính ít chữ cho bé
             todayCount >= MAX_SESSIONS_PER_DAY && !overLimit
               ? h('p', { class: 'soft-note' }, `Hôm nay con đã học ${todayCount} buổi rồi, giỏi quá! Nghỉ ngơi nhé 😊`)
               : null,
           ),
-          h(
-            'section',
-            { class: 'lesson-card', 'aria-label': 'Các bài của tuần' },
-            h('h2', { class: 'card-kicker' }, `${plan.islandEmoji} Bài trong tuần`),
-            h(
-              'div',
-              { class: 'lesson-list' },
-              ...plan.lessons.map(lessonRow),
-              // Từ Cấp 2 (tuần 11, giáo trình v5): luyện tập mỗi ngày (bài đang tập + ôn bài đã thuộc + đọc nhạc mới)
-              plan.week >= 11 && next.id !== `w${plan.week}-daily`
-                ? h(
-                    'button',
-                    {
-                      class: 'lesson-row daily',
-                      type: 'button',
-                      onClick: () => (overLimit ? restToast() : startSession(app, dailyLesson(app.store.get()))),
-                    },
-                    h('span', { class: 'lesson-emoji', 'aria-hidden': 'true' }, '🔁'),
-                    h('span', { class: 'lesson-title' }, 'Luyện tập mỗi ngày'),
-                  )
-                : null,
-            ),
-          ),
+          panel,
         ),
-        h(
-          'nav',
-          { class: 'home-dock' },
-          libraryDockButton(app),
-          button({ icon: '🎹', label: 'Đàn tự do', kind: 'mint', onTap: () => app.show(freePlayScreen(app)) }),
-          gamesBtn,
-          stickerDockButton(app),
-        ),
+        h('nav', { class: 'home-dock kid-dock' }, libraryDockButton(app), gamesBtn, stickerDockButton(app)),
       ),
     );
     // (+ 2026-10-10) Chấm "mới" trên 🎮: trò đã mở mà con chưa thấy ở màn Trò chơi. Danh mục trò (khóa theo tuần) nằm
@@ -505,11 +497,10 @@ export function homeScreen(app: App, banner?: string) {
       .catch(() => undefined);
     // Buổi học là việc bé bấm NGAY → tải sẵn sớm (300 ms, sau khi màn chính đã vẽ)
     prefetchLater([sessionMod], 300);
-    // Đọc to câu chuyện của tuần — mỗi ngày một lần (không phải mỗi lần về màn chính)
-    // (hẹn giờ được gỡ khi rời màn — trước đây rời màn trong 0,6 s thì câu chuyện vẫn đọc đè lên màn kế tiếp)
-    // (+ 2026-10-09) Có màn mừng quà → đọc câu chuyện SAU khi bé đóng màn mừng (không đọc chồng lên tiếng chuông mừng)
-    const tell = shouldTellStory(today, plan.week);
-    const storyTimer = tell && !freshUnlocks.length ? window.setTimeout(() => void speak(app, bubbleText), 600) : 0;
+    // Đọc to "Hôm nay mình chơi …" — mỗi ngày một lần (không phải mỗi lần về màn chính); hẹn giờ gỡ khi rời màn.
+    // (+ 2026-10-09) Có màn mừng quà → đọc SAU khi bé đóng màn mừng (không đọc chồng lên tiếng chuông mừng)
+    const tell = !overLimit && shouldTellStory(today, plan.week);
+    const storyTimer = tell && !freshUnlocks.length ? window.setTimeout(() => void speak(app, sayText), 600) : 0;
     // 🎁 Màn mừng quà mới (sau khi màn chính đã vẽ — bé thấy Bé Nốt mặc đồ mới phía sau)
     const unlockTimer = freshUnlocks.length
       ? window.setTimeout(
@@ -519,7 +510,7 @@ export function homeScreen(app: App, banner?: string) {
               app,
               freshUnlocks,
               () => app.show(stickersScreen(app)),
-              () => tell && root.isConnected && void speak(app, bubbleText),
+              () => tell && root.isConnected && void speak(app, sayText),
             ),
           450,
         )
@@ -529,15 +520,35 @@ export function homeScreen(app: App, banner?: string) {
       const st = storageStatus();
       if ((st.full || st.futureVersion) && !root.querySelector('.storage-alert')) app.show(homeScreen(app, banner));
     });
-    const unNap = napWhenIdle(storyMascot, storyMood, 84);
     return () => {
       unStore();
-      unNap();
       window.clearTimeout(storyTimer);
       window.clearTimeout(unlockTimer);
       cancelSpeech();
     };
   };
+}
+
+/** MỘT chip nhỏ cách học hôm nay: "👪 Có bố mẹ" ⇄ "👦 Con tự học" (chạm để đổi; nhớ tới hết ngày — store.studyMode). */
+function studyModeChip(app: App, onChange: () => void): HTMLElement {
+  const mode = app.store.studyMode();
+  const self = mode === 'self';
+  return h(
+    'button',
+    {
+      type: 'button',
+      class: `study-chip home-study on`,
+      'data-mode': mode,
+      'aria-label': `Hôm nay: ${self ? 'con tự học' : 'có bố mẹ ngồi cùng'}. Chạm để đổi`,
+      onClick: () => {
+        app.store.setStudyMode(self ? 'parent' : 'self');
+        onChange();
+      },
+    },
+    h('span', { 'aria-hidden': 'true' }, self ? '👦' : '👪'),
+    ` ${self ? 'Con tự học' : 'Có bố mẹ'}`,
+    h('span', { class: 'study-swap', 'aria-hidden': 'true' }, ' ⇄'),
+  );
 }
 
 const STORY_KEY = 'piano-be-9:story-told';

@@ -10,6 +10,7 @@ import { homeScreen } from './home';
 import { CHALLENGE_INFO, weeklyChallenge } from '../../lessons/challenges';
 import { applyCosmetics, unlockSection } from '../components/unlocksUi';
 import '../../styles/challenges.css';
+import { nextStickers, stickerProgress } from '../../lessons/kidRewards';
 
 /** Một ô sticker: đã nhận = tranh màu + tên; chưa nhận = bóng xám + gợi ý cách nhận. */
 export function stickerCell(s: Sticker, opts: { fresh?: boolean } = {}): HTMLElement {
@@ -82,14 +83,22 @@ function concertSection(all: readonly Sticker[]): HTMLElement {
   );
 }
 
-/** SỔ STICKER — bé xem các sticker đã sưu tầm (tính từ tiến độ, không lưu thêm). */
+/**
+ * SỔ STICKER — bé xem các sticker đã sưu tầm (tính từ tiến độ, không lưu thêm).
+ * (2026-10-17, OWNER duyệt "Gộp phần thưởng") Chỉ hiện sticker ĐÃ CÓ + tối đa 3 "🎯 Sắp có" (lessons/kidRewards.nextStickers)
+ * — không còn hàng dài bóng xám kiểu "Tập đàn 120 ngày". Mọi sticker / trứng / cúp đã nhận vẫn hiện đủ như cũ.
+ */
 export function stickersScreen(app: App) {
   return (root: HTMLElement) => {
     applyCosmetics(app.store.get());
     const all = allStickers(app.store.get());
     const got = all.filter((s) => s.earned).length;
-    const islands = all.filter((s) => s.kind === 'island');
-    const others = all.filter((s) => s.kind !== 'island' && s.kind !== 'challenge' && s.kind !== 'concert');
+    const soon = nextStickers(all, stickerProgress(app.store.get()), 3);
+    const soonIds = new Set(soon.map((s) => s.id));
+    // Đảo: các đảo đã qua + đảo đang ở (nếu chưa nằm trong "Sắp có")
+    const cur = app.store.get().progress.currentWeek;
+    const islands = all.filter((s) => s.kind === 'island' && (s.earned || (s.week === cur && !soonIds.has(s.id))));
+    const others = all.filter((s) => s.earned && s.kind !== 'island' && s.kind !== 'challenge' && s.kind !== 'concert');
     // (+ 2026-10-07) 🏆 Cúp tuần: mỗi tuần hoàn thành thử thách một cúp (mới nhất trước) + ô khóa của tuần này nếu chưa xong
     const cups = all.filter((s) => s.kind === 'challenge').reverse();
     const today = app.store.today();
@@ -127,25 +136,37 @@ export function stickersScreen(app: App) {
     // 🎁 Bất ngờ: Chào mừng + bộ sưu tập trứng (tính lại từ lịch sử buổi — không lưu thêm)
     const bonus = new Map(bonusCollection(app.store.get()).map((c) => [c.sticker.key, c.count]));
     const bonusDefs = [WELCOME_STICKER, ...BONUS_POOL];
-    const bonusGot = bonusDefs.filter((d) => bonus.has(d.key)).length;
+    const bonusGotDefs = bonusDefs.filter((d) => bonus.has(d.key));
+    // Chỉ các sticker bất ngờ đã có + MỘT quả trứng bí ẩn (còn sticker chưa có) — không bày cả kho ??? ra
+    const bonusLeft = bonusDefs.find((d) => !bonus.has(d.key));
     const bonusSection = h(
       'section',
       { class: 'sticker-section' },
-      h('h2', { class: 'sticker-kicker' }, '🎁 Bất ngờ', h('span', { class: 'sticker-count' }, `${bonusGot}/${bonusDefs.length}`)),
-      h('div', { class: 'sticker-grid' }, ...bonusDefs.map((d) => bonusCell(d, bonus.get(d.key) ?? 0))),
-    );
-    const section = (title: string, list: Sticker[]) =>
+      h('h2', { class: 'sticker-kicker' }, '🎁 Bất ngờ', h('span', { class: 'sticker-count' }, `${bonusGotDefs.length}`)),
       h(
-        'section',
-        { class: 'sticker-section' },
-        h(
-          'h2',
-          { class: 'sticker-kicker' },
-          title,
-          h('span', { class: 'sticker-count' }, `${list.filter((s) => s.earned).length}/${list.length}`),
-        ),
-        h('div', { class: 'sticker-grid' }, ...list.map((s) => stickerCell(s))),
-      );
+        'div',
+        { class: 'sticker-grid' },
+        ...bonusGotDefs.map((d) => bonusCell(d, bonus.get(d.key) ?? 0)),
+        bonusLeft ? bonusCell(bonusLeft, 0) : null,
+      ),
+    );
+    const section = (title: string, list: Sticker[], extra = '') =>
+      list.length
+        ? h(
+            'section',
+            { class: `sticker-section${extra}` },
+            h('h2', { class: 'sticker-kicker' }, title, h('span', { class: 'sticker-count' }, `${list.filter((s) => s.earned).length}`)),
+            h('div', { class: 'sticker-grid' }, ...list.map((s) => stickerCell(s))),
+          )
+        : null;
+    const soonSection = soon.length
+      ? h(
+          'section',
+          { class: 'sticker-section sticker-soon' },
+          h('h2', { class: 'sticker-kicker' }, '🎯 Sắp có'),
+          h('div', { class: 'sticker-grid' }, ...soon.map((s) => stickerCell(s))),
+        )
+      : null;
     root.append(
       h(
         'div',
@@ -154,7 +175,7 @@ export function stickersScreen(app: App) {
           'header',
           { class: 'topbar' },
           h('div', { class: 'topbar-title' }, h('span', { 'aria-hidden': 'true' }, '📒'), h('span', {}, 'Sổ sticker của con')),
-          h('div', { class: 'topbar-side' }, h('div', { class: 'sticker-total' }, `🌟 ${got}/${all.length}`)),
+          h('div', { class: 'topbar-side' }, h('div', { class: 'sticker-total', 'aria-label': `${got} sticker` }, `🌟 ${got}`)),
         ),
         h(
           'div',
@@ -171,6 +192,7 @@ export function stickersScreen(app: App) {
                 : 'Sổ còn trống — học xong mỗi đảo, thuộc bài hát, tuần nào học đủ 4 buổi là có sticker!',
             ),
           ),
+          soonSection,
           section('🏆 Thành tích', others),
           // (+ 2026-10-08) 🎁 Quà của các đảo — chạm để dùng; đổi món thì vẽ lại mục này + Bé Nốt (trang phục)
           (() => {

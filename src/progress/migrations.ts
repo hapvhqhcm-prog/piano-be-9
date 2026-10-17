@@ -98,7 +98,44 @@ export function renumberIdRev4(id: string): string {
   return id.replace(/^w(\d+)-/, (_m, n: string) => `w${rev4Week(Number(n))}-`);
 }
 
+/**
+ * GIÁO TRÌNH rev 4 (43 tuần) → rev 5 (46 tuần — OWNER duyệt 2026-10-17, rà soát giáo viên dài hạn "Thêm tuần ôn & biểu diễn"):
+ * chèn tuần ÔN 27 (Xưởng Đánh Bóng), 32 (Phòng Tổng Duyệt), 38 (Trạm Nghỉ Gió). Bảng OLD→NEW:
+ * 1–26 giữ nguyên · 27–30 → +1 (28–31) · 31–35 → +2 (33–37) · 36–43 → +3 (39–46). Không bài nào chuyển tuần riêng lẻ;
+ * thứ tự hoạt động trong các bài cũ KHÔNG đổi → dấu "đã xong một phần bài" ("<bài>#<i>") được GIỮ (chỉ đổi số tuần).
+ */
+export const rev5Week = (w: number): number => (w <= 26 ? w : w <= 30 ? w + 1 : w <= 35 ? w + 2 : w + 3);
+
+/** Đánh số lại một mã từ rev 4 sang rev 5 ("w31-stage" → "w33-stage", "w43-daily" → "w46-daily", "w5-l1#2" giữ nguyên). */
+export function renumberIdRev5(id: string): string {
+  return id.replace(/^w(\d+)-/, (_m, n: string) => `w${rev5Week(Number(n))}-`);
+}
+
 const isObj = (x: unknown): x is Record<string, unknown> => typeof x === 'object' && x !== null && !Array.isArray(x);
+
+/**
+ * (+ rev 5) Các chỗ KHÁC còn lưu số tuần / mã bài (có từ sau rev 4): settings.holdWeek, concerts[].week, history (weekFirst,
+ * passedWeeks, sticker "island-<tuần>", bonusStubs[].lessonId), reviews[].lessonId. Bản sao nông — không sửa dữ liệu vào.
+ */
+function renumberExtrasRev5(data: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = { ...data };
+  const id = renumberIdRev5;
+  if (isObj(data.settings) && typeof data.settings.holdWeek === 'number') out.settings = { ...data.settings, holdWeek: rev5Week(data.settings.holdWeek) };
+  if (Array.isArray(data.concerts))
+    out.concerts = data.concerts.map((c) => (isObj(c) && typeof c.week === 'number' ? { ...c, week: rev5Week(c.week) } : c));
+  if (Array.isArray(data.reviews))
+    out.reviews = data.reviews.map((r) => (isObj(r) && typeof r.lessonId === 'string' ? { ...r, lessonId: id(r.lessonId) } : r));
+  if (isObj(data.history)) {
+    const h: Record<string, unknown> = { ...data.history };
+    if (isObj(h.weekFirst)) h.weekFirst = Object.fromEntries(Object.entries(h.weekFirst).map(([k, v]) => [/^\d+$/.test(k) ? String(rev5Week(Number(k))) : k, v]));
+    if (Array.isArray(h.passedWeeks)) h.passedWeeks = h.passedWeeks.map((w) => (typeof w === 'number' ? rev5Week(w) : w));
+    if (Array.isArray(h.stickers)) h.stickers = h.stickers.map((x) => (typeof x === 'string' ? x.replace(/^island-(\d+)$/, (_m, n: string) => `island-${rev5Week(Number(n))}`) : x));
+    if (Array.isArray(h.bonusStubs))
+      h.bonusStubs = h.bonusStubs.map((b) => (isObj(b) && typeof b.lessonId === 'string' ? { ...b, lessonId: id(b.lessonId) } : b));
+    out.history = h;
+  }
+  return out;
+}
 
 /** Đổi mã trong progress.lessonsCompleted và sessions[].lessonId; `week` đổi progress.currentWeek. */
 function renumberAll(
@@ -128,7 +165,7 @@ function renumberAll(
 }
 
 /**
- * Chạy đúng MỘT lần cho mỗi bậc: dữ liệu thiếu `curriculumRev` = rev 1. rev 1 → 2 → 3 → 4 lần lượt; dữ liệu đã ở rev hiện tại
+ * Chạy đúng MỘT lần cho mỗi bậc: dữ liệu thiếu `curriculumRev` = rev 1. rev 1 → 2 → 3 → 4 → 5 lần lượt; dữ liệu đã ở rev hiện tại
  * được trả về NGUYÊN (cùng object) — idempotent.
  */
 export function migrateCurriculum(data: Record<string, unknown>): Record<string, unknown> {
@@ -151,6 +188,12 @@ export function migrateCurriculum(data: Record<string, unknown>): Record<string,
     // từ tuần 19 trở đi +1. Dấu "đã xong một phần bài" bị BỎ (v5.1 rút gọn buổi: bỏ hoạt động khởi động kỹ thuật
     // trong bài, dời lượt băng chuyền… → số thứ tự hoạt động đã đổi) — bài dở sẽ học lại trọn.
     out = renumberAll(out, 4, renumberIdRev4, rev4Week, (x) => !x.includes('#'));
+  }
+  if (rev < 5) {
+    // (2026-10-17) chèn tuần ôn 27 · 32 · 38: tuần ≤ 26 KHÔNG đổi (bé đang học tuần 1–26: dữ liệu y nguyên); dấu "<bài>#<i>" GIỮ —
+    // thứ tự hoạt động trong bài cũ không đổi. Bé đang ở tuần cũ X → tuần mới rev5Week(X) (cùng nội dung; tuần ôn mới chèn TRƯỚC
+    // đó coi như đã qua — vẫn mở trong Thư viện / ôn tập).
+    out = renumberExtrasRev5(renumberAll(out, 5, renumberIdRev5, rev5Week));
   }
   return out;
 }

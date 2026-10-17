@@ -100,7 +100,7 @@ const firework = (x: number, y: number, r: number, c: string) => {
 };
 const star = (x: number, y: number, r: number, c: string) => `<path d="${starPath(x, y, r)}" fill="${c}" stroke="none"/>`;
 
-/** Chi tiết riêng của từng tuần (1–43). */
+/** Chi tiết riêng của từng tuần (1–46; rev 5: tuần ôn 27 · 32 · 38). */
 export const ACCENTS: Readonly<Record<number, string>> = {
   1: crab(14, 64) + gull(12, 12), // Đảo Phím Đen — cua + hải âu
   2: flower(14, 60, P.coral) + flower(84, 62, P.sun), // Làng Đô Rê Mi — hoa trước ngõ
@@ -128,23 +128,26 @@ export const ACCENTS: Readonly<Record<number, string>> = {
   24: buoy(8, 71) + gull(12, 12) + gull(24, 18, 0.8), // Biển Đổi Thế
   25: moon(14, 14) + sparkle(24, 22, 2.6, P.sun), // Thung lũng Vui Buồn
   26: kite(14, 14, P.coral), // Tháp Nốt Cao — diều
-  27: owl(84, 62) + sparkle(12, 14, 3, P.violetLight), // Thư viện Lớn
-  28: pennant(14, 64, P.coral) + pennant(84, 66, P.water), // Đỉnh Hai Tay — hai lá cờ
-  29: bush(12, 64, P.grassDark) + bush(85, 66, P.grass) + sparkle(16, 14, 3, P.sun), // Cung điện Minuet — cây cắt tỉa
-  30: butterfly(12, 16, P.violet) + butterfly(23, 26, P.sun), // Vườn Beethoven
-  31: balloon(8, 22, P.coral) + balloon(15, 18, P.violet) + balloon(22, 24, P.mint), // Đại hòa nhạc
-  32: sun(12, 22, 3.6) + fish(90, 70, P.coral), // Đồi Gam Sol — bình minh + cá lặn
-  33: leaf(12, 14, P.orange, -30) + leaf(20, 24, P.sun, 20) + leaf(8, 30, P.coral, 50), // Hang Si Giáng — lá vàng rơi
-  34: duck(8, 70) + flower(86, 62, P.sun), // Thung lũng Rê
-  35: rainbow(16, 24, 10) + butterfly(84, 66, P.pink), // Cầu Vồng Hợp Âm
-  36: bunting(2, 20, 28, 12) + balloon(86, 66, P.coral), // Lâu đài Alberti
-  37: tent(14, 64, P.coral) + campfire(85, 66), // Làng Nghỉ Chân — lều + lửa trại
-  38: lily(8, 70) + lily(89, 72) + sparkle(14, 16, 2.6, P.water), // Hồ Ngân Vang
-  39: gull(10, 12) + gull(22, 18, 0.8) + gull(40, 8, 0.7), // Vịnh Thuyền Đưa — đàn hải âu
-  40: sun(14, 20, 4.6) + cloud(28, 12), // Đồi Bình Minh
-  41: moon(12, 14) + lantern(22, 26, P.violet), // Vũ hội La Thứ
-  42: noteGlyph(10, 22, 2.8, P.indigo) + pennant(84, 66, P.sun), // Đỉnh Tập Dượt
-  43: firework(12, 16, 7, P.coral) + firework(26, 10, 5, P.sun) + sparkle(20, 26, 2.4, P.pink), // Nhà hát Lớn — pháo hoa
+  27: sparkle(12, 14, 3.4, P.sun) + sparkle(24, 24, 2.4, P.violet) + sparkle(84, 62, 2.6, P.mint), // Xưởng Đánh Bóng — lấp lánh (tuần ôn)
+  28: owl(84, 62) + sparkle(12, 14, 3, P.violetLight), // Thư viện Lớn
+  29: pennant(14, 64, P.coral) + pennant(84, 66, P.water), // Đỉnh Hai Tay — hai lá cờ
+  30: bush(12, 64, P.grassDark) + bush(85, 66, P.grass) + sparkle(16, 14, 3, P.sun), // Cung điện Minuet — cây cắt tỉa
+  31: butterfly(12, 16, P.violet) + butterfly(23, 26, P.sun), // Vườn Beethoven
+  32: bunting(4, 22, 28, 14) + star(84, 62, 3, P.sun), // Phòng Tổng Duyệt — dây cờ (tuần ôn)
+  33: balloon(8, 22, P.coral) + balloon(15, 18, P.violet) + balloon(22, 24, P.mint), // Đại hòa nhạc
+  34: sun(12, 22, 3.6) + fish(90, 70, P.coral), // Đồi Gam Sol — bình minh + cá lặn
+  35: leaf(12, 14, P.orange, -30) + leaf(20, 24, P.sun, 20) + leaf(8, 30, P.coral, 50), // Hang Si Giáng — lá vàng rơi
+  36: duck(8, 70) + flower(86, 62, P.sun), // Thung lũng Rê
+  37: rainbow(16, 24, 10) + butterfly(84, 66, P.pink), // Cầu Vồng Hợp Âm
+  38: gull(10, 12) + cloud(24, 16) + leaf(86, 68, P.grass, 10), // Trạm Nghỉ Gió — gió mát (tuần ôn)
+  39: bunting(2, 20, 28, 12) + balloon(86, 66, P.coral), // Lâu đài Alberti
+  40: tent(14, 64, P.coral) + campfire(85, 66), // Làng Nghỉ Chân — lều + lửa trại
+  41: lily(8, 70) + lily(89, 72) + sparkle(14, 16, 2.6, P.water), // Hồ Ngân Vang
+  42: gull(10, 12) + gull(22, 18, 0.8) + gull(40, 8, 0.7), // Vịnh Thuyền Đưa — đàn hải âu
+  43: sun(14, 20, 4.6) + cloud(28, 12), // Đồi Bình Minh
+  44: moon(12, 14) + lantern(22, 26, P.violet), // Vũ hội La Thứ
+  45: noteGlyph(10, 22, 2.8, P.indigo) + pennant(84, 66, P.sun), // Đỉnh Tập Dượt
+  46: firework(12, 16, 7, P.coral) + firework(26, 10, 5, P.sun) + sparkle(20, 26, 2.4, P.pink), // Nhà hát Lớn — pháo hoa
 };
 
 /** Chuỗi SVG chi tiết riêng của tuần (rỗng nếu không có). */

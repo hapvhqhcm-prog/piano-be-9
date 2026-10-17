@@ -1,0 +1,293 @@
+{
+ "id": "duet_minuet",
+ "title": "Minuet in G (BWV Anh. 114) (duet with teacher)",
+ "titleVi": "Minuet Sol trưởng — song tấu với thầy",
+ "composer": "Christian Petzold (khoảng 1725)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Bè bé như bài gốc; bè thầy (secondo) tự soạn cho app (piano-be-9)",
+ "attributionRequired": false,
+ "hand": "RH",
+ "bpm": 60,
+ "timeSignature": "3/4",
+ "week": 30,
+ "position": "free",
+ "phrases": [
+  0,
+  4
+ ],
+ "notes": [
+  {
+   "pitch": "D5",
+   "beats": 1,
+   "finger": 5,
+   "dyn": "mf"
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.5,
+   "finger": 1,
+   "slur": "start"
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "B4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "C5",
+   "beats": 0.5,
+   "finger": 4,
+   "slur": "end"
+  },
+  {
+   "pitch": "D5",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 1,
+   "stac": true
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 1,
+   "stac": true
+  },
+  {
+   "pitch": "E5",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "C5",
+   "beats": 0.5,
+   "finger": 1,
+   "slur": "start"
+  },
+  {
+   "pitch": "D5",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "E5",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "F#5",
+   "beats": 0.5,
+   "finger": 4,
+   "slur": "end"
+  },
+  {
+   "pitch": "G5",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 1,
+   "stac": true
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 1,
+   "stac": true
+  },
+  {
+   "pitch": "C5",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "D5",
+   "beats": 0.5,
+   "finger": 5,
+   "slur": "start"
+  },
+  {
+   "pitch": "C5",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "B4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 2,
+   "slur": "end"
+  },
+  {
+   "pitch": "B4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "C5",
+   "beats": 0.5,
+   "finger": 4,
+   "slur": "start"
+  },
+  {
+   "pitch": "B4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.5,
+   "finger": 1,
+   "slur": "end"
+  },
+  {
+   "pitch": "F#4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.5,
+   "finger": 2,
+   "slur": "start"
+  },
+  {
+   "pitch": "A4",
+   "beats": 0.5,
+   "finger": 3
+  },
+  {
+   "pitch": "B4",
+   "beats": 0.5,
+   "finger": 4
+  },
+  {
+   "pitch": "G4",
+   "beats": 0.5,
+   "finger": 2,
+   "slur": "end"
+  },
+  {
+   "pitch": "A4",
+   "beats": 3,
+   "finger": 3
+  }
+ ],
+ "duet": [
+  {
+   "pitch": "G2",
+   "beats": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 1
+  },
+  {
+   "pitch": "G2",
+   "beats": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 1
+  },
+  {
+   "pitch": "B2",
+   "beats": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 1
+  },
+  {
+   "pitch": "G2",
+   "beats": 1
+  },
+  {
+   "pitch": "G2",
+   "beats": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 1
+  },
+  {
+   "pitch": "B2",
+   "beats": 1
+  },
+  {
+   "pitch": "G2",
+   "beats": 1
+  },
+  {
+   "pitch": "G2",
+   "beats": 1
+  },
+  {
+   "pitch": "E3",
+   "beats": 1
+  },
+  {
+   "pitch": "G2",
+   "beats": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 1
+  },
+  {
+   "pitch": "B2",
+   "beats": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 1
+  },
+  {
+   "pitch": "A2",
+   "beats": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 1
+  }
+ ]
+}

@@ -1,4 +1,5 @@
 import type { WeekPlan } from './types';
+import { byEar } from './musician';
 
 /**
  * TUẦN 9 — Bến Đò Nhịp Hai (v5, tuần mới — OWNER duyệt 2026-10-05): NHỊP 2/4 trước bài 2/4 đầu tiên.
@@ -90,6 +91,20 @@ export const WEEK9: WeekPlan = {
           bars: 2,
         },
       ],
+    },
+    // (+ 2026-10-17, OWNER duyệt) SONG TẤU VỚI THẦY: app đàn bè thầy (Tune.duet) khi con chơi theo nhịp — cả khi micro bật
+    {
+      id: 'w9-duet',
+      week: 9,
+      title: 'Chèo thuyền — song tấu · đàn theo tai',
+      emoji: '🎎',
+      activities: [
+        { kind: 'song', songId: 'duet_lightly_row', mode: 'wait', hints: 'names', intro: 'Bài quen "Chèo thuyền nhẹ" — nhớ lại từng nốt nhé!' },
+        { kind: 'song', songId: 'duet_lightly_row', mode: 'tempo', level: 2, hints: 'names', intro: 'Song tấu: thầy đàn bè thấp, con đàn giai điệu!' },
+        // (+ 2026-10-17, OWNER duyệt) 👂 ĐÀN THEO TAI — mỗi tháng một lần từ tuần 9
+        byEar('hot_cross_buns', 6),
+      ],
+      teach: { emoji: '🎎', text: 'Con mời bố mẹ nghe bài song tấu và kể: thầy đàn bè cao hay bè thấp?' },
     },
   ],
 };

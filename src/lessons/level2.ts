@@ -1,5 +1,6 @@
 import { notes, posEcho, posNote } from './targets';
 import type { Activity, Lesson, WeekPlan } from './types';
+import { byEar, recitalLesson, transpose } from './musician';
 
 /**
  * CẤP 2 — "Hai tay & đọc nhạc" (tuần 11–21; v5 — OWNER duyệt 2026-10-05: thêm tuần 13 củng cố hai tay
@@ -190,8 +191,9 @@ export const WEEK12: WeekPlan = {
   warmup: { variant: 'identify', pool: ['C3', 'D3', 'E3', 'F3', 'G3'], rounds: 6, reference: 'C3' },
   teach: { emoji: '👨‍🏫', text: 'Con chỉ bố mẹ: tay trái bấm Đô và GIỮ, tay phải đàn Mi Rê Đô. Rồi đàn Đô Rê Mi NGẮT (nảy như bóng) và LIỀN (nối như dòng nước).' },
   drills: ['finger-tap', 'five-finger'],
-  criterion: { text: 'Chơi trọn "Bài ca niềm vui — hai tay" theo nhịp — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
-  kidGoal: 'Hai tay hát Bài ca niềm vui — 2 hôm nhé! 🎎',
+  // (2026-10-17, OWNER duyệt "Bớt Bài ca niềm vui") bài tiêu chí: "Bánh nóng — hai tay" (bài hai tay cùng lúc chính của tuần)
+  criterion: { text: 'Chơi trọn "Bánh nóng — hai tay" theo nhịp — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
+  kidGoal: 'Hai tay cùng lúc: Bánh nóng — 2 hôm nhé! 🎎',
   lessons: [
     {
       id: 'w12-l1',
@@ -306,6 +308,17 @@ export const WEEK13: WeekPlan = {
         { kind: 'theory', ids: ['interval-45'] },
       ],
     },
+    // (+ 2026-10-17, OWNER duyệt — rà soát giáo viên dài hạn) nhạc công nhỏ: đàn theo tai · dịch giọng · song tấu · buổi diễn nhỏ
+    {
+      id: 'w13-ear',
+      week: 13,
+      title: 'Đàn theo tai',
+      emoji: '👂',
+      activities: [
+        byEar('mary_lamb', 7),
+      ],
+      teach: { emoji: '👂', text: 'Con đàn cho bố mẹ một câu con tìm được bằng tai, rồi đố bố mẹ tìm lại!' },
+    },
   ],
 };
 
@@ -375,6 +388,29 @@ export const WEEK14: WeekPlan = {
         song('hot_cross_buns_g_lh', 'tempo', 2, 'names'),
       ],
     },
+    // (+ 2026-10-17, OWNER duyệt — rà soát giáo viên dài hạn) nhạc công nhỏ: đàn theo tai · dịch giọng · song tấu · buổi diễn nhỏ
+    {
+      id: 'w14-transpose',
+      week: 14,
+      title: 'Dịch giọng: Chú cừu ở thế Sol',
+      emoji: '🔀',
+      activities: [
+        transpose('mary_lamb', 'Chú cừu nhỏ', 7, 'thế Sol'),
+        { kind: 'theory', ids: ['transpose'] },
+      ],
+      teach: { emoji: '🔀', text: 'Con chỉ bố mẹ: đàn "Chú cừu" ở thế Sol, ngón cái đặt ở đâu? Số ngón có đổi không?' },
+    },
+    {
+      id: 'w14-duet',
+      week: 14,
+      title: 'Cô Rhody — song tấu với thầy',
+      emoji: '🎎',
+      activities: [
+        { kind: 'song', songId: 'duet_aunt_rhody_g', mode: 'wait', hints: 'names', intro: 'Bài quen ở thế Sol — nhớ lại từng nốt nhé!' },
+        { kind: 'song', songId: 'duet_aunt_rhody_g', mode: 'tempo', level: 2, hints: 'names', intro: 'Song tấu: thầy đàn bè thấp, con đàn giai điệu!' },
+      ],
+      teach: { emoji: '🎎', text: 'Con mời bố mẹ nghe bài song tấu và kể: thầy đàn bè cao hay bè thấp?' },
+    },
   ],
 };
 
@@ -420,6 +456,8 @@ export const WEEK15: WeekPlan = {
       qa('Hỏi – Đáp liền 💬', 'App hỏi. Con đáp thật LIỀN và NHẸ, kết ở Đô!', 'C'),
     ),
     pair('w15-l4', 15, 'Chúc mừng sinh nhật', '🎂', 'birthday_both', 'full', 'Bắt đầu ở phách 3. Tay trái mở đầu, tay phải nối!'),
+    // (+ 2026-10-17, OWNER duyệt) 🎤 Buổi diễn nhỏ ~4 tuần một lần (không huy chương — sticker "Buổi diễn")
+    recitalLesson(15),
   ],
 };
 
@@ -491,6 +529,17 @@ export const WEEK16: WeekPlan = {
         { kind: 'theory', ids: ['natural'] },
       ],
     },
+    // (+ 2026-10-17, OWNER duyệt — rà soát giáo viên dài hạn) nhạc công nhỏ: đàn theo tai · dịch giọng · song tấu · buổi diễn nhỏ
+    {
+      id: 'w16-transpose',
+      week: 16,
+      title: 'Dịch giọng: Bánh nóng ở thế Rê',
+      emoji: '🔀',
+      activities: [
+        transpose('hot_cross_buns', 'Bánh nóng', 2, 'thế Rê'),
+      ],
+      teach: { emoji: '🔀', text: 'Con chỉ bố mẹ: "Bánh nóng" ở thế Rê có phím đen nào?' },
+    },
   ],
 };
 
@@ -504,8 +553,9 @@ export const WEEK17: WeekPlan = {
   warmup: { variant: 'read', pool: ['C4', 'D4', 'E4', 'F4', 'G4', 'A4'], rounds: 6 },
   teach: { emoji: '👨‍🏫', text: 'Con đọc to cho bố mẹ nhịp "Đi-chấm chạy Đi Đi" (nốt chấm dôi).' },
   drills: ['thumb-under', 'finger-tap'],
-  criterion: { text: 'Chơi "Bài ca niềm vui" đúng nhịp chấm dôi, 60 nhịp/phút — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
-  kidGoal: 'Lạc đà "Đi-chấm chạy": Bài ca niềm vui — 2 hôm! 🐪',
+  // (2026-10-17, OWNER duyệt "Bớt Bài ca niềm vui") bài tiêu chí: "Lạc đà đi chợ" (tự sáng tác, "Đi-chấm chạy" thế Đô)
+  criterion: { text: 'Chơi "Lạc đà đi chợ" đúng nhịp chấm dôi, 60 nhịp/phút — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
+  kidGoal: 'Lạc đà "Đi-chấm chạy" đi chợ — 2 hôm! 🐪',
   lessons: [
     {
       id: 'w17-l1',
@@ -532,6 +582,8 @@ export const WEEK17: WeekPlan = {
     },
     // (2026-10-15) bài đầu tiên có "Đi-chấm chạy" → đọc nhịp trước lượt theo nhịp đầu tiên
     chantTempo(pair('w17-l2', 17, 'Bài ca niềm vui — bản gốc', '🎶', 'ode_to_joy_original', 'names')),
+    // (2026-10-17) bài tiêu chí mới của tuần — "Đi-chấm chạy" đã đọc nhịp ở bài trước
+    pair('w17-camel', 17, 'Lạc đà đi chợ', '🐪', 'camel_walk', 'names', 'Lạc đà "Đi-chấm chạy" — nốt chấm dài, nốt sau ngắn!'),
     // v5: "Bắc kim thang" (có móc kép) dời sang tuần 18 — sau bài "móc kép"
     {
       id: 'w17-l4',
@@ -550,6 +602,17 @@ export const WEEK17: WeekPlan = {
           bars: 4,
         },
       ],
+    },
+    // (+ 2026-10-17, OWNER duyệt — rà soát giáo viên dài hạn) nhạc công nhỏ: đàn theo tai · dịch giọng · song tấu · buổi diễn nhỏ
+    {
+      id: 'w17-ear',
+      week: 17,
+      title: 'Đàn theo tai',
+      emoji: '👂',
+      activities: [
+        byEar('twinkle_easy', 7),
+      ],
+      teach: { emoji: '👂', text: 'Con đàn cho bố mẹ câu con tìm được bằng tai — bố mẹ đoán tên bài nhé!' },
     },
   ],
 };
@@ -631,6 +694,8 @@ export const WEEK18: WeekPlan = {
         blackKeys('Mưa móc kép 🎨', 'App đàn nền. Con làm mưa nhanh "Chạy-chạy-chạy-chạy"!'),
       ],
     },
+    // (+ 2026-10-17, OWNER duyệt) 🎤 Buổi diễn nhỏ
+    recitalLesson(18),
   ],
 };
 
@@ -735,6 +800,18 @@ export const WEEK20: WeekPlan = {
     ),
     // (2026-10-12, OWNER duyệt) 📘 Biết thêm — cung & nửa cung (gam: Mi–Fa, Si–Đô) ở CUỐI bài
     plus(pair('w20-l3', 20, 'Niềm vui cho thế giới', '🎄', 'joy_to_the_world', 'full', 'Bài này chính là gam đi xuống!'), { kind: 'theory', ids: ['half-whole'] }),
+    // (+ 2026-10-17, OWNER duyệt) SONG TẤU VỚI THẦY
+    {
+      id: 'w20-duet',
+      week: 20,
+      title: 'Ngôi sao nhỏ — song tấu với thầy',
+      emoji: '🎎',
+      activities: [
+        { kind: 'song', songId: 'duet_twinkle', mode: 'wait', hints: 'names', intro: 'Bài quen "Ngôi sao nhỏ" — nhớ La là ngón 5!' },
+        { kind: 'song', songId: 'duet_twinkle', mode: 'tempo', level: 2, hints: 'names', intro: 'Song tấu: thầy đàn bè thấp, con đàn giai điệu!' },
+      ],
+      teach: { emoji: '🎎', text: 'Con mời bố mẹ nghe bài song tấu và kể: thầy đàn bè cao hay bè thấp?' },
+    },
   ],
 };
 

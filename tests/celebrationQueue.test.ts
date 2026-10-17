@@ -3,7 +3,7 @@ import { OPEN_GAP_MS, canCelebrate, initTracker, markCelebrated, onHidden, onVis
 import { fixtureWeek4Child } from './fixtures/week4Child';
 import { unseenUnlocks } from '../src/lessons/unlocks';
 import { playableSongCount, welcomeBack } from '../src/lessons/shortSession';
-import { backupNudgeDue } from '../src/progress/backup';
+import { backupFresh, daysSinceBackup } from '../src/progress/backup';
 import { sessionCount } from '../src/progress/history';
 
 describe('celebrationQueue: mỗi lần mở app tối đa một màn mừng', () => {
@@ -41,10 +41,11 @@ describe('fixture bé thật tuần 4 (lần mở đầu sau cập nhật v0.18)
   const now = new Date(2026, 9, 9, 18, 0);
   const d = fixtureWeek4Child(now);
 
-  it('~40 buổi, tuần 4, chưa sao lưu → có nhắc sao lưu; buổi gần nhất hôm qua → không chào "nhớ con"', () => {
+  it('~40 buổi, tuần 4, chưa sao lưu → việc tuần “sao lưu” chưa xong; buổi gần nhất hôm qua → không chào "nhớ con"', () => {
     expect(sessionCount(d)).toBe(40);
     expect(d.progress.currentWeek).toBe(4);
-    expect(backupNudgeDue(d.settings, sessionCount(d), now.getTime())).toBe(true);
+    expect(backupFresh(d, now.getTime())).toBe(false);
+    expect(daysSinceBackup(d, now.getTime())).toBeGreaterThan(14);
     expect(welcomeBack(d, now)).toBe(false);
   });
 

@@ -87,8 +87,13 @@ describe('AlbumStore', () => {
     expect((await store.consider(take({ songId: 'a', bytes: 600 }), true)).saved).toBe(true);
     expect(await store.consider(take({ songId: 'b', bytes: 500 }), true)).toEqual({ saved: false, reason: 'full' });
     expect([...be.takes.keys()]).toEqual(['a']);
-    // Thay chính bài 'a' bằng bản to hơn nhưng vẫn ≤ giới hạn: dung lượng bản cũ không tính
-    expect((await store.consider(take({ songId: 'a', bytes: 900, stars: 3 }), true)).saved).toBe(true);
+    // (2026-10-16) Lần thay ĐẦU TIÊN của bài 'a': bản cũ (= bản đầu) được GIỮ ở ô 'first' → tính vào dung lượng chung
+    expect(await store.consider(take({ songId: 'a', bytes: 500, stars: 3 }), true)).toEqual({ saved: false, reason: 'full' });
+    expect((await store.consider(take({ songId: 'a', bytes: 400, stars: 3 }), true)).saved).toBe(true);
+    expect([...be.firsts.keys()]).toEqual(['a']);
+    // Đã có ô 'first': thay bản hay nhất lần nữa thì bản hay nhất cũ không tính (bản đầu vẫn tính)
+    expect((await store.consider(take({ songId: 'a', bytes: 400, stars: 3, accuracy: 0.95 }), true)).saved).toBe(true);
+    expect(await store.consider(take({ songId: 'a', bytes: 401, stars: 3, accuracy: 1 }), true)).toEqual({ saved: false, reason: 'full' });
   });
 
   it('hoàn tác ("Không lưu"): trả bản cũ về, hoặc xoá bản vừa lưu', async () => {

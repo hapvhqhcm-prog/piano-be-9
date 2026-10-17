@@ -7,25 +7,23 @@ import { backButton, button, h } from '../components/dom';
 import { cancelSpeech, speak } from '../../audio/voice';
 import { speakChip } from '../components/speakChip';
 import { TEACH_TITLE, teachCard } from './teach';
+import { parentCorner } from '../components/parentCorner';
 
 /**
  * Câu nào cũng là câu trả lời tốt — số sao KHÔNG phụ thuộc câu trả lời (sao = đúng ngay lần đầu trong buổi, ≥ 1).
  * Bé nói thật "khó quá" = thông tin quý cho bố mẹ, không bao giờ bị ít sao hơn.
  */
 const OPTIONS: Array<{ rating: SelfRating; emoji: string; label: string; praise: string }> = [
-  { rating: 'all', emoji: '😄', label: 'Dễ — con đàn được', praise: 'Tuyệt vời! Mai mình thử khó hơn chút nhé.' },
-  { rating: 'some', emoji: '🙂', label: 'Vừa — còn vấp chút', praise: 'Vấp là đang học đó! Con giỏi lắm.' },
-  { rating: 'hard', emoji: '😅', label: 'Khó — con cần tập thêm', praise: 'Cảm ơn con đã nói thật! Bố mẹ sẽ giúp con chỗ khó.' },
+  // (+ 2026-10-17, OWNER duyệt "Buổi học ≥ 60% đàn thật") nhãn & lời khen NGẮN (chữ của bé ≤ 12 tiếng mỗi màn)
+  { rating: 'all', emoji: '😄', label: 'Dễ', praise: 'Tuyệt vời! Mai thử khó hơn nhé.' },
+  { rating: 'some', emoji: '🙂', label: 'Vừa', praise: 'Vấp là đang học đó!' },
+  { rating: 'hard', emoji: '😅', label: 'Khó', praise: 'Cảm ơn con đã nói thật!' },
 ];
 
 const QUESTION = 'Hôm nay con thấy thế nào?';
+/** (+ 2026-10-17) Sao sau khi bé chọn hiện ngần này ms rồi tự sang màn kết buổi. */
+export const STARS_MS = 1500;
 
-/** Lời giải thích số sao (sao = đúng ngay lần đầu trong buổi; luôn ≥ 1). */
-const STAR_LINE: Record<1 | 2 | 3, string> = {
-  3: 'Gần như nốt nào cũng đúng ngay lần đầu — siêu quá!',
-  2: 'Nhiều nốt đúng ngay lần đầu — mai thêm sao nữa nhé!',
-  1: 'Sao cố gắng — con đã tập cả buổi, mai sẽ thêm sao!',
-};
 
 /** Sao của buổi ĐANG học (buổi chưa đóng gần nhất); không tìm thấy → 3. */
 function sessionStars(app: App): 1 | 2 | 3 {
@@ -38,6 +36,13 @@ export interface ClosingHooks {
   teach: { emoji: string; text: string } | null;
   /** (+ 2026-10-15) Dòng "📝 Bài tập về nhà" cho BỐ MẸ (chỗ thầy dặn hôm nay — lessons/homework.ts); null/không có = không hiện */
   homework?: string | null;
+  /** (+ 2026-10-17) Lời nhắn cho bố mẹ: bài tập về nhà vừa TẠM DỪNG (lessons/homework.ts reassignHomework); null/không có = không hiện */
+  homeworkNote?: string | null;
+  /**
+   * (+ 2026-10-17, OWNER duyệt "Buổi học ≥ 60% đàn thật") Chip KHÔNG bắt buộc "📘 1 thẻ mới" (thẻ "Biết thêm" của bài — đã ra khỏi
+   * buổi). null/không có = không hiện.
+   */
+  theory?: { label: string; onOpen(): void } | null;
   /** Bố mẹ bấm "Bố mẹ đã học xong" (PARENT_ASSESSMENT 'teach-back') — tối đa một lần */
   onTaught(): void;
   onRate(r: SelfRating): void;
@@ -73,12 +78,21 @@ export function closingScreen(app: App, hooks: ClosingHooks) {
         if (card) b.classList.add('rate-compact');
         return b;
       });
+      const theory = hooks.theory
+        ? h('button', { class: 'closing-theory', type: 'button', 'aria-label': 'Mở thẻ nhạc lý mới (không bắt buộc)' }, hooks.theory.label)
+        : null;
+      theory?.addEventListener('click', () => hooks.theory?.onOpen());
       stage.replaceChildren(
         ...(card ? [card] : []),
-        hooks.homework ? h('p', { class: 'closing-homework' }, h('b', {}, '📝 Bài tập về nhà (bố mẹ): '), hooks.homework) : '',
         h('h1', { class: 'title' }, QUESTION, speakChip(app, QUESTION)),
-        h('p', { class: 'lead' }, 'Con chọn câu nào cũng được sao — nói thật nhé!'),
         h('div', { class: 'rating-options' }, ...options),
+        theory ?? '',
+      );
+      // (+ 2026-10-17, OWNER duyệt) chữ cho bố mẹ (bài tập về nhà / lời nhắn) → góc 👪 thu gọn, không giữa màn của bé
+      parentCorner(
+        root,
+        hooks.homework ? h('p', { class: 'closing-homework' }, h('b', {}, '📝 Bài tập về nhà: '), hooks.homework) : null,
+        !hooks.homework && hooks.homeworkNote ? h('p', { class: 'closing-homework' }, hooks.homeworkNote) : null,
       );
       bar.replaceChildren(backButton(hooks.onBack));
     };
@@ -94,13 +108,13 @@ export function closingScreen(app: App, hooks: ClosingHooks) {
         h('div', { class: 'hero-mascot' }, mascot('love', 100)),
         h('div', { class: 'stars' }, '★'.repeat(n), h('span', { class: 'stars-off' }, '★'.repeat(3 - n))),
         h('h1', { class: 'title' }, o.praise),
-        h('p', { class: 'lead' }, STAR_LINE[n]),
       );
-      bar.replaceChildren(
-        backButton(ask),
-        button({ icon: '▶', label: 'Tiếp', kind: 'primary', onTap: hooks.onDone }),
-      );
+      // (+ 2026-10-17, OWNER duyệt "Buổi học ≥ 60% đàn thật") không còn màn sao phải bấm "Tiếp" — sao hiện ~1,5 giây rồi tự sang
+      bar.replaceChildren();
+      const gen = ++rated;
+      window.setTimeout(() => gen === rated && root.isConnected && hooks.onDone(), STARS_MS);
     };
+    let rated = 0;
     ask();
     const said = hooks.teach ? `${TEACH_TITLE} ${hooks.teach.text} Xong rồi, ${QUESTION.toLowerCase()}` : QUESTION;
     const timer = window.setTimeout(() => void speak(app, said), 400);

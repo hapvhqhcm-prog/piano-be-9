@@ -20,7 +20,8 @@ export { MIC_GOOD, buildMicLog, type MicLogState } from './micTestShared';
 /**
  * Màn phụ huynh "🎤 Cài micro (3 bước)" (rà soát 2026-10-06 — trước đây không có bước nào bật settings.micEnabled):
  *   1) Cho phép micro → 2) Kiểm tra 5 nốt (tự chỉnh độ nhạy) → 3) kết quả tốt: nút to "✅ Dùng micro cho các buổi học"
- *   (đặt micEnabled = true; có nút tắt lại). Công cụ kỹ thuật nằm trong "🔧 Dành cho người hỗ trợ".
+ *   (đặt micEnabled = true; có nút tắt lại). Công cụ kỹ thuật nằm trong "🔧 Dành cho người hỗ trợ" — (2026-10-17) kể cả
+ *   "🎙️ Đo micro & tạo báo cáo" (trước đây ở đầu màn): bố mẹ thấy 3 bước trước tiên.
  * Bên trong vẫn là TRÌNH CHẨN ĐOÁN:
  * - thanh âm lượng có vạch ngưỡng (tiếng đàn phải vượt vạch mới được nghe)
  * - chỉnh độ nhạy, chỉnh theo đàn nhà (đàn cơ lâu không lên dây lệch vài chục cents)
@@ -76,6 +77,8 @@ export function micTestScreen(app: App) {
     };
     const tools = createSupportTools(c);
     const auto = createAutoReport(c);
+    // 🎙️ Đo micro & tạo báo cáo → đầu mục "🔧 Dành cho người hỗ trợ" (ngay dưới dòng tiêu đề)
+    tools.helper.querySelector('summary')?.after(auto.card);
 
     let lastMeterText = 0;
 
@@ -91,7 +94,20 @@ export function micTestScreen(app: App) {
       return app.mic.state === 'on' ? 2 : 1;
     }
 
+    /**
+     * (2026-10-17) Một trạng thái rõ ràng: trước đây "Micro đang tắt" (màn này chưa nghe) đứng cạnh "✅ đang được dùng"
+     * (cài đặt buổi học) — trông như mâu thuẫn. Giờ nói rõ cả hai: dùng cho buổi học hay chưa + màn này đang nghe hay không.
+     */
+    function statusText(st: typeof app.mic.state): string {
+      if (st === 'off')
+        return store.settings.micEnabled
+          ? '🎤 Micro được dùng trong buổi học (tự bật khi bé học). Màn này chưa nghe — bấm “1. Cho phép micro” để thử ngay.'
+          : 'Micro chưa dùng cho buổi học. Bấm “1. Cho phép micro” để bắt đầu.';
+      return STATE_TEXT[st];
+    }
+
     function renderSteps(): void {
+      if (MicListener.supported) status.textContent = statusText(app.mic.state);
       const now = stepNow();
       const enabled = store.settings.micEnabled;
       const everChecked = check.everChecked;
@@ -123,7 +139,7 @@ export function micTestScreen(app: App) {
       if (enabled) {
         useBox.replaceChildren(
           ...notChecked,
-          h('p', { class: 'lead' }, '✅ Micro đang được dùng cho các buổi học — app tự nghe và chấm nốt.'),
+          h('p', { class: 'lead' }, '✅ Đã chọn dùng micro cho các buổi học — khi bé học, app tự nghe và chấm nốt.'),
           button({
             icon: '🔇',
             label: 'Tắt micro (bố mẹ tự bấm “Đúng rồi”)',
@@ -160,7 +176,7 @@ export function micTestScreen(app: App) {
     }
 
     const unState = app.mic.onState((st) => {
-      status.textContent = STATE_TEXT[st];
+      status.textContent = statusText(st);
       auto.onState(st);
       renderSteps();
     });
@@ -224,7 +240,6 @@ export function micTestScreen(app: App) {
           'div',
           { class: 'stage scrollable' },
           h('h1', { class: 'title' }, '🎤 Cài micro (3 bước)'),
-          auto.card,
           wizard,
           status,
           big,
@@ -260,7 +275,7 @@ export function micTestScreen(app: App) {
         ),
       ),
     );
-    status.textContent = MicListener.supported ? STATE_TEXT[app.mic.state] : STATE_TEXT.unsupported;
+    status.textContent = MicListener.supported ? statusText(app.mic.state) : STATE_TEXT.unsupported;
     tools.showTuning();
     tools.showLatency();
     tools.renderSens();

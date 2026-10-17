@@ -392,6 +392,23 @@ const NEW_PROPS: Record<number, { base: Base; art: string }> = {
       ${[26, 36, 48, 60, 70].map((x) => `<path d="M${x - 5} ${44 - 22 * Math.sin((Math.PI * (x - 16)) / 64)} h10" stroke="${P.ink}" stroke-opacity=".75" stroke-width="1.4" stroke-linecap="round"/>`).join('')}
       <ellipse cx="48" cy="18" rx="4.2" ry="3.2" fill="${P.ink}" transform="rotate(-20 48 18)"/>`,
   },
+  // (+ 2026-10-17) 27 · Xưởng Đánh Bóng (tuần ôn) — viên ngọc được lau sáng lấp lánh
+  27: {
+    base: 'sand',
+    art: `
+      <path d="M34 30 L48 16 L62 30 L48 50 Z" fill="${P.violet}"/>
+      <path d="M34 30 H62 M48 16 L42 30 L48 50 L54 30 Z" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="1.2"/>
+      ${sparkle(28, 18, 2.6, P.sun)}${sparkle(68, 22, 2.4, P.coral)}${sparkle(66, 44, 2, P.sun)}`,
+  },
+  // (+ 2026-10-17) 32 · Phòng Tổng Duyệt (tuần ôn) — sân khấu có rèm đỏ
+  32: {
+    base: 'grass',
+    art: `
+      <rect x="24" y="22" width="48" height="28" rx="2" fill="${P.wood}"/>
+      <path d="M24 18 H72 V26 Q60 34 48 26 Q36 34 24 26 Z" fill="${P.coral}"/>
+      <path d="M26 26 Q30 40 26 50 H32 Q34 38 30 26 Z M70 26 Q66 40 70 50 H64 Q62 38 66 26 Z" fill="${P.coral}"/>
+      ${noteGlyph(48, 40, 3, P.indigo)}${sparkle(48, 12, 2.4, P.sun)}`,
+  },
 };
 
 /**
@@ -400,10 +417,13 @@ const NEW_PROPS: Record<number, { base: Base; art: string }> = {
  */
 const ART_OF_WEEK: Record<number, number> = {
   1: 1, 2: 2, 3: 3, 4: 4, 6: 5, 7: 6, 8: 7, 10: 8, 11: 9, 12: 10, 14: 11, 15: 12, 16: 13, 17: 14,
-  20: 15, 21: 16, 22: 17, 24: 18, 25: 19, 26: 20, 27: 23, 28: 24, 29: 21, 30: 22, 31: 25,
-  // Cấp 4 (2026-10-08): dùng lại tranh có sẵn theo chủ đề — 32 núi Sol · 33 hang phím đen · 34 thung lũng song ca · 35 cầu thang
-  // cầu vồng · 36 lâu đài · 37 làng · 38 hồ soi bóng (ngân vang) · 39 thuyền buồm · 40 mặt trời · 41 vũ hội · 42 đỉnh núi · 43 nhà hát
-  32: 11, 33: 13, 34: 10, 35: 3, 36: 8, 37: 2, 38: 6, 39: 18, 40: 19, 41: 12, 42: 24, 43: 16,
+  20: 15, 21: 16, 22: 17, 24: 18, 25: 19, 26: 20, 28: 23, 29: 24, 30: 21, 31: 22, 33: 25,
+  // Cấp 4 (2026-10-08): dùng lại tranh có sẵn theo chủ đề — 34 núi Sol · 35 hang phím đen · 36 thung lũng song ca · 37 cầu thang
+  // cầu vồng · 39 lâu đài · 40 làng · 41 hồ soi bóng (ngân vang) · 42 thuyền buồm · 43 mặt trời · 44 vũ hội · 45 đỉnh núi · 46 nhà hát
+  // (giáo trình rev 5, 2026-10-17: tuần 27–30 cũ +1, 31–35 +2, 36–43 +3)
+  34: 11, 35: 13, 36: 10, 37: 3, 39: 8, 40: 2, 41: 6, 42: 18, 43: 19, 44: 12, 45: 24, 46: 16,
+  // (+ 2026-10-17) tuần ÔN & BIỂU DIỄN: 27 · 32 có hình riêng (NEW_PROPS); 38 Trạm Nghỉ Gió (Cấp 4: dùng lại tranh đỉnh núi)
+  38: 24,
 };
 
 const FALLBACK = { base: 'grass' as Base, art: beamedNotes(40, 46, 4, P.violet) };
@@ -439,12 +459,12 @@ export function islandIcon(week: number, state: IslandState): SVGElement {
   return svg;
 }
 
-/** Bảng xem thử toàn bộ 43 đảo × 3 trạng thái (chỉ để phát triển / chụp màn hình). */
+/** Bảng xem thử toàn bộ 46 đảo × 3 trạng thái (chỉ để phát triển / chụp màn hình). */
 export function islandArtPreview(): HTMLElement {
   const wrap = document.createElement('div');
   wrap.setAttribute('style', 'display:grid;grid-template-columns:repeat(8,1fr);gap:6px;padding:8px;background:#fff8ee');
   const states: IslandState[] = ['current', 'done', 'locked'];
-  for (let w = 1; w <= 43; w++) {
+  for (let w = 1; w <= 46; w++) {
     const cell = document.createElement('div');
     cell.setAttribute('style', 'display:flex;flex-direction:column;align-items:center;font:12px sans-serif;color:#3d3466');
     const icon = islandIcon(w, states[w % 3]);

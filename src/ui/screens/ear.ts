@@ -49,6 +49,13 @@ const ANSWER_TEXT: Record<string, string> = {
   minor: 'Buồn (thứ) 😢',
 };
 
+/** (+ 2026-10-17) Trả lời đúng → "khen nháy" ngần này ms rồi tự sang câu sau. */
+export const CORRECT_FLASH_MS = 800;
+/** (+ 2026-10-17) Màn giới thiệu trò: đọc lời dẫn xong ngần này ms thì tự vào lượt 1. */
+const AUTO_START_MS = 900;
+/** (+ 2026-10-17) Điểm cuối trò hiện ngần này ms rồi tự đi tiếp (không nút). */
+export const SUMMARY_MS = 1200;
+
 /** Câu hỏi hiện trên màn (không suy ra từ tiêu đề — tiêu đề có thể đổi/không có emoji). */
 const QUESTION: Record<QuizSpec['variant'], string> = {
   updown: 'Lên hay xuống?',
@@ -159,7 +166,13 @@ export function quizScreen(app: App, hooks: QuizHooks): Screen {
       );
       setBar(back(), button({ icon: '▶', label: 'Bắt đầu', kind: 'primary', onTap: () => void demo() }));
       const tk = token;
-      window.setTimeout(() => tk === token && void speak(app, said), 400);
+      // (+ 2026-10-17, OWNER duyệt "Buổi học ≥ 60% đàn thật") đọc lời dẫn xong → tự vào lượt 1 (nút "Bắt đầu" vẫn có cho bé nhanh tay)
+      window.setTimeout(
+        () =>
+          tk === token &&
+          void speak(app, said).then(() => window.setTimeout(() => tk === token && void demo(), AUTO_START_MS)),
+        400,
+      );
     }
 
     async function demo(): Promise<void> {
@@ -213,7 +226,7 @@ export function quizScreen(app: App, hooks: QuizHooks): Screen {
         prog,
         h('div', { class: 'hero-emoji listen-ear' }, '🎵'),
         h('h1', { class: 'title' }, q.choices ? QUESTION[spec.variant] : 'Nốt nào đây?'),
-        h('div', { class: 'listen-hint', 'aria-hidden': 'true' }, '👂 Nghe đã nhé…'),
+        h('div', { class: 'listen-hint', 'aria-hidden': 'true' }, '👂'),
         choices ?? h('p', { class: 'lead' }, 'Nghe nốt Đô mốc, rồi nốt bí ẩn — chạm phím'),
       );
       setBar(back(), button({ icon: '🔊', label: 'Nghe lại', onTap: () => void playQuestion() }));
@@ -329,8 +342,9 @@ export function quizScreen(app: App, hooks: QuizHooks): Screen {
       } else
         stage.replaceChildren(
           h('div', { class: 'hero-emoji' }, correct ? '🎉' : '👂'),
-          h('h1', { class: 'title' }, correct ? 'Đúng rồi!' : 'Chưa đúng — nghe lại nhé!'),
-          h('p', { class: 'lead' }, correct ? `Đó là ${what}` : `Đáp án là ${what}${isPitchAnswer ? ' — phím đang sáng' : ''}`),
+          // (+ 2026-10-17) chữ của bé ngắn: "Đúng rồi!" / "Đáp án: …"
+          h('h1', { class: 'title' }, correct ? 'Đúng rồi!' : 'Nghe lại nhé!'),
+          h('p', { class: 'lead' }, correct ? `${what}` : `Đáp án: ${what}${isPitchAnswer ? ' (phím sáng)' : ''}`),
         );
       setBar(
         back(),
@@ -346,8 +360,21 @@ export function quizScreen(app: App, hooks: QuizHooks): Screen {
                     : playQuestion()),
             })
           : null,
-        button({ icon: '▶', label: 'Tiếp', kind: 'primary', onTap: () => void next() }),
+        // (+ 2026-10-17, OWNER duyệt "Buổi học ≥ 60% đàn thật") ĐÚNG → tự sang câu sau sau cái "khen nháy" (không nút "Tiếp");
+        // chưa đúng → vẫn chờ bé (nghe lại đáp án) rồi "Tiếp"
+        correct ? null : button({ icon: '▶', label: 'Tiếp', kind: 'primary', onTap: () => void next() }),
       );
+      if (correct) {
+        // trò nhìn khuông: nghe lại hai nốt (nối hình với âm) rồi mới sang; trò nghe: chỉ khen nháy
+        if (q.pair || spec.variant === 'landmark') {
+          await wait(450);
+          if (tk !== token) return;
+          await app.audio.playSequence(q.play, { duration: 0.6, onEach: (p, on) => kb.flash(p as Pitch, on) });
+        }
+        await wait(CORRECT_FLASH_MS);
+        if (tk === token) void next();
+        return;
+      }
       // Cho bé thấy hướng đi trên bàn phím
       if (q.pair || spec.variant === 'landmark') {
         // Đọc xong rồi mới nghe: hai nốt vang lên + phím nháy → bé nối hình trên khuông với âm thanh
@@ -373,9 +400,12 @@ export function quizScreen(app: App, hooks: QuizHooks): Screen {
       stage.replaceChildren(
         h('div', { class: 'hero-emoji' }, good ? '🏆' : '👏'),
         h('h1', { class: 'title' }, `Con đúng ${score} / ${spec.rounds}`),
-        h('p', { class: 'lead' }, good ? 'Con giỏi quá!' : 'Con đang tiến bộ từng ngày!'),
+        h('p', { class: 'lead' }, good ? 'Con giỏi quá!' : 'Con tiến bộ lắm!'),
       );
-      setBar(button({ icon: '▶', label: 'Tiếp', kind: 'primary', onTap: hooks.onDone }));
+      // (+ 2026-10-17, OWNER duyệt) không còn màn tổng kết phải bấm — hiện điểm ~1,2 giây rồi tự đi tiếp
+      setBar();
+      const tk = token;
+      window.setTimeout(() => tk === token && hooks.onDone(), SUMMARY_MS);
     }
 
     intro();

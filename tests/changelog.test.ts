@@ -4,7 +4,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import pkg from '../package.json';
-import { CHANGELOG, CHANGELOG_BASELINE, LATEST_VERSION, compareVersions, isVersion, whatsNew, type ChangelogEntry } from '../src/pwa/changelog';
+import { CHANGELOG, CHANGELOG_BASELINE, LATEST_VERSION, compareVersions, isVersion, parentWhatsNew, whatsNew, type ChangelogEntry } from '../src/pwa/changelog';
 import { RELEASE_VERSION } from '../src/pwa/release';
 import { defaultData, validateAppData } from '../src/progress/schema';
 import { migrate } from '../src/progress/migrations';
@@ -120,6 +120,27 @@ describe('changelog — lastSeenVersion', () => {
     const bad2 = defaultData() as unknown as { settings: Record<string, unknown> };
     bad2.settings.guideHintAt = 'hôm qua';
     expect(validateAppData(bad2)).toContain('settings.guideHintAt');
+  });
+});
+
+describe('changelog — "Có gì mới" ít hơn (parentAction, 2026-10-17)', () => {
+  const log: ChangelogEntry[] = [
+    { version: '1.3.0', date: '2026-10-13', items: ['d1', 'd2'] },
+    { version: '1.2.0', date: '2026-10-12', items: ['c1', 'c2'], parentAction: true },
+    { version: '1.1.0', date: '2026-10-11', items: ['b1', 'b2'] },
+    { version: '1.0.0', date: '2026-10-10', items: ['a1', 'a2'], parentAction: true },
+  ];
+  it('thẻ chỉ gồm các bản có việc cho bố mẹ; không có bản nào như vậy → không hiện', () => {
+    expect(parentWhatsNew('1.0.0', true, log).entries.map((e) => e.version)).toEqual(['1.2.0']);
+    expect(parentWhatsNew('1.2.0', true, log)).toEqual({ kind: 'same', entries: [] });
+    expect(parentWhatsNew(undefined, false, log).kind).toBe('first-install');
+  });
+  it('bản đánh dấu đúng ý chủ app: tự học 0.23.0, báo cáo micro 0.18.1, Đàn để thêm bài 0.22.0 có; bản sửa nhỏ không', () => {
+    const flag = (v: string) => CHANGELOG.find((e) => e.version === v)?.parentAction === true;
+    for (const v of ['0.23.0', '0.18.1', '0.22.0']) expect(flag(v), v).toBe(true);
+    for (const v of ['0.20.1', '0.18.2', '0.23.3', '0.19.1']) expect(flag(v), v).toBe(false);
+    // ít hơn một nửa số bản hiện thẻ
+    expect(CHANGELOG.filter((e) => e.parentAction).length).toBeLessThan(CHANGELOG.length / 2);
   });
 });
 

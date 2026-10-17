@@ -30,7 +30,8 @@ export const PHRASE_STEPS_SKIP: ReadonlySet<string> = new Set([
   'w11-l4', // Nhịp 3 + Valse đu quay + thẻ nhạc lý — 6 hoạt động
   'w12-l3', // Bài ca niềm vui hai tay + ứng tấu — 12,1'
   'w14-l3', // hai bài thế Sol trong một buổi — 8 hoạt động
-  'w22-l3', 'w22-l4', 'w23-l3', 'w25-l1', 'w25-ninja', 'w28-l2', 'w37-l2', 'w38-l3', 'w39-l1', 'w42-l2',
+  // (giáo trình rev 5, 2026-10-17: mã tuần ≥ 27 đánh số lại — tuần 27–30 cũ +1, 31–35 +2, 36–43 +3)
+  'w22-l3', 'w22-l4', 'w23-l3', 'w25-l1', 'w25-ninja', 'w29-l2', 'w40-l2', 'w41-l3', 'w42-l1', 'w45-l2',
 ]);
 
 const EXERCISE = /^(scale_|arpeggio_|alberti_|ex_)/;

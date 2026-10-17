@@ -1,0 +1,426 @@
+{
+ "id": "duet_twinkle",
+ "title": "Twinkle Twinkle Little Star (duet with teacher)",
+ "titleVi": "Ngôi sao nhỏ — song tấu với thầy",
+ "composer": "Dân ca Pháp \"Ah! vous dirai-je, maman\" (traditional)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Bè bé như bài gốc; bè thầy (secondo) tự soạn cho app (piano-be-9)",
+ "attributionRequired": false,
+ "hand": "RH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 20,
+ "extension": "A4",
+ "position": "free",
+ "phrases": [
+  0,
+  4,
+  8
+ ],
+ "notes": [
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "G4",
+   "beats": 2,
+   "finger": 4
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 2,
+   "finger": 1
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 2,
+   "finger": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 2,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "G4",
+   "beats": 2,
+   "finger": 4
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "F4",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 2,
+   "finger": 1
+  }
+ ],
+ "duet": [
+  {
+   "pitch": "G2",
+   "beats": 1
+  },
+  {
+   "pitch": "G2",
+   "beats": 1
+  },
+  {
+   "pitch": "E3",
+   "beats": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 1
+  },
+  {
+   "pitch": "F2",
+   "beats": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 1
+  },
+  {
+   "pitch": "E3",
+   "beats": 1
+  },
+  {
+   "pitch": "G2",
+   "beats": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 1
+  },
+  {
+   "pitch": "G2",
+   "beats": 1
+  },
+  {
+   "pitch": "G2",
+   "beats": 1
+  },
+  {
+   "pitch": "G2",
+   "beats": 1
+  },
+  {
+   "pitch": "F3",
+   "beats": 1
+  },
+  {
+   "pitch": "E3",
+   "beats": 1
+  },
+  {
+   "pitch": "G2",
+   "beats": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 1
+  },
+  {
+   "pitch": "E3",
+   "beats": 1
+  },
+  {
+   "pitch": "A2",
+   "beats": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 1
+  },
+  {
+   "pitch": "G2",
+   "beats": 1
+  },
+  {
+   "pitch": "B2",
+   "beats": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 1
+  },
+  {
+   "pitch": "E3",
+   "beats": 1
+  },
+  {
+   "pitch": "A2",
+   "beats": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 1
+  },
+  {
+   "pitch": "G2",
+   "beats": 1
+  },
+  {
+   "pitch": "B2",
+   "beats": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 1
+  },
+  {
+   "pitch": "G2",
+   "beats": 1
+  },
+  {
+   "pitch": "G2",
+   "beats": 1
+  },
+  {
+   "pitch": "E3",
+   "beats": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 1
+  },
+  {
+   "pitch": "F2",
+   "beats": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 1
+  },
+  {
+   "pitch": "E3",
+   "beats": 1
+  },
+  {
+   "pitch": "G2",
+   "beats": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 1
+  },
+  {
+   "pitch": "G2",
+   "beats": 1
+  },
+  {
+   "pitch": "G2",
+   "beats": 1
+  },
+  {
+   "pitch": "G2",
+   "beats": 1
+  },
+  {
+   "pitch": "F3",
+   "beats": 1
+  },
+  {
+   "pitch": "E3",
+   "beats": 1
+  },
+  {
+   "pitch": "G2",
+   "beats": 1
+  }
+ ]
+}

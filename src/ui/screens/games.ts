@@ -8,6 +8,7 @@ import { SONGS } from '../../music/tune';
 import { GAME_IDS, GAME_INFO, gameLock, unlockedGames, type GameId } from '../../practice/games/catalog';
 import { gameKey, gamePlayed, newGameIds, withSeen } from '../../lessons/discovery';
 import { newPillOn } from '../components/newBadge';
+import { theoryBadge } from '../../lessons/theorySeen';
 import { speak } from '../../audio/voice';
 import type { App, Screen } from '../App';
 import { backButton, h, toast } from '../components/dom';
@@ -20,6 +21,7 @@ import { lazy, lazyScreen, prefetchLater } from '../lazy';
 import '../../styles/games.css';
 
 const earMod = lazy(() => import('./games/earGuess'));
+const glossaryMod = lazy(() => import('./glossary'));
 const contourMod = lazy(() => import('./games/contour'));
 const beatMod = lazy(() => import('./games/beatCatch'));
 const echoMod = lazy(() => import('./games/echo'));
@@ -69,6 +71,33 @@ export function gamesScreen(app: App): Screen {
       });
       return b;
     };
+    /**
+     * (+ 2026-10-17, OWNER duyệt "Buổi học ≥ 60% đàn thật") 📘 Từ điển nhạc nhỏ ở đây (thẻ "Biết thêm" ra khỏi buổi học) — huy
+     * hiệu "📘 N thẻ mới" khi có thẻ đã mở khóa con chưa xem (tính sau khi chunk nhạc lý nạp xong — không nặng màn này).
+     */
+    const dictCard = (): HTMLElement => {
+      const badge = h('span', { class: 'gd-badge none' }, '✨ Điều con đã biết');
+      const b = h(
+        'button',
+        { class: 'game-dict', type: 'button', 'aria-label': 'Từ điển nhạc nhỏ' },
+        h('span', { class: 'gd-emoji', 'aria-hidden': 'true' }, '📘'),
+        h('span', { class: 'gd-title' }, 'Từ điển nhạc nhỏ'),
+        badge,
+      );
+      b.addEventListener('click', () => app.show(lazyScreen(glossaryMod, (m) => m.glossaryScreen(app, toHub))));
+      void glossaryMod.load().then(
+        (m) => {
+          const label = theoryBadge(m.glossaryNewCount(app.store.get()));
+          if (label && b.isConnected) {
+            badge.textContent = label;
+            badge.classList.remove('none');
+            newPillOn(b);
+          }
+        },
+        () => undefined,
+      );
+      return b;
+    };
     root.append(
       h(
         'div',
@@ -79,7 +108,7 @@ export function gamesScreen(app: App): Screen {
           mascot('wave', 72),
           h('h1', { class: 'title' }, '🎮 Trò chơi'),
         ),
-        h('div', { class: 'stage scrollable' }, h('div', { class: `game-cards n${GAME_IDS.length}` }, ...GAME_IDS.map(card))),
+        h('div', { class: 'stage scrollable' }, h('div', { class: `game-cards n${GAME_IDS.length}` }, ...GAME_IDS.map(card)), dictCard()),
         h('div', { class: 'actions' }, backButton(() => app.show(homeScreen(app)))),
       ),
     );

@@ -23,9 +23,10 @@
  *   E  Cập nhật an toàn: phát bản mới (bản sao dist/ có sw.js + index.html khác) → giữa buổi học KHÔNG tải lại;
  *      về màn chính (điểm an toàn) → tự tải lại sang bản mới, dữ liệu còn nguyên.
  *   F  Bài tập về nhà (+ 2026-10-16): tuần 3 bài w3-l3 — lượt "Chú cừu nhỏ" cố ý chưa đạt (phiếu bố mẹ thiếu ý) → có bài
- *      tập; học xong bài → 🎁 Chọn 1 bài con thích → mở bài → quay ra. Đồng hồ app +1 ngày (CLOCK_SHIM), tuần 4: 📍 Tìm Đô giữa →
- *      📝 Bài tập về nhà → "Bỏ qua" → khởi động → … → màn kết; +2 ngày: đàn bài tập (đạt) → bài tập được xóa → khởi động
- *      → … → màn kết (ngày +1/+2 nhảy đồng hồ 30 phút ở khởi động → app tự rút gọn buổi như khi hết giờ).
+ *      tập; học xong bài → 🎁 Chọn 1 bài con thích → mở bài → quay ra. Đồng hồ app +1 ngày (CLOCK_SHIM), tuần 4 + nhật ký lệch
+ *      quãng 8: 📍 Tìm Đô giữa → 📝 Bài tập về nhà (THAY khởi động bằng nhạc — 2026-10-17) → "Bỏ qua" → … → màn kết; +2 ngày:
+ *      đàn bài tập (đạt) → bài tập được xóa → … → màn kết (ngày +1/+2 nhảy đồng hồ 30 phút ở bài nhạc đầu buổi → app tự rút
+ *      gọn buổi như khi hết giờ).
  *
  * Kết quả: ảnh chụp từng bước, log, summary.json trong thư mục ra (mặc định <scratchpad>/e2e-N).
  * Mã thoát ≠ 0 nếu có kịch bản hỏng (lỗi console/exception/request hỏng ngoài dự kiến cũng tính là hỏng).
@@ -420,6 +421,8 @@ const screenKind = () => {
   // v5.2: đọc nhạc 1 phút mỗi ngày (từ tuần 8)
   if (q('.sight-daily-tag')) return 'sight-daily';
   if (txt(q('.step-tag')).startsWith('Tư thế')) return 'posture';
+  // (2026-10-17) Nhạc công nhỏ (musician*.ts): dịch giọng / đàn theo tai / đệm hợp âm / đánh bóng / buổi diễn nhỏ
+  if (q('.mu-stage')) return 'musician:' + (txt(q('.step-tag')) || '?');
   if (q('.iv-stage')) return 'improv:' + ((q('.iv-stage').className.match(/iv-(black-keys|question-answer|compose)/) || [])[1] || '?');
   if (q('.tq-art-box, .tq-list, .tq-timer')) return 'technique';
   if (q('.dyn-pair, .dyn-card')) return 'dynamics';
@@ -441,7 +444,7 @@ const screenKind = () => {
   if (q('.choice-row')) return 'quiz:choice';
   if (txt(q('.step-tag')) === 'Trò chơi' || /^Nốt nào đây|^Nghe các nốt|^Con đúng \d+ \/ \d+/.test(title)) return 'quiz';
   if (q('.note-view, .demo-caption') || title === 'Con sẵn sàng chưa?' || (q('.keyboard-wrap') && q('.countdown'))) return 'notes';
-  if (q('.keyboard-wrap') && /^(🎉 )?Đúng rồi!$|^Chưa đúng|^👀 Nhìn lại/.test(title)) return 'quiz';
+  if (q('.keyboard-wrap') && /^(🎉 )?Đúng rồi!$|^Chưa đúng|^Nghe lại nhé|^👀 Nhìn lại/.test(title)) return 'quiz';
   if (q('.library-wrap')) return 'library';
   if (q('.hero-title') && txt(q('.hero-title')).startsWith('Học Piano')) return 'start';
   return 'other';
@@ -456,7 +459,7 @@ const decide = () => {
   const kind = screenKind();
   const out = { kind, sig: signature(), actions: [], home: kind === 'home' };
   // Màn đáp án của trò nốt/quãng: 'ok' | 'wrong' (để kiểm đáp án đọc từ khuông là đúng)
-  { const t = txt(document.querySelector('.stage .title')); out.verdict = /^(🎉 )?Đúng rồi!$/.test(t) ? 'ok' : /^Chưa đúng|^👀 Nhìn lại/.test(t) ? 'wrong' : null; }
+  { const t = txt(document.querySelector('.stage .title')); out.verdict = /^(🎉 )?Đúng rồi!$/.test(t) ? 'ok' : /^Chưa đúng|^Nghe lại nhé|^👀 Nhìn lại/.test(t) ? 'wrong' : null; }
   if (out.home) return out;
   const tap = (el, what) => el && out.actions.push(target(el, what));
   const q = (s) => document.querySelector(s);
@@ -557,10 +560,12 @@ const decide = () => {
     tap(btn('Xong'), 'Xong (phím đen)');
     return out;
   }
+  // (2026-10-17) Buổi diễn nhỏ: chọn bài đầu tiên (thẻ .stage-pick) rồi Mời khán giả, Bắt đầu biểu diễn (ORDER)
+  if (q('.stage-picks') && !q('.stage-pick.on') && qa('.stage-pick')[0]) { tap(qa('.stage-pick')[0], 'chọn bài diễn'); return out; }
   // Thứ tự ưu tiên các nút còn lại
   const ORDER = ['Đúng hết!', 'Về nhà rồi!', 'Con làm đúng rồi', 'Bố mẹ: qua', 'Bố mẹ: tiếp', 'Bố mẹ đã học xong', 'Tặng huy chương',
     'Lưu vào Thư viện', 'Con xong rồi', 'Đúng rồi', 'Xong rồi', 'Tiếp', 'Câu tiếp', 'Con làm nào', 'Con đàn', 'Con vỗ',
-    'Bắt đầu', 'Dễ — con đàn được'];
+    'Bắt đầu', 'Dễ — con đàn được', 'Dễ', 'Mời khán giả', 'Bắt đầu biểu diễn', 'Rõ rồi!'];
   for (const l of ORDER) {
     const b = btn(l);
     if (b) { tap(b, l); return out; }
@@ -644,6 +649,17 @@ const tapText = (text, timeoutMs) => tapBy(`btn(${JSON.stringify(text)})`, text,
 const tapTextStarts = (text, timeoutMs) => tapBy(`btnStarts(${JSON.stringify(text)})`, text, timeoutMs);
 const tapSel = (sel, timeoutMs) => tapBy(`document.querySelector(${JSON.stringify(sel)})`, sel, timeoutMs);
 
+/**
+ * (2026-10-17) Màn chính "1 nút to": danh sách bài / 🎹 Đàn tự do / 👤 Khách chơi nằm sau link "Xem các bài"
+ * ([data-test="lessons-toggle"]) — mở ra trước khi chạm các nút đó (không có link / đã mở thì thôi).
+ */
+const openLessons = async () => {
+  const opened = await evaluate(
+    `(() => { const p = document.getElementById('home-lessons'); const t = document.querySelector('[data-test="lessons-toggle"]'); if (p && p.hidden && t) { t.click(); return true; } return false; })()`,
+  ).catch(() => false);
+  if (opened) await sleep(250);
+};
+
 async function waitFor(expr, what, timeoutMs = 15_000) {
   const end = Date.now() + timeoutMs;
   let last;
@@ -705,8 +721,12 @@ const STUCK_MS = 120_000;
  */
 async function runSession(label, start, o = {}) {
   const tStart = Date.now();
-  if (start === 'next') await tapTextStarts('Học tiếp:');
-  else await tapSel(`[data-lesson="${start}"]`);
+  // (2026-10-17) nút ▶ to của màn chính mang tên bài hát hôm nay → chạm theo data-test (không theo chữ "Học tiếp:")
+  if (start === 'next') await tapSel('[data-test="continue"]');
+  else {
+    await openLessons();
+    await tapSel(`[data-lesson="${start}"]`);
+  }
   log(`  ▶ buổi ${label} (${start})`);
   // Màn buổi học tải lười: chờ rời màn chính (tối đa 10 s) trước khi lái tự động — tránh tưởng buổi đã kết thúc
   // (2026-10-16: trước đây chờ ".home-stage" — lớp này không còn trong app nên vòng chờ không có tác dụng)
@@ -822,9 +842,13 @@ async function setWeek(week) {
   await openParent();
   await openAdvanced();
   // <select> gốc: chọn bằng bàn phím không ổn định ở headless → đặt giá trị + sự kiện change (như người dùng chọn)
+  // (2026-10-17) Ô chọn tuần = chọn Cấp (.week-pick-level) rồi Tuần trong cấp (.week-pick-week)
   const ok = await evaluate(
-    inPage(`const s = document.querySelector('details.adv select'); if (!s) return false; s.scrollIntoView({block:'center'});
-      s.value = '${week}'; s.dispatchEvent(new Event('change', { bubbles: true })); return true;`),
+    inPage(`const lv = document.querySelector('details.adv .week-pick-level'); if (!lv) return false; lv.scrollIntoView({block:'center'});
+      const o = [...lv.options].find((x) => Number(x.dataset.from) <= ${week} && ${week} <= Number(x.dataset.to)); if (!o) return false;
+      lv.value = o.value; lv.dispatchEvent(new Event('change', { bubbles: true }));
+      const wk = document.querySelector('details.adv .week-pick-week'); if (!wk) return false;
+      wk.value = '${week}'; wk.dispatchEvent(new Event('change', { bubbles: true })); return true;`),
   );
   assert(ok, 'Không thấy ô chọn tuần');
   await sleep(300);
@@ -920,12 +944,14 @@ async function main() {
     const s1 = await runSession('w1-1', 'next');
     const prog = await evaluate(
       inPage(`return { done: document.querySelectorAll('.lesson-row.is-done').length, stars: txt(document.querySelector('.today-stars')),
-        dots: document.querySelectorAll('.goal-dots .dot.on').length, next: label(btnStarts('Học tiếp:') || document.body) };`),
+        dots: document.querySelectorAll('.goal-days .gd.on').length, next: label(document.querySelector('[data-test="continue"]') || document.body) };`),
     );
-    notes.push(`Sau buổi 1: ${prog.done} bài ✓, sao hôm nay "${prog.stars}", chấm tuần ${prog.dots}, Học tiếp → "${prog.next}"`);
+    notes.push(`Sau buổi 1: ${prog.done} bài ✓, sao hôm nay "${prog.stars}", chấm mục tiêu ${prog.dots}, nút ▶ → "${prog.next}"`);
     assert(prog.done >= 1, 'Màn chính chưa đánh dấu bài 1 đã học');
     assert(prog.stars, 'Màn chính chưa hiện sao hôm nay');
-    assert(prog.dots >= 1, 'Mục tiêu tuần chưa có chấm nào');
+    // (2026-10-17) Màn chính "1 nút to": chấm tuần cũ (.goal-dots) không còn; chấm NGÀY (.goal-days, trong "Xem các bài")
+    // chỉ có ở tuần tính theo ngày — tuần 1 là MỘT buổi thử thách → không có chấm. Kiểm nút ▶ mang tên bài/hoạt động.
+    assert(prog.next && !/Mức\s*\d/.test(prog.next), `Nút ▶ phải mang tên bài hôm nay (đang "${prog.next}")`);
     const d1 = await appData();
     assert(d1.progress.lessonsCompleted.includes('w1-l1'), 'lessonsCompleted thiếu w1-l1');
     notes.push(`Buổi 1 các màn: ${s1.seq.join(' → ')}`);
@@ -996,7 +1022,9 @@ async function main() {
     const kinds = [...allKinds].filter((k) => !['home', 'other'].includes(k)).sort();
     notes.push(`Các loại màn đã chạy hết: ${kinds.join(', ')}`);
     // v0.18: 'review-song' có thể bị gộp vào phần khởi động bằng nhạc (buổi đủ 7 màn) → không bắt buộc
-    const want = ['warmup', 'posture', 'notes', 'technique', 'song', 'closing', 'session-end', 'quiz:read'];
+    // (+ 2026-10-17, OWNER duyệt "Buổi học ≥ 60% đàn thật") thẻ tư thế đầy đủ ≤ 1 lần / tuần lịch — kịch bản A (buổi đầu tiên)
+    // đã hiện trong tuần này → B không bắt buộc 'posture'
+    const want = ['warmup', 'notes', 'technique', 'song', 'closing', 'session-end', 'quiz:read'];
     if (B_WEEKS.some((w) => w >= 8)) want.push('sight-daily'); // v5.2: đọc nhạc 1 phút mỗi ngày
     if (B_WEEKS.some((w) => [15, 17, 18, 19].includes(w))) want.push('rhythm'); // nhịp: bài đầu các tuần này
     if (!QUICK) want.push('quiz:interval', 'improv:black-keys', 'improv:question-answer', 'improv:compose', 'quiz:landmark', 'dynamics', 'sight');
@@ -1081,6 +1109,9 @@ async function main() {
     }
     assert((await kindNow()) === 'parent', 'Sao lưu làm rời màn Phụ huynh');
     // v0.21.1: nút 📖 mở "Hướng dẫn nhanh cho bố mẹ"; 4 thẻ lần đầu nằm ở "Xem lại 4 thẻ"
+    // (2026-10-17) 📊 Báo cáo / 📖 Hướng dẫn / 👀 Xem tay nằm trong menu "⋯ Thêm" ở đầu màn Phụ huynh
+    await tapSel('details.parent-menu > summary');
+    await waitFor(`document.querySelector('details.parent-menu')?.open`, 'mở menu ⋯ Thêm');
     await tapText('Hướng dẫn');
     await waitFor(`!!document.querySelector('.screen') && /Xem lại 4 thẻ/.test(document.body.innerText)`, 'Hướng dẫn nhanh từ màn Phụ huynh');
     await tapText('Xem lại 4 thẻ');
@@ -1155,7 +1186,7 @@ async function main() {
     await toHome().catch(() => undefined);
     await waitFor(`screenKind() === 'home'`, 'màn chính');
     // Vào giữa buổi học (màn khởi động bằng nhạc / tư thế — KHÔNG phải điểm an toàn)
-    await tapTextStarts('Học tiếp:');
+    await tapSel('[data-test="continue"]');
     await waitFor(`!['home', 'start'].includes(screenKind())`, 'đã vào buổi học');
     await evaluate(`window.__e2eMarker = 'v1-page'; true`);
     const kindIn = await kindNow();
@@ -1233,16 +1264,17 @@ async function main() {
   });
 
   // ---------- F ----------
-  await scenario('F', 'Bài tập về nhà: lượt chưa đạt (+ 🎁 bài thưởng) → ngày sau: Tìm Đô giữa → Bỏ qua → khởi động → … → ngày sau nữa: đàn bài tập → khởi động → …', async (notes) => {
+  await scenario('F', 'Bài tập về nhà: lượt chưa đạt (+ 🎁 bài thưởng) → ngày sau: Tìm Đô giữa → Bỏ qua (thay khởi động) → … → ngày sau nữa: đàn bài tập → …', async (notes) => {
     // Đồng hồ giả (CLOCK_SHIM) cho mọi lần tải trang từ đây; ngày 0 = hôm nay thật
     await cdp.send('Page.addScriptToEvaluateOnNewDocument', { source: CLOCK_SHIM });
     const d0 = await setClockDays(0);
     const flags = (o) => evaluate(`Object.assign(window, ${JSON.stringify(o)}); true`);
-    // Nhảy đồng hồ 30 phút ngay khi tới khởi động bằng nhạc → hết thời lượng buổi → app tự sang màn kết sau bước kế (đỡ thời gian chạy)
+    // Nhảy đồng hồ 30 phút ngay khi tới bài nhạc đầu buổi (bài tập về nhà / khởi động bằng nhạc) → hết thời lượng buổi → app tự
+    // sang màn kết sau hoạt động đầu tiên của bài (đỡ thời gian chạy)
     const jumpAtWarmup = () => {
       let done = false;
       return async (d) => {
-        if (done || d.kind !== 'warmup') return;
+        if (done || (d.kind !== 'warmup' && d.kind !== 'homework')) return;
         done = true;
         await flags({ __e2eClockExtraMs: 30 * 60_000 });
       };
@@ -1269,15 +1301,19 @@ async function main() {
     assert(picked.song && picked.opened, `Chọn bài thưởng mà màn bài hát không mở (${JSON.stringify(picked)})`);
     notes.push(`Bài thưởng: chọn "${picked.song}" → mở "${picked.opened}" → quay ra → màn chính`);
 
-    // Ngày +1 — tuần 4 (buổi đầu tuần → 📍 Tìm Đô giữa) → 📝 bài tập về nhà → "Bỏ qua" → khởi động → … (hết giờ) → màn kết
+    // Ngày +1 — tuần 4, bé vừa lệch quãng 8 hai lần (nhật ký trong máy → 📍 Tìm Đô giữa) → 📝 bài tập về nhà → "Bỏ qua" → … (hết
+    // giờ) → màn kết. (+ 2026-10-17, OWNER duyệt "Buổi học ≥ 60% đàn thật": bài tập về nhà THAY khởi động bằng nhạc — không có cả
+    // hai; Tìm Đô giữa chỉ khi bé thật sự lệch quãng 8, không còn vì "buổi đầu tuần")
     const d1 = await setClockDays(1);
     assert(d1 > d0, `Đồng hồ giả chưa sang ngày mới (${d1} / ${d0})`);
     await setWeek(4);
+    await evaluate(`localStorage.setItem('piano-be-9-octave-log', JSON.stringify({ events: [Date.now() - 3 * 3600e3, Date.now() - 2 * 3600e3] })); true`);
     await flags({ __e2eSkipWarmup: true });
     const s1 = await runSession('F-day1', 'next', { onStep: jumpAtWarmup() });
     notes.push(`Ngày +1 ${d1} (Bỏ qua bài tập): ${s1.seq.join(' → ')} (${(s1.ms / 1000).toFixed(0)}s)`);
     assert(order(s1.seq, 'middle-c', 'homework'), 'Không có "Tìm Đô giữa" rồi "Bài tập về nhà" ở buổi đầu tuần 4 ngày sau');
-    assert(order(s1.seq, 'homework', 'warmup', 'closing', 'session-end'), 'Sau "Bỏ qua" bài tập về nhà buổi không đi tiếp khởi động → … → màn kết');
+    assert(order(s1.seq, 'homework', 'closing', 'session-end'), 'Sau "Bỏ qua" bài tập về nhà buổi không đi tiếp → … → màn kết');
+    assert(!s1.seq.includes('warmup'), 'Buổi có bài tập về nhà mà vẫn có khởi động bằng nhạc (phải THAY, không cả hai)');
     const hw1 = (await appData()).settings.homework;
     assert(hw1 && hw1.at === hw0.at, 'Bỏ qua mà bài tập về nhà bị xóa / đổi');
 
@@ -1286,7 +1322,8 @@ async function main() {
     await flags({ __e2eDoHomework: true, __e2eSkipWarmup: true });
     const s2 = await runSession('F-day2', 'next', { onStep: jumpAtWarmup() });
     notes.push(`Ngày +2 ${d2} (đàn bài tập): ${s2.seq.join(' → ')} (${(s2.ms / 1000).toFixed(0)}s)`);
-    assert(order(s2.seq, 'homework', 'warmup', 'closing', 'session-end'), 'Đàn bài tập về nhà xong buổi không đi tiếp khởi động → … → màn kết');
+    assert(order(s2.seq, 'homework', 'closing', 'session-end'), 'Đàn bài tập về nhà xong buổi không đi tiếp → … → màn kết');
+    assert(!s2.seq.includes('warmup'), 'Buổi có bài tập về nhà mà vẫn có khởi động bằng nhạc (phải THAY, không cả hai)');
     const data2 = await appData();
     const hwRuns = data2.sessions.filter((x) => x.date === d2).flatMap((x) => x.songRuns).filter((r) => r.songId === hw0.songId && r.passed);
     assert(hwRuns.length, `Không có lượt đạt bài ${hw0.songId} ở ngày +2`);

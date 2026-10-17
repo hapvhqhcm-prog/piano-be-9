@@ -14,7 +14,7 @@ import { TakeReplay } from './songTake';
 import { MicHonestyWatch, micHonestyBox } from '../components/micHonesty';
 import { selfStudy } from '../selfStudy';
 import { songEverPlayed, songMastered, startTempoBpm } from '../../lessons/lessonEngine';
-import { tempoAdvice, todayTempoOutcomes } from '../../lessons/songStats';
+import { familiarMinBpm, songPassedBefore, tempoAdvice, todayTempoOutcomes } from '../../lessons/songStats';
 import { buildStaff, groupAt, groups, halt, handsOn, lightOnset, micOn, pulseWindow, scheduleAccomp, setBar, solo, together, type SongCtx, type SongHooks } from './songState';
 import { onWaitChord, onWaitHands, onWaitInput, onWaitMic, showWaitNote, startWait } from './songWait';
 import { READ_FIRST_IDLE_MS, READ_FIRST_TEXT, readFirstDue, songFamiliar } from '../../lessons/readingAids';
@@ -52,7 +52,9 @@ function openTempoBpm(full: Tune, app: App, phrase: [number, number] | null): nu
   const start = startTempoBpm(full, data);
   if (full.id.startsWith('sight')) return start;
   const hold = tempoAdvice(todayTempoOutcomes(data, full.id, phrase)).hold;
-  return hold !== null ? Math.min(start, hold) : start;
+  const bpm = hold !== null ? Math.min(start, hold) : start;
+  // (+ 2026-10-17, OWNER duyệt) bài QUEN không bao giờ MỞ dưới 56 (kể cả tốc độ đã lùi hôm nay) — songStats.familiarMinBpm
+  return songPassedBefore(data, full.id) ? Math.max(bpm, familiarMinBpm(full)) : bpm;
 }
 
 export function songScreen(app: App, full: Tune, opts: SongOptions, hooks: SongHooks) {
@@ -102,6 +104,7 @@ function songMount(app: App, full: Tune, opts: SongOptions, hooks: SongHooks) {
     const head = new SongHead({
       full,
       opts,
+      backingAllowed: () => !!app.store.settings.accompaniment,
       canEdit: () => (c.state === 'idle' || c.state === 'result') && !c.focus,
       pick: (p: Partial<SongChoices>) => {
         if (p.handSel) c.handSel = p.handSel;
@@ -214,6 +217,7 @@ function songMount(app: App, full: Tune, opts: SongOptions, hooks: SongHooks) {
       hardBack: null,
       fails: 0,
       easyEnd: false,
+      masteredBefore: full.id.startsWith('sight') || opts.stage ? undefined : songMastered(app.store.get(), full.id),
       missByMeasure: new Map<number, number>(),
       wLog: [],
       lastHands: null,
@@ -309,11 +313,12 @@ function songMount(app: App, full: Tune, opts: SongOptions, hooks: SongHooks) {
               : mode === 'wait'
               ? // Bài mới: nghe – hát – rồi mới đàn (gộp một dòng cho gọn)
                 firstTime
-                ? '🎬 Xem mẫu và hát tên nốt theo thầy — rồi Bắt đầu đàn từng nốt.'
+                ? // (+ 2026-10-17, OWNER duyệt "Buổi học ≥ 60% đàn thật") chữ của bé ngắn (≤ 12 tiếng mỗi màn)
+                  '🎬 Xem mẫu, hát theo — rồi đàn từng nốt'
                 : micOn(c)
-                  ? '🎤 Bấm Bắt đầu rồi đàn từng nốt — app nghe và tự đi tiếp.'
-                  : 'Bấm 🎬 Xem mẫu để xem thầy đàn, rồi Bắt đầu và đàn từng nốt.'
-              : `Đếm vào rồi đàn theo tiếng "tích" (${bpm} nhịp/phút).${pulseWindow(c) ? ' 🤫 Giữa bài máy sẽ im 2 ô — con đếm thầm trong đầu nhé!' : ''}`,
+                  ? '🎤 Bắt đầu rồi đàn từng nốt'
+                  : '▶ Bắt đầu rồi đàn từng nốt'
+              : `🥁 Đếm vào rồi đàn theo “tích” · ♩ ${bpm}${pulseWindow(c) ? ' · 🤫 máy im 2 ô — đếm thầm nhé' : ''}`,
           ),
         ),
       );

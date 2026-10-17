@@ -4,7 +4,8 @@
  * - Mỗi bản: version (đúng package.json), ngày phát hành, 2–5 ý ngắn nói bố mẹ được gì / tìm ở đâu.
  * - Bản MỚI NHẤT ĐỨNG ĐẦU; bản đầu tiên phải trùng package.json (tests/changelog.test.ts canh) → khi tăng phiên bản
  *   nhớ thêm một mục ở đây.
- * - Chỉ hiện ở màn Phụ huynh (thẻ thu gọn được, "Đã xem" thì ẩn) — KHÔNG bao giờ hiện cho bé.
+ * - Chỉ hiện ở màn Phụ huynh (thẻ thu gọn được, "Đã xem" thì ẩn) — KHÔNG bao giờ hiện cho bé. Thẻ chỉ hiện khi có bản
+ *   `parentAction: true` chưa xem (parentWhatsNew); bản khác nằm lặng lẽ ở Nâng cao › "Bản mới".
  * - settings.lastSeenVersion = bản bố mẹ đã xem. Dữ liệu cũ (chưa có trường này) coi như đã xem tới CHANGELOG_BASELINE.
  */
 
@@ -15,6 +16,12 @@ export interface ChangelogEntry {
   date: string;
   /** 2–5 ý, mỗi ý một câu ngắn cho bố mẹ */
   items: readonly string[];
+  /**
+   * (+ 2026-10-17, OWNER duyệt "Có gì mới ít hơn") Bản này có việc BỐ MẸ cần biết / làm (tính năng mới cho bố mẹ, cần
+   * cài lại, cách dùng đổi) → hiện thẻ "🆕 Có gì mới" ở màn Phụ huynh. Không có = bản sửa / làm đẹp → chỉ liệt kê lặng lẽ ở
+   * Nâng cao › "Bản mới".
+   */
+  parentAction?: boolean;
 }
 
 /** Bản cuối cùng TRƯỚC khi có nhật ký này — dữ liệu cũ không có lastSeenVersion coi như đã xem tới đây. */
@@ -22,8 +29,31 @@ export const CHANGELOG_BASELINE = '0.15.0';
 
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
+    version: '0.29.0',
+    date: '2026-10-17',
+    parentAction: true,
+    items: [
+      'Màn Phụ huynh gọn: thẻ "Hôm nay bố mẹ cần" (tối đa 3 việc) và "Vì sao?" cho tuần học.',
+      'Sao lưu: mỗi tuần ở cuối báo cáo tuần. Xoá biểu tượng app = mất dữ liệu!',
+      '🩺 Kiểm tra sức khỏe app hằng tháng (~3 phút); thẻ "Khi có sự cố"; 👤 Khách chơi.',
+      'Buổi học gọn, đàn nhiều hơn; màn chính 1 nút ▶; nhạc nền khi đàn theo nhịp.',
+      'Giáo trình 46 tuần: thêm tuần ôn & buổi diễn nhỏ, song tấu, dịch giọng, đệm hợp âm, đàn theo tai.',
+    ],
+  },
+  {
+    version: '0.28.0',
+    date: '2026-10-17',
+    items: [
+      'Tự cân độ khó: con vấp nhiều thì buổi sau nhẹ hơn; làm rất tốt thì có thử thách ⭐ tuỳ chọn.',
+      'Phần khởi động xoay vòng nhiều trò, không lặp một trò hai buổi liền.',
+      '🌱 Nghe lần đầu → hôm nay: khi thuộc bài, nghe lại bản thu đầu tiên để thấy con tiến bộ.',
+      'Bàn phím to hơn ở bài ngắn một tay.',
+    ],
+  },
+  {
     version: '0.27.0',
     date: '2026-10-16',
+    parentAction: true,
     items: [
       'Sửa lỗi: sau màn "Bài tập về nhà" buổi học bị kẹt ở phần khởi động.',
       'Từ tuần 8: bài mới cho bé tự đọc trước, nghe mẫu sau; vấp thì nghe mẫu đúng câu đó.',
@@ -54,6 +84,7 @@ export const CHANGELOG: readonly ChangelogEntry[] = [
   {
     version: '0.24.0',
     date: '2026-10-15',
+    parentAction: true,
     items: [
       'Hình tư thế tay mới: so sánh Đúng ✓ / Chưa đúng ✗ (khớp gốc, đầu ngón, ngón cái, cổ tay, cánh tay).',
       'Đầu buổi: 4 thẻ tư thế ngắn; trang "✋ Tư thế tay" và "👀 Bố mẹ xem tay con".',
@@ -88,6 +119,7 @@ export const CHANGELOG: readonly ChangelogEntry[] = [
   {
     version: '0.23.0',
     date: '2026-10-12',
+    parentAction: true,
     items: [
       '👦 Con tự học: bố mẹ bận thì bé tự học, app ghi lại chỗ cần bố mẹ nghe.',
       '🕑 Chờ bố mẹ xem: tối nghe lại vài đoạn, bấm Đạt / Chưa đạt — khoảng 2 phút.',
@@ -98,6 +130,7 @@ export const CHANGELOG: readonly ChangelogEntry[] = [
   {
     version: '0.22.0',
     date: '2026-10-10',
+    parentAction: true,
     items: [
       '🎙️ Đàn để thêm bài (trong "Bố mẹ thêm bài"): đàn giai điệu, app tự ghi nốt và nhịp.',
       'Nhãn "Mới" nhỏ trên bài hát và trò chơi bé chưa thử — tự mất khi bé chơi lần đầu.',
@@ -106,6 +139,7 @@ export const CHANGELOG: readonly ChangelogEntry[] = [
   {
     version: '0.21.1',
     date: '2026-10-10',
+    parentAction: true,
     items: [
       '📖 Hướng dẫn nhanh cho bố mẹ (nút 📖 ở đầu màn này): mỗi việc vài dòng, có nút "Mở ngay".',
       'Mục "Có gì mới" này — sau mỗi lần cập nhật sẽ kể ngắn những gì thay đổi.',
@@ -116,6 +150,7 @@ export const CHANGELOG: readonly ChangelogEntry[] = [
   {
     version: '0.21.0',
     date: '2026-10-09',
+    parentAction: true,
     items: [
       'Tiếng đàn trong app ấm và tròn hơn, bài đàn mẫu nghe hay hơn.',
       'Thêm 4 trò chơi luyện tai và nhịp (nút 🎮 Trò chơi ở màn của bé) — giờ có 7 trò.',
@@ -164,6 +199,7 @@ export const CHANGELOG: readonly ChangelogEntry[] = [
   {
     version: '0.18.1',
     date: '2026-10-09',
+    parentAction: true,
     items: [
       'Cài micro có nút “🎙️ Đo micro & tạo báo cáo”: app tự nghe khoảng 1 phút.',
       'Bấm “Sao chép báo cáo” rồi gửi cho người hỗ trợ để chỉnh micro cho đúng đàn nhà.',
@@ -172,6 +208,7 @@ export const CHANGELOG: readonly ChangelogEntry[] = [
   {
     version: '0.18.0',
     date: '2026-10-08',
+    parentAction: true,
     items: [
       'Thêm Cấp 4 (tuần 32–43): gam, hợp âm rải, pedal, nhịp 6/8 — tổng 126 bài.',
       'Buổi học mở đầu bằng âm nhạc; thêm “Hát rồi đàn” và 1 phút đọc nốt (từ tuần 8).',
@@ -192,6 +229,7 @@ export const CHANGELOG: readonly ChangelogEntry[] = [
   {
     version: '0.16.1',
     date: '2026-10-08',
+    parentAction: true,
     items: [
       'Micro nghe được tiếng đàn nhẹ — không cần đánh thật to nữa.',
       'Trong buổi học, app tự tăng độ nhạy micro khi bé đàn nhẹ.',
@@ -252,5 +290,16 @@ export function whatsNew(lastSeen: unknown, hasHistory: boolean, log: readonly C
   else if (!hasHistory) return { kind: 'first-install', entries: [] };
   else since = CHANGELOG_BASELINE;
   const entries = log.filter((e) => compareVersions(e.version, since) > 0);
+  return entries.length ? { kind: 'update', entries } : { kind: 'same', entries: [] };
+}
+
+/**
+ * (+ 2026-10-17) Thẻ "🆕 Có gì mới" cho bố mẹ: như whatsNew nhưng CHỈ các bản `parentAction` — không có bản nào như vậy →
+ * 'same' (không hiện thẻ; các bản còn lại xem ở Nâng cao › "Bản mới").
+ */
+export function parentWhatsNew(lastSeen: unknown, hasHistory: boolean, log: readonly ChangelogEntry[] = CHANGELOG): WhatsNew {
+  const wn = whatsNew(lastSeen, hasHistory, log);
+  if (wn.kind !== 'update') return wn;
+  const entries = wn.entries.filter((e) => e.parentAction);
   return entries.length ? { kind: 'update', entries } : { kind: 'same', entries: [] };
 }

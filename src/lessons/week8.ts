@@ -10,6 +10,7 @@ import type { WeekPlan } from './types';
  * tuần 1–7 Sol vẫn là ngón 5 ở thế Đô.
  * Gợi ý rút dần: khuông + tên + phím sáng → khuông + tên → chỉ khuông.
  * Tiêu chí: chơi bài tuần 6 chỉ nhìn khuông (phiếu 3 ý của bố mẹ, hoặc micro ≥ 80%) — v5: ở 2 NGÀY khác nhau.
+ * (2026-10-17, OWNER duyệt "Bớt Bài ca niềm vui") bài tiêu chí: "Chuông ngân vang" (cũng bài tuần 6, thế Đô) thay "Bài ca niềm vui".
  * (2026-10-08, OWNER duyệt) rút dần phím sáng: tuần đầu tiên có 'staff' (week4.ts "GỢI Ý RÚT DẦN");
  * "Kìa con bướm vàng" có dấu luyến; ứng tấu 1 phút Hỏi – Đáp "bước & nhảy" ở bài 1.
  */
@@ -22,8 +23,8 @@ export const WEEK8: WeekPlan = {
   warmup: { variant: 'read', pool: ['C4', 'D4', 'E4', 'F4', 'G4'], rounds: 6 },
   teach: { emoji: '👨‍🏫', text: 'Con chỉ trên khuông cho bố mẹ: Đô "đội mũ", Mi "trên vạch 1", Sol "trên vạch 2".' },
   drills: ['finger-tap', 'wrist-circle'],
-  criterion: { text: 'Chơi "Bài ca niềm vui" chỉ nhìn khuông nhạc — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
-  kidGoal: 'Chỉ nhìn khuông: Bài ca niềm vui — 2 hôm nhé! 📖',
+  criterion: { text: 'Chơi "Chuông ngân vang" chỉ nhìn khuông nhạc — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
+  kidGoal: 'Chỉ nhìn khuông: Chuông ngân vang — 2 hôm nhé! 📖',
   lessons: [
     {
       id: 'w8-l1',
@@ -75,9 +76,9 @@ export const WEEK8: WeekPlan = {
       title: 'Đàn nhìn khuông',
       emoji: '👀',
       activities: [
-        { kind: 'quiz', title: 'Đọc nốt 📖', intro: 'Chạm đúng phím. Khó thì tìm nốt mốc rồi đếm!', quiz: { variant: 'read', pool: ['C4', 'D4', 'E4', 'F4', 'G4'], rounds: 6 } },
-        { kind: 'song', songId: 'ode_to_joy_easy', mode: 'wait', hints: 'names', intro: 'Lần này phím không sáng nữa — nhìn tên nốt trên khuông nhé.' },
-        { kind: 'song', songId: 'ode_to_joy_easy', mode: 'tempo', level: 2, hints: 'staff', intro: 'Thử thách: chỉ nhìn khuông nhạc mà đàn!', pulseDrop: true },
+        // (2026-10-17) bỏ trò đọc nốt ở đây (khởi động của tuần đã là đọc nốt) — "Chuông ngân vang" dài gấp đôi bài cũ, buổi ≤ ~12 phút
+        { kind: 'song', songId: 'jingle_bells', mode: 'wait', hints: 'names', intro: 'Lần này phím không sáng nữa — nhìn tên nốt trên khuông nhé.' },
+        { kind: 'song', songId: 'jingle_bells', mode: 'tempo', level: 2, hints: 'staff', intro: 'Thử thách: chỉ nhìn khuông nhạc mà đàn!', pulseDrop: true },
       ],
     },
     {

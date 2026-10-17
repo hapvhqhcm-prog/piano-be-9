@@ -96,10 +96,10 @@ describe('lessonEngine', () => {
   });
 
   it('31 tuần (v5.1: 10 + 11 + 10), mỗi tuần có bài, "con làm thầy", tiêu chí và mục tiêu cho bé; bài hát trong bài học đều tồn tại', () => {
-    // Cấp 4 (2026-10-08): + 12 tuần (32–43) ở cuối
-    expect(WEEKS).toHaveLength(43);
-    expect(MAX_WEEK).toBe(43);
-    expect(WEEKS.map((w) => w.week)).toEqual(Array.from({ length: 43 }, (_, i) => i + 1));
+    // Cấp 4 (2026-10-08): + 12 tuần ở cuối; (2026-10-17) rev 5: + 3 tuần ôn 27 · 32 · 38 → 46 tuần
+    expect(WEEKS).toHaveLength(46);
+    expect(MAX_WEEK).toBe(46);
+    expect(WEEKS.map((w) => w.week)).toEqual(Array.from({ length: 46 }, (_, i) => i + 1));
     const ids = new Set<string>();
     for (const w of WEEKS) {
       expect(w.lessons.length).toBeGreaterThan(0);
@@ -251,7 +251,7 @@ describe('tiêu chí tuần 4–10 (v5: bài hát cần 2 ngày)', () => {
     expect(weekPassed(4, st.get())).toBe(true);
   });
 
-  it('tuần 6: Ode to Joy trọn bài, 60 BPM, 2 ngày; tuần 8: chỉ nhìn khuông, 2 ngày', () => {
+  it('tuần 6: Ode to Joy trọn bài, 60 BPM, 2 ngày; tuần 8: chỉ nhìn khuông (Chuông ngân vang — 2026-10-17), 2 ngày', () => {
     const { st, day } = clock();
     runIn(st, 'w6-l2', run({ songId: 'ode_to_joy_easy', bpm: 50 }));
     day(1);
@@ -261,11 +261,11 @@ describe('tiêu chí tuần 4–10 (v5: bài hát cần 2 ngày)', () => {
     runIn(st, 'w6-l2', run({ songId: 'ode_to_joy_easy' }));
     expect(weekPassed(6, st.get())).toBe(true);
     day(0); // 4/10 — trước ngày phát hành v5
-    runIn(st, 'w8-l2', run({ songId: 'ode_to_joy_easy', hints: 'names' }));
-    runIn(st, 'w8-l2', run({ songId: 'ode_to_joy_easy', hints: 'staff', source: 'parent' })); // trước ngày v5: lượt cũ không phiếu vẫn tính
+    runIn(st, 'w8-l2', run({ songId: 'jingle_bells', hints: 'names' }));
+    runIn(st, 'w8-l2', run({ songId: 'jingle_bells', hints: 'staff', source: 'parent' })); // trước ngày v5: lượt cũ không phiếu vẫn tính
     expect(weekPassed(8, st.get())).toBe(false);
     day(4);
-    runIn(st, 'w8-l2', run({ songId: 'ode_to_joy_easy', hints: 'staff' }));
+    runIn(st, 'w8-l2', run({ songId: 'jingle_bells', hints: 'staff' }));
     expect(weekPassed(8, st.get())).toBe(true);
   });
 
@@ -324,14 +324,15 @@ describe('Cấp 2–3 & luyện tập mỗi ngày', () => {
     phrase: null, total: 20, hits: 18, source: 'mic', passed: true, ...o,
   });
 
-  it('tiêu chí tuần 12, 18, 19, 20, 23, 25, 26, 27, 29 (v5.1: mọi tiêu chí theo ngày cần 2 ngày)', () => {
+  it('tiêu chí tuần 12, 18, 19, 20, 23, 25, 26, 28, 30 (v5.1: mọi tiêu chí theo ngày cần 2 ngày; rev 5: tuần 27–30 cũ +1)', () => {
     const { st, day } = clock();
-    runIn(st, 'w12-l3', run({ songId: 'ode_to_joy_both', mode: 'wait' }));
-    runIn(st, 'w12-l3', run({ songId: 'ode_to_joy_both' }));
+    // (2026-10-17) tuần 12: "Bánh nóng — hai tay" thay "Bài ca niềm vui — hai tay"
+    runIn(st, 'w12-l1', run({ songId: 'hot_cross_buns_both', mode: 'wait' }));
+    runIn(st, 'w12-l1', run({ songId: 'hot_cross_buns_both' }));
     day(1);
-    runIn(st, 'w12-l3', run({ songId: 'ode_to_joy_both', mode: 'wait' }));
+    runIn(st, 'w12-l1', run({ songId: 'hot_cross_buns_both', mode: 'wait' }));
     expect(weekPassed(12, st.get())).toBe(false);
-    runIn(st, 'w12-l3', run({ songId: 'ode_to_joy_both' }));
+    runIn(st, 'w12-l1', run({ songId: 'hot_cross_buns_both' }));
     expect(weekPassed(12, st.get())).toBe(true);
 
     // Tuần 18: Lý cây đa theo nhịp (tốc độ 40 vẫn tính — bài có móc kép)
@@ -397,41 +398,41 @@ describe('Cấp 2–3 & luyện tập mỗi ngày', () => {
     runIn(st, 'w26-l3', run({ songId: 'sight:C5:RH', mode: 'wait' }));
     expect(weekPassed(26, st.get())).toBe(true);
 
-    // Tuần 27: 5 đoạn đọc nhạc đạt, trải trên ≥ 2 ngày
+    // Tuần 28 (27 cũ): 5 đoạn đọc nhạc đạt, trải trên ≥ 2 ngày
     day(0);
-    for (let i = 0; i < 5; i++) runIn(st, 'w27-l1', run({ songId: 'sight:C:RH', mode: 'wait' }));
-    expect(weekPassed(27, st.get())).toBe(false);
+    for (let i = 0; i < 5; i++) runIn(st, 'w28-l1', run({ songId: 'sight:C:RH', mode: 'wait' }));
+    expect(weekPassed(28, st.get())).toBe(false);
     day(1);
-    runIn(st, 'w27-l1', run({ songId: 'sight:C:LH', mode: 'wait' }));
-    expect(weekPassed(27, st.get())).toBe(true);
+    runIn(st, 'w28-l1', run({ songId: 'sight:C:LH', mode: 'wait' }));
+    expect(weekPassed(28, st.get())).toBe(true);
 
-    // Minuet tuần 29 — v5.1: phải THEO NHỊP ≥ 50 (chế độ chờ không tính)
+    // Minuet tuần 30 (29 cũ) — v5.1: phải THEO NHỊP ≥ 50 (chế độ chờ không tính)
     day(0);
-    runIn(st, 'w29-l2', run({ songId: 'minuet_g', mode: 'wait' }));
-    runIn(st, 'w29-l2', run({ songId: 'minuet_g', bpm: 50 }));
+    runIn(st, 'w30-l2', run({ songId: 'minuet_g', mode: 'wait' }));
+    runIn(st, 'w30-l2', run({ songId: 'minuet_g', bpm: 50 }));
     day(1);
-    runIn(st, 'w29-l2', run({ songId: 'minuet_g', mode: 'wait' }));
-    runIn(st, 'w29-l2', run({ songId: 'minuet_g', bpm: 40 })); // chậm quá
-    expect(weekPassed(29, st.get())).toBe(false);
-    runIn(st, 'w29-l2', run({ songId: 'minuet_g', bpm: 50 }));
-    expect(weekPassed(29, st.get())).toBe(true);
+    runIn(st, 'w30-l2', run({ songId: 'minuet_g', mode: 'wait' }));
+    runIn(st, 'w30-l2', run({ songId: 'minuet_g', bpm: 40 })); // chậm quá
+    expect(weekPassed(30, st.get())).toBe(false);
+    runIn(st, 'w30-l2', run({ songId: 'minuet_g', bpm: 50 }));
+    expect(weekPassed(30, st.get())).toBe(true);
   });
 
-  it('bài đã thuộc = trọn bài theo nhịp ≥ 60 ở 2 NGÀY (2026-10-15); xong tuần 31 (chưa sang Cấp 4) / xong tuần cuối → "Học tiếp" là luyện tập mỗi ngày', () => {
+  it('bài đã thuộc = trọn bài theo nhịp ≥ 60 ở 2 NGÀY (2026-10-15); xong tuần 33 (hòa nhạc Cấp 3, chưa sang Cấp 4) / xong tuần cuối → "Học tiếp" là luyện tập mỗi ngày', () => {
     const { st, day } = clock();
-    st.setCurrentWeek(31);
-    st.addSongRun(st.startSession('w31-stage').id, run({ songId: 'mary_lamb' }));
+    st.setCurrentWeek(33);
+    st.addSongRun(st.startSession('w33-stage').id, run({ songId: 'mary_lamb' }));
     expect(songMastered(st.get(), 'mary_lamb')).toBe(false); // mới 1 ngày
     day(1);
-    const s = st.startSession('w31-stage');
+    const s = st.startSession('w33-stage');
     st.addSongRun(s.id, run({ songId: 'mary_lamb', bpm: 50 }));
     expect(songMastered(st.get(), 'mary_lamb')).toBe(false); // tốc độ 50 không tính
     st.addSongRun(s.id, run({ songId: 'mary_lamb' }));
     expect(songMastered(st.get(), 'mary_lamb')).toBe(true);
-    expect(nextLesson(st.get()).id).toBe('w31-stage');
+    expect(nextLesson(st.get()).id).toBe('w33-stage');
     st.addParentAssessment(s.id, 'medal', 'correct');
     const daily = nextLesson(st.get(), () => 0.4);
-    expect(daily.id).toBe('w31-daily');
+    expect(daily.id).toBe('w33-daily');
     expect(daily.activities[0].kind).toBe('sight');
     const songIds = daily.activities.flatMap((a) => (a.kind === 'song' ? [a.songId] : []));
     expect(songIds).toContain('mary_lamb'); // bài đã thuộc được ôn lại
@@ -455,10 +456,11 @@ describe('Cấp 2–3 & luyện tập mỗi ngày', () => {
     expect(levelOf(11).level).toBe(2);
     expect(levelOf(21).level).toBe(2);
     expect(levelOf(22).level).toBe(3);
-    expect(levelOf(31).level).toBe(3);
-    expect(levelOf(32).level).toBe(4);
-    expect(levelOf(43).level).toBe(4);
-    expect(LEVELS.map((l) => l.weeks)).toEqual([[1, 10], [11, 21], [22, 31], [32, 43]]);
+    // (2026-10-17) rev 5: Cấp 3 = 22–33 (+ tuần ôn 27, 32), Cấp 4 = 34–46 (+ tuần ôn 38)
+    expect(levelOf(33).level).toBe(3);
+    expect(levelOf(34).level).toBe(4);
+    expect(levelOf(46).level).toBe(4);
+    expect(LEVELS.map((l) => l.weeks)).toEqual([[1, 10], [11, 21], [22, 33], [34, 46]]);
     expect(LEVELS[3].goal).toContain('ABRSM');
     expect(LEVELS[2].goal).toContain('Faber cấp 1');
   });
@@ -473,7 +475,9 @@ describe('tự phản biện: buổi gọn, mục tiêu tuần, mẹo bố mẹ'
         for (const a of l.activities) if (a.kind === 'quiz') expect(a.quiz.rounds, l.id).toBeLessThanOrEqual(MAX_QUIZ_ROUNDS);
         if (l.activities.some((a) => a.kind === 'stage')) continue;
         for (const s of buildSessionPlan(l)) {
-          if (s.kind === 'quiz') expect(s.quiz.rounds, `${l.id} khởi động`).toBe(w.week === 1 ? 3 : Math.min(w.warmup!.rounds, MAX_QUIZ_ROUNDS));
+          // (+ 2026-10-17, OWNER duyệt "Buổi học ≥ 60% đàn thật") trong buổi ≤ 3 lượt — trừ ngày chấm tiêu chí bằng trò đố (đủ lượt)
+          if (s.kind === 'quiz')
+            expect(s.quiz.rounds, `${l.id} khởi động`).toBe(Math.min(w.warmup!.rounds, w.criterion.who === 'APP' ? MAX_QUIZ_ROUNDS : 3));
           if (s.kind === 'activity' && s.activity.kind === 'quiz') expect(s.activity.quiz.rounds, l.id).toBeLessThanOrEqual(MAX_QUIZ_ROUNDS);
         }
       }
@@ -560,7 +564,7 @@ describe('sắc thái & kiểu đàn trong giáo trình (OWNER duyệt 2026-10-0
     for (const { l } of dyn) expect(l.activities.length, l.id).toBeLessThanOrEqual(3);
   });
 
-  it('tuần 26 "Đọc nốt cao": khởi động 6 lượt Đô5–Sol5, có bài thế Đô cao và đọc nhạc; Minuet tuần 29, Für Elise tuần 30', () => {
+  it('tuần 26 "Đọc nốt cao": khởi động 6 lượt Đô5–Sol5, có bài thế Đô cao và đọc nhạc; Minuet tuần 30, Für Elise tuần 31 (rev 5)', () => {
     const w = WEEKS[25];
     expect(w.week).toBe(26);
     expect(w.warmup?.pool).toEqual(['C5', 'D5', 'E5', 'F5', 'G5']);
@@ -568,10 +572,10 @@ describe('sắc thái & kiểu đàn trong giáo trình (OWNER duyệt 2026-10-0
     const acts = w.lessons.flatMap((l) => l.activities);
     expect(acts.some((a) => a.kind === 'song' && findTune(a.songId)?.position === 'C5')).toBe(true);
     expect(acts.some((a) => a.kind === 'sight' && a.position === 'C5')).toBe(true);
-    expect(WEEKS[28].title).toContain('Minuet');
-    expect(WEEKS[29].title).toContain('Für Elise');
-    expect(findTune('minuet_g')?.week).toBe(29);
-    expect(findTune('fur_elise')?.week).toBe(30);
+    expect(WEEKS[29].title).toContain('Minuet');
+    expect(WEEKS[30].title).toContain('Für Elise');
+    expect(findTune('minuet_g')?.week).toBe(30);
+    expect(findTune('fur_elise')?.week).toBe(31);
   });
 });
 

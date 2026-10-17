@@ -21,20 +21,30 @@ chỉ phím, chỉ ngón, phát âm mẫu. Khi bật micro, app **nghe đàn cơ
 
 ## Có gì trong app
 
-- **4 cấp, 43 tuần** (giáo trình v5/v5.1, OWNER duyệt 2026-10-05 và 2026-10-06; Cấp 4 tuần 32–43 duyệt 2026-10-08: gam Sol/Fa/Rê trưởng, La thứ, hợp âm rải, Alberti, pedal, 6/8, to dần – nhỏ dần), sau đó **Luyện tập mỗi ngày** không có điểm dừng.
+- **4 cấp, 46 tuần** (giáo trình v5/v5.1, OWNER duyệt 2026-10-05 và 2026-10-06; Cấp 4 duyệt 2026-10-08: gam Sol/Fa/Rê trưởng, La thứ, hợp âm rải, Alberti, pedal, 6/8, to dần – nhỏ dần; **rev 5** duyệt 2026-10-17: thêm 3 tuần ÔN & BIỂU DIỄN 27 · 32 · 38), sau đó **Luyện tập mỗi ngày** không có điểm dừng.
   **Mục tiêu cuối nói thật: ≈ hoàn thành Faber cấp 1 / đầu cấp 2** (không phải "thành thạo" theo nghĩa nhạc viện).
   - **Cấp 1 · Làm quen** (1–10): bàn phím, thế Đô hai tay, nhịp Đi / Chạy-chạy (tuần 4) / 2/4 (tuần 9), đọc nốt khóa Sol theo
     NỐT MỐC & QUÃNG, to/nhỏ (f/p), nốt La (Sol–La ngón 4–5), ngẫu hứng phím đen, Hỏi – Đáp; tuần củng cố 5; hòa nhạc tuần 10.
   - **Cấp 2 · Hai tay** (11–21): Đô giữa tay trái & khóa Fa (nốt mốc), hai tay luân phiên → cùng lúc, củng cố hai tay (tuần 13),
     thế Sol, nhịp 3/4, phím đen (Fa♯, Mi♭), chấm dôi, MÓC KÉP (tuần 18), NGHỊCH PHÁCH & DẤU NỐI (tuần 19), gam luồn ngón (tuần 20),
     sáng tác 4 ô nhịp; hòa nhạc Cấp 2 (tuần 21).
-  - **Cấp 3 · Vững vàng** (22–31): hợp âm I–IV–V, DÒNG KẺ PHỤ & KHUÔNG LỚN (tuần 23), đổi thế, trưởng/thứ, nốt cao Đô cao–Sol cao,
-    đọc nhạc hai khóa, bài hai tay, rồi Minuet (tuần 29), Für Elise (tuần 30), Đại hòa nhạc (tuần 31).
+  - **Cấp 3 · Vững vàng** (22–33): hợp âm I–IV–V, DÒNG KẺ PHỤ & KHUÔNG LỚN (tuần 23), đổi thế + hợp âm Sol bảy V7 (tuần 24),
+    trưởng/thứ, nốt cao Đô cao–Sol cao, **tuần ôn 27 Xưởng Đánh Bóng**, đọc nhạc hai khóa, bài hai tay + đệm I–IV–V7, Minuet
+    (tuần 30), Für Elise (tuần 31), **tuần ôn 32 Phòng Tổng Duyệt**, Đại hòa nhạc (tuần 33).
+  - **Cấp 4 · Nghệ sĩ nhỏ** (34–46): gam Sol / Fa / Rê trưởng, hợp âm rải (+ đệm rải), **tuần ôn 38 Trạm Nghỉ Gió**, Alberti &
+    Sonatina (39), củng cố (40), pedal (41), 6/8 (42), to dần – nhỏ dần (43), La thứ (44), tập dượt (45), Đại hòa nhạc (46).
+  - **Tuần ÔN & BIỂU DIỄN** (27 · 32 · 38): không học gì mới — "đánh bóng" 3 bài cũ (thang tốc độ 50 → 60 → 72, to – nhỏ rõ,
+    🎙️ bản thu biểu diễn), cuối tuần 🎤 Buổi diễn nhỏ diễn đúng 3 bài đó. Tiêu chí: mỗi bài đạt ≥ 1 lần theo nhịp từ 60, trong ≥ 2 ngày.
+  - **🎹 Nhạc công nhỏ** (2026-10-17): 🎎 **song tấu với thầy** (tuần 6 · 9 · 14 · 20 · 30 — app đàn bè thầy thấp, kể cả khi micro
+    bật; micro vẫn chỉ chấm bè của bé), 👂 **đàn theo tai** (mỗi tháng từ tuần 9 — app đàn câu quen, bé tìm lại; gợi ý tăng dần),
+    🔀 **dịch giọng** (14 thế Sol · 16 thế Rê · 24 thế Sol · 35 thế Fa — app hiện bản thế Đô, bé đàn cùng số ngón), 🎹 **đệm hợp âm**
+    I–V7 (24), I–IV–V7 (29), rải (37); 🎤 **Buổi diễn nhỏ** ~4 tuần một lần (15 · 18 · 25 · 27 · 32 · 38 · 42 — sticker, không huy chương).
+    "Bài ca niềm vui" chỉ còn là tiêu chí ở tuần 6 · 14 · 16 (một bài, ba giọng); tuần 8 · 12 · 17 · 22 dùng bài khác cùng kỹ năng.
 - **Khởi động kỹ thuật 1 phút** đầu tuần (thả rơi cánh tay, xoay cổ tay, tay tròn, gõ ngón, 5 ngón to/nhỏ, luồn ngón cái).
 - **Tiêu chí qua tuần** bằng bài hát: đạt ở **2 ngày khác nhau** (micro, hoặc phiếu 3 ý của bố mẹ: đúng nốt · đều nhịp · đúng ngón).
 - **Mỗi buổi 10–15 phút**: Khởi động bằng âm nhạc (+ nhắc tư thế; thẻ tư thế đầy đủ đầu tuần) → Ôn nhanh → Khởi động tai/đọc nốt → 1 phút đọc nốt (từ tuần 8) → Bài mới → Con làm thầy → Tự đánh giá; cuối tuần: 🎤 Biểu diễn cho cả nhà.
 - **Trò chơi**: Lên hay xuống? · Bước hay nhảy? · Nốt nào đây? (có mốc) · Đọc nốt khóa Sol/Fa · Nốt mốc · Giống/bước/nhảy trên khuông (quãng) · Vui hay buồn? · Nhại lại · Vỗ nhịp · Sáng tạo (phím đen, hỏi – đáp, sáng tác).
-- **126 bài** (public domain / dân ca Việt Nam / tự sáng tác, kể cả bài tập gam); **Thư viện** (⭐ bài đã thuộc) để bé tự chọn bài.
+- **156 bài** (public domain / dân ca Việt Nam / tự sáng tác, kể cả bài tập gam; 5 bài song tấu có bè thầy); **Thư viện** (⭐ bài đã thuộc) để bé tự chọn bài.
 - **Đọc nhạc ngẫu nhiên**: app sinh đoạn nhạc mới mỗi lần (đúng thế tay, nhịp 4/4 hoặc 3/4) — luyện đọc vô hạn.
 - **Màn bài hát**: Từng nốt (chờ bé đàn đúng) · Theo nhịp (đếm vào, máy gõ nhịp, nhạc đệm; con trỏ hoặc băng chuyền) ·
   tập từng câu · tốc độ 40/50/60 · khuông nhạc với gợi ý rút dần (phím sáng → tên nốt → chỉ khuông).

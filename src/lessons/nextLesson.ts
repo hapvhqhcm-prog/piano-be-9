@@ -43,6 +43,10 @@ function idealSession(lesson: Lesson, data: Readonly<AppData>, date: string, seq
   const parent: Session['parentAssessments'] = [];
   const app: AppAssessment[] = [];
   const runs: Session['songRuns'] = [];
+  // (+ 2026-10-17, rà soát giáo viên dài hạn) Mọi ghi nhận của buổi giả lập mang mốc giờ SAU mọi ghi nhận thật (ngày 9998…):
+  // tiêu chí Cấp 4 đọc thẻ bố mẹ GẦN NHẤT (weekCriteria.parentCheckOk) — trước đây ts: 0 → một lần bố mẹ chấm "Chưa" thật
+  // luôn "mới hơn" buổi giả lập → criterionLesson trả null → "Học tiếp" mời mãi bài cuối tuần (tuần 32 kẹt).
+  const ts = Date.UTC(Number(date.slice(0, 4)), Number(date.slice(5, 7)) - 1, Number(date.slice(8, 10)), 12) + seq;
   let x = seq * 7919 + 17;
   const rng = () => ((x = (x * 9301 + 49297) % 233280) / 233280);
   const answerQuiz = (q: QuizSpec) => {
@@ -50,7 +54,7 @@ function idealSession(lesson: Lesson, data: Readonly<AppData>, date: string, seq
     // v5.1: đúng số lượt buổi thật cho chơi (≤ MAX_QUIZ_ROUNDS) — không "cộng" lượt mà app không hỏi
     for (let k = 0; k < Math.min(q.rounds, MAX_QUIZ_ROUNDS); k++) {
       prev = makeQuestion(q, rng, prev);
-      app.push({ expected: prev.expected, actual: prev.expected, correct: true, ts: 0 });
+      app.push({ expected: prev.expected, actual: prev.expected, correct: true, ts });
     }
   };
   const steps = buildSessionPlan(lesson, data);
@@ -58,20 +62,20 @@ function idealSession(lesson: Lesson, data: Readonly<AppData>, date: string, seq
   for (const a of lesson.activities) {
     switch (a.kind) {
       case 'notes':
-        for (const t of a.segment.targets) parent.push({ note: t.noteId, result: 'correct', ts: 0 });
+        for (const t of a.segment.targets) parent.push({ note: t.noteId, result: 'correct', ts });
         break;
       case 'quiz':
         answerQuiz(a.quiz);
         break;
       case 'song':
-        runs.push({ songId: a.songId, mode: a.mode, level: a.mode === 'tempo' ? (a.level ?? 2) : undefined, bpm: 72, hints: a.hints, phrase: a.phrase ?? null, total: 10, hits: 10, source: 'mic', passed: true, ts: 0, ...(a.hand ? { hand: a.hand } : {}) });
+        runs.push({ songId: a.songId, mode: a.mode, level: a.mode === 'tempo' ? (a.level ?? 2) : undefined, bpm: 72, hints: a.hints, phrase: a.phrase ?? null, total: 10, hits: 10, source: 'mic', passed: true, ts, ...(a.hand ? { hand: a.hand } : {}) });
         break;
       case 'sight':
         for (let k = 0; k < a.count; k++)
-          runs.push({ songId: `sight:${a.position}:${a.hand}`, mode: 'wait', bpm: 60, hints: a.hints, phrase: null, total: 10, hits: 10, source: 'mic', passed: true, ts: 0 });
+          runs.push({ songId: `sight:${a.position}:${a.hand}`, mode: 'wait', bpm: 60, hints: a.hints, phrase: null, total: 10, hits: 10, source: 'mic', passed: true, ts });
         break;
       case 'stage':
-        parent.push({ note: 'medal', result: 'correct', ts: 0 });
+        parent.push({ note: 'medal', result: 'correct', ts });
         break;
       default:
         break;
@@ -79,7 +83,7 @@ function idealSession(lesson: Lesson, data: Readonly<AppData>, date: string, seq
   }
   return {
     id: `ideal-${seq}`, date, lessonId: lesson.id, parentAssessments: parent, appAssessments: app, micAssessments: [],
-    songRuns: runs, selfRating: null, startedAt: 0, endedAt: 0, minutes: 10, completed: true, checklist: {},
+    songRuns: runs, selfRating: null, startedAt: ts, endedAt: ts, minutes: 10, completed: true, checklist: {},
   };
 }
 

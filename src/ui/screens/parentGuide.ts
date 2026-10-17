@@ -12,7 +12,7 @@ import { onboardingScreen } from './onboarding';
 import { parentScreen } from './parent';
 import { micTestScreen, weeklyReportScreen } from './parentShared';
 import { handGuideScreen } from './parentHelp';
-import { GUIDE_SECTIONS, guideSummaryText, isParentAnchor, type GuideScreen, type GuideTarget } from './parentGuideData';
+import { GUIDE_SECTIONS, TROUBLE, guideSummaryText, isParentAnchor, troubleText, type GuideScreen, type GuideTarget } from './parentGuideData';
 import '../../styles/parentux.css';
 import '../../styles/parenthelp.css';
 
@@ -121,6 +121,29 @@ export function parentGuideScreen(app: App) {
               'div',
               { class: 'row guide-go' },
               button({ icon: '👀', label: 'Bố mẹ xem tay con', kind: 'primary', onTap: () => app.show(handGuideScreen(app, { parent: true, onBack: back })) }),
+            ),
+          ),
+          // (+ 2026-10-17) 🆘 Khi có sự cố — các bước tự xử lý, thử theo thứ tự
+          h(
+            'section',
+            { class: 'card guide-sec guide-trouble', id: 'guide-trouble' },
+            h('h2', {}, h('span', { class: 'guide-icon', 'aria-hidden': 'true' }, '🆘'), 'Khi có sự cố'),
+            ...TROUBLE.map((t) =>
+              h(
+                'details',
+                { class: 'trouble-item', id: `trouble-${t.id}` },
+                h('summary', {}, `${t.icon} ${t.title}`),
+                h('ol', {}, ...t.steps.map((x) => h('li', {}, x))),
+              ),
+            ),
+            h(
+              'div',
+              { class: 'row guide-go' },
+              button({
+                icon: '📋',
+                label: 'Sao chép các bước',
+                onTap: () => void copyText(troubleText()).then((ok) => toast(ok ? '📋 Đã sao chép' : 'Chưa sao chép được', 2200)),
+              }),
             ),
           ),
           h(

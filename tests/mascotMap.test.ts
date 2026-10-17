@@ -116,9 +116,9 @@ describe('Bé Nốt — trạng thái', () => {
 });
 
 describe('Đảo — SVG + chi tiết riêng', () => {
-  it('mọi đảo 1–43 × 3 trạng thái: viewBox + aria-label, không NaN', async () => {
+  it('mọi đảo 1–46 × 3 trạng thái: viewBox + aria-label, không NaN', async () => {
     const { islandIcon } = await import('../src/ui/components/art/islandArt');
-    for (let w = 1; w <= 43; w++) {
+    for (let w = 1; w <= 46; w++) {
       for (const s of ['done', 'current', 'locked'] as const) {
         const el = islandIcon(w, s) as unknown as FakeEl;
         expect(el.attrs.viewBox).toBe('0 0 96 80');
@@ -128,10 +128,10 @@ describe('Đảo — SVG + chi tiết riêng', () => {
     }
   });
 
-  it('chi tiết riêng: đủ 43 tuần, khác nhau từng tuần, SVG hợp lệ, nằm trong khung 96×80', async () => {
+  it('chi tiết riêng: đủ 46 tuần (rev 5), khác nhau từng tuần, SVG hợp lệ, nằm trong khung 96×80', async () => {
     const { ACCENTS, accentSvg } = await import('../src/ui/components/art/islandAccents');
     const all = new Set<string>();
-    for (let w = 1; w <= 43; w++) {
+    for (let w = 1; w <= 46; w++) {
       const a = accentSvg(w);
       expect(a.length, `tuần ${w}`).toBeGreaterThan(40);
       expect(a, `tuần ${w}`).not.toMatch(/undefined|NaN/);
@@ -144,8 +144,8 @@ describe('Đảo — SVG + chi tiết riêng', () => {
       for (const m of a.matchAll(/\b(cy|y)="(-?[\d.]+)"/g)) expect(Number(m[2]), `tuần ${w} ${m[0]}`).toBeLessThanOrEqual(80);
       all.add(a);
     }
-    expect(all.size).toBe(43);
-    expect(Object.keys(ACCENTS).length).toBe(43);
+    expect(all.size).toBe(46);
+    expect(Object.keys(ACCENTS).length).toBe(46);
     expect(accentSvg(99)).toBe('');
   });
 
@@ -153,11 +153,11 @@ describe('Đảo — SVG + chi tiết riêng', () => {
     const { islandIcon } = await import('../src/ui/components/art/islandArt');
     const { accentSvg } = await import('../src/ui/components/art/islandAccents');
     const looks = new Set<string>();
-    for (let w = 1; w <= 43; w++) {
+    for (let w = 1; w <= 46; w++) {
       const base = (islandIcon(w, 'current') as unknown as FakeEl).innerHTML;
       looks.add(base + accentSvg(w));
     }
-    expect(looks.size).toBe(43);
+    expect(looks.size).toBe(46);
   });
 });
 

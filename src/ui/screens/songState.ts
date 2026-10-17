@@ -8,9 +8,12 @@ import { tallyHands } from '../../music/handGrade';
 import type { HandsSpec } from '../../audio/twoHand';
 import { TWO_HAND_DEFAULT } from '../../audio/twoHand';
 import { pulseDropWindow, type TIMING_WINDOWS } from '../../music/timing';
+import { backingPlan, groove } from '../../music/groove';
+import { tempoSound } from './songShared';
 import {
   DYN_VOLUME,
   accompaniment,
+  backingStyle,
   beatsPerMeasure,
   dynAtBeat,
   expressionUsed,
@@ -46,6 +49,11 @@ export interface SongHooks {
   onRun(run: Omit<SongRun, 'ts'>): void;
   onDone(): void;
   onBack(): void;
+  /**
+   * (+ 2026-10-17) Thẻ "dừng nhẹ nhàng" ('tired') vừa hiện. CHỈ hoạt động bài hát của bài học truyền (session.ts → Session.kindStops);
+   * đọc nhạc, bài tập về nhà, "Ôn bài cũ", lượt tách tay, Thư viện… không truyền → không tính là dừng nhẹ nhàng.
+   */
+  onKindStop?(): void;
 }
 
 export type State = 'idle' | 'demo' | 'countin' | 'playing' | 'rate' | 'result';
@@ -131,6 +139,11 @@ export interface SongCtx {
   fails: number;
   /** (+ 2026-10-15) Đang đàn "câu dễ" để kết thúc bằng thành công (songResult.startEasyEnd) */
   easyEnd: boolean;
+  /**
+   * (+ 2026-10-16) Bài ĐÃ THUỘC lúc mở màn (hoặc đã mừng "vừa thuộc" trong lần mở này) — lượt làm bài chuyển sang "đã thuộc"
+   * thì màn kết quả mời "🎧 Nghe lần đầu → hôm nay" một lần (songTake.offerProgress). undefined = không mời.
+   */
+  masteredBefore?: boolean;
   /** v5.1 — Số lỗi theo ô nhịp của lượt đang chơi (chờ: đàn sai; theo nhịp: nốt trượt) */
   readonly missByMeasure: Map<number, number>;
   /**
@@ -338,14 +351,36 @@ export function halt(c: SongCtx): void {
 }
 
 export function scheduleAccomp(c: SongCtx, t0: number, spb: number, mute: [number, number] | null = null): void {
-  if (!c.settings.accompaniment || micOn(c)) return;
+  // (+ 2026-10-17, OWNER duyệt) SONG TẤU: bè thầy (Tune.duet) luôn đàn — kể cả micro bật (bè thấp, không trùng tên nốt bé:
+  // tune.validateDuet) — micro vẫn chỉ chấm nốt của bé
+  const duet = !!c.tune.duet;
+  // (+ 2026-10-17) bè đệm piano: bố mẹ bật nhạc đệm, bé không chọn "🔔 Chỉ tiếng tích", micro TẮT (micro bật: bè piano che mất
+  // tiếng đàn của bé — đo ở tests/backingMic.test.ts; khi đó chỉ trống nhịp vui, scheduleGroove)
+  if (!duet && !backingNow(c).pitched) return;
   for (const a of accompaniment(c.tune)) {
     // Giữ nhịp trong đầu: 2 ô máy im thì nhạc đệm cũng im (nhạc đệm cũng "gõ nhịp" hộ bé)
     if (mute && a.start >= mute[0] - 1e-6 && a.start < mute[1] - 1e-6) continue;
     // v4: bè đệm to/nhỏ theo sắc thái của giai điệu (mf = như cũ)
     const d = dynAtBeat(c.tune, a.start);
-    const vol = 0.45 * (d ? DYN_VOLUME[d] / DYN_VOLUME.mf : 1);
+    const vol = 0.45 * (d ? DYN_VOLUME[d] / DYN_VOLUME.mf : 1) * (duet && micOn(c) ? 0.7 : 1);
     void c.app.audio.scheduleFreq(midiToFreq(a.midi), t0 + a.start * spb, a.beats * spb * 0.9, vol, false);
+  }
+}
+
+/** (+ 2026-10-17) Lượt / mẫu này phát gì ngoài tiếng tích (music/groove.ts backingPlan). */
+export const backingNow = (c: SongCtx) => backingPlan({ parentOn: !!c.settings.accompaniment, mic: micOn(c), clickOnly: tempoSound() === 'click' });
+
+/**
+ * (+ 2026-10-17, OWNER duyệt "Nhạc đệm + bài vui hơn") TRỐNG NHỊP VUI theo kiểu nhạc đệm bé chọn (music/groove.ts) — cả khi
+ * micro bật (tiếng ≥ 6,5 kHz, micro lọc bỏ như tiếng tích). Im cùng tiếng tích trong 2 ô "giữ nhịp trong đầu".
+ */
+export function scheduleGroove(c: SongCtx, t0: number, spb: number, mute: [number, number] | null = null): void {
+  if (!backingNow(c).groove) return;
+  const audio = c.app.audio as { grooveHit?: (when: number, hz: number, gain: number, tau?: number) => void };
+  if (typeof audio.grooveHit !== 'function') return;
+  for (const g of groove(c.tune, backingStyle())) {
+    if (mute && g.beat >= mute[0] - 1e-6 && g.beat < mute[1] - 1e-6) continue;
+    audio.grooveHit.call(c.app.audio, t0 + g.beat * spb, g.hz, g.gain, g.tau);
   }
 }
 

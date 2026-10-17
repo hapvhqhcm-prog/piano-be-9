@@ -1,43 +1,54 @@
 import { findTune } from '../../music/exercises';
-import { completedSessionCount, parentStats } from '../../progress/history';
-import type { AppData, Session, Settings } from '../../progress/schema';
+import { parentStats } from '../../progress/history';
+import type { AppData, Settings } from '../../progress/schema';
 import type { App } from '../App';
-import { button, confirmDialog, h, toast } from '../components/dom';
+import { button, h, toast } from '../components/dom';
 import { homeScreen } from './home';
-import { parentTip } from '../../lessons/parentTips';
 import { tonightSegment, type TonightPractice } from './tonight';
-import { quickTipsCard } from './onboarding';
 import { practiceScreen } from './practice';
 import { songScreen } from './song';
 import { compositionToTune } from '../../practice/compose';
 import type { Tune } from '../../music/tune';
 import '../../styles/parentux.css';
-import { whenCorrectBox } from '../components/whenCorrect';
 
-import { installCard } from '../components/installCard';
-import { BACKUP_MESSAGE, exportBackup } from '../../progress/backup';
+import { BACKUP_MESSAGE, backupFresh, backupOverdue, daysSinceBackup, exportBackup } from '../../progress/backup';
 import { parentSongToTune } from '../../practice/parentSongs';
 import { prefetchLater } from '../lazy';
-import { reminderCard } from '../components/reminderCard';
-import { DAY_MS, fmtMs, micTestMod, reportMod, reportScreen, songEditorMod, storageText, weeklyReportMod, type ParentCtx, type ParentUxSettings } from './parentShared';
-import { micSetupCard, readinessCard, tonightCard, weeklyReportCard } from './parentTodayCards';
+import {
+  healthCheckScreen,
+  micTestMod,
+  micTestScreen,
+  reportMod,
+  reportScreen,
+  songEditorMod,
+  weeklyReportMod,
+  weeklyReportScreen,
+  type ParentCtx,
+  type ParentUxSettings,
+} from './parentShared';
 import { detailsCard, latestSessionCards, overviewCard, skillsCard } from './parentProgressCards';
 import { advancedSection } from './parentAdvanced';
-import { parentSongsCard } from './parentSongsCard';
-import { focusGuideAnchor, guideButton, handGuideScreen, parentGuideMod, parentGuideScreen, syncWhatsNew, tagGuide, takeGuideHint, whatsNewCard } from './parentHelp';
+import { focusGuideAnchor, guideButton, handGuideScreen, parentGuideMod, parentGuideScreen, syncWhatsNew, takeGuideHint, whatsNewCard } from './parentHelp';
 import { PARENT_ANCHORS, type GuideAnchor } from './parentGuideData';
-import { parentReviewScreen, reviewCard } from './parentReview';
+import { parentReviewScreen } from './parentReview';
 import { cleanReviewAudio } from '../selfStudy';
+import { gradable, reminders } from '../../progress/reviewQueue';
+import { weeklyReportDue } from '../../progress/weeklyReportDue';
+import { loadMicLog } from '../../audio/micLogStore';
+import { healthNow } from '../healthEnv';
+import { tickToday, todayCard } from './parentToday';
+import { setupSection, tipsCard, weekCard } from './parentWeek';
 
 // Giữ nguyên API cũ
 export { fmtDate, parentLabel } from './parentShared';
 
 /**
- * Màn phụ huynh (§8). Trên cùng: "Việc cần làm tối nay" (3 chỗ khó + 1 việc + tiêu chí tuần).
- * Kết quả bố mẹ bấm / trò chơi app chấm / micro chấm vẫn hiển thị TÁCH RIÊNG (§2) nhưng bằng lời thường.
- * Phiên bản, cài đặt, dữ liệu nằm trong mục "Nâng cao" thu gọn.
- * Thẻ: parentTodayCards.ts (tối nay, micro, sẵn sàng) · parentProgressCards.ts (tổng quan, kỹ năng, chi tiết, buổi gần
- * nhất) · parentAdvanced.ts (Nâng cao) · parentSongsCard.ts (bài bố mẹ thêm) · dùng chung: parentShared.ts.
+ * Màn phụ huynh (§8). (2026-10-17, OWNER duyệt — gọn còn ~2 màn hình):
+ *   đầu màn (← Về màn của bé · ⋯ Báo cáo / Hướng dẫn / Xem tay) → ✅ Hôm nay bố mẹ cần (≤ 3 việc) → 🗓️ Tuần N (mục tiêu +
+ *   "Vì sao?" + giữ tuần) → 💡 3 điều cần nhớ (thu gọn sau lần đầu mỗi tuần) → 🧩 Thiết lập một lần (thu gọn) → ⚙️ Nâng cao.
+ * Bảng tiến độ (Tổng quan, Kỹ năng, Chi tiết, Phiếu quan sát, Sửa kết quả) nằm trong "📊 Báo cáo" (cuối trang báo cáo).
+ * Sao lưu: MỘT quy tắc — mỗi tuần cùng báo cáo tuần; quá 30 ngày → băng nổi bật ở đây (progress/backup.ts backupOverdue).
+ * Thẻ: parentToday.ts · parentWeek.ts · parentAdvanced.ts · parentProgressCards.ts · parentHelp.ts · dùng chung: parentShared.ts.
  */
 export function parentScreen(app: App, opts: { focus?: GuideAnchor } = {}) {
   return (root: HTMLElement) => {
@@ -47,12 +58,11 @@ export function parentScreen(app: App, opts: { focus?: GuideAnchor } = {}) {
     syncWhatsNew(store);
     const guideHint = takeGuideHint(store);
     const whatsNewUi = { open: true };
+    const back = () => app.show(parentScreen(app));
     const openGuide = () => app.show(parentGuideScreen(app));
     const scroller = h('div', { class: 'parent scrollable' });
     root.append(h('div', { class: 'screen' }, scroller));
     let message = '';
-    const ux = () => store.settings as Readonly<ParentUxSettings>;
-    const setUx = (patch: Partial<ParentUxSettings>) => store.updateSettings(patch as Partial<Settings>);
 
     const render = () => {
       const top = scroller.scrollTop;
@@ -72,36 +82,15 @@ export function parentScreen(app: App, opts: { focus?: GuideAnchor } = {}) {
         store.updateSettings(patch as Partial<Settings>);
         render();
       },
-      ux,
-      // resetStep: bước "Đặt lại dữ liệu"; advOpen: mục "Nâng cao" đang mở; detailsOpen: mục "Chi tiết" đang mở
-      ui: { resetStep: 0, advOpen: !!opts.focus && PARENT_ANCHORS[opts.focus], detailsOpen: false },
+      ux: () => store.settings as Readonly<ParentUxSettings>,
+      // resetStep: bước "Đặt lại dữ liệu"; advOpen: mục "Nâng cao" đang mở; …
+      ui: { resetStep: 0, advOpen: !!opts.focus && PARENT_ANCHORS[opts.focus], detailsOpen: false, setupOpen: false, supportOpen: false },
     };
 
     const backup = () => void exportBackup(store).then((r) => say(BACKUP_MESSAGE[r]));
 
-    /** 📊 Báo cáo → khi quay lại: chưa sao lưu tuần này thì hỏi (tối đa mỗi tuần một lần). */
-    const openReport = () =>
-      app.show(
-        reportScreen(app, {
-          onBack: () => {
-            app.show(parentScreen(app));
-            const now = Date.now();
-            const s = ux();
-            if (now - (s.lastBackupAt ?? 0) > 7 * DAY_MS && now - (s.backupAskedAt ?? 0) > 7 * DAY_MS) {
-              setUx({ backupAskedAt: now });
-              confirmDialog({
-                title: '💾 Sao lưu luôn?',
-                text: s.lastBackupAt
-                  ? `Lần sao lưu gần nhất: ${fmtMs(s.lastBackupAt)}. Sao lưu mỗi tuần để không mất tiến độ của bé nếu iPad bị xóa dữ liệu.`
-                  : 'Chưa sao lưu lần nào. Tiến độ của bé chỉ nằm trên iPad này — sao lưu mỗi tuần (Lưu vào Tệp) cho chắc.',
-                okIcon: '💾',
-                okLabel: 'Sao lưu ngay',
-                onOk: () => void exportBackup(store).then((r) => toast(BACKUP_MESSAGE[r], 3200)),
-              });
-            }
-          },
-        }),
-      );
+    /** 📊 Báo cáo — cuối trang có các bảng tiến độ chi tiết (trước đây chiếm 3 màn hình ở đây). */
+    const openReport = () => app.show(reportScreen(app, { onBack: back, extra: () => progressDetails(c) }));
 
     /** "▶ Làm ngay (5')": luyện riêng chỗ khó rồi về màn của bé để bấm "Học tiếp". */
     const runPractice = (p: TonightPractice) => {
@@ -112,8 +101,9 @@ export function parentScreen(app: App, opts: { focus?: GuideAnchor } = {}) {
         if (cur && (cur.parentAssessments.length || cur.micAssessments.length || cur.songRuns.length)) store.finishSession(sessionId);
         else store.discardSessionIfEmpty(sessionId);
         if (done) {
+          tickToday('tonight');
           app.show(homeScreen(app));
-          toast('✅ Xong phần ôn — giờ bấm “Học tiếp” nhé!', 3200);
+          toast('✅ Xong phần ôn — giờ bấm nút ▶ to nhé!', 3200);
         } else app.show(parentScreen(app));
       };
       if (p.kind === 'notes') {
@@ -162,95 +152,103 @@ export function parentScreen(app: App, opts: { focus?: GuideAnchor } = {}) {
     const build = (d: Readonly<AppData>): HTMLElement[] => {
       const now = new Date();
       const week = d.progress.currentWeek;
-      const latest: Session | null = store.latestSession();
+      const health = healthNow(d, now.getTime());
+      const overdue = backupOverdue(d, now.getTime());
+      const pending = gradable(d).length + reminders(d).length;
 
-      // Bảng tổng hợp theo nốt (PARENT / APP / MIC) + "Kỹ năng của con" — TỪ ĐẦU, kể cả các buổi đã gộp vào lịch sử
-      const stats = parentStats(d);
-
-      // 💾 Sao lưu: dòng trạng thái dưới tiêu đề (cảnh báo khi > 14 ngày / chưa lần nào mà đã học vài buổi)
-      const lastBackup = d.settings.lastBackupAt ?? 0;
-      const backupStale = lastBackup ? Date.now() - lastBackup > 14 * DAY_MS : completedSessionCount(d) >= 3;
-      const storageSpan = h('span', {});
-      void storageText(store).then((t) => (storageSpan.textContent = t ? ` · ${t}` : ''));
-      const backupLine = h(
-        'p',
-        { class: `backup-line${backupStale ? ' warn' : ''}` },
-        lastBackup
-          ? `💾 Đã sao lưu ngày ${fmtMs(lastBackup)}${backupStale ? ' — đã hơn 2 tuần, bấm “💾 Sao lưu” để giữ tiến độ của bé' : ''}`
-          : `💾 Chưa sao lưu lần nào${backupStale ? ' — bấm “💾 Sao lưu” (Lưu vào Tệp) để không mất tiến độ' : ''}`,
-        storageSpan,
+      // ⋯ Thêm: Báo cáo tuần · Báo cáo · Hướng dẫn · Xem tay (bố mẹ bận chỉ cần "Hôm nay" + "Về màn của bé")
+      const menu = h(
+        'details',
+        { class: 'parent-menu' },
+        h(
+          'summary',
+          { 'aria-label': 'Thêm: Báo cáo tuần, Báo cáo, Hướng dẫn, Xem tay' },
+          '⋯ Thêm',
+          guideHint ? h('span', { class: 'guide-hint-tag', 'aria-hidden': 'true' }, 'Mới') : null,
+        ),
+        h(
+          'div',
+          { class: 'parent-menu-list' },
+          button({ icon: '🗓️', label: 'Báo cáo tuần', onTap: () => app.show(weeklyReportScreen(app, { onBack: back })) }),
+          button({ icon: '📊', label: 'Báo cáo', onTap: openReport }),
+          guideButton(openGuide, guideHint),
+          // (+ 2026-10-15) 👀 Bố mẹ xem tay con: phiếu 3 ý có hình + tranh Tư thế tay
+          button({ icon: '👀', label: 'Xem tay', onTap: () => app.show(handGuideScreen(app, { parent: true, onBack: back })) }),
+        ),
       );
 
-      const weekly = weeklyReportCard(c, d, now, () => app.show(parentScreen(app)));
-      // (+ 2026-10-12) 🕑 Chờ bố mẹ xem (bé tự học): có mục chờ → thẻ ở ĐẦU màn; không thì thẻ nhỏ (cài đặt) ở cuối
-      const review = reviewCard(c, d, () => app.show(parentReviewScreen(app, () => app.show(parentScreen(app)))));
-      const reviewTop = review.classList.contains('has-items');
-      const weeklyDue = weekly.classList.contains('due');
       const sections: (HTMLElement | null)[] = [
         h(
           'header',
           { class: 'parent-head' },
           h('h1', {}, '👪 Phụ huynh'),
-          h(
-            'div',
-            { class: 'parent-head-actions' },
-            button({ icon: '📊', label: 'Báo cáo', onTap: openReport }),
-            (() => {
-              const b = button({ icon: '💾', label: 'Sao lưu', onTap: backup });
-              b.classList.add('backup-btn');
-              if (backupStale) b.classList.add('warn');
-              return b;
-            })(),
-            guideButton(openGuide, guideHint),
-            // (+ 2026-10-15) 👀 Bố mẹ xem tay con: phiếu 3 ý có hình + tranh Tư thế tay
-            button({ icon: '👀', label: 'Xem tay', onTap: () => app.show(handGuideScreen(app, { parent: true, onBack: () => app.show(parentScreen(app)) })) }),
-            button({ icon: '←', label: 'Về màn của bé', kind: 'primary', onTap: () => app.show(homeScreen(app)) }),
-          ),
+          h('div', { class: 'parent-head-actions' }, menu, button({ icon: '←', label: 'Về màn của bé', kind: 'primary', onTap: () => app.show(homeScreen(app)) })),
         ),
-        backupLine,
         message ? h('div', { class: 'banner' }, message) : null,
-        reviewTop ? review : null,
         store.recoveredFromMirror
           ? h('div', { class: 'banner' }, '✅ Dữ liệu chính bị trống / hỏng — app đã tự khôi phục tiến độ của bé từ bản sao thứ hai trong máy.')
           : store.recoveredFromBackup
             ? h('div', { class: 'banner' }, '✅ App đã tự khôi phục tiến độ của bé từ bản sao lưu trong máy (do lỗi cũ khi lên tuần 9).')
             : null,
         store.lastSaveError ? h('div', { class: 'banner warn' }, `Lỗi lưu dữ liệu: ${store.lastSaveError}`) : null,
-        // (+ 2026-10-10) 🆕 Có gì mới sau khi app cập nhật — chỉ ở màn Phụ huynh, "Đã xem" thì ẩn
+        // 💾 MỘT quy tắc sao lưu: quá 30 ngày → băng nổi bật (màn này đã qua cổng phụ huynh)
+        overdue
+          ? h(
+              'div',
+              { class: 'banner warn backup-overdue', role: 'alert' },
+              h(
+                'p',
+                {},
+                (d.settings.lastBackupAt ?? 0) > 0 ? `⚠️ Đã ${daysSinceBackup(d, now.getTime())} ngày chưa sao lưu. ` : '⚠️ Chưa sao lưu lần nào. ',
+                'Tiến độ của bé chỉ nằm trên iPad này — ',
+                h('b', {}, 'xóa biểu tượng app = mất hết dữ liệu'),
+                '.',
+              ),
+              button({ icon: '💾', label: 'Sao lưu ngay', kind: 'primary', onTap: backup }),
+            )
+          : null,
+        // 🩺 Điều cần chú ý (cũng là "⚠️" trên nút Phụ huynh ở màn của bé) — trừ sao lưu (đã có băng trên)
+        ((flags) =>
+          flags.length
+            ? h(
+                'section',
+                { class: 'card health-flags' },
+                h('h2', {}, '⚠️ Cần bố mẹ xem'),
+                h('ul', {}, ...flags.map((f) => h('li', {}, f.text))),
+                button({ icon: '🩺', label: 'Kiểm tra sức khỏe app (~3 phút)', onTap: () => app.show(healthCheckScreen(app)) }),
+              )
+            : null)(health.flags.filter((f) => f.id !== 'backup')),
+        // (+ 2026-10-10) 🆕 Có gì mới — chỉ bản có việc cho bố mẹ (changelog parentAction)
         whatsNewCard(c, d, whatsNewUi, openGuide),
-        // (+ 2026-10-09) 📊 Báo cáo tuần: tuần vừa hết chưa xem → thẻ ở đầu màn; không thì nằm cạnh phần tiến độ
-        weeklyDue ? weekly : null,
-        micSetupCard(c, d),
-        tonightCard(d, now, runPractice),
-        tagGuide(readinessCard(c, d, now), 'hold'),
-        h(
-          'section',
-          { class: 'card tip-card' },
-          h('h2', {}, `👪 Tuần ${week}: bố mẹ chú ý`),
-          h('p', {}, parentTip(week)),
-          whenCorrectBox(),
+        todayCard(
+          d,
+          now,
+          {
+            pending,
+            reminders: reminders(d).length,
+            weeklyDue: weeklyReportDue(d, now),
+            backupNeeded: !backupFresh(d, now.getTime()) && (daysSinceBackup(d, now.getTime()) ?? 0) >= 7,
+            micNever: !d.settings.micEnabled && !c.ux().micSetupHidden && !loadMicLog(),
+            healthDue: health.due,
+            lastBackupAt: d.settings.lastBackupAt ?? 0,
+            healthReasons: health.reasons,
+          },
+          {
+            review: () => app.show(parentReviewScreen(app, back)),
+            practice: runPractice,
+            weekly: () => app.show(weeklyReportScreen(app, { onBack: back })),
+            backup,
+            mic: () => app.show(micTestScreen(app)),
+            micLater: () => c.set({ micSetupHidden: true }),
+            health: () => app.show(healthCheckScreen(app)),
+            render,
+          },
         ),
-        tagGuide(quickTipsCard(), 'tips'),
-        // Chưa thêm vào Màn hình chính → iPad có thể xóa tiến độ: giữ ở phần đầu (an toàn dữ liệu)
-        installCard(),
-        weeklyDue ? null : weekly,
-        overviewCard(d, now),
-        skillsCard(d, stats.skills),
-        detailsCard(c, d, stats),
+        weekCard(c, d, now),
+        tipsCard(week),
+        setupSection(c, d, back),
+        advancedSection(c, d),
       ];
-
-      if (latest) sections.push(...latestSessionCards(c, d, latest));
-
-      const details = advancedSection(c, d);
-      // (2026-10-09) Nhóm "thiết lập một lần" ở cuối (trước Nâng cao): ⏰ giờ tập · bài bố mẹ thêm —
-      // phần đầu màn dành cho việc hằng ngày (tối nay, sẵn sàng sang tuần, mẹo tuần) và tiến độ
-      sections.push(
-        reviewTop ? null : review,
-        // (+ 2026-10-08) ⏰ Đặt giờ tập — lời nhắc .ics lặp hằng tuần trong Lịch của iPad
-        tagGuide(reminderCard(app), 'reminder'),
-        tagGuide(parentSongsCard(c, () => app.show(parentScreen(app))), 'songs'),
-        details,
-      );
       return sections.filter((x): x is HTMLElement => !!x);
     };
 
@@ -258,4 +256,38 @@ export function parentScreen(app: App, opts: { focus?: GuideAnchor } = {}) {
     void cleanReviewAudio(app);
     if (opts.focus) focusGuideAnchor(scroller, opts.focus);
   };
+}
+
+/**
+ * 📋 Bảng tiến độ cho trang "📊 Báo cáo" (trước đây ở màn Phụ huynh): Tổng quan, Kỹ năng, Chi tiết (thu gọn), Phiếu quan
+ * sát + Sửa kết quả buổi gần nhất. Vẽ lại tại chỗ khi bố mẹ chạm (không rời trang báo cáo).
+ */
+export function progressDetails(parent: ParentCtx): HTMLElement {
+  const box = h('div', { class: 'progress-details' });
+  const ui = { resetStep: 0, advOpen: false, detailsOpen: false, setupOpen: false, supportOpen: false };
+  const c: ParentCtx = {
+    ...parent,
+    ui,
+    render: () => draw(),
+    say: (m) => toast(m),
+    set: (patch) => {
+      parent.store.updateSettings(patch as Partial<Settings>);
+      draw();
+    },
+  };
+  const draw = () => {
+    const d = parent.store.get();
+    const now = new Date();
+    const latest = parent.store.latestSession();
+    const stats = parentStats(d);
+    box.replaceChildren(
+      h('h2', { class: 'progress-details-title' }, '📋 Số liệu chi tiết (cho bố mẹ)'),
+      overviewCard(d, now),
+      skillsCard(d, stats.skills),
+      detailsCard(c, d, stats),
+      ...(latest ? latestSessionCards(c, d, latest) : []),
+    );
+  };
+  draw();
+  return box;
 }

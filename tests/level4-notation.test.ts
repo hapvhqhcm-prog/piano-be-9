@@ -310,7 +310,8 @@ function legacyStyles(t: Tune) {
 
 describe('bài cũ (không pedal / nêm / 6/8) không đổi', () => {
   const old = SONGS.filter(
-    (s) => !isCompound(s) && ![...s.notes, ...(s.lh ?? [])].some((n) => n.ped || n.hairpin),
+    // (2026-10-17) bài song tấu (Tune.duet) có bè thầy thay nhạc đệm tự động — không so ở đây (tests/musician.test.ts)
+    (s) => !isCompound(s) && !s.duet && ![...s.notes, ...(s.lh ?? [])].some((n) => n.ped || n.hairpin),
   );
   it('có bài để so', () => expect(old.length).toBeGreaterThan(10));
   it.each(old.map((s) => [s.id, s] as const))('%s', (_id, s) => {

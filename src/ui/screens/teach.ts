@@ -33,7 +33,8 @@ export function teachCard(app: App, teach: { emoji: string; text: string }, onTa
     { class: 'closing-teach' },
     h('div', { class: 'step-tag' }, `${teach.emoji} Con làm thầy`),
     h('div', { class: 'hero-mascot' }, mascot('wave', 72)),
-    h('h2', { class: 'title' }, TEACH_TITLE),
+    // (+ 2026-10-17, OWNER duyệt "Buổi học ≥ 60% đàn thật") chữ của bé ngắn: nhãn "Con làm thầy" đã nói điều này — câu
+    // TEACH_TITLE vẫn được đọc to cùng thẻ (rating.ts / speakChip bên dưới)
     h('p', { class: 'lead teach-card' }, teach.text, speakChip(app, `${TEACH_TITLE} ${teach.text}`)),
     // (+ 2026-10-12) 👦 Bé tự học: không có bố mẹ để dạy → hẹn tối nay (không ghi gì)
     h('div', { class: 'closing-teach-actions' }, selfStudy(app) ? h('p', { class: 'lead' }, '👪 Tối nay con dạy lại bố mẹ nhé!') : btn),

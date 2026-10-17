@@ -31,11 +31,20 @@ export class ActivityWakeLock {
   private pending = false;
   private lastActive = -Infinity;
   private timer: unknown = null;
+  /** (+ 2026-10-17) Số lần iPad TỪ CHỐI giữ màn hình sáng (pin yếu / Chế độ nguồn điện thấp…) — 🩺 + lời khuyên Tự động khóa */
+  denials = 0;
+  private deniedListeners = new Set<() => void>();
 
   constructor(
     private readonly env: WakeEnv,
     private readonly idleMs = WAKE_IDLE_MS,
   ) {}
+
+  /** (+ 2026-10-17) Báo mỗi lần bị từ chối giữ sáng (App ghi lại + hiện lời khuyên MỘT lần). */
+  onDenied(fn: () => void): () => void {
+    this.deniedListeners.add(fn);
+    return () => this.deniedListeners.delete(fn);
+  }
 
   get supported(): boolean {
     return !!this.env.api;
@@ -88,7 +97,15 @@ export class ActivityWakeLock {
       });
       this.sentinel = s;
     } catch {
-      /* bị từ chối (vd pin yếu / chế độ nguồn điện thấp) — bỏ qua */
+      /* bị từ chối (vd pin yếu / chế độ nguồn điện thấp) — không giữ được; báo để bố mẹ chỉnh Tự động khóa */
+      this.denials++;
+      this.deniedListeners.forEach((fn) => {
+        try {
+          fn();
+        } catch {
+          /* bỏ qua */
+        }
+      });
     } finally {
       this.pending = false;
     }

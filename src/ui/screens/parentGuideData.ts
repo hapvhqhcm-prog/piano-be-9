@@ -16,13 +16,13 @@ export const PARENT_ANCHORS = {
   data: true,
   /** Nâng cao → Cài đặt → "Tuần hiện tại" */
   week: true,
-  /** Thẻ "Sẵn sàng sang tuần mới?" (có "⏸ Ở lại tuần này thêm") */
+  /** Thẻ "🗓️ Tuần N" (mục tiêu, Vì sao?, "⏸ Ở lại tuần này thêm") */
   hold: false,
-  /** Thẻ "⏰ Đặt giờ tập" */
+  /** Thẻ "⏰ Đặt giờ tập" (trong "🧩 Thiết lập một lần" — tự mở ra) */
   reminder: false,
-  /** Thẻ "📝 Bài bố mẹ thêm" */
+  /** Thẻ "📝 Bài bố mẹ thêm" (trong "🧩 Thiết lập một lần") */
   songs: false,
-  /** Thẻ "🗒️ Thẻ nhắc nhanh cho bố mẹ" */
+  /** Thẻ "💡 Tuần N: 3 điều cần nhớ" */
   tips: false,
 } as const satisfies Record<string, boolean>;
 export type GuideAnchor = keyof typeof PARENT_ANCHORS;
@@ -58,7 +58,7 @@ export const GUIDE_SECTIONS: readonly GuideSection[] = [
     icon: '▶',
     title: 'Bắt đầu một buổi học',
     lines: [
-      'Về màn của bé, bấm “Học tiếp” — app tự chọn bài, không cần soạn gì.',
+      'Về màn của bé, bấm nút ▶ to — app tự chọn bài, không cần soạn gì.',
       'Ngồi cạnh bé 10–15 phút. Bé đàn đúng thì bấm “👪 Đúng rồi”, chưa đúng thì “Thử lại”.',
       'Bé vừa nghỉ ≥ 3 ngày: app gợi ý “Buổi ngắn 5 phút” cho nhẹ nhàng.',
     ],
@@ -71,7 +71,7 @@ export const GUIDE_SECTIONS: readonly GuideSection[] = [
     lines: [
       'Micro giúp app tự nghe đàn thật và chấm thay bố mẹ (xử lý ngay trên iPad).',
       'Cài micro: “1. Cho phép micro” → “2. Kiểm tra 5 nốt” (bé đàn Đô Rê Mi Fa Sol).',
-      'Chưa ưng? Bấm “🎙️ Đo micro & tạo báo cáo” (≈ 1 phút) → “Sao chép báo cáo” → gửi người hỗ trợ.',
+      'Chưa ưng? “🔧 Dành cho người hỗ trợ” → “🎙️ Đo micro & tạo báo cáo” (≈ 1 phút) → gửi người hỗ trợ.',
     ],
     open: { label: 'Mở Cài micro', go: 'micSetup' },
   },
@@ -92,9 +92,10 @@ export const GUIDE_SECTIONS: readonly GuideSection[] = [
     icon: '💾',
     title: 'Sao lưu & khôi phục',
     lines: [
-      'Tiến độ của bé chỉ nằm trên iPad này. Mỗi tuần bấm “💾 Sao lưu” → Lưu vào Tệp.',
-      'App còn tự giữ một bản sao thứ hai trong máy, tự khôi phục nếu dữ liệu chính hỏng.',
-      'Đổi iPad / lỡ xóa app: Nâng cao → Dữ liệu → “Nhập từ tệp JSON” → chọn tệp đã lưu.',
+      'Tiến độ chỉ nằm trên iPad này — XÓA BIỂU TƯỢNG APP = MẤT HẾT DỮ LIỆU (quá 30 ngày chưa sao lưu: app cảnh báo).',
+      'Mỗi tuần: “Hôm nay bố mẹ cần” → Xem báo cáo tuần → “💾 Sao lưu” → Lưu vào Tệp.',
+      'Đổi iPad / lỡ xóa app: Nâng cao → Cho người hỗ trợ → “Nhập từ tệp JSON”.',
+      '📀 Album không vào bản sao lưu — chia sẻ bản thu trước khi đổi máy; máy mới: làm lại “🎤 Cài micro 3 bước”.',
     ],
     open: { label: 'Mở phần Dữ liệu', go: 'data' },
   },
@@ -136,8 +137,8 @@ export const GUIDE_SECTIONS: readonly GuideSection[] = [
     title: 'Đổi tuần / giữ tuần',
     lines: [
       'App tự sang tuần mới khi bé đạt mục tiêu và học xong các bài của tuần.',
-      'Bé chưa vững: màn Phụ huynh, dòng “⏸ Ở lại tuần này thêm” → chọn “Có”.',
-      'Cần nhảy / lùi tuần: Nâng cao → “Tuần hiện tại” (kết quả cũ vẫn giữ).',
+      'Bé chưa vững: thẻ “🗓️ Tuần N” → “⏸ Ở lại tuần này thêm” → “Có”. “Vì sao?” giải thích cách app tính.',
+      'Cần nhảy / lùi tuần: Nâng cao → “Tuần hiện tại” → chọn Cấp rồi Tuần (kết quả cũ vẫn giữ).',
     ],
     open: { label: 'Giữ tuần', go: 'hold' },
     more: { label: 'Đổi tuần (Nâng cao)', go: 'week' },
@@ -158,12 +159,109 @@ export const GUIDE_SECTIONS: readonly GuideSection[] = [
     title: 'Mẹo khi bé chán / khó',
     lines: [
       'Chán: cho chơi 1 lượt 🎮 Trò chơi hoặc 🎹 Đàn tự do rồi học tiếp; buổi ngắn còn hơn bỏ.',
-      "Khó: “Con thử chậm hơn nhé” — dùng “Làm ngay (5')” ở thẻ “Việc cần làm tối nay”.",
+      "Khó: “Con thử chậm hơn nhé” — dùng “Làm ngay (5')” ở thẻ “Hôm nay bố mẹ cần”.",
       'Khen cụ thể, không so sánh. Bé mệt / cáu: nghỉ 1 phút, hoặc mai học tiếp.',
     ],
-    open: { label: 'Mở Thẻ nhắc nhanh', go: 'tips' },
+    open: { label: 'Mở 3 điều cần nhớ', go: 'tips' },
   },
 ];
+
+/**
+ * (+ 2026-10-17, OWNER duyệt) "🆘 KHI CÓ SỰ CỐ" — các bước tự xử lý (màn Hướng dẫn, thẻ riêng; không nằm trong bản một trang).
+ * Mỗi sự cố: ≤ 4 bước ngắn, theo thứ tự thử.
+ */
+export interface TroubleItem {
+  id: string;
+  icon: string;
+  title: string;
+  steps: readonly string[];
+}
+export const TROUBLE: readonly TroubleItem[] = [
+  {
+    id: 'no-sound',
+    icon: '🔇',
+    title: 'Không có tiếng',
+    steps: [
+      'Tăng âm lượng; tắt chế độ Im lặng (Trung tâm điều khiển → chuông).',
+      'Tháo tai nghe / tắt Bluetooth nếu không dùng.',
+      'Chạm vào màn một lần (iPad cần một lần chạm để bật tiếng sau cuộc gọi).',
+      'Vẫn im: vuốt tắt hẳn app rồi mở lại từ biểu tượng 🎹.',
+    ],
+  },
+  {
+    id: 'mic-deaf',
+    icon: '👂',
+    title: 'Micro không nghe thấy đàn',
+    steps: [
+      'Mở nắp đàn, đặt iPad trên giá nhạc, tắt quạt / TV.',
+      'Phụ huynh → Cài micro → “2. Kiểm tra 5 nốt” (app tự chỉnh độ nhạy).',
+      'Vẫn hụt: “🩺 Kiểm tra sức khỏe app” → bước 3 → đổi độ nhạy.',
+      'Tạm thời: bấm “👪 Bố mẹ chấm giúp” để bé đi tiếp.',
+    ],
+  },
+  {
+    id: 'mic-perm',
+    icon: '🎤',
+    title: 'iPad chặn micro',
+    steps: [
+      'Cài đặt iPad → Safari → Micrô → chọn “Hỏi” hoặc “Cho phép”.',
+      'Vuốt tắt hẳn app, mở lại, bấm “1. Cho phép micro” → Cho phép.',
+      'iPad có thể hỏi lại một lần mỗi khi mở app — chọn Cho phép.',
+    ],
+  },
+  {
+    id: 'screen-dark',
+    icon: '🌙',
+    title: 'Màn hình tự tắt khi bé đàn',
+    steps: [
+      'Cài đặt → Màn hình & Độ sáng → Tự động khóa: 5 phút hoặc lâu hơn.',
+      'Tắt Chế độ nguồn điện thấp (pin) khi tập.',
+      'Mở app từ biểu tượng 🎹 trên Màn hình chính.',
+    ],
+  },
+  {
+    id: 'progress-missing',
+    icon: '📭',
+    title: 'Mất tiến độ / app như mới cài',
+    steps: [
+      'ĐỪNG học tiếp ngay (tránh ghi đè). Mở bằng biểu tượng 🎹 trên Màn hình chính (không phải tab Safari).',
+      'Phụ huynh → Nâng cao → Cho người hỗ trợ → “Nhập từ tệp JSON” → chọn bản sao lưu trong Tệp.',
+      'Không có bản sao lưu: gửi “🩺 Kiểm tra iPad” cho người hỗ trợ.',
+    ],
+  },
+  {
+    id: 'strange',
+    icon: '🌀',
+    title: 'Màn hình lạ / bị kẹt',
+    steps: [
+      'Bấm “Quay lại” hoặc “Về màn của bé”.',
+      'Vuốt tắt hẳn app rồi mở lại — tiến độ đã lưu không mất.',
+      'Lặp lại: Phụ huynh → “🩺 Kiểm tra sức khỏe app” → “📤 Gửi kết quả” (kèm lỗi gần đây).',
+    ],
+  },
+  {
+    id: 'new-ipad',
+    icon: '📲',
+    title: 'Chuyển sang iPad mới',
+    steps: [
+      'iPad CŨ: “💾 Sao lưu” → Lưu vào Tệp (iCloud Drive) hoặc gửi cho chính mình. Album bản thu không nằm trong bản sao lưu.',
+      'iPad MỚI: mở app bằng Safari → Chia sẻ → “Thêm vào MH chính” → mở từ biểu tượng 🎹.',
+      'Phụ huynh → Nâng cao → Cho người hỗ trợ → “Nhập từ tệp JSON”.',
+      'Cài micro lại (3 bước) — micro và loa của máy mới khác máy cũ.',
+    ],
+  },
+];
+
+/** Bản chữ "🆘 Khi có sự cố" (sao chép / chia sẻ). */
+export function troubleText(items: readonly TroubleItem[] = TROUBLE): string {
+  const out = ['🆘 PIANO BÉ — KHI CÓ SỰ CỐ', ''];
+  for (const t of items) {
+    out.push(`${t.icon} ${t.title.toUpperCase()}`);
+    t.steps.forEach((x, i) => out.push(`${i + 1}. ${x}`));
+    out.push('');
+  }
+  return out.join('\n');
+}
 
 /** Bản tóm tắt MỘT TRANG (chữ thường) — sao chép / chia sẻ / in. */
 export function guideSummaryText(sections: readonly GuideSection[] = GUIDE_SECTIONS, version = ''): string {
@@ -174,6 +272,6 @@ export function guideSummaryText(sections: readonly GuideSection[] = GUIDE_SECTI
     out.push('');
   }
   out.push('Vào màn Phụ huynh: ở màn của bé, nhấn giữ nút “Phụ huynh” 2 giây rồi làm một phép nhân.');
-  out.push('Mọi dữ liệu của bé chỉ nằm trên iPad này — nhớ sao lưu mỗi tuần.');
+  out.push('Mọi dữ liệu của bé chỉ nằm trên iPad này — xóa biểu tượng app = mất hết dữ liệu. Nhớ sao lưu mỗi tuần.');
   return out.join('\n');
 }

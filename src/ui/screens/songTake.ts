@@ -4,9 +4,13 @@
  * (+ 2026-10-08) Lượt cả bài HAY HƠN bản đang có trong "🎧 Album của con" → tự lưu (mặc định có), kèm nút "Không lưu"
  * (hoàn tác). Album chỉ nằm trên iPad này (src/progress/albumStore.ts).
  */
-import { takeRecorder, type RecorderMic, type TakeClip, type TakeRecorder } from '../../audio/recorder';
+import { clipFromBlob, takeRecorder, type RecorderMic, type TakeClip, type TakeRecorder } from '../../audio/recorder';
 import { albumStore, type AlbumTake, type TakeScore } from '../../progress/albumStore';
+import { isGuestMode } from '../../progress/ProgressStore';
+import { rememberTake, scoreTake, type MemTake } from './sessionTakes';
+import type { App } from '../App';
 import { button, h } from '../components/dom';
+import { clipLoader, progressCompare, type CompareSide } from '../components/progressCompare';
 import '../../styles/album.css';
 
 export interface TakeReplayDeps {
@@ -33,6 +37,14 @@ export class TakeReplay {
    * bản này) → quay về màn kết quả vẫn "🎧 Nghe lại" được. Rời màn thì vẫn xoá như thường.
    */
   private held = false;
+  /** (+ 2026-10-16) Lúc bắt đầu ghi lượt hiện tại (ms) — bản "lần đầu" phải cũ hơn lượt này */
+  private startedAt = 0;
+  /** (+ 2026-10-16) Album đã cân nhắc xong bản ghi lượt vừa dừng (đã lưu / không lưu) */
+  private albumDone: Promise<unknown> | null = null;
+  /** (+ 2026-10-16) "🎧 Nghe lần đầu → hôm nay" đang hiện (dừng phát khi rời / lượt mới) */
+  private progress: { stop(): void } | null = null;
+  /** (+ 2026-10-17) Lượt vừa dừng trong bộ nhớ của buổi (sessionTakes) — cho "🎧 Nghe con vừa đàn" ở màn kết buổi */
+  private memP: Promise<MemTake | null> | null = null;
 
   constructor(private readonly d: TakeReplayDeps) {}
 
@@ -41,6 +53,7 @@ export class TakeReplay {
     if (this.held) return;
     this.drop();
     if (!this.d.micOn()) return;
+    this.startedAt = Date.now();
     this.rec = takeRecorder(this.d.mic);
     this.rec?.start();
   }
@@ -52,9 +65,14 @@ export class TakeReplay {
     this.rec = null;
     if (!r) return;
     const my = this.gen;
-    this.pending = r
-      .stop()
-      .catch(() => null)
+    const a = this.d.album;
+    const raw = r.stop().catch(() => null);
+    // Nhớ cho màn kết buổi TRƯỚC khi xét lượt mới / rời màn (bản ghi thường tới sau khi đã sang màn kế)
+    this.memP = raw.then((c) => {
+      const blob = c?.blob?.() ?? null;
+      return c && blob ? rememberTake({ blob, seconds: c.seconds, songId: a?.songId ?? null, title: a?.title ?? '' }) : null;
+    });
+    this.pending = raw
       .then((c) => {
         if (my !== this.gen || this.d.disposed()) {
           c?.dispose();
@@ -73,9 +91,11 @@ export class TakeReplay {
   offerAlbum(score: TakeScore | null): void {
     const p = this.pending;
     const a = this.d.album;
+    if (score) void this.memP?.then((m) => m && scoreTake(m, score)).catch(() => undefined);
     if (!p || !score || !a) return;
+    if (isGuestMode()) return; // (+ 2026-10-17) 👤 khách chơi: không lưu Album
     const my = this.gen;
-    void p.then(async (c) => {
+    this.albumDone = p.then(async (c) => {
       const blob = c?.blob?.() ?? null;
       const store = albumStore();
       if (!c || !blob || !store || my !== this.gen) return;
@@ -84,6 +104,49 @@ export class TakeReplay {
       if (v.saved) this.showSaved(a.songId, v.previous);
       else if (v.reason === 'full') this.note(h('span', { class: 'take-album-text' }, '📀 Album đầy — bố mẹ xóa bớt ở màn Phụ huynh nhé'));
     }).catch(() => undefined);
+  }
+
+  /**
+   * (+ 2026-10-16, OWNER duyệt — "Nghe lại tiến bộ của con") Lượt này làm bài chuyển sang ĐÃ THUỘC: Album có bản ĐẦU TIÊN
+   * (cũ hơn lượt này) → hiện hai thẻ "🌱 Lần đầu → 🌟 Hôm nay" + nút nghe liền mạch (dưới nút Nghe lại). "Hôm nay" = bản ghi
+   * của chính lượt này (trong bộ nhớ — kể cả khi Album TẮT: không lưu gì); micro tắt → bản hay nhất trong Album (nếu khác
+   * bản đầu). Không có bản đầu → không hiện gì. Chờ Album lưu xong (bản cũ có thể vừa chuyển sang ô "lần đầu").
+   */
+  offerProgress(app: App, score: TakeScore): void {
+    const a = this.d.album;
+    const store = albumStore();
+    if (!a || !store) return;
+    const my = this.gen;
+    const since = this.pending && this.startedAt ? this.startedAt : Date.now();
+    const clipP = this.pending ?? Promise.resolve(null);
+    void Promise.resolve(this.albumDone)
+      .then(async () => {
+        const first = await store.firstOf(a.songId);
+        if (!first || first.meta.savedAt >= since || my !== this.gen || this.d.disposed()) return;
+        const c = await clipP;
+        const blob = c?.blob?.() ?? null;
+        let now: CompareSide | null = null;
+        if (c && blob) {
+          const sec = c.seconds;
+          now = { at: Date.now(), stars: score.stars, accuracy: score.accuracy, load: async () => clipFromBlob(blob, sec, app.audio) };
+        } else {
+          const best = (await store.list()).find((m) => m.songId === a.songId);
+          if (best && best.savedAt !== first.meta.savedAt)
+            now = { at: best.savedAt, stars: best.stars, accuracy: best.accuracy, load: clipLoader(app.audio, () => store.getSlot(a.songId, 'best')) };
+        }
+        if (!now || my !== this.gen || this.d.disposed() || !this.slot || !this.d.showing()) return;
+        const f = first.meta;
+        const pc = progressCompare(app, {
+          compact: true,
+          first: { at: f.savedAt, stars: f.stars, accuracy: f.accuracy, trueFirst: !!f.firstTake, load: clipLoader(app.audio, () => store.getSlot(a.songId, first.slot)) },
+          now,
+        });
+        this.progress?.stop();
+        this.progress = pc;
+        this.slot.querySelector('.take-progress')?.remove();
+        this.slot.append(h('div', { class: 'take-progress' }, h('div', { class: 'take-progress-head' }, '⭐ Con thuộc bài này rồi! Nghe con tiến bộ thế nào nhé:'), pc.el));
+      })
+      .catch(() => undefined);
   }
 
   private note(...kids: HTMLElement[]): void {
@@ -128,6 +191,9 @@ export class TakeReplay {
   drop(): void {
     if (this.held && !this.d.disposed()) return;
     this.gen++;
+    this.progress?.stop();
+    this.progress = null;
+    this.albumDone = null;
     this.rec?.cancel();
     this.rec = null;
     this.clip?.stopPlayback();
@@ -135,12 +201,16 @@ export class TakeReplay {
     this.clip = null;
     this.slot = null;
     this.pending = null;
+    this.memP = null;
   }
 
   /** Giữ / thôi giữ bản ghi hiện có (xem `held`). Đang giữ: start/stop/drop không làm gì (trừ khi đã rời màn). */
   hold(on: boolean): void {
     this.held = on;
-    if (on) this.clip?.stopPlayback();
+    if (on) {
+      this.clip?.stopPlayback();
+      this.progress?.stop();
+    }
   }
 
   /** Ô trống cho màn kết quả; có bản ghi (ngay hoặc tới sau) thì điền nút + một câu hỏi nhẹ. */
@@ -176,6 +246,8 @@ export class TakeReplay {
       b.querySelector('.btn-label')!.textContent = label;
     };
     b.classList.add('take-btn');
-    slot.replaceChildren(b, h('span', { class: 'take-ask' }, 'Con nghe thấy chỗ nào chưa đều?'));
+    // (+ 2026-10-16) giữ dòng Album / "Nghe lần đầu → hôm nay" nếu đã có trong ô
+    const keep = Array.from(slot.querySelectorAll<HTMLElement>(':scope > .take-album, :scope > .take-progress'));
+    slot.replaceChildren(b, h('span', { class: 'take-ask' }, 'Con nghe thấy chỗ nào chưa đều?'), ...keep);
   }
 }

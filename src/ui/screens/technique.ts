@@ -15,6 +15,7 @@ import { principleFigure } from '../components/handCards';
 import { selfStudy } from '../selfStudy';
 import { lazy } from '../lazy';
 import type { TechniqueAnimHandle } from '../components/techniqueAnim';
+import '../../styles/parentCorner.css';
 
 /** (+ 2026-10-15) Hoạt hình kỹ thuật TỪNG BƯỚC (chunk riêng); chưa nạp xong → tạm hiện tranh cũ (techniqueArt). */
 const techAnim = lazy(() => import('../components/techniqueAnim'));
@@ -32,6 +33,19 @@ export interface TechniqueHooks {
    */
   mini?: boolean;
 }
+
+/**
+ * (+ 2026-10-17, OWNER duyệt "Buổi học ≥ 60% đàn thật") Câu NGẮN (≤ 8 tiếng) hiện trên màn khởi động tay rút gọn của buổi —
+ * câu đầy đủ `how` vẫn được đọc to (🔊).
+ */
+export const DRILL_SHORT: Record<TechniqueDrill, string> = {
+  'arm-drop': 'Thả tay rơi nhẹ xuống phím',
+  'wrist-circle': 'Xoay cổ tay thật chậm',
+  'finger-tap': 'Gõ ngón 1 đến 5, ngón cong',
+  'five-finger': 'Đô lên Sol: nhỏ rồi to',
+  'thumb-under': 'Ngón cái chui dưới tay',
+  'hand-shape': 'Khum tay ôm quả bóng',
+};
 
 export const DRILL_INFO: Record<TechniqueDrill, { emoji: string; name: string; how: string; secs: number; times: number }> = {
   'arm-drop': {
@@ -220,19 +234,33 @@ export function techniqueScreen(app: App, hooks: TechniqueHooks) {
         );
       }
       const said = `${info.name}. ${info.how} Làm ${info.times} lần nhé.`;
+      stage.classList.toggle('tq-mini', !!hooks.mini);
       stage.replaceChildren(
         hooks.mini
-          ? h('div', { class: 'step-tag' }, 'Khởi động tay · 30 giây')
+          ? h('div', { class: 'step-tag' }, 'Khởi động tay')
           : h('div', { class: 'progress' }, `Bài ${i + 1} / ${hooks.drills.length}`),
         h('h1', { class: 'title' }, `${info.emoji} ${info.name}`),
         // (+ 2026-10-15) cạnh hoạt hình bài tập: tranh NGUYÊN TẮC tay tương ứng (đúng ✓), suốt 30 giây bé làm
         h('div', { class: `tq-row${five ? ' five' : ''}` }, art, principleBox(d)),
-        h('p', { class: 'lead tq-how' }, info.how, speakChip(app, said)),
+        // (+ 2026-10-17) bản rút gọn của buổi: câu NGẮN trên màn, câu đầy đủ đọc to
+        h('p', { class: 'lead tq-how' }, hooks.mini ? DRILL_SHORT[d] : info.how, speakChip(app, said)),
         h('div', { class: 'tq-times' }, `Làm ${info.times} lần`),
       );
+      if (hooks.mini) {
+        // (+ 2026-10-17, OWNER duyệt "Buổi học ≥ 60% đàn thật") MỘT màn gọn: đọc câu hướng dẫn xong là đồng hồ tự chạy (không nút
+        // "Con làm nào"); "✓ Con xong rồi" có sẵn từ đầu; hết giờ / xong → bố mẹ xác nhận ngay trên màn này.
+        setBar(
+          backButton(() => (i > 0 ? ((i -= 1), show()) : (halt(), hooks.onBack()))),
+          button({ icon: '⏭', label: 'Để sau', onTap: () => (halt(), hooks.onDone()) }),
+          five ? button({ icon: '🎬', label: 'Thầy làm mẫu', onTap: () => demoFive() }) : null,
+          button({ icon: '✓', label: 'Con xong rồi', kind: 'primary', onTap: () => (window.clearInterval(timer), halt(), ask()) }),
+        );
+        if (five) window.setTimeout(() => tk === token && demoFive(), 500);
+        else window.setTimeout(() => tk === token && void speak(app, said).then(() => tk === token && run()), 350);
+        return;
+      }
       setBar(
-        backButton(() => (i > 0 ? ((i -= 1), show()) : hooks.mini ? (halt(), hooks.onBack()) : intro())),
-        hooks.mini ? button({ icon: '⏭', label: 'Để sau', onTap: () => (halt(), hooks.onDone()) }) : null,
+        backButton(() => (i > 0 ? ((i -= 1), show()) : intro())),
         five ? button({ icon: '🎬', label: 'Thầy làm mẫu', onTap: () => demoFive() }) : null,
         button({ icon: '▶', label: 'Con làm nào', kind: 'primary', onTap: () => run() }),
       );
@@ -276,7 +304,11 @@ export function techniqueScreen(app: App, hooks: TechniqueHooks) {
       };
       timer = window.setInterval(tick, 100);
       tick();
-      setBar(button({ icon: '✓', label: 'Con xong rồi', kind: 'primary', onTap: () => (window.clearInterval(timer), ask()) }));
+      setBar(
+        hooks.mini ? backButton(() => (halt(), hooks.onBack())) : null,
+        hooks.mini ? button({ icon: '⏭', label: 'Để sau', onTap: () => (halt(), hooks.onDone()) }) : null,
+        button({ icon: '✓', label: 'Con xong rồi', kind: 'primary', onTap: () => (window.clearInterval(timer), ask()) }),
+      );
     }
 
     function ask(): void {
@@ -293,7 +325,7 @@ export function techniqueScreen(app: App, hooks: TechniqueHooks) {
       }
       stage.querySelector('.tq-timer')?.classList.add('done');
       anim?.setSound(false);
-      const q = h('p', { class: 'lead tq-ask' }, '👪 Bố mẹ: bé làm đúng chưa?');
+      const q = h('p', { class: 'lead tq-ask' }, hooks.mini ? '👪 Bé làm đúng chưa?' : '👪 Bố mẹ: bé làm đúng chưa?');
       stage.querySelector('.tq-ask')?.remove();
       stage.append(q);
       q.scrollIntoView?.({ block: 'nearest' });

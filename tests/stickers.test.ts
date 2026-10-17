@@ -131,7 +131,9 @@ describe('sổ sticker', () => {
     expect(FOLK_SONG_IDS.length).toBeGreaterThanOrEqual(6);
     expect(FOLK_SONG_IDS).toContain('ly_cay_da');
     expect(earned(data([session({ songRuns: [run('ly_cay_da')] })])).has('folk')).toBe(true);
-    expect(earned(data([session({ songRuns: [run('ly_cay_da', { bpm: 40 })] })])).has('folk')).toBe(false);
+    // (+ 2026-10-17, OWNER duyệt) bài viết ở 40 → thuộc ở đúng tốc độ của bài (songStats.masteryBpm); chậm hơn → chưa
+    expect(earned(data([session({ songRuns: [run('ly_cay_da', { bpm: 40 })] })])).has('folk')).toBe(true);
+    expect(earned(data([session({ songRuns: [run('ly_cay_da', { bpm: 39 })] })])).has('folk')).toBe(false);
   });
 
   it('trò sắc thái: ≥ 3 lượt khác nhau đúng trong cùng một buổi, tách To/nhỏ và Ngắt/liền', () => {

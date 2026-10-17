@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { WEEKS, weekPassed } from '../src/lessons/lessonEngine';
-import { REV3_LESSON_MAP, REV3_WEEK_MAP, REV4_LESSON_MAP, migrate, migrateCurriculum, renumberId, renumberIdRev3, renumberIdRev4, rev4Week } from '../src/progress/migrations';
+import { REV3_LESSON_MAP, REV3_WEEK_MAP, REV4_LESSON_MAP, migrate, migrateCurriculum, renumberId, renumberIdRev3, renumberIdRev4, rev4Week, rev5Week } from '../src/progress/migrations';
 import { MemoryStorage, ProgressStore, STORAGE_KEY } from '../src/progress/ProgressStore';
 import { CURRICULUM_REV, defaultData, validateAppData } from '../src/progress/schema';
 
@@ -8,7 +8,9 @@ import { CURRICULUM_REV, defaultData, validateAppData } from '../src/progress/sc
  * Giáo trình rev 2 (OWNER duyệt 2026-10-05): chèn tuần 20 "Đọc nốt cao" → tuần 20–24 cũ thành 21–25.
  * Giáo trình rev 3 (v5, OWNER duyệt 2026-10-05): 30 tuần — bảng OLD→NEW (REV3_WEEK_MAP).
  * Giáo trình rev 4 (v5.1, OWNER duyệt 2026-10-06): 31 tuần — tách tuần 18; tuần ≥ 19 +1; w18-l3 → w19-l1, w18-bkt → w19-bkt.
- * Dữ liệu cũ được đánh số lại đúng MỘT lần mỗi bậc; rev 1 → 2 → 3 → 4 lần lượt (kết quả cuối luôn là rev 4).
+ * Dữ liệu cũ được đánh số lại đúng MỘT lần mỗi bậc; rev 1 → 2 → 3 → 4 lần lượt.
+ * (2026-10-17) rev 5 (46 tuần — tuần ôn 27 · 32 · 38): kết quả cuối luôn là rev 5 → số tuần cuối = rev5Week(tuần rev 4);
+ * kiểm tra riêng bậc rev 4 → 5: tests/curriculum-review-2026-10-17.test.ts.
  */
 const fixedNow = () => new Date(2026, 9, 5, 17, 0, 0);
 
@@ -98,13 +100,13 @@ describe('rev 2 → 3 (giáo trình v5, 30 tuần): bảng OLD→NEW', () => {
       18: 'silent_night', 19: 'ninja_tiptoe', 20: 'drifting_boat', 21: 'minuet_g', 22: 'fur_elise', 23: 'canon', 24: 'saints_both',
     };
     for (const [old, songId] of Object.entries(SIGNATURE)) {
-      const w = WEEKS[rev4Week(REV3_WEEK_MAP[Number(old)]) - 1];
+      const w = WEEKS[rev5Week(rev4Week(REV3_WEEK_MAP[Number(old)])) - 1];
       const songs = w.lessons.flatMap((l) => l.activities.flatMap((a) => (a.kind === 'song' ? [a.songId] : [])));
       expect(songs, `tuần cũ ${old} → ${w.week}`).toContain(songId);
     }
     // Buổi biểu diễn vẫn là buổi biểu diễn
     for (const old of [8, 16, 25]) {
-      const w = rev4Week(REV3_WEEK_MAP[old]);
+      const w = rev5Week(rev4Week(REV3_WEEK_MAP[old]));
       expect(WEEKS[w - 1].lessons.some((l) => l.id === `w${w}-stage`)).toBe(true);
     }
   });
@@ -147,13 +149,13 @@ describe('rev 2 → 3 (giáo trình v5, 30 tuần): bảng OLD→NEW', () => {
   });
 
   it('mọi tuần cũ 1–25 → tuần mới theo bảng', () => {
-    for (let w = 1; w <= 25; w++) expect(migrate(rev2Data(w, [], [])).progress.currentWeek).toBe(rev4Week(REV3_WEEK_MAP[w]));
+    for (let w = 1; w <= 25; w++) expect(migrate(rev2Data(w, [], [])).progress.currentWeek).toBe(rev5Week(rev4Week(REV3_WEEK_MAP[w])));
   });
 
   it('chạy đúng một lần (idempotent): dữ liệu đã ở rev hiện tại không bị đổi nữa', () => {
     const once = migrate(rev2Data(21, ['w21-l1'], [session('a', 'w21-l1')]));
-    expect(once.progress.currentWeek).toBe(29);
-    expect(once.progress.lessonsCompleted).toEqual(['w29-l1']);
+    expect(once.progress.currentWeek).toBe(30);
+    expect(once.progress.lessonsCompleted).toEqual(['w30-l1']);
     const twice = migrate(JSON.parse(JSON.stringify(once)));
     expect(twice).toEqual(once);
     expect(migrateCurriculum(once as unknown as Record<string, unknown>)).toBe(once);
@@ -161,53 +163,53 @@ describe('rev 2 → 3 (giáo trình v5, 30 tuần): bảng OLD→NEW', () => {
 });
 
 describe('rev 1 → 2 → 3 → 4 (dữ liệu rất cũ đi qua mọi bậc)', () => {
-  it('rev 1 ở tuần 22 → rev 2 tuần 23 → rev 3 tuần 26 → rev 4 tuần 27; mã bài học / buổi đánh số lại từng bậc; tiến độ không mất', () => {
+  it('rev 1 ở tuần 22 → rev 2 tuần 23 → rev 3 tuần 26 → rev 4 tuần 27 → rev 5 tuần 28; mã bài học / buổi đánh số lại từng bậc; tiến độ không mất', () => {
     const d = migrate(rev1Data(22));
     expect(validateAppData(d)).toEqual([]);
     expect(d.curriculumRev).toBe(CURRICULUM_REV);
-    expect(d.progress.currentWeek).toBe(27);
-    expect(d.progress.lessonsCompleted).toEqual(['w6-l1', 'w25-l2', 'w29-l1', 'w29-l2', 'w30-l1', 'w30-l2', 'w27-l1']);
-    expect(d.sessions.map((s) => s.lessonId)).toEqual(['w25-l1', 'w29-l2', 'w29-l2', 'w30-l2', 'w27-l1', 'w30-song-canon', 'w2-l1']);
+    expect(d.progress.currentWeek).toBe(28);
+    expect(d.progress.lessonsCompleted).toEqual(['w6-l1', 'w25-l2', 'w30-l1', 'w30-l2', 'w31-l1', 'w31-l2', 'w28-l1']);
+    expect(d.sessions.map((s) => s.lessonId)).toEqual(['w25-l1', 'w30-l2', 'w30-l2', 'w31-l2', 'w28-l1', 'w31-song-canon', 'w2-l1']);
     // songRuns (mã bài hát) giữ nguyên
     expect(d.sessions[1].songRuns[0].songId).toBe('minuet_g');
   });
 
-  it('rev 1: tuần 19 → 19 → 24 → 25; tuần 20 (Minuet chưa qua) → 20 "Nốt cao" → 25 → 26; tuần 24 → 25 → 30 → 31', () => {
+  it('rev 1: tuần 19 → 19 → 24 → 25; tuần 20 (Minuet chưa qua) → 20 "Nốt cao" → 25 → 26; tuần 24 → 25 → 30 → 31 → (rev 5) 33', () => {
     expect(migrate(rev1Data(19)).progress.currentWeek).toBe(25);
     expect(migrate(rev1Data(20)).progress.currentWeek).toBe(26);
-    expect(migrate(rev1Data(24)).progress.currentWeek).toBe(31);
+    expect(migrate(rev1Data(24)).progress.currentWeek).toBe(33);
     expect(migrate(rev1Data(5)).progress.currentWeek).toBe(6);
   });
 
-  it('tiêu chí tuần vẫn đúng tuần sau đánh số lại (Minuet theo nhịp đạt ở 2 ngày → tuần 29 mới)', () => {
+  it('tiêu chí tuần vẫn đúng tuần sau đánh số lại (Minuet theo nhịp đạt ở 2 ngày → tuần 30 mới — rev 5)', () => {
     // v5.1: Minuet cần lượt THEO NHỊP ≥ 50
     const tempo = (id: string) => ({ ...run(id), mode: 'tempo', level: 2 });
     const raw = rev1Data(21);
-    // rev 1: tuần 20 = Minuet, tuần 21 = Für Elise. Buổi ở tuần 21 rev 1 → 22 rev 2 → 29 rev 3 → 30 rev 4
+    // rev 1: tuần 20 = Minuet, tuần 21 = Für Elise. Buổi ở tuần 21 rev 1 → 22 rev 2 → 29 rev 3 → 30 rev 4 → 31 rev 5
     raw.sessions = [
       session('m1', 'w21-l2', { songRuns: [tempo('minuet_g')] }),
       session('m2', 'w21-l2', { date: '2026-10-02', songRuns: [tempo('minuet_g')] }),
     ];
     const d = migrate(raw);
-    expect(d.sessions.map((s) => s.lessonId)).toEqual(['w30-l2', 'w30-l2']);
-    expect(weekPassed(30, d)).toBe(false); // Für Elise chưa chơi
+    expect(d.sessions.map((s) => s.lessonId)).toEqual(['w31-l2', 'w31-l2']);
+    expect(weekPassed(31, d)).toBe(false); // Für Elise chưa chơi
     const raw2 = rev1Data(20);
     raw2.sessions = [
       session('m1', 'w20-l2', { songRuns: [tempo('minuet_g')] }),
       session('m2', 'w20-l2', { date: '2026-10-02', songRuns: [tempo('minuet_g')] }),
     ];
     const d2 = migrate(raw2);
-    expect(d2.sessions.map((s) => s.lessonId)).toEqual(['w29-l2', 'w29-l2']);
-    expect(weekPassed(29, d2)).toBe(true);
+    expect(d2.sessions.map((s) => s.lessonId)).toEqual(['w30-l2', 'w30-l2']);
+    expect(weekPassed(30, d2)).toBe(true);
     expect(weekPassed(26, d2)).toBe(false); // tuần "Nốt cao" chưa có dữ liệu
   });
 });
 
 describe('lưu trữ & nhập JSON', () => {
-  it('cài mới bắt đầu ở rev 4 — mã tuần của bản mới KHÔNG bị dịch', () => {
+  it('cài mới bắt đầu ở rev hiện tại (5) — mã tuần của bản mới KHÔNG bị dịch', () => {
     const st = new ProgressStore(new MemoryStorage(), fixedNow);
     expect(st.get().curriculumRev).toBe(CURRICULUM_REV);
-    expect(CURRICULUM_REV).toBe(4);
+    expect(CURRICULUM_REV).toBe(5);
     st.setCurrentWeek(21);
     st.markLessonCompleted('w21-l1');
     const kv = new MemoryStorage();
@@ -221,18 +223,18 @@ describe('lưu trữ & nhập JSON', () => {
     const kv = new MemoryStorage();
     kv.setItem(STORAGE_KEY, JSON.stringify(rev1Data(22)));
     const a = new ProgressStore(kv, fixedNow);
-    expect(a.get().progress.currentWeek).toBe(27);
-    a.markLessonCompleted('w27-l2'); // ghi xuống → có curriculumRev
+    expect(a.get().progress.currentWeek).toBe(28);
+    a.markLessonCompleted('w28-l2'); // ghi xuống → có curriculumRev
     expect(JSON.parse(kv.getItem(STORAGE_KEY)!).curriculumRev).toBe(CURRICULUM_REV);
     const b = new ProgressStore(kv, fixedNow);
-    expect(b.get().progress.currentWeek).toBe(27);
-    expect(b.get().sessions.map((s) => s.lessonId)).toContain('w27-l1');
+    expect(b.get().progress.currentWeek).toBe(28);
+    expect(b.get().sessions.map((s) => s.lessonId)).toContain('w28-l1');
   });
 
   it('nhập JSON xuất từ bản cũ cũng được đánh số lại', () => {
     const st = new ProgressStore(new MemoryStorage(), fixedNow);
     expect(st.importJSON(JSON.stringify(rev1Data(24)))).toEqual({ ok: true });
-    expect(st.get().progress.currentWeek).toBe(31);
+    expect(st.get().progress.currentWeek).toBe(33);
     expect(st.importJSON(JSON.stringify(rev2Data(9, ['w9-l1'], [])))).toEqual({ ok: true });
     expect(st.get().progress.currentWeek).toBe(11);
     expect(st.get().progress.lessonsCompleted).toEqual(['w11-l1']);
@@ -241,7 +243,7 @@ describe('lưu trữ & nhập JSON', () => {
   it('curriculumRev sai kiểu bị từ chối', () => {
     expect(validateAppData({ ...defaultData(fixedNow()), curriculumRev: 'x' }).length).toBeGreaterThan(0);
     expect(validateAppData({ ...defaultData(fixedNow()), curriculumRev: 0 }).length).toBeGreaterThan(0);
-    expect(validateAppData({ ...defaultData(fixedNow()), curriculumRev: 5 }).length).toBeGreaterThan(0);
+    expect(validateAppData({ ...defaultData(fixedNow()), curriculumRev: CURRICULUM_REV + 1 }).length).toBeGreaterThan(0);
   });
 });
 
@@ -280,7 +282,7 @@ describe('rev 3 → 4 (v5.1, OWNER duyệt 2026-10-06): tách tuần 18, tuần 
       24: 'ninja_tiptoe', 25: 'drifting_boat', 26: 'canon', 27: 'saints_both', 28: 'minuet_g', 29: 'fur_elise',
     };
     for (const [old, songId] of Object.entries(SIGNATURE)) {
-      const w = WEEKS[rev4Week(Number(old)) - 1];
+      const w = WEEKS[rev5Week(rev4Week(Number(old))) - 1];
       const songs = w.lessons.flatMap((l) => l.activities.flatMap((a) => (a.kind === 'song' ? [a.songId] : [])));
       expect(songs, `tuần rev 3 ${old} → ${w.week}`).toContain(songId);
     }
@@ -302,7 +304,7 @@ describe('rev 3 → 4 (v5.1, OWNER duyệt 2026-10-06): tách tuần 18, tuần 
     ]);
     const d = migrate(raw);
     expect(validateAppData(d)).toEqual([]);
-    expect(d.curriculumRev).toBe(4);
+    expect(d.curriculumRev).toBe(CURRICULUM_REV);
     expect(d.progress.currentWeek).toBe(18);
     // dấu "xong một phần" bị bỏ (thứ tự hoạt động đã đổi ở v5.1)
     expect(d.progress.lessonsCompleted).toEqual(['w17-l2', 'w18-l1', 'w19-l1', 'w19-bkt']);
@@ -311,8 +313,8 @@ describe('rev 3 → 4 (v5.1, OWNER duyệt 2026-10-06): tách tuần 18, tuần 
     expect(weekPassed(18, d)).toBe(false); // Lý cây đa mới 1 ngày
   });
 
-  it('mọi tuần rev 3: 1–18 giữ nguyên, 19–30 → 20–31', () => {
-    for (let w = 1; w <= 30; w++) expect(migrate(rev3Data(w, [], [])).progress.currentWeek).toBe(w >= 19 ? w + 1 : w);
+  it('mọi tuần rev 3: 1–18 giữ nguyên, 19–30 → 20–31 (→ rev 5: rev5Week)', () => {
+    for (let w = 1; w <= 30; w++) expect(migrate(rev3Data(w, [], [])).progress.currentWeek).toBe(rev5Week(w >= 19 ? w + 1 : w));
   });
 
   it('idempotent: chạy lại trên dữ liệu rev 4 không đổi gì (cùng object)', () => {

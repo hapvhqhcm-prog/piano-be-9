@@ -16,7 +16,7 @@ const FOLK: Array<{ id: string; week: number; lessonId: string }> = [
   { id: 'xoe_hoa', week: 9, lessonId: 'w9-l4' },
   { id: 'bac_kim_thang', week: 19, lessonId: 'w19-bkt' },
   { id: 'ly_ngua_o', week: 24, lessonId: 'w24-ngua' },
-  { id: 'ly_cay_bong', week: 27, lessonId: 'w27-l1' },
+  { id: 'ly_cay_bong', week: 28, lessonId: 'w28-l1' }, // (2026-10-17) rev 5: tuần 27 cũ → 28
 ];
 
 const lessonSongs = (lessonId: string) =>
@@ -199,7 +199,7 @@ const NEW_VN: VnSpec[] = [
   { id: 'ly_ngua_o', composer: 'Dân ca Nam Bộ', vn: 'folk', week: 24, lessons: ['w24-ngua'], octave: { 29: { 1: 12 } }, order: [...range(0, 32), ...range(24, 30), 32] },
   { id: 'dem_thu', composer: 'Đặng Thế Phong', vn: 'composed', week: 25 },
   { id: 'con_thuyen_khong_ben', composer: 'Đặng Thế Phong', vn: 'composed', week: 26 },
-  { id: 'nguoi_oi_nguoi_o_dung_ve', composer: 'Dân ca quan họ Bắc Ninh', vn: 'folk', week: 27 },
+  { id: 'nguoi_oi_nguoi_o_dung_ve', composer: 'Dân ca quan họ Bắc Ninh', vn: 'folk', week: 28 },
 ];
 
 /** Bản ký âm trong tư liệu nghiên cứu (giọng của tư liệu, chưa dịch giọng / mở nhắc lại) */

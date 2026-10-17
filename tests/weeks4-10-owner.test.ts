@@ -64,7 +64,8 @@ describe('tiến độ tuần 4 đã lưu vẫn đúng sau rà soát 2026-10-08'
     expect(nextLesson(d).id).toBe('w4-l4');
     const acts = buildSessionPlan(findLesson('w4-l4')!, d).flatMap((s) => (s.kind === 'activity' ? [s.index] : []));
     // (+ 2026-10-12) + 4: thẻ "📘 Biết thêm" (quãng 2 & 3) thêm vào CUỐI bài
-    expect(acts).toEqual([1, 2, 3, 4]);
+    // (+ 2026-10-17) thẻ 4 ra khỏi buổi (chip "📘 1 thẻ mới" ở màn kết) — chỉ số giữ nguyên
+    expect(acts).toEqual([1, 2, 3]);
     // Bài 3 đã xong: không bị "mở lại" vì có thêm bước (Chơi lại / tiêu chí vẫn làm đủ bài)
     expect(d.progress.lessonsCompleted).toContain('w4-l3');
   });

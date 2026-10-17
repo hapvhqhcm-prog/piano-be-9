@@ -68,23 +68,24 @@ describe('1. Tập tách tay (bài hai tay)', () => {
     // (2026-10-15) bằng chứng tính từ ngày học bài có "Bài ca niềm vui hai tay" (w12-l3)
     // v5: lượt bố mẹ phải có phiếu 3 ý đều đạt
     const ok = { checklist: { notes: true, beat: true, fingers: true } };
+    // (2026-10-17) bài tiêu chí tuần 12: "Bánh nóng — hai tay" (bài hai tay chính của tuần, bài w12-l1)
     for (const day of [0, 1]) {
       at(day);
-      const s = st.startSession('w12-l3');
-      st.addSongRun(s.id, run('ode_to_joy_both', { hand: 'RH', ...ok }));
-      st.addSongRun(s.id, run('ode_to_joy_both', { hand: 'LH', ...ok }));
+      const s = st.startSession('w12-l1');
+      st.addSongRun(s.id, run('hot_cross_buns_both', { hand: 'RH', ...ok }));
+      st.addSongRun(s.id, run('hot_cross_buns_both', { hand: 'LH', ...ok }));
     }
     expect(validateAppData(st.get())).toEqual([]);
-    expect(songMastered(st.get(), 'ode_to_joy_both')).toBe(false);
+    expect(songMastered(st.get(), 'hot_cross_buns_both')).toBe(false);
     expect(weekPassed(12, st.get())).toBe(false);
     at(0);
-    st.addSongRun(st.startSession('w12-l3').id, run('ode_to_joy_both', ok));
+    st.addSongRun(st.startSession('w12-l1').id, run('hot_cross_buns_both', ok));
     // (2026-10-15) "thuộc" cũng cần 2 ngày như tiêu chí tuần
-    expect(songMastered(st.get(), 'ode_to_joy_both')).toBe(false);
+    expect(songMastered(st.get(), 'hot_cross_buns_both')).toBe(false);
     expect(weekPassed(12, st.get())).toBe(false); // mới 1 ngày
     at(1);
-    st.addSongRun(st.startSession('w12-l3').id, run('ode_to_joy_both', ok));
-    expect(songMastered(st.get(), 'ode_to_joy_both')).toBe(true);
+    st.addSongRun(st.startSession('w12-l1').id, run('hot_cross_buns_both', ok));
+    expect(songMastered(st.get(), 'hot_cross_buns_both')).toBe(true);
     expect(weekPassed(12, st.get())).toBe(true);
   });
 

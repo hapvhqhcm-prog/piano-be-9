@@ -946,3 +946,54 @@ Cả 9 bài chờ tuần 4–6 (`CHILD_SIM=full`, 16 nốt đầu mỗi bài, c�
 - **📍 Tìm Đô giữa** (`middleC.ts`): hiện khi bé lệch quãng tám ≥ 2 lần trong 7 ngày, khi đổi thế tay, hoặc ở buổi đầu tuần (tuần ≤ 6). Micro xác nhận C4; không ảnh hưởng tiêu chí.
 - **Bố mẹ 30 giây** (`parentFocus.ts`): mỗi buổi chọn 1 điều cần để ý theo thứ tự ưu tiên bài học / lỗi gần đây.
 - **🎁 Bài con thích** (`rewardSongs.ts`): hiện khi buổi tốt. Chọn từ 3–6 bài (bài quen + 1 bài mới). Lượt `reward` không tính vào tiêu chí và không tính thuộc bài.
+
+## 51. Tự cân độ khó, đổi món khởi động, nghe lại tiến bộ, bàn phím to hơn (2026-10-17)
+- **Tự cân độ khó** (`adaptive.ts`)
+  - Chỉ số thành công lấy trung bình 4 tỉ lệ trong 5 buổi gần nhất.
+  - Chế độ nhẹ (gentle) bật khi: chỉ số < 0,65, hoặc ≥ 2 lần dừng nhẹ nhàng, hoặc còn bài tập về nhà kèm chỉ số thấp. Khi đó:
+    - mỗi buổi chỉ có 1 hoạt động mới (bài được chia ra, không đổi id hay index);
+    - nhịp khởi đầu 40;
+    - giữ tên nốt và màu.
+  - Chế độ kéo giãn (stretch) bật khi 3 buổi liên tiếp > 0,92 và không có lần nào hỏng. Khi đó thêm nút ⭐ tùy chọn; kết quả không tính vào tiêu chí.
+  - Dữ liệu mẫu (fixture) của bé ra chỉ số ≈ 0,67, tức chế độ bình thường.
+- **Xoay vòng bài khởi động:** không lặp lại dạng bài của buổi trước. Các tuần chấm bằng bài khởi động vẫn giữ nguyên dạng bài.
+- **Album: bản thu đầu tiên**
+  - IndexedDB lên v3, có kho `first` riêng.
+  - Bản thu đầu tiên không bao giờ bị thay; tính chung giới hạn dung lượng.
+  - Có màn "Lần đầu → Hôm nay" khi vừa thuộc bài, và trong Album.
+- **Bàn phím:** dùng chỗ trống `--staff-want`. Ví dụ bài một tay tuần 4 trên iPad 10.2": 243 → 340 px.
+- **e2e:** thêm kịch bản F (bài tập về nhà → hôm sau → khởi động), WebKit H.
+
+## 52. Tích hợp đợt lớn 2026-10-17 (8 nhánh song song) — kiểm tra, sửa, đánh bóng
+- **Kiểm tra chung:** `tsc --noEmit` sạch; vitest 117 tệp / 2823 test đạt (11 bỏ qua); `npm run build` + `npm run compat` đạt (chỉ cảnh báo `text-wrap` cũ).
+- **"sau khi gộp < 300 K" (712.683 ký tự):** KHÔNG phải dữ liệu mới phình ra. Test dùng danh sách tuần huy chương cũ (31/43) trong khi giáo trình rev 5 có huy chương ở 33/46, nên bé giả lập "kẹt" ở tuần 33 khoảng 1,5 năm. Tuần chưa đạt thì giữ mọi buổi (đúng thiết kế), ra 329 buổi sống. Đúng danh sách thì còn 207.066 ký tự / 41 buổi (đầy đủ ~1,06 M). Test giờ lấy tuần huy chương từ `LEVELS`, không ghi cứng nữa.
+- **Nút ▶ ở màn chính:** `home.ts homePlayLabel` và dòng "Ngày mai" ở màn kết giờ truyền `stepTitle` vào `playLabel`. Bài tập không có trong Thư viện cũng hiện 🎵 + tên bài. Bé thật (fixture) thấy "▶ 🎵 Ếch con nhảy" (đã thêm test). Đàn theo tai không còn lộ tên bài trên nút.
+- **🎧 Nghe con vừa đàn:** thêm `src/ui/screens/sessionTakes.ts`, giữ bản ghi của buổi trong bộ nhớ (bản hay nhất trong ≤ 4 lượt có điểm, nếu không có thì lấy bản cuối). `TakeReplay` ghi nhớ lượt TRƯỚC khi rời màn. Màn kết phát bản này kể cả khi Album không lưu bản mới; không có thì dùng bản Album của buổi; không có gì thì ẩn nút (có test).
+- **Nâng cao → Nhạc nền:** chữ mới: micro BẬT chỉ có nhạc nền bộ gõ; micro TẮT có thêm nhạc đệm piano; tắt mục này thì chỉ còn tiếng tích.
+- **"Cài lại micro":** kiểm tra trên trình duyệt. Dữ liệu bé (fixture) nạp sẵn trong localStorage rồi mở app → không có hộp thoại. Gọi `importJSON` → có hộp thoại (đúng ý).
+- **Chữ cũ "Học tiếp" (nút không còn tên đó):** sửa thành "nút ▶ to" ở Hướng dẫn, Tối nay, Hôm nay bố mẹ cần, lời nhắc .ics, Hướng dẫn nhanh. Thẻ hướng dẫn sao lưu: "Phụ huynh → Xem báo cáo tuần → 💾 Sao lưu".
+- **Lỗi WebKit thật — đã sửa:**
+  - `staffView.fitCard` ghi `--staff-want` ngay trong ResizeObserver, làm WebKit báo "ResizeObserver loop completed…" ở mọi bài hát (vì vậy B/S/L/V/H hỏng). Giờ dời việc ghi sang requestAnimationFrame.
+  - Màn Nhịp "Đọc nhịp trước" (bước phụ): micro chấm chưa đạt thì trước đây mất nút ⏭ Bỏ qua. Giờ vẫn còn nút này.
+- **Màn quà nhiều món** (bố mẹ đổi tuần xa → 12 quà): thẻ tràn khỏi màn hình. Giờ danh sách cuộn trong thẻ và nút luôn thấy.
+- **Kịch bản kiểm thử cập nhật theo bố cục mới:**
+  - `e2e.mjs` A: không còn chấm tuần; kiểm tra nút ▶ mang tên bài.
+  - `webkit-smoke.mjs`:
+    - ô chọn Cấp → Tuần;
+    - "Cho người hỗ trợ", "Thiết lập một lần" là mục thu gọn;
+    - sao lưu ở Nâng cao;
+    - MỘT lời mời ở màn kết (bài thưởng hoặc biểu diễn);
+    - chờ trang ổn định sau khi đổi ngày.
+  - `shots.mjs` in kèm lỗi console của từng cảnh.
+- **Kết quả:** e2e `--quick` 6/6 kịch bản đạt (A–F), 0 lỗi console ngoài dự kiến; WebKit 11/11 kịch bản đạt (P A C B H S G R L V D), 0 lỗi ngoài dự kiến.
+- **Ảnh chưa từng chụp** (iPad 10.2" + mini, không có lỗi console):
+  - nhạc công nhỏ: theo tai w13, dịch giọng w14/w24, buổi diễn w15/w27, đệm hợp âm w24, đánh bóng w27;
+  - song tấu w6/w9;
+  - màn chính (fixture, mở "Xem các bài", tuần 30);
+  - 👤 khách chơi, 🩺 sức khỏe app, Phụ huynh (Hôm nay / Tuần), màn kết, thẻ hướng dẫn.
+- **Ước lượng khi bật micro** (bot "bé", fixture tuần 4, 5 buổi liền):
+  - Micro bật được giả lập: `app.mic` ở trạng thái 'on'; nốt đúng được bơm theo con trỏ khuông (chế độ theo nhịp hoặc chờ) / phím sáng; tiếng vỗ bơm theo ô nhịp.
+  - Micro TẮT: phần đàn ≈ 38–43 %, bố mẹ chạm 19–26 lần mỗi buổi.
+  - Micro BẬT: phần đàn ≈ 39–43 %, bố mẹ chạm 1–2 lần mỗi buổi (chỉ "Con làm đúng rồi" ở bài kỹ thuật + "Bố mẹ đã học xong").
+  - Mọi bài hát đạt bằng micro, không có bài tập về nhà, không kẹt.
+  - Micro giảm hẳn số chạm của bố mẹ nhưng KHÔNG nâng phần đàn lên 60 %: phần không đàn là lời/chữ (~470–590 từ/buổi), thẻ kỹ thuật, trò chơi và màn chuyển tiếp.

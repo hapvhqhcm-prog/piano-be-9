@@ -18,14 +18,14 @@ const pitchesOf = (t: Tune) =>
   voices(t).flatMap((v) => v.flatMap((n) => (n.rest ? [] : [n.pitch!, ...(n.also ?? []).map((a) => a.pitch)])));
 
 describe('Thư viện bổ sung 2026-10-09', () => {
-  it('đủ 24 bài, id không trùng, tuần 3–28 (Cấp 1–3; Cấp 4 chỉ dùng bài trong bài học), không có trong bài học nào', () => {
+  it('đủ 24 bài, id không trùng, tuần 3–29 (Cấp 1–3; Cấp 4 chỉ dùng bài trong bài học; rev 5: tuần 28 cũ → 29), không có trong bài học nào', () => {
     expect(IDS).toHaveLength(24);
     expect(new Set(IDS).size).toBe(24);
     for (const [i, t] of NEW.entries()) expect(t, IDS[i]).toBeDefined();
     const used = new Set(WEEKS.flatMap((w) => w.lessons.flatMap((l) => l.activities.flatMap((a) => (a.kind === 'song' ? [a.songId] : [])))));
     for (const t of NEW) {
       expect(t.week, t.id).toBeGreaterThanOrEqual(3);
-      expect(t.week, t.id).toBeLessThanOrEqual(28);
+      expect(t.week, t.id).toBeLessThanOrEqual(29);
       expect(used.has(t.id), t.id).toBe(false);
       expect(validateTune(t), t.id).toEqual([]);
     }

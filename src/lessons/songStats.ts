@@ -5,19 +5,35 @@ import { starsFor } from '../music/timing';
 import { SONGS, noteUnit, type Tune } from '../music/tune';
 import { localDateStr, type AppData, type Session, type SongAgg } from '../progress/schema';
 import { hist, memo } from '../progress/history';
+import { adaptiveStartBpm } from './adaptive';
+import { REWARD_LESSON_PREFIX, countsForMastery, sessionKind } from './sessionKind';
 
 export type Run = Session['songRuns'][number];
 /**
  * (+ 2026-10-16) Mã buổi của lượt chơi "🎁 bài thưởng" ở màn kết buổi (lessons/rewardSongs.ts): `reward-song-<bài>`.
  * Không bắt đầu bằng "w<tuần>-" → không vào tiêu chí tuần; lượt trong đó không tính "đã thuộc" (foldSongRun `reward`).
  */
-export const REWARD_LESSON_PREFIX = 'reward-song-';
-export const isRewardLessonId = (lessonId: string): boolean => lessonId.startsWith(REWARD_LESSON_PREFIX);
+export { REWARD_LESSON_PREFIX };
+export const isRewardLessonId = (lessonId: string): boolean => sessionKind(lessonId) === 'reward';
 /** Lượt chơi đủ tay (không phải tập tách tay một bè của bài hai tay). */
 export const together = (r: Run) => !r.hand;
 /** Lượt chơi đạt cả bài (không phải tập một câu, không phải tập tách tay). */
 export const passedWhole = (r: Run, songId: string, tempo = false, minBpm = 0): boolean =>
   r.songId === songId && !r.phrase && together(r) && r.passed && (!tempo || r.mode === 'tempo') && r.bpm >= minBpm;
+
+/** Tốc độ "thuộc bài" chuẩn (theo nhịp, ≥ ngần này). */
+export const MASTERY_BPM = 60;
+let tuneBpm: Map<string, number> | null = null;
+/**
+ * (+ 2026-10-17, OWNER duyệt) Tốc độ cần để THUỘC một bài = min(MASTERY_BPM, tốc độ viết của bài): 7 bài dân ca viết ở 40
+ * (ly_cay_da, bac_kim_thang, co_la, ly_ngua_o, ly_cay_bong, di_cay, ho_ba_li) thuộc được ở đúng tốc độ của bài. Bài không có trong
+ * SONGS (đọc nhạc, bài bố mẹ thêm…) → MASTERY_BPM. Dùng chung cho đọc trực tiếp và gộp lịch sử (compaction → foldSongRun).
+ */
+export function masteryBpm(songId: string): number {
+  tuneBpm ??= new Map(SONGS.map((t) => [t.id, t.bpm]));
+  const b = tuneBpm.get(songId);
+  return typeof b === 'number' && b > 0 ? Math.min(MASTERY_BPM, b) : MASTERY_BPM;
+}
 
 /**
  * (+ 2026-10-06) Cộng một lượt chơi vào tổng hợp của bài (dùng chung cho đọc trực tiếp và gộp lịch sử — compaction.ts).
@@ -27,8 +43,9 @@ export function foldSongRun(stats: Record<string, SongAgg>, r: Run, ruleFrom?: n
   const a = (stats[r.songId] ??= {});
   if (!a.r || r.ts >= a.r[0]) a.r = [r.ts, r.passed ? 1 : 0];
   if (!r.phrase && r.ts > (a.w ?? 0)) a.w = r.ts;
-  // (+ 2026-10-16) Lượt của bài thưởng ("🎁 Chọn 1 bài con thích" — buổi `reward-song-…`): không tính "đã thuộc"
-  if (!reward && passedWhole(r, r.songId, true, 60)) {
+  // (+ 2026-10-16) Lượt của buổi TÙY CHỌN (🎁 bài thưởng `reward-song-…`; + 2026-10-17: ⭐ thử thách nhỏ `stretch-song-…` —
+  // lessons/sessionKind.countsForMastery): không tính "đã thuộc"
+  if (!reward && passedWhole(r, r.songId, true, masteryBpm(r.songId))) {
     if (ruleFrom === undefined || r.ts < ruleFrom) {
       // Luật CŨ (lượt trước khi luật 2 ngày có hiệu lực — "giữ nguyên quyền"): MỘT lượt đạt là thuộc
       if (a.m === undefined || r.ts < a.m) a.m = r.ts;
@@ -56,7 +73,7 @@ export function songStats(data: Readonly<AppData>): Readonly<Record<string, Read
     const out: Record<string, SongAgg> = {};
     for (const [id, a] of Object.entries(hist(data).songs)) out[id] = { ...a, ...(a.r ? { r: [a.r[0], a.r[1]] } : {}) };
     const ruleFrom = masteryRuleFrom(data);
-    for (const s of data.sessions) for (const r of s.songRuns) foldSongRun(out, r, ruleFrom, isRewardLessonId(s.lessonId));
+    for (const s of data.sessions) for (const r of s.songRuns) foldSongRun(out, r, ruleFrom, !countsForMastery(s.lessonId));
     return out;
   });
 }
@@ -73,7 +90,7 @@ export function masteryRuleFrom(data: Readonly<AppData>): number | undefined {
 }
 
 /**
- * Bé đã THUỘC bài: chơi trọn theo nhịp ≥ tốc độ 60 và đạt (micro ≥ 80% hoặc bố mẹ xác nhận) — (+ 2026-10-15) ở 2 NGÀY
+ * Bé đã THUỘC bài: chơi trọn theo nhịp ≥ tốc độ 60 (+ 2026-10-17: bài viết chậm hơn → tốc độ của bài — masteryBpm) và đạt (micro ≥ 80% hoặc bố mẹ xác nhận) — (+ 2026-10-15) ở 2 NGÀY
  * khác nhau (lượt trước masteryRuleFrom: một lượt là đủ). "Đã từng thuộc" — giữ cho sticker.
  */
 export function songMastered(data: Readonly<AppData>, songId: string): boolean {
@@ -112,9 +129,27 @@ export function hasEighths(t: Tune): boolean {
  * sau đó thang tốc độ 40 → 50 → 60 như cũ (nút "🐇 Nhanh hơn" ở màn kết quả). Đã có lượt đạt → tốc độ của bài.
  */
 export function startTempoBpm(t: Tune, data: Readonly<AppData>): number {
-  if (t.id.startsWith('sight') || songStats(data)[t.id]?.b !== undefined) return t.bpm;
+  if (t.id.startsWith('sight')) return t.bpm;
+  // (+ 2026-10-16, OWNER duyệt "Tự cân độ khó") bé đang vấp nhiều (lessons/adaptive.ts 'gentle') → mở sẵn tốc độ 40 — (+ 2026-10-17,
+  // hiệu chỉnh) CHỈ cho bài bé CHƯA đạt lần nào; bài đã đạt (songStats `h` / `b`) mở như thường (không kéo về 40)
+  const st = songStats(data)[t.id];
+  if (st?.b !== undefined) return t.bpm;
   const hard = hasEighths(t) || !!t.lh?.some((n) => !n.rest);
-  return Math.min(t.bpm, hard ? START_SLOW_HARD_BPM : START_SLOW_BPM);
+  const slow = Math.min(t.bpm, hard ? START_SLOW_HARD_BPM : START_SLOW_BPM);
+  // (+ 2026-10-17, OWNER duyệt "bài vui hơn") bài QUEN (đã đạt cả bài) không bao giờ mở dưới FAMILIAR_MIN_BPM — chậm 40–50 chỉ cho bài MỚI
+  return st?.h === 1 ? Math.max(slow, familiarMinBpm(t)) : adaptiveStartBpm(slow, data);
+}
+
+/**
+ * (+ 2026-10-17, OWNER duyệt "Nhạc đệm + bài vui hơn") Bài QUEN (đã từng chơi trọn và đạt — songStats `h` / `b`) mở theo nhịp
+ * KHÔNG chậm hơn 56 (bé thấy "bò" ở 40–50 với bài đã biết). Bài vốn viết chậm hơn (vd dân ca 40 có móc kép) giữ tốc độ bài.
+ */
+export const FAMILIAR_MIN_BPM = 56;
+export const familiarMinBpm = (t: Pick<Tune, 'bpm'>): number => Math.min(t.bpm, FAMILIAR_MIN_BPM);
+/** Bài bé đã chơi trọn và đạt (mọi kiểu) — "bài quen" cho luật tốc độ ở trên. */
+export function songPassedBefore(data: Readonly<AppData>, songId: string): boolean {
+  const st = songStats(data)[songId];
+  return !!st && (st.h === 1 || st.b !== undefined);
 }
 
 /**

@@ -51,7 +51,7 @@ export const UNLOCKS: readonly UnlockDef[] = [
   u('timbre', 'bell', 21, '🔔', 'Chuông', 'Đàn tự do ngân như chuông'),
   u('outfit', 'mask', 24, '🦸', 'Mặt nạ siêu nhân', 'Bé Nốt thành siêu nhân'),
   u('timbre', 'organ', 26, '⛪', 'Đàn ống', 'Đàn tự do vang như đàn ống'),
-  u('outfit', 'crown', 31, '👑', 'Vương miện', 'Bé Nốt đội vương miện nhà vô địch'),
+  u('outfit', 'crown', 33, '👑', 'Vương miện', 'Bé Nốt đội vương miện nhà vô địch'),
 ];
 
 export const findUnlock = (id: string): UnlockDef | undefined => UNLOCKS.find((x) => x.id === id);

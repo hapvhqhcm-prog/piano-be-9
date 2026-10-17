@@ -4,14 +4,16 @@
  */
 import { findTune } from '../music/exercises';
 import { SONGS, beatsPerMeasure, phraseRanges } from '../music/tune';
-import type { QuizSpec } from '../practice/quiz';
-import type { AppData } from '../progress/schema';
+import type { QuizSpec, QuizVariant } from '../practice/quiz';
+import { localDateStr, type AppData } from '../progress/schema';
 import { completedDates, firstDateOfWeek, sessionCount } from '../progress/history';
 import type { Activity, Lesson, TechniqueDrill } from './types';
 import { POSITIONS, type Hand, type PositionId } from '../piano/fingering';
 import { pitchToMidi, type Pitch } from '../piano/pitchTable';
-import { DAY_MS, MAX_WEEK, weekPlan } from './curriculum';
-import { lastWholePlay, songMastered, songStats } from './songStats';
+import { DAY_MS, MAX_WEEK, findLesson, weekPlan } from './curriculum';
+import { FAMILIAR_MIN_BPM, TEMPO_LADDER, lastWholePlay, songEverPlayed, songMastered, songStats } from './songStats';
+import { SIGHT_DAILY_WEEK } from './sessionEstimate';
+import { difficulty } from './adaptive';
 import { freshDays } from './freshness';
 import { mondayOf } from './calendar';
 import type { SessionStep } from './sessionPlan';
@@ -23,7 +25,7 @@ import type { SessionStep } from './sessionPlan';
  * KHÔNG ghi gì vào buổi (không lượt chơi, không PARENT/MIC_ASSESSMENT) → không ảnh hưởng tiến độ, tiêu chí, "đã thuộc".
  */
 export type WarmupMusic =
-  | { kind: 'song'; songId: string; phrase: [number, number]; bpm: 40 | 50 | 60; hints: 'full' | 'names' }
+  | { kind: 'song'; songId: string; phrase: [number, number]; bpm: number; hints: 'full' | 'names' }
   | { kind: 'riff'; position: Exclude<PositionId, 'free'>; hand: Hand; riffs: Pitch[][] };
 
 /** v5.2 — Câu nhắc tư thế MỘT dòng (đọc to + hiện chữ) trên màn khởi động bằng nhạc. */
@@ -52,17 +54,45 @@ export interface PostureSettings {
 }
 
 /**
- * v5.2 — Thẻ tư thế ĐẦY ĐỦ (3 thẻ) chỉ khi: bài tuần 1 · buổi ĐẦU của tuần giáo trình (chưa có buổi nào của tuần đó)
+ * v5.2 — Thẻ tư thế ĐẦY ĐỦ (các thẻ tư thế) chỉ khi: bài tuần 1 · buổi ĐẦU của tuần giáo trình (chưa có buổi nào của tuần đó)
  * · buổi ĐẦU của tuần lịch (chưa có buổi hoàn thành nào từ thứ 2) · bố mẹ bật "nhắc tư thế đầy đủ".
- * Các buổi khác: chỉ câu nhắc MỘT dòng (POSTURE_CUE) trên màn khởi động bằng nhạc.
+ * (+ 2026-10-17, OWNER duyệt "Buổi học ≥ 60% đàn thật") TỐI ĐA MỘT LẦN mỗi tuần lịch và KHÔNG BAO GIỜ hai buổi liền
+ * (settings.postureFullAt — sessionFlow ghi khi hiện thẻ): đã hiện từ thứ 2 tuần này, hoặc buổi gần nhất chính là buổi đã hiện
+ * → không. (Bố mẹ bật "nhắc tư thế đầy đủ" → mọi buổi, như cũ.)
+ * Các buổi khác: chỉ câu nhắc MỘT dòng (POSTURE_CUE) trên màn khởi động bằng nhạc / bài tập về nhà.
  */
 export function postureFull(lesson: Lesson, data: Readonly<AppData> | undefined, now: number = Date.now()): boolean {
-  if (lesson.week === 1 || !data) return true;
+  if (!data) return true;
   if ((data.settings as AppData['settings'] & PostureSettings).postureFull) return true;
-  if (firstDateOfWeek(data, lesson.week) === null) return true;
   const monday = mondayOf(new Date(now));
+  const at = readPostureFullAt(data.settings);
+  if (at !== null) {
+    // đã hiện trong tuần lịch này → không (một lần mỗi tuần)
+    if (localDateStr(new Date(at)) >= monday) return false;
+    // buổi gần nhất (có nội dung) bắt đầu SAU lần hiện → buổi đó không hiện; ngược lại buổi đó chính là buổi đã hiện → không
+    const last = lastStartedAt(data);
+    if (last === null || last <= at) return false;
+  }
+  if (lesson.week === 1) return true;
+  if (firstDateOfWeek(data, lesson.week) === null) return true;
   for (const d of completedDates(data)) if (d >= monday) return false;
   return true;
+}
+
+/** Đọc MỀM settings.postureFullAt (ms). */
+export function readPostureFullAt(settings: Readonly<AppData['settings']> | undefined): number | null {
+  const v = (settings as { postureFullAt?: unknown } | undefined)?.postureFullAt;
+  return typeof v === 'number' && Number.isFinite(v) && v > 0 ? v : null;
+}
+
+/** Lúc bắt đầu của buổi CÓ NỘI DUNG gần nhất còn giữ (buổi đã gộp vào lịch sử thì đã cũ hơn mọi mốc postureFullAt). */
+function lastStartedAt(data: Readonly<AppData>): number | null {
+  let m: number | null = null;
+  for (const s of data.sessions) {
+    const has = s.completed || s.songRuns.length > 0 || s.parentAssessments.length > 0 || s.appAssessments.length > 0 || s.micAssessments.length > 0;
+    if (has && (m === null || s.startedAt > m)) m = s.startedAt;
+  }
+  return m;
 }
 
 /** Xoay vòng khởi động trong ngần này bài bé thuộc nhất. */
@@ -138,17 +168,21 @@ export function warmupMusic(
     });
     // (+ 2026-10-15, sửa lỗi) bài "nên dùng" (bài Ôn bài cũ bị bỏ vì quá số màn) cũng phải qua bộ lọc "thuộc" — trước đây
     // bài CHƯA đạt được mời khởi động với lời dẫn "bài con đã thuộc" (khởi động thành thất bại đầu buổi)
-    const preferred = prefer && isKnown(prefer) ? SONGS.find((t) => t.id === prefer) : undefined;
+    // (+ 2026-10-17, OWNER duyệt "bài vui hơn") KHÔNG lặp bài khởi động của buổi liền trước (settings.warmupSongs) khi còn bài khác
+    const lastWarm = data ? readWarmupSongs(data.settings)[0] : undefined;
+    const preferred = prefer && prefer !== lastWarm && isKnown(prefer) ? SONGS.find((t) => t.id === prefer) : undefined;
     if (preferred || known.length) {
       const top = known.slice(0, WARMUP_SONGS_ROTATION);
-      const t = preferred ?? top[n % top.length];
+      const fresh = top.length > 1 ? top.filter((x) => x.id !== lastWarm) : top;
+      const t = preferred ?? fresh[n % fresh.length];
       const mastered = stats[t.id].m !== undefined;
       const [a, b] = phraseRanges(t)[0];
       return {
         kind: 'song',
         songId: t.id,
         phrase: [a, Math.min(b, a + Math.max(1, Math.floor(WARMUP_BEATS / beatsPerMeasure(t))))],
-        bpm: t.bpm <= 40 ? 40 : mastered ? 60 : 50,
+        // (+ 2026-10-17) bài khởi động luôn là bài QUEN → không dưới FAMILIAR_MIN_BPM (trước: 50 khi chưa thuộc)
+        bpm: t.bpm <= 40 ? 40 : mastered ? 60 : FAMILIAR_MIN_BPM,
         hints: lesson.week >= 8 ? 'names' : 'full',
       };
     }
@@ -187,7 +221,8 @@ export function sightDailyStep(lesson: Lesson, data?: Readonly<AppData>): Extrac
 }
 
 /**
- * Chọn bài cho bước "Ôn bài cũ": bài của tuần (lesson.week − 4 … lesson.week − 2), không có trong bài hôm nay.
+ * Chọn bài cho bước "Ôn bài cũ": bài của tuần (lesson.week − 4 … lesson.week − 2) bé đã chơi — (+ 2026-10-17) và MỌI bài
+ * bé đã ĐẠT của các tuần ≤ lesson.week − 2 (xoay vòng: bài đã đạt lâu chưa chơi nhất trước) — không có trong bài hôm nay.
  * Ưu tiên: đã thuộc nhưng không còn "tươi" (> FRESH_DAYS ngày) → lượt cả bài gần nhất KHÔNG đạt → lâu chưa chơi nhất.
  * Hoà điểm → rng. Tốc độ: 60 nếu bài đã thuộc, còn lại 50; v5.1: bài có móc kép (tốc độ mặc định 40) → 40.
  */
@@ -201,22 +236,30 @@ export function reviewSongStep(
   // (rà soát 2026-10-09) CHỈ bài bé ĐÃ chơi — trước đây bài Thư viện chưa từng chơi được điểm "lâu chưa chơi" cao nhất
   // → bước "Ôn bài cũ" hay thành bài MỚI tinh
   const played = songStats(data);
+  // (+ 2026-10-17, rà soát giáo viên "ôn ngắt quãng") XOAY VÒNG mọi bài bé ĐÃ ĐẠT (lượt cả bài đạt — songStats `h`) của các tuần
+  // ≤ tuần − 2, không chỉ bài đã thuộc / 3 tuần gần nhất; bài đã chơi mà chưa đạt vẫn lấy trong cửa sổ tuần − 4 … tuần − 2 như cũ.
   const cands = SONGS.filter((t) => {
     const w = t.week ?? 1;
-    return w >= lesson.week - 4 && w <= lesson.week - 2 && !inLesson.has(t.id) && !t.id.startsWith('sight') && !!played[t.id]?.r;
+    if (w > lesson.week - 2 || inLesson.has(t.id) || t.id.startsWith('sight') || !played[t.id]?.r) return false;
+    return w >= lesson.week - 4 || played[t.id]?.h === 1;
   });
   if (!cands.length) return null;
+  const lastExtras = lastSessionExtraSongs(data);
   const scored = cands.map((t) => {
     const mastered = songMastered(data, t.id);
+    const passed = mastered || played[t.id]?.h === 1;
     const last = lastWholePlay(data, t.id);
     // Lượt gần nhất (mọi kiểu) — từ tổng hợp (lịch sử đã gộp + buổi còn giữ)
     const lastRun = songStats(data)[t.id]?.r;
     const lastAny = lastRun?.[0] ?? 0;
     const days = lastAny ? Math.min(60, (now - lastAny) / DAY_MS) : 60;
     let score = days / 30; // 0…2: càng lâu chưa chơi càng cao
-    if (mastered && last < now - freshDays(data) * DAY_MS) score += 3;
+    // bài ĐÃ ĐẠT (thuộc hay chưa) không còn "tươi" → đến lượt ôn; trong nhóm này bài lâu chưa chơi nhất trước (xoay vòng)
+    if (passed && last < now - freshDays(data) * DAY_MS) score += 3;
     if (lastRun && !lastRun[1]) score += 2;
-    return { t, mastered, score: score + rng() * 0.01 };
+    // (+ 2026-10-17, OWNER duyệt "bài vui hơn") bài vừa ôn ở buổi LIỀN trước → nhường bài khác (còn bài khác)
+    if (cands.length > 1 && lastExtras.has(t.id)) score -= 10;
+    return { t, mastered, passed, score: score + rng() * 0.01 };
   });
   scored.sort((a, b) => b.score - a.score);
   const best = scored[0];
@@ -225,11 +268,122 @@ export function reviewSongStep(
     kind: 'review-song',
     songId: best.t.id,
     phrase: [a, b],
-    bpm: best.t.bpm <= 40 ? 40 : best.mastered ? 60 : 50,
+    // (+ 2026-10-17) bài đã đạt (quen) không dưới FAMILIAR_MIN_BPM; chưa đạt giữ 50
+    bpm: best.t.bpm <= 40 ? 40 : best.mastered ? 60 : best.passed ? FAMILIAR_MIN_BPM : 50,
     level: 2,
     hints: lesson.week >= 8 ? 'names' : 'full',
-    intro: '🔁 Ôn bài cũ — đàn lại câu đầu cho nhớ lâu nhé!',
+    intro: '🔁 Ôn bài cũ: đàn lại câu đầu!',
   };
+}
+
+/**
+ * (+ 2026-10-17) Các bài "ôn" của buổi GẦN NHẤT có lượt chơi: lượt MỘT CÂU theo nhịp của bài không thuộc hoạt động của bài học
+ * buổi đó (bước "Ôn bài cũ", bài tập về nhà): reviewSongStep nhường các bài này để hai buổi liền nhau không ôn cùng một bài.
+ */
+export function lastSessionExtraSongs(data: Readonly<AppData>): Set<string> {
+  let last: AppData['sessions'][number] | undefined;
+  for (const s of data.sessions) if (s.songRuns.length && (!last || s.startedAt > last.startedAt)) last = s;
+  if (!last) return new Set();
+  const own = new Set((findLesson(last.lessonId)?.activities ?? []).flatMap((a) => (a.kind === 'song' ? [a.songId] : [])));
+  return new Set(last.songRuns.filter((r) => r.mode === 'tempo' && !!r.phrase && !own.has(r.songId) && !r.songId.startsWith('sight')).map((r) => r.songId));
+}
+
+/** (+ 2026-10-17) Nhớ ngần này bài khởi động gần nhất (settings.warmupSongs, mới → cũ). */
+export const WARMUP_SONGS_MAX = 3;
+/** Đọc MỀM settings.warmupSongs (mục lạ bị bỏ). */
+export function readWarmupSongs(settings: Readonly<AppData['settings']> | undefined): string[] {
+  const v = (settings as { warmupSongs?: unknown } | undefined)?.warmupSongs;
+  return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string').slice(0, WARMUP_SONGS_MAX) : [];
+}
+/** Thêm bài khởi động vừa mở lên đầu danh sách (không trùng, ≤ WARMUP_SONGS_MAX). */
+export function pushWarmupSong(recent: readonly string[], id: string): string[] {
+  return [id, ...recent.filter((x) => x !== id)].slice(0, WARMUP_SONGS_MAX);
+}
+
+/* ---------- (+ 2026-10-16, OWNER duyệt "Đổi món cho đỡ chán") XOAY VÒNG TRÒ KHỞI ĐỘNG ---------- */
+
+/** Xét các trò khởi động của ngần này tuần gần nhất (tính cả tuần hiện tại) — trò bé ĐÃ được dạy, còn "nóng". */
+export const WARMUP_ROTATION_WEEKS = 6;
+/** Nhớ ngần này trò khởi động gần nhất (settings.warmupRecent, mới → cũ). */
+export const WARMUP_RECENT_MAX = 6;
+
+const QUIZ_VARIANTS: readonly QuizVariant[] = ['updown', 'stepskip', 'identify', 'read', 'majorminor', 'interval', 'landmark', 'theory'];
+
+/** Đọc MỀM settings.warmupRecent (mục lạ bị bỏ). */
+export function readWarmupRecent(settings: Readonly<AppData['settings']> | undefined): QuizVariant[] {
+  const v = (settings as { warmupRecent?: unknown } | undefined)?.warmupRecent;
+  return Array.isArray(v) ? v.filter((x): x is QuizVariant => QUIZ_VARIANTS.includes(x as QuizVariant)).slice(0, WARMUP_RECENT_MAX) : [];
+}
+
+/** Thêm trò vừa chơi lên đầu danh sách gần nhất (không trùng, ≤ WARMUP_RECENT_MAX). */
+export function pushWarmupRecent(recent: readonly QuizVariant[], v: QuizVariant): QuizVariant[] {
+  return [v, ...recent.filter((x) => x !== v)].slice(0, WARMUP_RECENT_MAX);
+}
+
+/**
+ * Các trò khởi động CÙNG MỤC TIÊU (tai nghe / đọc nốt) bé đã học tới tuần `week`: trò của tuần (`base`) trước, rồi trò khởi
+ * động của các tuần trước (mới → cũ, trong WARMUP_ROTATION_WEEKS tuần), mỗi KIỂU một lần (lấy nội dung của tuần gần nhất).
+ * Số lượt = số lượt của `base` (buildSessionPlan vẫn cắt ≤ MAX_QUIZ_ROUNDS).
+ */
+export function warmupCandidates(week: number, base: QuizSpec): QuizSpec[] {
+  const out: QuizSpec[] = [base];
+  for (let w = Math.min(week, MAX_WEEK); w >= Math.max(1, week - WARMUP_ROTATION_WEEKS + 1); w--) {
+    const q = weekPlan(w).warmup;
+    if (q && !out.some((x) => x.variant === q.variant)) out.push({ ...q, rounds: base.rounds });
+  }
+  return out;
+}
+
+/**
+ * Chọn trò khởi động hôm nay: KHÔNG lặp trò của buổi trước (recent[0]); ưu tiên trò chưa chơi gần đây, rồi trò chơi lâu
+ * nhất; hòa → theo thứ tự `cands` (trò của tuần trước tiên). Chỉ một trò → giữ trò đó. Hàm thuần — không ngẫu nhiên.
+ */
+export function rotateWarmup(cands: readonly QuizSpec[], recent: readonly QuizVariant[]): QuizSpec | null {
+  if (cands.length <= 1) return cands[0] ?? null;
+  const pool = cands.filter((c) => c.variant !== recent[0]);
+  if (!pool.length) return cands[0];
+  const age = (c: QuizSpec) => {
+    const i = recent.indexOf(c.variant);
+    return i < 0 ? Number.POSITIVE_INFINITY : i;
+  };
+  return pool.reduce((best, c) => (age(c) > age(best) ? c : best), pool[0]);
+}
+
+/* ---------- (+ 2026-10-16, OWNER duyệt "Tự cân độ khó theo bé") THỬ THÁCH NHỎ khi bé làm rất tốt ---------- */
+
+/** Bài Thư viện "cao hơn một bậc": bài của tuần sau tuần hiện tại, xa nhất ngần này tuần. */
+export const STRETCH_LIBRARY_AHEAD = 2;
+
+/**
+ * Thử thách nhỏ TÙY CHỌN (nút ở màn kết buổi — bé bỏ qua được; không phải bước của buổi, không đổi tiến độ / tiêu chí):
+ * - 'faster': "🐇 Thử nhanh hơn?" — bài theo nhịp của bài học hôm nay, tốc độ trên tốc độ đạt cao nhất một nấc (≤ 72);
+ * - 'sight': một dòng đọc nhạc mới (từ tuần SIGHT_DAILY_WEEK);
+ * - 'library': một bài Thư viện cao hơn một bậc (tuần sau, chưa chơi — từng nốt).
+ * Chỉ khi chế độ độ khó là 'stretch' (lessons/adaptive.ts). null = không có.
+ */
+export type StretchOffer =
+  | { kind: 'faster'; songId: string; bpm: number; label: string }
+  | { kind: 'sight'; step: Extract<SessionStep, { kind: 'sight-daily' }>; label: string }
+  | { kind: 'library'; songId: string; label: string };
+
+export function stretchOffer(lesson: Lesson, data: Readonly<AppData>, now: number = Date.now()): StretchOffer | null {
+  if (difficulty(data, now).mode !== 'stretch' || lesson.isWeekTest || lesson.activities.some((a) => a.kind === 'stage')) return null;
+  const stats = songStats(data);
+  for (const a of lesson.activities) {
+    if (a.kind !== 'song' || a.mode !== 'tempo' || a.phrase || a.hand || a.songId.startsWith('sight')) continue;
+    const t = findTune(a.songId);
+    const best = stats[a.songId]?.b;
+    if (!t || best === undefined) continue;
+    const next = TEMPO_LADDER.find((x) => x > best);
+    if (next !== undefined) return { kind: 'faster', songId: t.id, bpm: next, label: `Thử nhanh hơn? “${t.titleVi || t.title}” tốc độ ${next}` };
+  }
+  if (lesson.week >= SIGHT_DAILY_WEEK) return { kind: 'sight', step: { ...sightDailyStep(lesson, data), hints: 'names' }, label: 'Thử đọc một dòng nhạc mới?' };
+  const week = data.progress.currentWeek;
+  const up = SONGS.filter((t) => {
+    const w = t.week ?? 1;
+    return w > week && w <= week + STRETCH_LIBRARY_AHEAD && !t.id.startsWith('sight') && t.hand !== 'BOTH' && !songEverPlayed(data, t.id);
+  }).sort((a, b) => (a.week ?? 1) - (b.week ?? 1))[0];
+  return up ? { kind: 'library', songId: up.id, label: `Thử bài khó hơn một chút: “${up.titleVi || up.title}”` } : null;
 }
 
 export function warmupTitle(q: QuizSpec): string {
@@ -245,15 +399,16 @@ export function warmupTitle(q: QuizSpec): string {
   }[q.variant];
 }
 
+/** (+ 2026-10-17, OWNER duyệt "Buổi học ≥ 60% đàn thật") lời dẫn NGẮN (≤ 12 tiếng — giọng đọc đọc to). */
 export function warmupIntro(q: QuizSpec): string {
   return {
-    updown: 'App đàn 2 nốt. Nốt sau CAO hơn (lên) hay THẤP hơn (xuống)?',
-    stepskip: 'Hai nốt cạnh nhau là BƯỚC. Cách một phím là NHẢY.',
-    identify: 'Đầu tiên app đàn nốt Đô làm mốc, rồi đàn một nốt bí ẩn. Con chạm đúng phím nhé!',
-    read: 'Nốt hiện trên khuông — con chạm đúng phím trên iPad.',
-    majorminor: 'App rải một hợp âm. Nghe VUI (trưởng) hay BUỒN (thứ)?',
-    interval: 'Khuông hiện 2 nốt. Nốt sau GIỐNG, BƯỚC hay NHẢY so với nốt trước — đi lên hay đi xuống?',
-    landmark: 'Nhìn nốt trên khuông — đó là nốt mốc nào? Chọn tên hoặc chạm phím.',
-    theory: 'Nhớ lại điều con đã biết — chọn đáp án đúng!',
+    updown: 'Nốt sau cao hơn hay thấp hơn?',
+    stepskip: 'Phím cạnh nhau là BƯỚC, cách một phím là NHẢY.',
+    identify: 'Nghe Đô mốc, rồi chạm nốt bí ẩn!',
+    read: 'Nhìn nốt trên khuông, chạm đúng phím.',
+    majorminor: 'Hợp âm nghe VUI hay BUỒN?',
+    interval: 'Nốt sau giống, bước hay nhảy?',
+    landmark: 'Nốt mốc nào đây? Chọn tên hoặc chạm phím.',
+    theory: 'Nhớ lại điều con đã biết nhé!',
   }[q.variant];
 }

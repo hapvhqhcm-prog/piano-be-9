@@ -67,19 +67,23 @@ const POWER_EVERY = 5;
 /** Lời chào đầu mỗi phần (trên tiêu đề) — đổi mỗi lần cho đỡ chán. */
 const KICKERS = ['🤖 Nhiệm vụ mới!', '🦸 Siêu nhân piano xuất kích!', '🚀 Sẵn sàng cất cánh!', '⚡ Nạp năng lượng nào!', '🎯 Thử thách mới!', '🦖 Khám phá tiếp nào!'];
 /** "Ôn nhanh": 6 lời dẫn xoay vòng (lời trong bài học luôn giống nhau). */
+// (+ 2026-10-17, OWNER duyệt "Buổi học ≥ 60% đàn thật") ngắn (≤ 8 tiếng)
 const REVIEW_INTROS = [
-  'Mình ôn lại vài nốt cũ thật nhanh nhé!',
-  'Khởi động ngón tay: vài nốt quen thuộc nào!',
-  'Rô-bốt kiểm tra trí nhớ: con còn nhớ các nốt này không?',
-  'Siêu nhân ôn bài — nhanh như chớp nhé!',
-  'Gặp lại mấy người bạn nốt cũ nào!',
-  'Bốn nốt cũ đang chờ con — xuất phát!',
+  'Ôn vài nốt cũ thật nhanh nhé!',
+  'Vài nốt quen thuộc nào!',
+  'Con còn nhớ các nốt này không?',
+  'Ôn nhanh như chớp nhé!',
+  'Gặp lại bạn nốt cũ nào!',
+  'Bốn nốt cũ đang chờ con!',
 ];
 const INTRO_MOODS = ['wave', 'happy', 'cheer', 'love'] as const;
-/** Đúng → tự sang nốt sau sau ~1,5 giây (khi bố mẹ bật "Tự chuyển"); sai thì luôn chờ bấm "Thử lại". */
-const CORRECT_ADVANCE_SEC = 1.5;
-/** Buổi đã qua màn "Con sẵn sàng chưa?" — từ phần thứ 2 của cùng buổi thì bỏ qua màn này. */
-let readySessionId: string | null = null;
+/**
+ * Đúng → tự sang nốt sau sau một cái "khen nháy" ~0,8 giây (khi bố mẹ bật "Tự chuyển" — mặc định bật); sai thì luôn chờ bấm
+ * "Thử lại". (+ 2026-10-17, OWNER duyệt "Buổi học ≥ 60% đàn thật": 1,5 → 0,8 giây; đang tự chuyển thì không có nút "Tiếp".)
+ */
+export const CORRECT_ADVANCE_SEC = 0.8;
+/** (+ 2026-10-17) Màn giới thiệu: xem mẫu xong ngần này ms thì tự vào nốt đầu. */
+const AUTO_START_MS = 900;
 /**
  * Số lần "Thử lại" (bố mẹ) trên cùng một nốt thì mới cho "Bỏ qua — mai ôn lại". Micro nghe sai: ≥ 5 lần VÀ ≥ 8 s
  * (src/music/waitJudge.ts missHelp — trước 2026-10-15: 5 lần, bé bấm loạn 2 giây đã được mời bỏ qua).
@@ -181,9 +185,6 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
     let correctRun = 0;
     /** Câu "nạp năng lượng" đang đọc — tự chuyển nốt chờ đọc xong */
     let powerSpeech: Promise<void> | null = null;
-    // Buổi học đang mở (chưa xong) — để biết đây có phải phần đầu tiên của buổi không
-    const openSession = [...app.store.get().sessions].reverse().find((s) => !s.completed) ?? null;
-    const skipReady = !!openSession && readySessionId === openSession.id;
     const reviewIntro = seg.step === 'Ôn nhanh' ? pick(REVIEW_INTROS) : null;
     const segIntro = reviewIntro ?? seg.intro;
     const resetMicTurn = (index: number) => {
@@ -375,7 +376,7 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
               { class: 'staff-text' },
               h('div', { class: 'note-big' }, t.title, speakChip(app, () => noteSpeech(t))),
               fingerView(t),
-              t.subtitle ? h('div', { class: 'note-sub' }, t.subtitle) : null,
+              t.subtitle && !reviewIntro ? h('div', { class: 'note-sub' }, t.subtitle) : null,
               micRow(t),
             ),
           )
@@ -385,7 +386,8 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
             progress(),
             h('div', { class: 'note-big' }, t.title, speakChip(app, () => noteSpeech(t))),
             fingerView(t),
-            t.subtitle ? h('div', { class: 'note-sub' }, t.subtitle) : null,
+            // (+ 2026-10-17) "Ôn nhanh": bỏ dòng phụ "Ôn bài cũ" lặp ở mọi nốt (chữ của bé ngắn)
+            t.subtitle && !reviewIntro ? h('div', { class: 'note-sub' }, t.subtitle) : null,
             micRow(t),
           );
 
@@ -446,12 +448,24 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
             void demo.done.then(() => {
               if (tk !== token) return;
               demo = null;
-              caption.textContent = '✅ Xem xong — đến lượt con!';
+              caption.textContent = '✅ Đến lượt con!';
+              autoStart();
             });
+          };
+          // (+ 2026-10-17, OWNER duyệt "Buổi học ≥ 60% đàn thật") xem mẫu xong → tự vào nốt đầu (không bắt bấm "Bắt đầu"),
+          // trừ khi cần một cú chạm để bật micro (micro bật trong cài đặt mà chưa chạy)
+          const autoStart = (): void => {
+            if (app.store.settings.micEnabled && app.mic.state !== 'on') return;
+            later(() => {
+              if (sm.snapshot.state !== 'INTRO') return;
+              send('NEXT');
+              send('NEXT');
+            }, AUTO_START_MS);
           };
           // Đọc lời giới thiệu trước, xong mới đàn mẫu (không nói chồng lên tiếng đàn)
           const startDemo = () => {
             if (events.length && !introStarted) playIntro();
+            else if (!events.length) autoStart();
           };
           if (voiceOn(app)) {
             const tk = token;
@@ -462,43 +476,25 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
           bar.append(
             button({
               icon: '▶',
-              label: skipReady ? 'Bắt đầu' : 'Tiếp',
+              label: 'Bắt đầu',
               kind: 'primary',
-              // Phần thứ 2 trở đi của buổi: bỏ màn "Con sẵn sàng chưa?" — chạm này cũng là thao tác bật micro
-              onTap: skipReady
-                ? async () => {
-                    await app.ensureMic();
-                    if (sm.snapshot.state !== 'INTRO') return;
-                    send('NEXT');
-                    send('NEXT');
-                  }
-                : () => send('NEXT'),
+              // (+ 2026-10-17, OWNER duyệt) không còn màn "Con sẵn sàng chưa?" — chạm này cũng là thao tác bật micro
+              onTap: async () => {
+                await app.ensureMic();
+                if (sm.snapshot.state !== 'INTRO') return;
+                send('NEXT');
+                send('NEXT');
+              },
             }),
           );
           break;
         }
 
         case 'READY':
-          if (openSession) readySessionId = openSession.id;
+          // (+ 2026-10-17, OWNER duyệt "Buổi học ≥ 60% đàn thật") màn "Con sẵn sàng chưa?" đã bỏ: INTRO → nốt đầu thẳng. Trạng
+          // thái này chỉ còn khi QUAY LẠI từ nốt đầu (PracticeStateMachine.goPrev) → về luôn màn giới thiệu.
           kb.clear();
-          stage.append(
-            h('div', { class: 'hero-emoji' }, '🙌'),
-            h('h1', { class: 'title' }, 'Con sẵn sàng chưa?'),
-            h('p', { class: 'lead' }, 'Ngồi thẳng, tay tròn, nhìn lên iPad'),
-          );
-          bar.append(
-            back,
-            button({
-              icon: '▶',
-              label: 'Bắt đầu',
-              kind: 'primary',
-              // Chạm "Bắt đầu" = thao tác người dùng → được phép bật micro
-              onTap: async () => {
-                await app.ensureMic();
-                send('NEXT');
-              },
-            }),
-          );
+          later(() => send('BACK'));
           break;
 
         case 'SHOW_NOTE':
@@ -546,6 +542,7 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
         case 'RESULT': {
           const ok = snap.lastResult === 'correct';
           const byMic = snap.lastSource === 'mic';
+          const autoNext = ok && (byMic ? settings.micAutoNext !== false : settings.autoAdvance);
           const countdown = h('div', { class: 'countdown' });
           const tries = retries.get(snap.index) ?? 0;
           const needHelp = !ok && tries >= 2;
@@ -554,7 +551,10 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
             // Đúng: Bé Nốt nhảy cẫng lên. Thử lại: Bé Nốt gãi đầu suy nghĩ (không buồn, không nhíu mày) — sai là một phần của học
             h('div', { class: `hero-mascot ${ok ? 'react-bounce' : 'react-scratch'}` }, mascot(ok ? cue('praise') : needHelp ? cue('retry') : cue('puzzle'), 110)),
             h('h1', { class: 'title' }, ok ? praiseTitle(t0) : needHelp ? 'Mình xem thầy làm nhé!' : 'Thử lại nhé'),
-            h(
+            // (+ 2026-10-17) đúng + tự chuyển: chỉ "khen nháy" (tiêu đề) — không thêm dòng chữ
+            autoNext
+              ? ''
+              : h(
               'p',
               { class: 'lead' },
               ok
@@ -570,7 +570,7 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
                     ? `Tìm ${plainTitle(t0)} — phím đang sáng, ngón ${t0.finger} nhé`
                     : pick(RETRY_SUB),
             ),
-            countdown,
+            countdown, // (trống khi tự chuyển — scripts/e2e.mjs nhận màn 'notes' theo .countdown)
           );
           // Trợ giúp thích ứng: sai từ 2 lần trở lên → thầy đàn mẫu lại nốt này (không mờ)
           if (needHelp) {
@@ -588,8 +588,11 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
             self ? '' : button({ icon: '👪', label: 'Bố mẹ sửa', onTap: () => send('EDIT') }),
             // (`tries` chưa tính lần "Thử lại" vừa bấm — hiệu ứng ghi chạy sau khi vẽ)
             !ok && tries + 1 >= SKIP_AFTER_RETRIES ? skipButton() : '',
+            // (+ 2026-10-17, OWNER duyệt) đúng + đang tự chuyển (mặc định) → chỉ "khen nháy" ~0,8 giây, không nút "Tiếp"
             ok
-              ? button({ icon: '▶', label: 'Tiếp', kind: 'primary', onTap: () => send('CONTINUE') })
+              ? autoNext
+                ? ''
+                : button({ icon: '▶', label: 'Tiếp', kind: 'primary', onTap: () => send('CONTINUE') })
               : button({ icon: '↻', label: 'Thử lại', kind: 'primary', onTap: () => send('CONTINUE') }),
           );
           break;
@@ -671,7 +674,7 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
           while (left > 0) {
             if (tk !== token) return;
             const el = stage.querySelector('.countdown');
-            if (el) el.textContent = total < 2 ? 'Sang nốt tiếp…' : `Tự chuyển sau ${Math.ceil(left)} giây…`;
+            if (el && total >= 2) el.textContent = `Tự chuyển sau ${Math.ceil(left)} giây…`;
             const step = Math.min(1, left);
             await new Promise((r) => setTimeout(r, step * 1000));
             left -= step;

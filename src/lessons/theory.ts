@@ -306,6 +306,23 @@ export const THEORY: readonly TheoryConcept[] = [
     week: 13,
     lesson: 'w13-l4',
   },
+  // (+ 2026-10-17, OWNER duyệt) DỊCH GIỌNG — bé tự dịch "Chú cừu" sang thế Sol (tuần 14, lessons/musician.ts)
+  {
+    id: 'transpose',
+    emoji: '🔀',
+    title: 'Dịch giọng',
+    lines: ['DỊCH GIỌNG: đàn cùng một bài ở chỗ khác trên đàn.', 'Dời tay, giữ nguyên SỐ NGÓN — bài vẫn nghe như cũ.', 'Chỉ cao hơn hoặc thấp hơn thôi!'],
+    short: 'Dời tay, giữ số ngón — cùng bài, giọng khác.',
+    terms: ['dịch giọng'],
+    pic: { kind: 'keys', low: 'C4', high: 'D5', marks: [{ pitch: 'C4', label: 'Đô 1' }, { pitch: 'G4', label: 'Sol 1' }] },
+    sound: [...seq(['E4', 'D4', 'C4'], 0.5), { p: 'D4', d: 0.5, gap: 0.6 }, ...seq(['B4', 'A4', 'G4'], 0.5), { p: 'A4', d: 0.6 }],
+    checks: [
+      { q: 'Dịch "Chú cừu" sang thế Sol, con giữ nguyên gì?', choices: ['Số ngón', 'Tên nốt'], answer: 0 },
+      { q: 'Ở thế Sol, ngón cái đặt ở đâu?', choices: ['Sol', 'Đô', 'Mi'], answer: 0 },
+    ],
+    week: 14,
+    lesson: 'w14-transpose',
+  },
   {
     id: 'sharp-flat',
     emoji: '⬛',
@@ -448,6 +465,27 @@ export const THEORY: readonly TheoryConcept[] = [
     week: 23,
     lesson: 'w23-l1',
   },
+  // (+ 2026-10-17, OWNER duyệt) HỢP ÂM SOL BẢY (V7) giản lược — đệm I – V7 dưới giai điệu quen (tuần 24, lessons/musician.ts)
+  {
+    id: 'dominant-7',
+    emoji: '🏠',
+    title: 'Hợp âm Sol bảy (V7)',
+    lines: ['Sol bảy (V7) nghe như "sắp về nhà".', 'Tay trái giản lược: Si – Fa – Sol, ngón 5 – 2 – 1.', 'Đệm I – V7 – I: đi xa rồi về nhà Đô!'],
+    short: 'V7 = Si – Fa – Sol, ngón 5 – 2 – 1, rồi về I.',
+    terms: ['V7', 'Sol bảy'],
+    pic: { kind: 'keys', low: 'A2', high: 'C4', marks: [{ pitch: 'B2', label: 'Si 5' }, { pitch: 'F3', label: 'Fa 2' }, { pitch: 'G3', label: 'Sol 1' }] },
+    sound: [
+      { p: ['C3', 'E3', 'G3'], d: 1, gap: 0.3 },
+      { p: ['B2', 'F3', 'G3'], d: 1, gap: 0.3 },
+      { p: ['C3', 'E3', 'G3'], d: 1.4 },
+    ],
+    checks: [
+      { q: 'Hợp âm V7 giản lược tay trái gồm những nốt nào?', choices: ['Si – Fa – Sol', 'Đô – Mi – Sol'], answer: 0 },
+      { q: 'Sau hợp âm V7, bài hát muốn về hợp âm nào?', choices: ['I (Đô)', 'V7'], answer: 0 },
+    ],
+    week: 24,
+    lesson: 'w24-v7',
+  },
   {
     id: 'major-minor',
     emoji: '😊',
@@ -490,8 +528,8 @@ export const THEORY: readonly TheoryConcept[] = [
       { q: 'Sol trưởng có dấu hóa nào?', choices: ['Fa♯', 'Si♭', 'Không có'], answer: 0 },
       { q: 'Dấu hóa theo khóa đúng cho những nốt nào?', choices: ['Mọi nốt cùng tên', 'Chỉ nốt đầu'], answer: 0 },
     ],
-    week: 32,
-    lesson: 'w32-l1',
+    week: 34,
+    lesson: 'w34-l1',
   },
   {
     id: 'key-sig-f',
@@ -511,8 +549,8 @@ export const THEORY: readonly TheoryConcept[] = [
       { q: 'Fa trưởng có dấu hóa nào?', choices: ['Si♭', 'Fa♯', 'Không có'], answer: 0 },
       { q: 'Đô trưởng có mấy dấu hóa?', choices: ['Không có', '1 dấu', '2 dấu'], answer: 0 },
     ],
-    week: 33,
-    lesson: 'w33-l1',
+    week: 35,
+    lesson: 'w35-l1',
   },
   {
     id: 'tempo',
@@ -530,8 +568,8 @@ export const THEORY: readonly TheoryConcept[] = [
       { q: 'Allegro nghĩa là gì?', choices: ['Nhanh và vui', 'Thong thả', 'Chậm dần'], answer: 0 },
       { q: 'Chữ rit. bảo con làm gì?', choices: ['Chậm dần', 'Nhanh lên', 'Đàn to'], answer: 0 },
     ],
-    week: 39,
-    lesson: 'w39-l3',
+    week: 42,
+    lesson: 'w42-l3',
   },
   {
     id: 'cresc-dim',
@@ -546,8 +584,8 @@ export const THEORY: readonly TheoryConcept[] = [
       { q: 'cresc. nghĩa là gì?', choices: ['To dần', 'Nhỏ dần'], answer: 0 },
       { q: 'dim. nghĩa là gì?', choices: ['Nhỏ dần', 'Nhanh dần'], answer: 0 },
     ],
-    week: 39,
-    lesson: 'w39-l3',
+    week: 42,
+    lesson: 'w42-l3',
   },
 ];
 

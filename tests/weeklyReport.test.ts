@@ -376,3 +376,43 @@ describe('ảnh chia sẻ — chữ (không emoji, không kể trùng)', async (
     expect(weeklyFileName(s)).toBe('bao-cao-tuan-2026-10-05.png');
   });
 });
+
+describe('(2026-10-17) báo cáo tuần không tự mâu thuẫn: bài tiến bộ / chơi trọn & đạt không vào "hay vấp"', () => {
+  const mon = '2026-10-05';
+  it('bài vừa tiến bộ rõ (40% → 90%) dù còn nhiều lượt chưa đạt → chỗ vấp là bài khác', () => {
+    const d = base();
+    // Trước tuần: twinkle 40%
+    d.sessions.push(session('2026-09-28', { songRuns: [run('twinkle', '2026-09-28', { hits: 8, passed: false })] }));
+    // Trong tuần: twinkle 3 lượt hỏng + 1 lượt 90% (đạt); mary_lamb 1 lượt hỏng
+    d.sessions.push(
+      session('2026-10-06', {
+        songRuns: [
+          run('twinkle', '2026-10-06', { hits: 8, passed: false }),
+          run('twinkle', '2026-10-06', { hits: 9, passed: false }),
+          run('twinkle', '2026-10-06', { hits: 10, passed: false }),
+          run('twinkle', '2026-10-06', { hits: 18, passed: false }),
+          run('mary_lamb', '2026-10-06', { hits: 6, passed: false }),
+        ],
+      }),
+    );
+    d.sessions.push(session('2026-10-08', { songRuns: [run('twinkle', '2026-10-08', { hits: 17, passed: false })] }));
+    recompute(d);
+    const s = buildWeeklySummary(d, mon, NOW);
+    expect(s.improvements?.some((i) => i.kind === 'song')).toBe(true);
+    expect(s.struggle).not.toBeNull();
+    for (const i of s.improvements ?? []) if (i.kind === 'song') expect(s.struggle).not.toContain(i.label);
+  });
+
+  it('bài chơi trọn & đạt trong tuần không bị gọi là "hay vấp"', () => {
+    const d = base();
+    d.sessions.push(
+      session('2026-10-07', {
+        songRuns: [run('mary_lamb', '2026-10-07', { hits: 6, passed: false }), run('mary_lamb', '2026-10-07', { hits: 6, passed: false }), run('mary_lamb', '2026-10-07')],
+      }),
+    );
+    recompute(d);
+    const s = buildWeeklySummary(d, mon, NOW);
+    expect(s.wholeSongs?.map((x) => x.id)).toContain('mary_lamb');
+    expect(s.struggle).toBeNull();
+  });
+});

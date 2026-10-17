@@ -62,7 +62,7 @@ describe('Nhạc lý nhẹ nhàng — thẻ "📘 Biết thêm" trong giáo trì
     ]);
     // Bài kiểm tra tuần không có thẻ (kết quả kiểm tra không lẫn)
     for (const x of theoryActs) expect(x.lesson.isWeekTest, x.lesson.id).toBeFalsy();
-    expect(CURRICULUM_REV).toBe(4);
+    expect(CURRICULUM_REV).toBe(5); // (2026-10-17) rev 5: tuần 1–26 không đổi số
   });
 
   it('bé thật (tuần 4, bản lưu): bài đã xong không mở lại; "Học tiếp" vẫn là bài cũ, thẻ mới ở cuối', () => {
@@ -73,7 +73,13 @@ describe('Nhạc lý nhẹ nhàng — thẻ "📘 Biết thêm" trong giáo trì
     // w4-l4 dở (xong hoạt động 0–1) → còn 2, 3 + thẻ 4
     d.progress.lessonsCompleted.push(activityDoneId('w4-l4', 0), activityDoneId('w4-l4', 1));
     const acts = buildSessionPlan(findLesson('w4-l4')!, d).flatMap((s) => (s.kind === 'activity' ? [`${s.index}:${s.activity.kind}`] : []));
-    expect(acts).toEqual(['2:song', '3:improv', '4:theory']);
+    // (+ 2026-10-17, OWNER duyệt "Buổi học ≥ 60% đàn thật") thẻ 4 không còn là bước — chip "📘 1 thẻ mới" ở màn kết; chỉ số giữ nguyên
+    const plan = buildSessionPlan(findLesson('w4-l4')!, d);
+    expect(acts).toEqual(['2:song', '3:improv']);
+    const closing = plan[plan.length - 1];
+    expect(closing.kind === 'closing' && closing.theory).toEqual(['step-skip']);
+    const last = plan.filter((s) => s.kind === 'activity').pop()!;
+    expect(last.kind === 'activity' && last.index === 3 && last.last).toBe(true);
   });
 
   it('buổi có thẻ vẫn ≤ 12 phút, ≤ 7 màn, ≤ 5 hoạt động; hoạt động của bài không bị cắt', () => {
@@ -82,7 +88,7 @@ describe('Nhạc lý nhẹ nhàng — thẻ "📘 Biết thêm" trong giáo trì
       expect(x.lesson.activities.length, x.lesson.id).toBeLessThanOrEqual(5);
       const plan = buildSessionPlan(x.lesson);
       expect(plan.length, x.lesson.id).toBeLessThanOrEqual(MAX_SESSION_STEPS);
-      expect(plan.filter((s) => s.kind === 'activity')).toHaveLength(x.lesson.activities.length);
+      expect(plan.filter((s) => s.kind === 'activity')).toHaveLength(x.lesson.activities.filter((a) => a.kind !== 'theory').length); // thẻ 📘 ra khỏi buổi (2026-10-17)
       expect(x.a.ids.length, x.lesson.id).toBeLessThanOrEqual(2);
     }
   });

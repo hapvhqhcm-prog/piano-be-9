@@ -7,6 +7,7 @@ import { PASS_SCORE, starsFor } from '../../music/timing';
 import { beatsPerMeasure, phraseRanges, pitchesOf, type Onset } from '../../music/tune';
 import { midiToPitch, pitchToMidi, viName } from '../../piano/pitchTable';
 import { backButton, button, h } from '../components/dom';
+import { parentCorner } from '../components/parentCorner';
 import { SONG_CHECKS, SONG_CHECKS_WAIT, parentChecklist, type CheckItem } from '../components/parentCheck';
 import { speak } from '../../audio/voice';
 import { cue, mascot } from '../components/mascot';
@@ -15,8 +16,8 @@ import { kindsPresent, outcomeOf, placeLabel, reviewUsable, teach, type NoteKind
 import { TEMPOS, hardestPhrase } from './songShared';
 import { buildRun, buildStaff, micOn, record, setBar, solo, type ResultBack, type SongCtx } from './songState';
 import { SELF_PRAISE, deferSong, selfStudy } from '../selfStudy';
-import { homeworkDone, makeHomework, readHomework } from '../../lessons/homework';
-import { tempoAdvice, todayTempoOutcomes } from '../../lessons/songStats';
+import { homeworkDone, makeHomework, readHomework, readHomeworkNote, reassignHomework } from '../../lessons/homework';
+import { songMastered, tempoAdvice, todayTempoOutcomes } from '../../lessons/songStats';
 
 const pick = <T,>(a: T[]): T => a[Math.floor(Math.random() * a.length)];
 
@@ -108,7 +109,11 @@ export function showResult(
   const pullText = pullTo ? `Mình về tốc độ ${pullTo} cho chắc tay nhé` : '';
   // (+ 2026-10-15) 📝 Bài tập về nhà: giao chỗ thầy dặn (lượt chưa đạt / có chỗ cần luyện), xóa khi đã đạt chỗ đó
   if (!back && !pending) homeworkAfterRun(c, passedNow, point, focusRange, place);
-  if (tired) return stopCard(c, 'tired');
+  if (tired) {
+    // (+ 2026-10-17) ghi TƯỜNG MINH "dừng nhẹ nhàng" (chỉ hoạt động bài học truyền hook — lessons/adaptive.ts hadKindStop)
+    hooks.onKindStop?.();
+    return stopCard(c, 'tired');
+  }
   // (+ 2026-10-15) "xong" luyện chỗ khó cần ÍT NHẤT MỘT lượt sạch — chưa sạch lượt nào thì luyện tiếp (nút chính vẫn là 🎯)
   const notClean = !!back?.practiced && back.clean === false;
   const afterPractice = back?.practiced
@@ -139,6 +144,21 @@ export function showResult(
             ? 'Mình lặp lại câu này nhé!'
             : 'Mình chơi lại thật chậm nhé!'
         : '';
+  // (+ 2026-10-17, OWNER duyệt "Buổi học ≥ 60% đàn thật") lượt ĐẠT không có lời thầy cần luyện → "khen nháy" rồi TỰ đi tiếp
+  // (không nút "Tiếp" — không màn kết quả lặp lại); "Chơi lại" / "🐇 Nhanh hơn" vẫn chạm được trong lúc khen (chạm → ở lại).
+  // Không áp dụng: sân khấu, Thư viện / thử thách (free), bé tự học (pending), lặp câu khó, khi thầy chỉ chỗ cần luyện, micro bật
+  // (có bản ghi "🎧 Nghe lại" / Album), lượt vừa làm bài thành ĐÃ THUỘC (khoảnh khắc "Lần đầu → Hôm nay").
+  const autoPass =
+    passedNow &&
+    !back &&
+    !opts.stage &&
+    !opts.free &&
+    !pending &&
+    !c.hardBack &&
+    !hard &&
+    !(focusRange && point && !point.praise) &&
+    !micOn(c) &&
+    !(c.masteredBefore === false && songMastered(app.store.get(), full.id));
   // 🎧 Nghe lại: ô trống, có bản ghi (tới sau, bất đồng bộ) thì take.render() điền nút + một câu hỏi nhẹ
   c.status.replaceChildren(
     h(
@@ -149,7 +169,7 @@ export function showResult(
         'div',
         { class: 'song-lines' },
         h('div', { class: 'song-result-head' }, headline, ' ', pending ? '' : h('span', { class: 'stars small' }, '★'.repeat(stars), h('span', { class: 'stars-off' }, '★'.repeat(3 - stars)))),
-        h('div', { class: 'song-result-sub' }, text),
+        autoPass ? null : h('div', { class: 'song-result-sub' }, text),
         nextStep
           ? h('div', { class: `song-result-next${(point || pullText) && !afterPractice ? ' teacher' : ''}` }, `${afterPractice ? '✅' : point || pullText ? '🧑‍🏫' : '👉'} ${nextStep}`)
           : null,
@@ -160,6 +180,12 @@ export function showResult(
   take.render();
   // Album: chỉ lượt CẢ BÀI, hai tay như bài (không phải một câu / tách tay / lặp câu khó)
   if (!back) take.offerAlbum(!pending && !c.phrase && !solo(c) && !c.hardBack ? { stars, accuracy: s } : null);
+  // (+ 2026-10-16, OWNER duyệt) Lượt này làm bài chuyển sang ĐÃ THUỘC → "🎧 Nghe lần đầu → hôm nay" (nếu Album có bản đầu).
+  // Mừng nhẹ: chỉ thêm hai thẻ + một nút trong thẻ kết quả (không màn phủ / pháo giấy thêm). Một lần mỗi lần mở bài.
+  if (!back && passedNow && c.masteredBefore === false && songMastered(app.store.get(), full.id)) {
+    c.masteredBefore = true;
+    take.offerProgress(app, { stars, accuracy: s });
+  }
   if (back) {
     if (afterPractice) void speak(app, afterPractice);
   } else if (retryCard) void speak(app, `Gần được rồi! ${nextStep}`);
@@ -193,16 +219,39 @@ export function showResult(
     c.hardBack ? button({ icon: '↩', label: 'Cả bài', onTap: () => ((c.phrase = c.hardBack?.phrase ?? null), reset()) }) : null,
     // Chưa đạt: "Tiếp" vẫn có (không khóa bé) nhưng là nút phụ — nút chính là luyện lại
     // (+ 2026-10-15) Bài của buổi học: "Tiếp" sau lượt chưa đạt → kết thúc bằng một câu dễ trước (stopCard), không dừng ở thất bại
-    c.hardBack
-      ? null
-      : button({ icon: '▶', label: 'Tiếp', kind: retryCard || back ? undefined : 'primary', onTap: lessonFlow && retryCard ? () => stopCard(c, 'skip') : hooks.onDone }),
+    c.hardBack || autoPass
+      ? null // autoPass: đạt → tự đi tiếp (bên dưới), không cần nút "Tiếp"
+      : // (+ 2026-10-17, OWNER duyệt "Buổi học ≥ 60% đàn thật") "dừng nhẹ nhàng" chỉ sau ≥ KIND_STOP_MIN_FAILS (2) lần chưa được
+        // của hoạt động này trong buổi — một lần trượt rồi "Tiếp" thì đi tiếp luôn (không thêm màn dừng)
+        button({
+          icon: '▶',
+          label: 'Tiếp',
+          kind: retryCard || back ? undefined : 'primary',
+          onTap: lessonFlow && retryCard && c.fails >= KIND_STOP_MIN_FAILS ? () => stopCard(c, 'skip') : hooks.onDone,
+        }),
   );
+  if (autoPass) {
+    const card = c.status.firstElementChild;
+    window.setTimeout(
+      () => {
+        if (card?.isConnected && c.state === 'result') hooks.onDone();
+      },
+      faster ? PASS_FASTER_MS : PASS_MS,
+    );
+  }
 }
 
 /* ---------------- (+ 2026-10-15, OWNER duyệt — rà soát của giáo viên) "3 lần đúng" · dừng ở thành công ---------------- */
 
 /** Thử chưa được ngần này lần trong một lần mở bài (lượt chưa đạt / luyện chỗ khó không lượt nào sạch) → dừng nhẹ nhàng. */
 export const MAX_TRIES = 3;
+
+/** (+ 2026-10-17) Bấm "Tiếp" sau lượt chưa đạt → màn "tạm dừng" (kết thúc bằng câu dễ) chỉ khi đã ≥ ngần này lần chưa được. */
+export const KIND_STOP_MIN_FAILS = 2;
+/** (+ 2026-10-17) Lượt đạt → khen ngần này ms rồi tự đi tiếp. */
+export const PASS_MS = 1800;
+/** (+ 2026-10-17) … khi có gợi ý "🐇 Nhanh hơn": chờ lâu hơn chút để bé kịp chạm. */
+export const PASS_FASTER_MS = 3500;
 
 /** Lời dừng nhẹ nhàng sau MAX_TRIES lần thử chưa được */
 export const KIND_STOP = 'Hôm nay con cố gắng lắm rồi — mai mình luyện tiếp nhé!';
@@ -226,11 +275,12 @@ export function stopCard(c: SongCtx, why: 'tired' | 'skip'): void {
         'div',
         { class: 'song-lines' },
         h('div', { class: 'song-result-head' }, head),
-        h('div', { class: 'song-result-sub' }, 'Mình kết thúc bằng một câu con đàn hay nhất nhé 🌟'),
-        h('div', { class: 'song-result-parent' }, PARENT_STOP),
+        h('div', { class: 'song-result-sub' }, 'Kết thúc bằng một câu thật hay nhé 🌟'),
       ),
     ),
   );
+  // (+ 2026-10-17, OWNER duyệt "Buổi học ≥ 60% đàn thật") lời dặn bố mẹ → góc 👪 thu gọn (không giữa màn của bé)
+  cornerFor(c, PARENT_STOP);
   void speak(c.app, why === 'tired' ? KIND_STOP : 'Mình tạm dừng bài này nhé! Kết thúc bằng một câu con đàn hay nhất nào.');
   setBar(
     c,
@@ -238,6 +288,12 @@ export function stopCard(c: SongCtx, why: 'tired' | 'skip'): void {
     button({ icon: '🌟', label: 'Đàn câu dễ', kind: 'primary', onTap: () => startEasyEnd(c) }),
     button({ icon: '▶', label: 'Tiếp', onTap: c.hooks.onDone }),
   );
+}
+
+/** (+ 2026-10-17) Góc 👪 của màn bài hát đang mở (gốc màn = cha của .screen). */
+function cornerFor(c: SongCtx, text: string): void {
+  const root = c.status.closest('.screen')?.parentElement;
+  if (root) parentCorner(root, text);
 }
 
 /** Câu dễ để kết thúc: câu (phraseRanges) ít lỗi nhất ở lượt vừa chơi (hoà → câu đầu), tối đa 2 ô nhịp. */
@@ -282,11 +338,11 @@ function easyEndCard(c: SongCtx): void {
         'div',
         { class: 'song-lines' },
         h('div', { class: 'song-result-head' }, 'Đẹp lắm! 🌟'),
-        h('div', { class: 'song-result-sub' }, 'Con kết thúc bằng một câu thật hay — giỏi lắm!'),
-        h('div', { class: 'song-result-parent' }, '👪 Bố mẹ: dừng ở đây — bé đã cố gắng. Khen bé một câu rồi sang phần tiếp nhé.'),
+        h('div', { class: 'song-result-sub' }, 'Con kết thúc thật hay — giỏi lắm!'),
       ),
     ),
   );
+  cornerFor(c, '👪 Bố mẹ: dừng ở đây — bé đã cố gắng. Khen bé một câu rồi sang phần tiếp nhé.');
   void speak(c.app, 'Đẹp lắm! Con kết thúc bằng một câu thật hay — giỏi lắm!');
   setBar(c, backButton(() => c.hooks.onBack()), button({ icon: '▶', label: 'Tiếp', kind: 'primary', onTap: c.hooks.onDone }));
 }
@@ -305,6 +361,8 @@ function homeworkAfterRun(c: SongCtx, passed: boolean, point: TeacherPoint | nul
     return;
   }
   if (opts.free || opts.review || c.easyEnd) return;
+  // (+ 2026-10-17, OWNER duyệt) không giao bài tập về nhà cho bài bé ĐÃ THUỘC (trước lượt này)
+  if (c.masteredBefore === true) return;
   const needs = !passed || (!!point && !point.praise && !!focus);
   if (!needs) return;
   const off = c.phrase ? c.phrase[0] : 0;
@@ -325,18 +383,20 @@ function homeworkAfterRun(c: SongCtx, passed: boolean, point: TeacherPoint | nul
     const k = phrase ? ranges.findIndex(([a, b]) => a === phrase![0] && b === phrase![1]) : -1;
     where = !phrase ? 'Cả bài' : k >= 0 ? `Câu ${k + 1}` : `Ô ${phrase[0] + 1}–${phrase[1]}`;
   }
-  store.updateSettings({
-    homework: makeHomework({
-      songId: full.id,
-      title: full.titleVi || full.title,
-      phrase,
-      place: where,
-      mode: c.mode,
-      bpm: c.bpm,
-      date: store.today(),
-      at: Date.now(),
-    }),
+  // (+ 2026-10-17, rà soát kỹ sư trưởng) giao LẠI cùng bài: giữ mốc giao lần đầu + đếm lượt chưa đạt; quá 3 ngày / 5 lượt →
+  // tạm dừng bài tập + lời nhắn bố mẹ (lessons/homework.reassignHomework)
+  const next = makeHomework({
+    songId: full.id,
+    title: full.titleVi || full.title,
+    phrase,
+    place: where,
+    mode: c.mode,
+    bpm: c.bpm,
+    date: store.today(),
+    at: Date.now(),
   });
+  const patch = reassignHomework(cur, readHomeworkNote(store.settings), next, { today: store.today(), now: Date.now(), failed: !passed });
+  if (patch.homework !== undefined || patch.homeworkNote !== undefined) store.updateSettings(patch);
 }
 
 // ---------------- (+ 2026-10-09) Nhận xét kiểu thầy giáo ----------------

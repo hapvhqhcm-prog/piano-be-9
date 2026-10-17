@@ -129,7 +129,7 @@ export function topStruggles(data: Readonly<AppData>, now: Date, days = 14, n = 
 export function actionFor(top: Struggle | undefined, weekDays: number): string {
   if (!top) {
     return weekDays < 4
-      ? 'Tối nay chỉ cần 10–15 phút: ngồi cạnh bé và bấm “Học tiếp”.'
+      ? 'Tối nay chỉ cần 10–15 phút: ngồi cạnh bé và bấm nút ▶ to.'
       : 'Bé đang làm tốt! Tối nay cho bé chơi lại một bài đã thuộc và khen thật cụ thể (ví dụ: “ngón con cong đẹp quá”).';
   }
   if (top.kind === 'song') {
@@ -162,7 +162,7 @@ export function daysSinceLastPractice(data: Readonly<AppData>, now: Date): numbe
 }
 
 export const WELCOME_BACK_ACTION =
-  'Mừng bé quay lại! Buổi đầu ôn nhẹ: cho bé chơi lại một bài đã thuộc, khen thật cụ thể, rồi bấm “Học tiếp” — không cần học bù.';
+  'Mừng bé quay lại! Buổi đầu ôn nhẹ: cho bé chơi lại một bài đã thuộc, khen thật cụ thể, rồi bấm nút ▶ to — không cần học bù.';
 
 /** Chỗ khó đầu tiên luyện riêng được: nốt/hợp âm có phím (tối đa 3) hoặc một bài hát (không phải đọc nhạc ngẫu nhiên). */
 export function practiceFor(struggles: readonly Struggle[]): TonightPractice | null {

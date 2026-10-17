@@ -57,7 +57,8 @@ describe('AN TOÀN TIẾN ĐỘ tuần 1–4 (bé đang ở tuần 4)', () => {
       const now = findLesson(id)!.activities.map(sig);
       expect(now.slice(0, old.length), id).toEqual(old);
     }
-    expect(CURRICULUM_REV).toBe(4);
+    // (2026-10-17) rev 5 chèn tuần ôn 27 · 32 · 38 — tuần 1–26 KHÔNG đổi số (tests/curriculum-review-2026-10-17.test.ts)
+    expect(CURRICULUM_REV).toBe(5);
   });
 
   it('bản lưu giữa tuần 4: bài đã xong không mở lại; bài dở chỉ làm phần còn lại + ứng tấu mới ở cuối', () => {
@@ -67,8 +68,10 @@ describe('AN TOÀN TIẾN ĐỘ tuần 1–4 (bé đang ở tuần 4)', () => {
     const plan = buildSessionPlan(findLesson('w4-l4')!, st.get());
     const acts = plan.flatMap((s) => (s.kind === 'activity' ? [s] : []));
     // (+ 2026-10-12) thẻ "📘 Biết thêm" (quãng 2 & 3) THÊM VÀO CUỐI bài 4 — chỉ số cũ giữ nguyên
-    expect(acts.map((s) => s.index)).toEqual([2, 3, 4]);
-    expect(acts.map((s) => sig(s.activity))).toEqual(['song:lightly_row@wait', 'improv:black-keys', 'theory']);
+    // (+ 2026-10-17, OWNER duyệt) thẻ không còn là bước của buổi (chip ở màn kết) — chỉ số 4 vẫn là thẻ trong dữ liệu
+    expect(acts.map((s) => s.index)).toEqual([2, 3]);
+    expect(acts.map((s) => sig(s.activity))).toEqual(['song:lightly_row@wait', 'improv:black-keys']);
+    expect(findLesson('w4-l4')!.activities[4].kind).toBe('theory');
     expect(plan.length).toBeLessThanOrEqual(MAX_SESSION_STEPS);
   });
 });
@@ -168,8 +171,8 @@ describe('3. THẾ SOL và NHỊP 3/4 sớm hơn', () => {
 describe('4. ỨNG TẤU 1 phút mỗi tuần từ tuần 4', () => {
   const improvWeeks = new Set(ORDERED.filter((x) => x.lesson.activities.some((a) => a.kind === 'improv')).map((x) => x.week));
 
-  it('mọi tuần 4–30 có ứng tấu (trừ tuần 21 — hòa nhạc; tuần 31 chỉ có hòa nhạc)', () => {
-    for (let w = 4; w <= 30; w++) if (w !== 21) expect(improvWeeks.has(w), `tuần ${w}`).toBe(true);
+  it('mọi tuần 4–31 có ứng tấu (trừ tuần 21 — hòa nhạc; tuần ÔN 27 chỉ đánh bóng bài cũ; tuần 33 chỉ có hòa nhạc)', () => {
+    for (let w = 4; w <= 31; w++) if (w !== 21 && w !== 27) expect(improvWeeks.has(w), `tuần ${w}`).toBe(true);
   });
 
   it('Hỏi – Đáp ở đúng thế tay đã học của tuần (không dùng thế tay chưa dạy)', () => {

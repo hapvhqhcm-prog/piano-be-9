@@ -170,7 +170,7 @@ describe('v5.2 — đọc nhạc 1 phút mỗi ngày (từ tuần 8)', () => {
           const plan = buildSessionPlan(l, st.get(), { songReview: true, sightRead: true, rng, now: T0 });
           expect(plan.length, `${l.id}: ${plan.map((x) => x.kind).join(',')}`).toBeLessThanOrEqual(MAX_SESSION_STEPS);
           expect(plan[plan.length - 1].kind).toBe('closing');
-          expect(plan.filter((x) => x.kind === 'activity')).toHaveLength(l.activities.length);
+          expect(plan.filter((x) => x.kind === 'activity')).toHaveLength(l.activities.filter((a) => a.kind !== 'theory').length); // thẻ 📘 ra khỏi buổi (2026-10-17)
         }
         done.push(l.id);
       }
@@ -204,7 +204,8 @@ describe('v5.2 — đọc nhạc 1 phút mỗi ngày (từ tuần 8)', () => {
     const plan = buildSessionPlan(lesson, st.get(), { songReview: true, sightRead: true, now: T0 });
     expect(plan[0].kind).toBe('posture');
     const acts = plan.flatMap((s) => (s.kind === 'activity' ? [s.index] : []));
-    expect(acts).toEqual(lesson.activities.map((_, i) => i).slice(1));
+    // (+ 2026-10-17) thẻ "📘 Biết thêm" không còn là bước của buổi (chỉ số các hoạt động khác giữ nguyên)
+    expect(acts).toEqual(lesson.activities.flatMap((a, i) => (i > 0 && a.kind !== 'theory' ? [i] : [])));
     const lastAct = plan.filter((s) => s.kind === 'activity').pop()!;
     expect(lastAct.kind === 'activity' && lastAct.last).toBe(true);
     expect(plan.filter((s) => s.kind === 'activity' && s.last)).toHaveLength(1);

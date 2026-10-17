@@ -14,10 +14,12 @@ export const SCHEMA_VERSION = 1 as const;
  * dòng kẻ phụ, Minuet & Für Elise dời xuống cuối Cấp 3 — bảng đánh số OLD→NEW trong migrations.ts (rev 1 đi qua rev 2 trước).
  * 4 = 31 tuần (giáo trình v5.1, OWNER duyệt 2026-10-06): tách tuần 18 thành 18 (móc kép, Tập-tễnh) và 19 MỚI (nghịch phách,
  * dây nối); tuần 19–30 cũ → 20–31; bài "w18-l3" → "w19-l1", "w18-bkt" → "w19-bkt" (migrations.ts, rev 1/2 đi qua rev 3 trước).
+ * 5 = 46 tuần (OWNER duyệt 2026-10-17, rà soát giáo viên dài hạn): chèn 3 tuần ÔN & BIỂU DIỄN 27 · 32 · 38 — tuần 27–30 cũ → 28–31,
+ * 31–35 → 33–37, 36–43 → 39–46 (migrations.ts rev5Week; tuần 1–26 KHÔNG đổi → dữ liệu bé đang học tuần 1–26 giữ nguyên).
  */
-export const CURRICULUM_REV = 4;
+export const CURRICULUM_REV = 5;
 /**
- * Giới hạn kiểm tra tuần (giáo trình hiện có 31 tuần; để rộng cho các cấp sau).
+ * Giới hạn kiểm tra tuần (giáo trình hiện có 46 tuần; để rộng cho các cấp sau).
  * LỖI ĐÃ SỬA 2026-10-04: trước đây giới hạn là 8 → lên tuần 9 thì dữ liệu bị coi là hỏng và bị đặt lại.
  */
 export const MAX_WEEK_LIMIT = 52;
@@ -119,6 +121,12 @@ export interface Session {
   minutes: number; // (+)
   completed: boolean; // (+) bé đi hết buổi tới màn tự đánh giá
   checklist: Partial<Record<ChecklistKey, boolean>>; // (+) checklist phụ huynh §8
+  /**
+   * (+ 2026-10-17, rà soát kỹ sư trưởng) Các bài (songId) của HOẠT ĐỘNG BÀI HỌC đã hiện thẻ "dừng nhẹ nhàng" trong buổi
+   * (lessons/adaptive.ts hadKindStop — một định nghĩa cho độ khó + bài thưởng). Buổi mới luôn có (có thể rỗng);
+   * không có = buổi cũ (đoán từ lượt chơi).
+   */
+  kindStops?: string[];
 }
 
 export interface Settings {
@@ -197,6 +205,39 @@ export interface Settings {
    * buổi sau (khởi động) và báo cáo tuần. Đọc MỀM (readHomework — mục hỏng bị bỏ qua). Không có / null = không có bài.
    */
   homework?: import('../lessons/homework').Homework | null;
+  /** (+ 2026-10-17) Lời nhắn cho bố mẹ khi bài tập về nhà bị tạm dừng (lessons/homework.ts reassignHomework). Đọc MỀM. */
+  homeworkNote?: import('../lessons/homework').HomeworkNote | null;
+  /**
+   * (+ 2026-10-17, rà soát giáo viên "ôn ngắt quãng phải chắc chắn") Số buổi LIỀN gần nhất mà bước "Ôn bài cũ" bị bỏ vì quá số
+   * màn (lessons/sessionPlan.ts). ≥ REVIEW_SONG_GUARANTEE → buổi sau GIỮ bước ôn. Đọc MỀM. Không có = 0.
+   */
+  reviewSkips?: number;
+  /**
+   * (+ 2026-10-16, OWNER duyệt "Đổi món cho đỡ chán") Các trò khởi động tai / đọc nốt gần nhất (mới → cũ, ≤ 6) — để buổi
+   * sau không lặp trò (lessons/sessionSelectors.ts rotateWarmup). Đọc MỀM (readWarmupRecent). Không có = chưa ghi.
+   */
+  warmupRecent?: string[];
+  /**
+   * (+ 2026-10-17, OWNER duyệt "bài vui hơn") Các BÀI khởi động bằng nhạc gần nhất (songId, mới → cũ, ≤ 3) — buổi sau không lặp
+   * bài khởi động (lessons/sessionSelectors.ts warmupMusic). Ghi ở ui/screens/warmup.ts. Đọc MỀM (readWarmupSongs).
+   */
+  warmupSongs?: string[];
+  /**
+   * (+ 2026-10-17, OWNER duyệt "Buổi học ≥ 60% đàn thật") Lúc (ms) buổi gần nhất hiện THẺ TƯ THẾ ĐẦY ĐỦ — tối đa một lần mỗi tuần
+   * lịch, không bao giờ hai buổi liền (lessons/sessionSelectors.ts postureFull). Đọc MỀM. Không có = chưa ghi.
+   */
+  postureFullAt?: number;
+  /**
+   * (+ 2026-10-17, OWNER duyệt) Mã các thẻ "📘 Biết thêm" con đã MỞ (Từ điển / chip ở màn kết) — để hiện "📘 1 thẻ mới"
+   * (lessons/theory.ts newTheoryCards). Đọc MỀM. Không có = chưa mở thẻ nào.
+   */
+  theorySeen?: string[];
+  /**
+   * (+ 2026-10-17, OWNER duyệt — rà soát vận hành) Dữ liệu VẬN HÀNH của iPad (pwa/opsState.ts OpsState): bản iPadOS thấy lần
+   * trước, lần nghỉ dài, màn hình không được giữ sáng, mất giọng tiếng Việt, dữ liệu nhập cần cài lại micro, lần "Kiểm tra sức
+   * khỏe app" gần nhất. Đọc MỀM (readOps). Không có = chưa ghi gì.
+   */
+  ops?: import('../pwa/opsState').OpsState;
 }
 
 /** (+ 2026-10-12) 👦 Con tự học / 👪 Có bố mẹ ngồi cùng */
@@ -594,6 +635,8 @@ export function validateAppData(x: unknown): string[] {
     // (+ 2026-10-12) Bé tự học
     if (st.studyMode !== undefined && !(isObj(st.studyMode) && isStudyMode(st.studyMode.mode) && typeof st.studyMode.date === 'string')) errs.push('settings.studyMode');
     if (st.studyDefault !== undefined && !isStudyMode(st.studyDefault)) errs.push('settings.studyDefault');
+    // (+ 2026-10-17) dữ liệu vận hành — chỉ chặn kiểu sai hẳn; bên trong đọc mềm (pwa/opsState.ts readOps)
+    if (st.ops !== undefined && !isObj(st.ops)) errs.push('settings.ops');
   }
   const p = x.progress;
   if (!isObj(p)) errs.push('Thiếu progress');
@@ -642,6 +685,9 @@ export function validateAppData(x: unknown): string[] {
             errs.push(`sessions[${i}].songRuns[${j}]`);
           }
         });
+      if (s.kindStops !== undefined && !(Array.isArray(s.kindStops) && s.kindStops.every((x) => typeof x === 'string'))) {
+        errs.push(`sessions[${i}].kindStops`);
+      }
       if (!Array.isArray(s.micAssessments)) errs.push(`sessions[${i}].micAssessments`);
       else
         s.micAssessments.forEach((a, j) => {

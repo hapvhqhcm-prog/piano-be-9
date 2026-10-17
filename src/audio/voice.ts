@@ -106,6 +106,17 @@ export function voiceSupported(): boolean {
   return !!synth() && (viVoice !== null || !voicesLoaded);
 }
 
+/**
+ * (+ 2026-10-17) Có giọng tiếng Việt không — CHỜ danh sách giọng nạp xong (tối đa `ms`). null = chưa biết (danh sách chưa nạp /
+ * không có speechSynthesis) → không được kết luận "mất giọng".
+ */
+export async function viVoiceKnown(ms = 3000): Promise<boolean | null> {
+  if (!synth()) return null;
+  pickVoice();
+  if (!voicesLoaded) await waitVoices(ms);
+  return voicesLoaded ? viVoice !== null : null;
+}
+
 /** Đã tìm thấy giọng vi-VN. */
 export function hasVietnameseVoice(): boolean {
   return viVoice !== null;

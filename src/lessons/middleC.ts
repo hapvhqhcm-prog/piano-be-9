@@ -3,14 +3,13 @@
  * bỏ qua được, ở ĐẦU buổi (cùng chấm tiến trình với phần mở đầu — không thêm màn). Chỉ hiện khi:
  *  (a) gần đây bé đàn LỆCH QUÃNG 8 (waitJudge 'octave' → nhật ký nhỏ trong máy, ≥ OCTAVE_MIN_EVENTS lần trong
  *      OCTAVE_LOOKBACK_DAYS ngày, tính từ lần tìm đúng Đô giữa gần nhất);
- *  (b) bài mở THẾ TAY MỚI (thế tay của bài khác bài trước — vd thế Sol tuần 10, Đô giữa tay trái tuần 11) và bài chưa học xong;
- *  (c) buổi ĐẦU của một tuần giáo trình ≤ MIDDLE_C_MAX_WEEK (trừ buổi đầu tiên của bé — bài 1 tuần 1 đã dạy tìm Đô).
+ *  (+ 2026-10-17, OWNER duyệt "Buổi học ≥ 60% đàn thật") CHỈ lý do (a): trước đây còn (b) thế tay mới, (c) buổi đầu tuần ≤
+ *  MIDDLE_C_MAX_WEEK — bỏ để mở đầu buổi ≤ 60 giây (positionChange vẫn dùng cho dải 👪 của bố mẹ — parentFocus.ts).
  * Tối đa MỘT lần mỗi ngày. KHÔNG ghi gì vào buổi / tiêu chí (chỉ nhật ký nhỏ trong máy, như phiếu "Bố mẹ xem tay").
  * Hàm thuần (bộ nhớ truyền vào) — test: tests/sessionHelpers-2026-10-16.test.ts.
  */
 import { findTune } from '../music/exercises';
 import type { AppData } from '../progress/schema';
-import { completedSessionCount, firstDateOfWeek } from '../progress/history';
 import { POSITIONS, type Hand, type PositionId } from '../piano/fingering';
 import { DAY_MS, MAX_WEEK, weekPlan } from './curriculum';
 import type { Lesson } from './types';
@@ -146,20 +145,16 @@ export function positionChange(lesson: Lesson): { position: Exclude<PositionId, 
 }
 
 /**
- * Lý do hiện bước "📍 Tìm Đô giữa" ở đầu buổi của bài `lesson` (null = không hiện). Ưu tiên: lệch quãng 8 gần đây →
- * thế tay mới → buổi đầu tuần ≤ MIDDLE_C_MAX_WEEK. Đã hiện hôm nay (`log.shownOn === today`) → null.
+ * Lý do hiện bước "📍 Tìm Đô giữa" ở đầu buổi của bài `lesson` (null = không hiện).
+ * (+ 2026-10-17, OWNER duyệt "Buổi học ≥ 60% đàn thật") CHỈ khi bé THẬT SỰ lệch quãng 8 gần đây (nhật ký octaveTrouble) —
+ * không còn hiện vì "thế tay mới" / "buổi đầu tuần" (mở đầu buổi ≤ 60 giây). Đã hiện hôm nay (`log.shownOn === today`) → null.
+ * ('position' / 'week-start' giữ trong kiểu MiddleCReason cho màn middleC.ts — không còn được chọn.)
  */
 export function middleCReason(
-  lesson: Lesson,
-  data: Readonly<AppData> | undefined,
+  _lesson: Lesson,
+  _data: Readonly<AppData> | undefined,
   o: { now: number; today: string; log?: OctaveLog | null },
 ): MiddleCReason | null {
-  if (!data || lesson.id.endsWith('-daily')) return octaveTrouble(o.log, o.now) && o.log?.shownOn !== o.today ? 'octave' : null;
   if (o.log?.shownOn === o.today) return null;
-  if (octaveTrouble(o.log, o.now)) return 'octave';
-  const done = new Set(data.progress.lessonsCompleted);
-  if (!done.has(lesson.id) && positionChange(lesson)) return 'position';
-  // Buổi đầu tiên của bé: bài 1 tuần 1 chính là bài tìm Đô — không thêm bước
-  if (lesson.week <= MIDDLE_C_MAX_WEEK && completedSessionCount(data) > 0 && firstDateOfWeek(data, lesson.week) === null) return 'week-start';
-  return null;
+  return octaveTrouble(o.log, o.now) ? 'octave' : null;
 }

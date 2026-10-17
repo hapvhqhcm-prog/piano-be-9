@@ -283,6 +283,8 @@ export function rhythmScreen(app: App, hooks: RhythmHooks) {
         button({ icon: '↻', label: 'Vỗ lại', onTap: () => void play(false) }),
         // Micro có thể chấm trượt (phòng ồn, vỗ nhỏ) → sau 2 lần, bố mẹ được cho qua — không kẹt bé lại
         !ok && micFails >= 2 ? button({ icon: '👪', label: 'Bố mẹ: qua', onTap: () => askParent() }) : null,
+        // (+ 2026-10-17) Bước phụ ("Đọc nhịp trước"): chưa đạt vẫn "⏭ Bỏ qua" được — không bao giờ chặn bé
+        !ok ? skipBtn() : null,
         ok
           ? button({
               icon: '▶',

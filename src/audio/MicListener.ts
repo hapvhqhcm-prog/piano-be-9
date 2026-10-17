@@ -273,6 +273,20 @@ export class MicListener {
     return tr ? readTrackInfo(tr, this.usedFallback) : null;
   }
 
+  /**
+   * (+ 2026-10-17) Tên micro đang dùng (track.label — luồng đang mở hoặc đang GIỮ chờ màn kế); null = không có / trình duyệt
+   * không báo. Tai nghe Bluetooth (AirPods…) thường kéo cả micro sang tai nghe → tên lộ ra ở đây (audio/outputRoute.ts).
+   */
+  trackLabel(): string | null {
+    try {
+      const tr = (this.stream ?? this.kept)?.getAudioTracks?.()[0];
+      const l = tr?.label;
+      return typeof l === 'string' && l.trim() ? l.trim() : null;
+    } catch {
+      return null;
+    }
+  }
+
   /** Micro vừa TỰ tăng độ nhạy (một bậc) — App lưu Cài đặt, ghi nhật ký, báo phụ huynh. */
   onAutoSensitivity(fn: (c: AutoSensChange) => void): () => void {
     this.autoSensListeners.add(fn);

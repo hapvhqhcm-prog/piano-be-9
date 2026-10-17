@@ -91,8 +91,12 @@ const ws = new WebSocket(await pageWs());
 await new Promise((r) => ws.addEventListener('open', r, { once: true }));
 let seq = 0;
 const pending = new Map();
+/** (+ 2026-10-17) Lỗi console / exception của cảnh đang chụp (in kèm kết quả) */
+let sceneErrors = [];
 ws.addEventListener('message', (ev) => {
   const m = JSON.parse(ev.data);
+  if (m.method === 'Runtime.exceptionThrown') sceneErrors.push(String(m.params?.exceptionDetails?.exception?.description ?? m.params?.exceptionDetails?.text ?? '?').split('\n')[0]);
+  if (m.method === 'Runtime.consoleAPICalled' && m.params?.type === 'error') sceneErrors.push((m.params.args ?? []).map((a) => a.value ?? a.description ?? '').join(' ').split('\n')[0]);
   if (m.id && pending.has(m.id)) {
     pending.get(m.id)(m);
     pending.delete(m.id);
@@ -122,6 +126,7 @@ for (const size of SIZES) {
     if (sc.sizes && !sc.sizes.includes(size.name)) continue;
     // Mỗi cảnh: tải lại trang với dữ liệu sạch → các cảnh không ảnh hưởng nhau
     await evaluate('try { localStorage.clear() } catch {} ; 1').catch(() => undefined);
+    sceneErrors = [];
     await send('Page.navigate', { url: URL });
     for (let i = 0; i < 50; i++) {
       await sleep(150);
@@ -134,7 +139,7 @@ for (const size of SIZES) {
       const shot = await send('Page.captureScreenshot', { format: 'png' });
       const file = join(OUT, `${size.name}-${sc.name}.png`);
       writeFileSync(file, Buffer.from(shot.data, 'base64'));
-      results.push(`✓ ${size.name}-${sc.name}${note ? ' — ' + note : ''}`);
+      results.push(`✓ ${size.name}-${sc.name}${note ? ' — ' + note : ''}${sceneErrors.length ? ' ⚠ console: ' + sceneErrors.join(' | ') : ''}`);
     } catch (e) {
       results.push(`✗ ${size.name}-${sc.name}: ${e.message.split('\n')[0]}`);
     }

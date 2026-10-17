@@ -46,7 +46,7 @@ export interface SimOptions {
   /** Tần số lấy mẫu (mặc định 48 kHz; iPad cũ / tai nghe có thể 44,1 kHz) */
   sampleRate?: number;
   /** Tiếng tích máy đếm nhịp lọt vào micro: các thời điểm (giây) */
-  clicks?: Array<{ t: number; accent?: boolean }>;
+  clicks?: Array<{ t: number; accent?: boolean; hz?: number; gain?: number; tau?: number }>;
   /** Biên độ đỉnh tiếng tích tại micro (mặc định 0,3 — loa iPad sát micro) */
   clickLevel?: number;
   /**
@@ -140,13 +140,15 @@ export function renderPiano(notes: SimNote[], seconds: number, o: SimOptions = {
   }
   // Tiếng tích máy đếm nhịp (giống AudioEngine.click: sin cao, lên nhanh, tắt nhanh) — đi thẳng loa → micro
   for (const c of o.clicks ?? []) {
-    const f = c.accent ? CLICK.accentHz : CLICK.hz;
-    const peak = (o.clickLevel ?? 0.3) * (c.accent ? 1 : CLICK.normalGain / CLICK.accentGain);
+    // (+ 2026-10-17) trống nhịp vui (music/groove.ts → AudioEngine.grooveHit): tần số / âm lượng / tắt dần riêng
+    const f = c.hz ?? (c.accent ? CLICK.accentHz : CLICK.hz);
+    const peak = (o.clickLevel ?? 0.3) * (c.gain !== undefined ? c.gain / CLICK.accentGain : c.accent ? 1 : CLICK.normalGain / CLICK.accentGain);
+    const tau = c.tau ?? CLICK.tau;
     const s0 = Math.floor(c.t * SR);
-    const len = Math.floor(CLICK.length * SR);
+    const len = Math.floor(Math.max(CLICK.length, tau * 6) * SR);
     for (let i = 0; i < len && s0 + i < n; i++) {
       const t = i / SR;
-      const env = t < CLICK.attack ? t / CLICK.attack : Math.exp(-(t - CLICK.attack) / CLICK.tau);
+      const env = t < CLICK.attack ? t / CLICK.attack : Math.exp(-(t - CLICK.attack) / tau);
       out[s0 + i] += peak * env * Math.sin(2 * Math.PI * f * t);
     }
   }

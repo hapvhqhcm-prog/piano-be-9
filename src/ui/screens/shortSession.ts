@@ -13,7 +13,7 @@ export function startShortSession(app: App): void {
   const store = app.store;
   const songs = shortSessionSongs(store.get());
   if (!songs.length) {
-    toast('Con chưa có bài nào — bấm "Học tiếp" nhé!');
+    toast('Con chưa có bài nào — bấm nút ▶ to nhé!');
     return;
   }
   const week = store.get().progress.currentWeek;

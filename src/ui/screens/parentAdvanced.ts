@@ -1,7 +1,11 @@
 /**
- * Màn Phụ huynh — mục "⚙️ Nâng cao" (thu gọn): phiên bản, cài đặt, 🎧 Album của con, dữ liệu (sao lưu / nhập / đặt lại).
+ * Màn Phụ huynh — mục "⚙️ Nâng cao" (thu gọn). (2026-10-17, OWNER duyệt — gọn lại ~5 cài đặt chính):
+ *   Cài đặt chính (tên bé · độ dài buổi · giọng đọc · micro · tuần — chọn Cấp rồi Tuần) → 💾 Dữ liệu (sao lưu) → 🆕 Bản mới
+ *   → 🧑‍🔧 "Cho người hỗ trợ" (thu gọn, mọi thứ còn lại: tự chuyển nốt, micro tự sang nốt / chấm nhịp / 2 tay, nhạc đệm, tay
+ *   trái sớm, tư thế đầy đủ, giới hạn ngày, kiểm tra bản mới, 🩺 Kiểm tra iPad, nhập dữ liệu, đặt lại, chỉnh micro, Album).
  */
 import { LEFT_HAND_WEEK, MAX_WEEK, POSTURE_CUE, WEEKS, levelOf } from '../../lessons/lessonEngine';
+import { LEVELS } from '../../lessons/curriculum';
 import { sessionCount } from '../../progress/history';
 import type { AppData } from '../../progress/schema';
 import { button, confirmDialog, h, toast } from '../components/dom';
@@ -11,45 +15,112 @@ import { cancelSpeech, hasVietnameseVoice, speak } from '../../audio/voice';
 import { BACKUP_MESSAGE, exportBackup } from '../../progress/backup';
 import { TWO_HAND_DEFAULT } from '../../audio/twoHand';
 import { albumParentCard } from './albumParent';
-import { diagnosticsScreen, fmtDate, micTestScreen, segmented, type ParentCtx, type ParentUxSettings } from './parentShared';
+import { ALBUM_NOT_IN_BACKUP } from '../../progress/newDevice';
+import { diagnosticsScreen, fmtDate, fmtMs, healthCheckScreen, micTestScreen, segmented, storageText, type ParentCtx, type ParentUxSettings } from './parentShared';
+import { versionsCard } from './parentHelp';
 
-/** Phiên bản đang chạy + kiểm tra bản mới + 🩺 Kiểm tra iPad */
-function versionCard(c: ParentCtx): HTMLElement {
+/** 🔄 Kiểm tra bản mới + 🩺 Kiểm tra iPad + 🩺 Kiểm tra sức khỏe app (cho người hỗ trợ) */
+function toolsCard(c: ParentCtx): HTMLElement {
   const { app, say } = c;
   return h(
     'section',
-    { class: 'card version-card' },
-    h('p', {}, 'Phiên bản đang chạy: ', h('b', {}, APP_VERSION)),
-    button({
-      icon: '🔄',
-      label: 'Kiểm tra bản mới',
-      onTap: async () => {
-        if (!navigator.onLine) return say('iPad đang không có mạng — bật Wi‑Fi rồi thử lại.');
-        say('Đang kiểm tra…');
-        await checkForUpdate(true);
-        await new Promise((r) => setTimeout(r, 5000));
-        say(
-          isUpdateReady()
-            ? '✅ Đã tải bản mới. Bấm "Về màn của bé" — app sẽ tự khởi động lại bằng bản mới.'
-            : 'Đang dùng bản mới nhất (nếu vừa có bản cập nhật, đợi 1–2 phút rồi thử lại).',
-        );
-      },
-    }),
-    button({ icon: '🩺', label: 'Kiểm tra iPad (gửi người hỗ trợ)', onTap: () => app.show(diagnosticsScreen(app)) }),
+    { class: 'card' },
+    h('h2', {}, '🔧 Công cụ'),
+    h(
+      'div',
+      { class: 'row' },
+      button({
+        icon: '🔄',
+        label: 'Kiểm tra bản mới',
+        onTap: async () => {
+          if (!navigator.onLine) return say('iPad đang không có mạng — bật Wi‑Fi rồi thử lại.');
+          say('Đang kiểm tra…');
+          await checkForUpdate(true);
+          await new Promise((r) => setTimeout(r, 5000));
+          say(
+            isUpdateReady()
+              ? '✅ Đã tải bản mới. Bấm "Về màn của bé" — app sẽ tự khởi động lại bằng bản mới.'
+              : 'Đang dùng bản mới nhất (nếu vừa có bản cập nhật, đợi 1–2 phút rồi thử lại).',
+          );
+        },
+      }),
+      button({ icon: '🩺', label: 'Kiểm tra iPad (gửi người hỗ trợ)', onTap: () => app.show(diagnosticsScreen(app)) }),
+      button({ icon: '🩺', label: 'Kiểm tra sức khỏe app', onTap: () => app.show(healthCheckScreen(app)) }),
+      button({ icon: '🎤', label: 'Chỉnh micro (người hỗ trợ)', onTap: () => app.show(micTestScreen(app)) }),
+    ),
   );
 }
 
-/** Cài đặt: giọng đọc, tư thế, độ dài buổi, tự chuyển nốt, tuần hiện tại, micro, nhạc đệm, tay trái, giới hạn ngày, tên bé */
-function settingsCard(c: ParentCtx, d: Readonly<AppData>): HTMLElement {
-  const { app, store, set, say } = c;
+/** Ô chọn tuần: chọn Cấp (4) rồi Tuần trong cấp (≤ 12) — không phải danh sách 43 dòng. Đổi tuần phải xác nhận. */
+function weekPicker(c: ParentCtx, week: number): HTMLElement {
+  const { store, say } = c;
+  const lvSel = h('select', { class: 'text-in week-pick-level', 'aria-label': 'Chọn cấp' }) as HTMLSelectElement;
+  const wkSel = h('select', { class: 'text-in week-pick-week', 'aria-label': 'Chọn tuần' }) as HTMLSelectElement;
+  const cur = levelOf(week);
+  for (const l of LEVELS) {
+    const o = h('option', { value: String(l.level), 'data-from': String(l.weeks[0]), 'data-to': String(Math.min(l.weeks[1], MAX_WEEK)) }, l.name);
+    if (l.level === cur.level) o.setAttribute('selected', '');
+    lvSel.append(o);
+  }
+  const fillWeeks = (level: number, pick: number | null) => {
+    const l = LEVELS.find((x) => x.level === level) ?? cur;
+    wkSel.replaceChildren(h('option', { value: '' }, 'Chọn tuần…'));
+    for (const w of WEEKS) {
+      if (w.week < l.weeks[0] || w.week > l.weeks[1]) continue;
+      const o = h('option', { value: String(w.week) }, `Tuần ${w.week} · ${w.islandEmoji} ${w.island}${w.week === week ? ' (đang học)' : ''}`);
+      if (w.week === pick) o.setAttribute('selected', '');
+      wkSel.append(o);
+    }
+  };
+  fillWeeks(cur.level, week);
+  lvSel.addEventListener('change', () => fillWeeks(Number(lvSel.value), null));
+  // Đổi tuần phải xác nhận (chạm nhầm ô chọn = bé nhảy cóc / học lại cả tuần)
+  wkSel.addEventListener('change', () => {
+    const to = Number(wkSel.value);
+    lvSel.value = String(cur.level);
+    fillWeeks(cur.level, week);
+    if (!to || to === week) return;
+    confirmDialog({
+      title: `Chuyển bé sang tuần ${to}?`,
+      text:
+        to > week
+          ? `Bé sẽ bỏ qua bài của tuần ${week}${to > week + 1 ? `–${to - 1}` : ''}. Chỉ nên làm khi bé đã biết những bài đó. Kết quả cũ vẫn giữ.`
+          : `Bé quay lại học tuần ${to}. Kết quả cũ vẫn giữ; app tự sang tuần mới khi bé đạt mục tiêu.`,
+      okLabel: `Sang tuần ${to}`,
+      onOk: () => {
+        store.setCurrentWeek(to);
+        // "Ở lại tuần" gắn với tuần cũ — bỏ đi để sau này bé không bị giữ im lặng khi tới lại tuần đó
+        if (store.settings.holdWeek != null) store.updateSettings({ holdWeek: null });
+        say(`Đã chuyển sang tuần ${to}.`);
+      },
+    });
+  });
+  return h('div', { class: 'row week-picker' }, lvSel, wkSel);
+}
+
+/** ~5 cài đặt chính: tên bé, độ dài buổi, giọng đọc, micro, tuần */
+function mainSettingsCard(c: ParentCtx, d: Readonly<AppData>): HTMLElement {
+  const { app, store, set } = c;
   const s = d.settings;
   const week = d.progress.currentWeek;
   return h(
     'section',
-    { class: 'card' },
+    { class: 'card main-settings' },
     h('h2', {}, 'Cài đặt'),
+    h('h3', {}, 'Tên của bé (hiện ở màn chào)'),
+    (() => {
+      const input = h('input', { class: 'text-in', type: 'text', value: d.learner.name, maxlength: '20' });
+      input.addEventListener('change', () => store.setLearnerName(input.value.trim()));
+      return input;
+    })(),
+    h('h3', {}, 'Độ dài buổi'),
+    segmented(
+      [10, 15, 20].map((m) => ({ value: m as 10 | 15 | 20, label: `${m} phút` })),
+      s.sessionMinutes,
+      (v) => set({ sessionMinutes: v }),
+    ),
     h('h3', {}, '🔊 Giọng đọc hướng dẫn'),
-    h('p', { class: 'muted' }, 'App đọc to câu hướng dẫn cho bé (bé đọc chậm). Cần giọng tiếng Việt trên iPad: Cài đặt → Trợ năng → Nội dung được đọc → Giọng nói → Tiếng Việt.'),
+    h('p', { class: 'muted' }, 'App đọc to câu hướng dẫn cho bé. Cần giọng tiếng Việt: Cài đặt iPad → Trợ năng → Nội dung được đọc → Giọng nói → Tiếng Việt.'),
     h(
       'div',
       { class: 'row' },
@@ -67,85 +138,14 @@ function settingsCard(c: ParentCtx, d: Readonly<AppData>): HTMLElement {
       button({
         icon: '🔊',
         label: 'Nghe thử',
-        onTap: () =>
-          hasVietnameseVoice()
-            ? void speak(app, 'Chào con! Mình cùng học đàn nhé.')
-            : toast('iPad chưa có giọng đọc tiếng Việt'),
+        onTap: () => (hasVietnameseVoice() ? void speak(app, 'Chào con! Mình cùng học đàn nhé.') : toast('iPad chưa có giọng đọc tiếng Việt')),
       }),
     ),
-    // v5.2 (OWNER duyệt 2026-10-08): mặc định thẻ tư thế đầy đủ chỉ đầu tuần; bật → mọi buổi
-    h('h3', {}, '🧘 Nhắc tư thế đầy đủ mỗi buổi'),
-    h('p', { class: 'muted' }, `Tắt (mặc định): mỗi buổi chỉ nhắc một dòng "${POSTURE_CUE}"; 3 thẻ tư thế đầy đủ hiện ở buổi đầu mỗi tuần.`),
-    segmented(
-      [
-        { value: 'off', label: 'Tắt' },
-        { value: 'on', label: 'Bật' },
-      ],
-      (s as ParentUxSettings).postureFull ? 'on' : 'off',
-      (v) => set({ postureFull: v === 'on' }),
-    ),
-    h('h3', {}, 'Độ dài buổi'),
-    segmented(
-      [10, 15, 20].map((m) => ({ value: m as 10 | 15 | 20, label: `${m} phút` })),
-      s.sessionMinutes,
-      (v) => set({ sessionMinutes: v }),
-    ),
-    h('h3', {}, 'Tự chuyển nốt sau khi bấm "Đúng rồi"'),
-    segmented(
-      [
-        { value: 'off', label: 'Tắt' },
-        { value: 'on', label: 'Bật' },
-      ],
-      s.autoAdvance ? 'on' : 'off',
-      (v) => set({ autoAdvance: v === 'on' }),
-    ),
-    s.autoAdvance
-      ? segmented(
-          [2, 4, 6, 8, 10].map((n) => ({ value: n, label: `${n} giây` })),
-          s.autoAdvanceDelaySec,
-          (v) => set({ autoAdvanceDelaySec: v }),
-        )
-      : null,
-    h('h3', { 'data-guide': 'week' }, `Tuần hiện tại (1–${MAX_WEEK}) — chỉ đổi khi cần`),
-    (() => {
-      const sel = h('select', { class: 'text-in' }) as HTMLSelectElement;
-      for (const w of WEEKS) {
-        const o = h('option', { value: String(w.week) }, `${levelOf(w.week).name} · Tuần ${w.week} · ${w.islandEmoji} ${w.island}`);
-        if (w.week === week) o.setAttribute('selected', '');
-        sel.append(o);
-      }
-      // Đổi tuần phải xác nhận (chạm nhầm ô chọn = bé nhảy cóc / học lại cả tuần)
-      sel.addEventListener('change', () => {
-        const to = Number(sel.value);
-        sel.value = String(week);
-        if (to === week) return;
-        confirmDialog({
-          title: `Chuyển bé sang tuần ${to}?`,
-          text:
-            to > week
-              ? `Bé sẽ bỏ qua bài của tuần ${week}${to > week + 1 ? `–${to - 1}` : ''}. Chỉ nên làm khi bé đã biết những bài đó. Kết quả cũ vẫn giữ.`
-              : `Bé quay lại học tuần ${to}. Kết quả cũ vẫn giữ; app tự sang tuần mới khi bé đạt mục tiêu.`,
-          okLabel: `Sang tuần ${to}`,
-          onOk: () => {
-            store.setCurrentWeek(to);
-            // "Ở lại tuần" gắn với tuần cũ — bỏ đi để sau này bé không bị giữ im lặng khi tới lại tuần đó
-            if (store.settings.holdWeek != null) store.updateSettings({ holdWeek: null });
-            say(`Đã chuyển sang tuần ${to}.`);
-          },
-        });
-      });
-      return sel;
-    })(),
     h('h3', { 'data-guide': 'mic' }, '🎤 Nghe đàn bằng micro'),
     h(
       'p',
       { class: 'muted' },
-      'App nghe đàn cơ và tự chấm từng nốt. Xử lý ngay trên iPad, không gửi đi đâu; chỉ ghi TẠM khi bé đàn để "🎧 Nghe lại" (rời màn là xóa). Nút "Đúng rồi" của bố mẹ vẫn dùng được. Bật bằng "Cài micro (3 bước)".',
-    ),
-    h(
-      'p',
-      { class: 'muted' },
-      '🎧 "Nghe lại con đàn": khi micro bật, app giữ TẠM tiếng đàn của lượt vừa chơi để bé bấm nghe lại và tự nhận xét. Không gửi đi đâu; chơi lượt mới hoặc rời màn là xóa — TRỪ bản hay nhất của mỗi bài được giữ trong "🎧 Album của con" (chỉ trên iPad này; tắt / xóa ở mục Nâng cao). Micro tắt thì không ghi gì.',
+      'App nghe đàn cơ và tự chấm từng nốt — xử lý ngay trên iPad, không gửi đi đâu. Bản thu hay nhất của mỗi bài vào “🎧 Album của con”. Nút “Đúng rồi” của bố mẹ vẫn dùng được.',
     ),
     h(
       'div',
@@ -160,21 +160,44 @@ function settingsCard(c: ParentCtx, d: Readonly<AppData>): HTMLElement {
       ),
       button({ icon: '🎤', label: s.micEnabled ? 'Thử / chỉnh micro' : 'Cài micro (3 bước)', onTap: () => app.show(micTestScreen(app)) }),
     ),
-    s.micEnabled
-      ? h(
-          'div',
-          {},
-          h('h3', {}, 'Micro nghe đúng → tự sang nốt sau'),
-          segmented(
-            [
-              { value: 'on', label: 'Bật' },
-              { value: 'off', label: 'Tắt' },
-            ],
-            s.micAutoNext ? 'on' : 'off',
-            (v) => set({ micAutoNext: v === 'on' }),
-          ),
+    h('h3', { 'data-guide': 'week' }, `Tuần hiện tại: ${week} — chỉ đổi khi cần`),
+    weekPicker(c, week),
+  );
+}
+
+/** Cho người hỗ trợ: các cài đặt ít dùng */
+function supportSettingsCard(c: ParentCtx, d: Readonly<AppData>): HTMLElement {
+  const { set } = c;
+  const s = d.settings;
+  const onOff = (cur: boolean, pick: (on: boolean) => void, onFirst = false) =>
+    segmented(
+      onFirst
+        ? [
+            { value: 'on', label: 'Bật' },
+            { value: 'off', label: 'Tắt' },
+          ]
+        : [
+            { value: 'off', label: 'Tắt' },
+            { value: 'on', label: 'Bật' },
+          ],
+      cur ? 'on' : 'off',
+      (v) => pick(v === 'on'),
+    );
+  return h(
+    'section',
+    { class: 'card' },
+    h('h2', {}, 'Cài đặt khác'),
+    h('h3', {}, 'Tự chuyển nốt sau khi bấm "Đúng rồi"'),
+    onOff(s.autoAdvance, (on) => set({ autoAdvance: on })),
+    s.autoAdvance
+      ? segmented(
+          [2, 4, 6, 8, 10].map((n) => ({ value: n, label: `${n} giây` })),
+          s.autoAdvanceDelaySec,
+          (v) => set({ autoAdvanceDelaySec: v }),
         )
       : null,
+    h('h3', {}, 'Micro nghe đúng → tự sang nốt sau'),
+    onOff(s.micAutoNext, (on) => set({ micAutoNext: on }), true),
     h('h3', {}, 'Micro chấm nhịp: mức độ'),
     h('p', { class: 'muted' }, 'Dễ = cho phép sớm/muộn nhiều hơn (nên dùng lúc đầu). Khó = gần như chính xác tuyệt đối.'),
     segmented(
@@ -187,25 +210,15 @@ function settingsCard(c: ParentCtx, d: Readonly<AppData>): HTMLElement {
       (v) => set({ timing: v }),
     ),
     h('h3', {}, 'Micro chấm cả 2 tay (thử nghiệm)'),
-    h('p', { class: 'muted' }, 'Bài hai tay: micro nghe riêng tay phải và tay trái (thiếu tay nào, nhầm phím nào). Tắt = micro chỉ nghe một nốt mỗi lúc như trước. Nút "👪 Bố mẹ: tiếp" luôn còn.'),
-    segmented(
-      [
-        { value: 'on', label: 'Bật' },
-        { value: 'off', label: 'Tắt' },
-      ],
-      (s.micTwoHand ?? TWO_HAND_DEFAULT) ? 'on' : 'off',
-      (v) => set({ micTwoHand: v === 'on' }),
+    h('p', { class: 'muted' }, 'Bài hai tay: micro nghe riêng tay phải và tay trái. Tắt = micro chỉ nghe một nốt mỗi lúc. Nút "👪 Bố mẹ: tiếp" luôn còn.'),
+    onOff(s.micTwoHand ?? TWO_HAND_DEFAULT, (on) => set({ micTwoHand: on }), true),
+    h('h3', {}, 'Nhạc nền khi đàn theo nhịp ("bố mẹ đàn cùng")'),
+    h(
+      'p',
+      { class: 'muted' },
+      'Micro BẬT: chỉ có nhạc nền bộ gõ (trống nhẹ, micro không nghe nhầm thành nốt đàn). Micro TẮT: có thêm nhạc đệm piano (hợp âm theo bài). Tắt mục này = chỉ tiếng tích nhịp.',
     ),
-    h('h3', {}, 'Nhạc đệm khi đàn theo nhịp ("bố mẹ đàn cùng")'),
-    h('p', { class: 'muted' }, 'Khi micro đang bật, nhạc đệm tự tắt để micro nghe rõ tiếng đàn của bé.'),
-    segmented(
-      [
-        { value: 'on', label: 'Bật' },
-        { value: 'off', label: 'Tắt' },
-      ],
-      s.accompaniment ? 'on' : 'off',
-      (v) => set({ accompaniment: v === 'on' }),
-    ),
+    onOff(s.accompaniment, (on) => set({ accompaniment: on }), true),
     h('h3', {}, `Tay trái — tự bật từ tuần ${LEFT_HAND_WEEK}`),
     segmented(
       [
@@ -215,6 +228,10 @@ function settingsCard(c: ParentCtx, d: Readonly<AppData>): HTMLElement {
       s.leftHandEnabled ? 'on' : 'auto',
       (v) => set({ leftHandEnabled: v === 'on' }),
     ),
+    // v5.2 (OWNER duyệt 2026-10-08): mặc định thẻ tư thế đầy đủ chỉ đầu tuần; bật → mọi buổi
+    h('h3', {}, '🧘 Nhắc tư thế đầy đủ mỗi buổi'),
+    h('p', { class: 'muted' }, `Tắt (mặc định): mỗi buổi chỉ nhắc một dòng "${POSTURE_CUE}"; 3 thẻ tư thế đầy đủ hiện ở buổi đầu mỗi tuần.`),
+    onOff(!!(s as ParentUxSettings).postureFull, (on) => set({ postureFull: on })),
     h('h3', {}, 'Giới hạn mỗi ngày (mặc định không giới hạn)'),
     segmented(
       [
@@ -226,17 +243,41 @@ function settingsCard(c: ParentCtx, d: Readonly<AppData>): HTMLElement {
       s.dailyLimit,
       (v) => set({ dailyLimit: v }),
     ),
-    h('h3', {}, 'Tên của bé (hiện ở màn chào)'),
-    (() => {
-      const input = h('input', { class: 'text-in', type: 'text', value: d.learner.name, maxlength: '20' });
-      input.addEventListener('change', () => store.setLearnerName(input.value.trim()));
-      return input;
-    })(),
   );
 }
 
-/** Dữ liệu: sao lưu, nhập JSON (phải xác nhận), đặt lại toàn bộ (2 bước) */
+/** 💾 Dữ liệu: trạng thái + "Sao lưu dữ liệu" + cảnh báo xóa app. Mốc Hướng dẫn: 'data'. */
 function dataCard(c: ParentCtx, d: Readonly<AppData>): HTMLElement {
+  const { app, store, say } = c;
+  const last = d.settings.lastBackupAt ?? 0;
+  const storageSpan = h('span', {});
+  void storageText(store).then((t) => (storageSpan.textContent = t ? ` · ${t}` : ''));
+  return h(
+    'section',
+    { class: 'card', 'data-guide': 'data' },
+    h('h2', {}, '💾 Dữ liệu'),
+    h(
+      'p',
+      { class: 'muted backup-line' },
+      last ? `Sao lưu gần nhất: ${fmtMs(last)}` : 'Chưa sao lưu lần nào',
+      ' · Lưu trữ bền vững: ',
+      h('b', {}, app.storagePersisted === true ? 'có' : app.storagePersisted === false ? 'không' : 'chưa rõ'),
+      storageSpan,
+    ),
+    h(
+      'p',
+      { class: 'banner warn' },
+      '⚠️ Tiến độ của bé chỉ nằm trên iPad này. ',
+      h('b', {}, 'Xóa biểu tượng app = mất hết dữ liệu.'),
+      ' Sao lưu mỗi tuần (thẻ “Hôm nay”: xem báo cáo tuần → Sao lưu).',
+    ),
+    button({ icon: '💾', label: 'Sao lưu dữ liệu', kind: 'primary', onTap: () => void exportBackup(store).then((r) => say(BACKUP_MESSAGE[r])) }),
+    h('p', { class: 'muted' }, `📀 ${ALBUM_NOT_IN_BACKUP}`),
+  );
+}
+
+/** Cho người hỗ trợ: nhập JSON (phải xác nhận), đặt lại toàn bộ (2 bước) */
+function importResetCard(c: ParentCtx, d: Readonly<AppData>): HTMLElement {
   const { app, store, say, render } = c;
   // Dữ liệu — nhập JSON phải xác nhận trước (thay TOÀN BỘ dữ liệu hiện tại; bản cũ vẫn được lưu dự phòng)
   const doImport = (text: string, force = false) => {
@@ -289,28 +330,10 @@ function dataCard(c: ParentCtx, d: Readonly<AppData>): HTMLElement {
 
   return h(
     'section',
-    { class: 'card', 'data-guide': 'data' },
-    h('h2', {}, 'Dữ liệu'),
-    h(
-      'p',
-      { class: 'muted' },
-      'Lưu trữ bền vững: ',
-      h('b', {}, app.storagePersisted === true ? 'có' : app.storagePersisted === false ? 'không' : 'chưa rõ'),
-      app.storagePersisted === false ? ' — nên thêm app vào Màn hình chính và sao lưu thường xuyên.' : '',
-    ),
-    h('p', { class: 'muted' }, 'Mọi dữ liệu chỉ nằm trên iPad này. Nên bấm “Sao lưu dữ liệu” mỗi tuần (lưu vào Tệp / Ghi chú).'),
-    h(
-      'div',
-      { class: 'row' },
-      button({
-        icon: '💾',
-        label: 'Sao lưu dữ liệu',
-        kind: 'primary',
-        onTap: () => void exportBackup(store).then((r) => say(BACKUP_MESSAGE[r])),
-      }),
-      button({ icon: '⬆', label: 'Nhập từ tệp JSON', onTap: () => fileIn.click() }),
-      fileIn,
-    ),
+    { class: 'card' },
+    h('h2', {}, '⬆ Nhập lại dữ liệu (đổi iPad / lỡ xóa app)'),
+    h('p', { class: 'muted' }, 'Chọn tệp sao lưu (.json) đã lưu trong Tệp. Dữ liệu hiện tại được cất một bản dự phòng trước khi thay.'),
+    h('div', { class: 'row' }, button({ icon: '⬆', label: 'Nhập từ tệp JSON', onTap: () => fileIn.click() }), fileIn),
     paste,
     button({
       icon: '⬆',
@@ -373,14 +396,30 @@ function dataCard(c: ParentCtx, d: Readonly<AppData>): HTMLElement {
   );
 }
 
-/** Mục "Nâng cao" (thu gọn): phiên bản, cài đặt, Album, dữ liệu */
+/** Mục "Nâng cao" (thu gọn): cài đặt chính, dữ liệu, bản mới, "Cho người hỗ trợ" (thu gọn) */
 export function advancedSection(c: ParentCtx, d: Readonly<AppData>): HTMLElement {
-  const adv: HTMLElement[] = [];
-  adv.push(versionCard(c), settingsCard(c, d));
-  // (+ 2026-10-08) 🎧 Album của con: bật/tắt lưu, xoá (KHÔNG nằm trong bản sao lưu)
-  const album = albumParentCard();
-  adv.push(album, dataCard(c, d), h('p', { class: 'muted foot' }, 'Piano bé · không mạng, không quảng cáo, không thu thập dữ liệu.'));
-  const details = h('details', { class: 'adv' }, h('summary', {}, '⚙️ Nâng cao: cài đặt · dữ liệu · phiên bản'), ...adv);
+  const support = h(
+    'details',
+    { class: 'adv-support' },
+    h('summary', {}, '🧑‍🔧 Cho người hỗ trợ (kỹ thuật, ít dùng)'),
+    supportSettingsCard(c, d),
+    toolsCard(c),
+    // (+ 2026-10-08) 🎧 Album của con: bật/tắt lưu, xoá (KHÔNG nằm trong bản sao lưu)
+    albumParentCard(),
+    importResetCard(c, d),
+  );
+  support.open = c.ui.supportOpen;
+  support.addEventListener('toggle', () => (c.ui.supportOpen = support.open));
+  const details = h(
+    'details',
+    { class: 'adv' },
+    h('summary', {}, '⚙️ Nâng cao: cài đặt · dữ liệu · bản mới'),
+    mainSettingsCard(c, d),
+    dataCard(c, d),
+    versionsCard(d),
+    support,
+    h('p', { class: 'muted foot' }, `Piano bé ${APP_VERSION} · không mạng, không quảng cáo, không thu thập dữ liệu.`),
+  );
   details.open = c.ui.advOpen;
   details.addEventListener('toggle', () => (c.ui.advOpen = details.open));
   return details;

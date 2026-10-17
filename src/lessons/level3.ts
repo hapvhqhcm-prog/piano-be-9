@@ -1,10 +1,11 @@
 import { chordTarget, notes, posEcho, posNote } from './targets';
 import type { Activity, Lesson, WeekPlan } from './types';
+import { accompany, byEar, concertTake, polish, recitalLesson, transpose } from './musician';
 
 /**
- * CẤP 3 — "Thành thạo" (tuần 22–31; v5.1: +1 sau khi tách tuần 18): hợp âm tay trái, dòng kẻ phụ & khuông lớn, đổi thế tay,
+ * CẤP 3 — "Thành thạo" (tuần 22–33; v5.1: +1 sau khi tách tuần 18; rev 5 (2026-10-17): + tuần ôn 27 và 32, tuần 27–30 cũ +1, 31 → 33): hợp âm tay trái, dòng kẻ phụ & khuông lớn, đổi thế tay,
  * trưởng/thứ, đọc nốt cao Đô5–Sol5, đọc nhạc hai khóa, bài hai tay — rồi MỚI tới tác phẩm cổ điển giản lược (Minuet tuần 29,
- * Für Elise tuần 30), hòa nhạc lớn tuần 31.
+ * Für Elise tuần 31), tổng duyệt tuần 32, hòa nhạc lớn tuần 33 (số tuần theo rev 5).
  * v5 (OWNER duyệt 2026-10-05, chuyên gia sư phạm): nhịp độ cũ đưa Minuet/Für Elise tới sớm 6–9 tháng → dời xuống cuối
  * Cấp 3 sau 7 tuần chuẩn bị; thêm tuần "Cầu Vạch Phụ" (nay tuần 23: dòng kẻ phụ + đọc khuông lớn hai tay) trước khi đọc nhạc hai khóa.
  * v5.1 (OWNER duyệt 2026-10-06 — buổi ≤ 7 màn, ≤ ~12 phút): bỏ bộ ba lượt "chờ → theo nhịp → băng chuyền" trong MỘT bài —
@@ -12,7 +13,7 @@ import type { Activity, Lesson, WeekPlan } from './types';
  * được ôn ở Mức 3). Bài hai tay cùng lúc chính của tuần: TÁCH TAY sẵn trên MỘT CÂU KHÓ (chờ tay phải → chờ tay trái → hai tay cả bài).
  * Mục tiêu cuối (nói thật với phụ huynh): ≈ hoàn thành Faber cấp 1 / đầu cấp 2.
  * Dữ liệu cũ được đánh số lại trong progress/migrations.ts (bảng OLD→NEW, rev 3 → 4: tuần ≥ 19 +1).
- * Sau tuần 31: "Luyện tập mỗi ngày" (lessonEngine.dailyLesson) — không có điểm dừng.
+ * Sau Cấp 3: Cấp 4 (level4.ts), rồi "Luyện tập mỗi ngày" (lessonEngine.dailyLesson) — không có điểm dừng.
  * (2026-10-08, OWNER duyệt sau rà soát chuyên gia): ứng tấu 1 phút MỖI tuần (Hỏi – Đáp ở thế tay / giọng của tuần;
  * tuần 31 chỉ có buổi hòa nhạc — không thêm); lời cho bé ngắn (≤ ~12 chữ) — chi tiết cho người lớn ở parentTips.ts.
  */
@@ -84,8 +85,9 @@ export const WEEK22: WeekPlan = {
   warmup: { variant: 'read', clef: 'bass', pool: ['C3', 'E3', 'G3', 'F3', 'A3', 'B2', 'D3'], rounds: 6 },
   teach: { emoji: '👨‍🏫', text: 'Con chỉ bố mẹ hợp âm Đô: ngón 5 – 3 – 1 tay trái trên Đô – Mi – Sol.' },
   drills: ['arm-drop', 'hand-shape'],
-  criterion: { text: 'Chơi trọn "Bài ca niềm vui — hai tay hợp âm" theo nhịp — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
-  kidGoal: 'Bài ca niềm vui hai tay hợp âm — 2 hôm nhé! 🌲',
+  // (2026-10-17, OWNER duyệt "Bớt Bài ca niềm vui") bài tiêu chí: "Ngôi sao nhỏ — hai tay hợp âm" (I – IV – V như bài niềm vui)
+  criterion: { text: 'Chơi trọn "Ngôi sao nhỏ — hai tay hợp âm" theo nhịp — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
+  kidGoal: 'Ngôi sao nhỏ hai tay hợp âm — 2 hôm nhé! 🌲',
   lessons: [
     {
       id: 'w22-l1',
@@ -120,6 +122,17 @@ export const WEEK22: WeekPlan = {
       activities: [conveyor('ode_to_joy_chords'), song('twinkle_both', 'wait'), song('twinkle_both', 'tempo')],
     },
     pair('w22-l4', 22, 'Chuông ngân vang — hai tay', '🔔', 'jingle_bells_both'),
+    // (+ 2026-10-17, OWNER duyệt — rà soát giáo viên dài hạn) nhạc công nhỏ: đàn theo tai
+    {
+      id: 'w22-ear',
+      week: 22,
+      title: 'Đàn theo tai',
+      emoji: '👂',
+      activities: [
+        byEar('jingle_bells', 11),
+      ],
+      teach: { emoji: '👂', text: 'Con đàn cho bố mẹ câu con tìm được bằng tai — bố mẹ đoán tên bài nhé!' },
+    },
   ],
 };
 
@@ -237,6 +250,39 @@ export const WEEK24: WeekPlan = {
     { id: 'w24-ngua', week: 24, title: 'Lý ngựa ô', emoji: '🐎', activities: [
       song('ly_ngua_o', 'wait', 2, 'names', 'Hai tay thay nhau! Bắt đầu bằng hai nốt lấy đà.'),
     ] },
+    // (+ 2026-10-17, OWNER duyệt — rà soát giáo viên dài hạn) nhạc công nhỏ: HỢP ÂM SOL BẢY (V7) + đệm I – V7 dưới giai điệu quen
+    {
+      id: 'w24-v7',
+      week: 24,
+      title: 'Hợp âm Sol bảy · đệm hợp âm',
+      emoji: '🏠',
+      activities: [
+        notes({
+          id: 'w24-v7',
+          step: 'Bài mới',
+          title: 'Hợp âm Sol bảy (V7)',
+          intro: 'Từ Đô: ngón 5 xuống Si, ngón 3 sang Fa — Sol bảy!',
+          targets: [
+            chordTarget(['C3', 'E3', 'G3'], 'LH', 'Hợp âm Đô (I)', [5, 3, 1]),
+            chordTarget(['B2', 'F3', 'G3'], 'LH', 'Sol bảy (V7)', [5, 2, 1]),
+            chordTarget(['C3', 'E3', 'G3'], 'LH', 'Về nhà: Đô (I)', [5, 3, 1]),
+          ],
+        }),
+        accompany('mary_lamb', 'Chú cừu nhỏ', ['I', 'I', 'V7', 'I', 'I', 'I', 'V7', 'I']),
+        { kind: 'theory', ids: ['dominant-7'] },
+      ],
+      teach: { emoji: '🏠', text: 'Con chỉ bố mẹ hợp âm Sol bảy: Si – Fa – Sol, ngón 5 – 2 – 1. Rồi đàn I – V7 – I!' },
+    },
+    {
+      id: 'w24-transpose',
+      week: 24,
+      title: 'Dịch giọng: Chèo thuyền ở thế Sol',
+      emoji: '🔀',
+      activities: [
+        transpose('lightly_row', 'Chèo thuyền nhẹ', 7, 'thế Sol'),
+      ],
+      teach: { emoji: '🔀', text: 'Con đàn "Chèo thuyền nhẹ" cho bố mẹ ở thế Đô rồi ở thế Sol — nghe có giống không?' },
+    },
   ],
 };
 
@@ -275,6 +321,8 @@ export const WEEK25: WeekPlan = {
       pair('w25-ninja', 25, 'Ninja rón rén', '🥷', 'ninja_tiptoe', 'Ngón 1 ở La. Đi NHỎ và NGẮT — ô cuối hét TO!'),
       qa('Hỏi – Đáp giọng buồn 🥷', 'App hỏi giọng La thứ. Con đáp, kết ở La!', 'Am'),
     ),
+    // (+ 2026-10-17, OWNER duyệt) 🎤 Buổi diễn nhỏ
+    recitalLesson(25),
   ],
 };
 
@@ -333,11 +381,69 @@ export const WEEK26: WeekPlan = {
         conveyor('drifting_boat'),
       ],
     },
+    // (+ 2026-10-17, OWNER duyệt — rà soát giáo viên dài hạn) nhạc công nhỏ: đàn theo tai
+    {
+      id: 'w26-ear',
+      week: 26,
+      title: 'Đàn theo tai',
+      emoji: '👂',
+      activities: [
+        byEar('frere_jacques_easy', 8),
+      ],
+      teach: { emoji: '👂', text: 'Con đàn cho bố mẹ câu con tìm được bằng tai — bố mẹ đoán tên bài nhé!' },
+    },
   ],
 };
 
+/**
+ * (+ 2026-10-17, OWNER duyệt "Thêm tuần ôn & biểu diễn" — rà soát giáo viên dài hạn: tuần 22–26 mỗi tuần một điều mới)
+ * TUẦN 27 — Xưởng Đánh Bóng: KHÔNG học gì mới. Đánh bóng 3 bài đã học tới mức "biểu diễn": leo thang tốc độ 50 → 60 → 72,
+ * to – nhỏ rõ ràng, rồi "🎙️ Bản thu biểu diễn" (lượt theo nhịp chỉ nhìn khuông); cuối tuần "🎤 Buổi diễn nhỏ".
+ * Tiêu chí: 3 bài theo nhịp từ 60 trở lên — mỗi bài đạt ít nhất một lần, trải trên ≥ 2 ngày (criterionSpec.spread).
+ */
+const ON1 = [
+  { songId: 'twinkle_both', titleVi: 'Ngôi sao nhỏ — hai tay' },
+  { songId: 'lantern_parade', titleVi: 'Rước đèn' },
+  { songId: 'ninja_tiptoe', titleVi: 'Ninja rón rén' },
+] as const;
+
+/** Bài "đánh bóng" của tuần ôn: thang tốc độ → bản thu biểu diễn. */
+const polishLesson = (id: string, week: number, emoji: string, songId: string, titleVi: string, ladder?: number[]): Lesson => ({
+  id,
+  week,
+  title: `Đánh bóng: ${titleVi}`,
+  emoji,
+  activities: [polish(songId, titleVi, ladder), concertTake(songId)],
+  teach: { emoji: '✨', text: `Con kể cho bố mẹ: bài "${titleVi}" chỗ nào con đàn TO, chỗ nào NHỎ?` },
+});
+
 export const WEEK27: WeekPlan = {
   week: 27,
+  island: 'Xưởng Đánh Bóng',
+  islandEmoji: '✨',
+  title: 'Ôn & biểu diễn: đánh bóng 3 bài',
+  story: 'Ở Xưởng Đánh Bóng không có gì mới! Con lấy 3 bài đã học ra lau thật sáng: nhanh hơn một nấc, to – nhỏ thật rõ — rồi biểu diễn cho cả nhà.',
+  leftHand: true,
+  warmup: { variant: 'theory', pool: [], rounds: 6, theoryUpTo: 26 },
+  teach: { emoji: '👨‍🏫', text: 'Con chọn bài thích nhất trong 3 bài và kể cho bố mẹ: chỗ nào con đàn TO, chỗ nào NHỎ?' },
+  drills: ['arm-drop', 'wrist-circle'],
+  criterion: {
+    text: 'Chơi trọn 3 bài cũ ("Ngôi sao nhỏ — hai tay", "Rước đèn", "Ninja rón rén") THEO NHỊP từ tốc độ 60 — mỗi bài đạt ít nhất một lần, trong ít nhất 2 ngày',
+    who: 'PARENT/MIC',
+  },
+  criterionSpec: { songs: ON1.map((x) => ({ songId: x.songId, tempo: true, minBpm: 60 })), spread: true },
+  kidGoal: '3 bài cũ thật bóng — tốc độ 60, 2 hôm! ✨',
+  lessons: [
+    // bài 12 ô → 2 nấc (buổi ≤ ~12 phút); bài 8 ô → 3 nấc
+    polishLesson('w27-l1', 27, '⭐', ON1[0].songId, ON1[0].titleVi, [50, 60]),
+    polishLesson('w27-l2', 27, '🏮', ON1[1].songId, ON1[1].titleVi),
+    polishLesson('w27-l3', 27, '🥷', ON1[2].songId, ON1[2].titleVi),
+    recitalLesson(27, '🎤 Buổi diễn nhỏ', ON1.map((x) => x.songId)),
+  ],
+};
+
+export const WEEK28: WeekPlan = {
+  week: 28,
   island: 'Thư viện Lớn',
   islandEmoji: '🏛️',
   title: 'Đọc nhạc hai khóa',
@@ -349,7 +455,7 @@ export const WEEK27: WeekPlan = {
   criterion: { text: 'Đọc nhạc ngẫu nhiên: 5 đoạn đạt, trong ít nhất 2 ngày', who: 'PARENT/MIC' },
   kidGoal: 'Đọc 5 đoạn nhạc mới toanh — trong 2 hôm nhé! 🏛️',
   lessons: [
-    { id: 'w27-l1', week: 27, title: 'Đọc nhạc chỉ nhìn khuông', emoji: '👀', activities: [
+    { id: 'w28-l1', week: 28, title: 'Đọc nhạc chỉ nhìn khuông', emoji: '👀', activities: [
       // v5.1: 2 + 1 đoạn (trước 3 + 2) — buổi ≤ ~12 phút; tiêu chí 5 đoạn trải trên ≥ 2 ngày vẫn đạt sau 2 buổi
       { kind: 'sight', title: 'Tay phải — khóa Sol', position: 'C', hand: 'RH', count: 2, rhythm: 2, hints: 'staff' },
       { kind: 'sight', title: 'Tay trái — khóa Fa', position: 'C', hand: 'LH', count: 1, rhythm: 2, hints: 'staff' },
@@ -357,10 +463,10 @@ export const WEEK27: WeekPlan = {
       song('ly_cay_bong', 'wait', 2, 'names', 'Hai tay thay nhau: nốt cao tay phải, nốt thấp tay trái!'),
     ] },
     // Câu 2 (ô 5–8): tay trái nhảy xa nhiều nhất
-    handsApart('w27-l2', 27, 'Khúc Canon', '🎻', 'canon', [4, 8], 2, 'Tay phải trước, đàn thật êm.'),
+    handsApart('w28-l2', 28, 'Khúc Canon', '🎻', 'canon', [4, 8], 2, 'Tay phải trước, đàn thật êm.'),
     {
-      id: 'w27-l3',
-      week: 27,
+      id: 'w28-l3',
+      week: 28,
       title: 'Đọc quãng · sáng tác thế Sol',
       emoji: '✍️',
       activities: [
@@ -383,8 +489,8 @@ export const WEEK27: WeekPlan = {
   ],
 };
 
-export const WEEK28: WeekPlan = {
-  week: 28,
+export const WEEK29: WeekPlan = {
+  week: 29,
   island: 'Đỉnh Hai Tay',
   islandEmoji: '🏔️',
   title: 'Bài hai tay hoàn chỉnh',
@@ -399,12 +505,12 @@ export const WEEK28: WeekPlan = {
     // v5.1: tách tay sẵn; lượt hai tay THEO NHỊP dời sang bài 2 (buổi ≤ ~12 phút)
     // Câu 2 (ô 5–8): tay phải nhiều bước nhảy nhất
     plus(
-      handsApart('w28-l1', 28, 'Các thánh tiến bước — hai tay', '🎺', 'saints_both', [4, 8], 2, 'Tay phải hát giai điệu trước nhé!', false),
+      handsApart('w29-l1', 29, 'Các thánh tiến bước — hai tay', '🎺', 'saints_both', [4, 8], 2, 'Tay phải hát giai điệu trước nhé!', false),
       qa('Hỏi – Đáp diễu hành 🎺', 'App hỏi. Con đáp TO và vui, kết ở Đô!', 'C'),
     ),
     {
-      id: 'w28-l2',
-      week: 28,
+      id: 'w29-l2',
+      week: 29,
       title: 'Ô Susanna — hai tay',
       emoji: '🪕',
       activities: [
@@ -413,11 +519,22 @@ export const WEEK28: WeekPlan = {
         song('oh_susanna_both', 'tempo', 2, 'names'),
       ],
     },
+    // (+ 2026-10-17, OWNER duyệt — rà soát giáo viên dài hạn) nhạc công nhỏ: ĐỆM HỢP ÂM I – IV – V7
+    {
+      id: 'w29-chords',
+      week: 29,
+      title: 'Đệm hợp âm I – IV – V7',
+      emoji: '🎹',
+      activities: [
+        accompany('jingle_bells', 'Chuông ngân vang', ['I', 'I', 'I', 'I', 'IV', 'I', 'V7', 'V7']),
+      ],
+      teach: { emoji: '🎹', text: 'Con đệm "Chuông ngân vang" cho bố mẹ hát: I – IV – V7!' },
+    },
   ],
 };
 
-export const WEEK29: WeekPlan = {
-  week: 29,
+export const WEEK30: WeekPlan = {
+  week: 30,
   island: 'Cung điện Minuet',
   islandEmoji: '👑',
   title: 'Minuet Sol trưởng',
@@ -429,16 +546,27 @@ export const WEEK29: WeekPlan = {
   criterion: { text: 'Chơi trọn Minuet Sol trưởng (8 ô nhịp) THEO NHỊP (tốc độ từ 50 trở lên) — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
   kidGoal: 'Nhảy Minuet theo nhịp cùng các quý tộc — 2 hôm nhé! 👑',
   lessons: [
-    { id: 'w29-l1', week: 29, title: 'Minuet — từng câu', emoji: '👑', activities: [
+    { id: 'w30-l1', week: 30, title: 'Minuet — từng câu', emoji: '👑', activities: [
         // 2026-10-06: bài tự sáng tác chuẩn bị — cùng "dáng" Minuet (đen + 4 móc đơn liền, 2 nốt ngắt) nhưng gọn trong thế Sol
         song('sparrow_minuet', 'wait', 2, 'full', 'Chim sẻ nhảy Minuet: móc đơn LIỀN, nốt chấm NGẮT!'),
         song('minuet_g', 'wait', 2, 'full', 'Từng câu một! Dấu luyến: LIỀN; nốt có chấm: NGẮT.')] },
-    plus(pair('w29-l2', 29, 'Minuet — cả bài', '💃', 'minuet_g'), qa('Hỏi – Đáp Minuet 💬', 'App hỏi ở thế Sol. Con đáp nhẹ nhàng, kết ở Sol!', 'G')),
+    plus(pair('w30-l2', 30, 'Minuet — cả bài', '💃', 'minuet_g'), qa('Hỏi – Đáp Minuet 💬', 'App hỏi ở thế Sol. Con đáp nhẹ nhàng, kết ở Sol!', 'G')),
+    // (+ 2026-10-17, OWNER duyệt) SONG TẤU VỚI THẦY — Minuet (bè thầy tự soạn, thay bè trầm của bản gốc)
+    {
+      id: 'w30-duet',
+      week: 30,
+      title: 'Minuet — song tấu với thầy',
+      emoji: '🎎',
+      activities: [
+        { kind: 'song', songId: 'duet_minuet', mode: 'tempo', level: 2, hints: 'names', intro: 'Song tấu: thầy đàn bè thấp, con đàn Minuet!' },
+      ],
+      teach: { emoji: '🎎', text: 'Con mời bố mẹ nghe Minuet song tấu và kể: thầy đàn bè cao hay bè thấp?' },
+    },
   ],
 };
 
-export const WEEK30: WeekPlan = {
-  week: 30,
+export const WEEK31: WeekPlan = {
+  week: 31,
   island: 'Vườn Beethoven',
   islandEmoji: '🌹',
   title: 'Für Elise',
@@ -449,27 +577,72 @@ export const WEEK30: WeekPlan = {
   criterion: { text: 'Chơi trọn đoạn mở đầu Für Elise THEO NHỊP (tốc độ từ 50 trở lên) — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
   kidGoal: 'Für Elise "Mi – Rê♯ – Mi" theo nhịp — 2 hôm nhé! 🌹',
   lessons: [
-    { id: 'w30-l1', week: 30, title: 'Für Elise — từng câu', emoji: '🌹', activities: [
+    { id: 'w31-l1', week: 31, title: 'Für Elise — từng câu', emoji: '🌹', activities: [
         // 2026-10-06: bài tự sáng tác chuẩn bị — La thứ 3/4, hợp âm rải liền và "Mi – Rê♯ – Mi" trong một thế tay
         song('summer_shower', 'wait', 2, 'full', 'Rải "La – Đô – Mi" thật LIỀN, rồi "Mi – Rê thăng – Mi"!'),
         // (2026-10-09 rà soát) Sol THĂNG (ô 3) chưa từng có trong thẻ dạy nốt — nêu tên cùng Rê thăng
         song('fur_elise', 'wait', 2, 'full', 'Hai phím đen: Rê thăng và Sol thăng!')] },
-    plus(pair('w30-l2', 30, 'Für Elise — cả đoạn', '🎼', 'fur_elise'), qa('Hỏi – Đáp La thứ 💬', 'App hỏi giọng La thứ. Con đáp, kết ở La!', 'Am')),
+    plus(pair('w31-l2', 31, 'Für Elise — cả đoạn', '🎼', 'fur_elise'), qa('Hỏi – Đáp La thứ 💬', 'App hỏi giọng La thứ. Con đáp, kết ở La!', 'Am')),
+    // (+ 2026-10-17, OWNER duyệt — rà soát giáo viên dài hạn) nhạc công nhỏ: đàn theo tai
+    {
+      id: 'w31-ear',
+      week: 31,
+      title: 'Đàn theo tai',
+      emoji: '👂',
+      activities: [
+        byEar('ode_to_joy_easy', 8),
+      ],
+      teach: { emoji: '👂', text: 'Con đàn cho bố mẹ câu con tìm được bằng tai — bố mẹ đoán tên bài nhé!' },
+    },
   ],
 };
 
-export const WEEK31: WeekPlan = {
-  week: 31,
+/**
+ * (+ 2026-10-17, OWNER duyệt) TUẦN 32 — Phòng Tổng Duyệt: KHÔNG học gì mới — đánh bóng 3 bài cổ điển / hai tay của Cấp 3 trước
+ * Đại hòa nhạc (tuần 33); cuối tuần "🎤 Tổng duyệt" (buổi diễn nhỏ). Tiêu chí: như tuần 27 (criterionSpec.spread).
+ */
+const ON2 = [
+  { songId: 'minuet_g', titleVi: 'Minuet Sol trưởng' },
+  { songId: 'fur_elise', titleVi: 'Für Elise' },
+  { songId: 'oh_susanna_both', titleVi: 'Ô Susanna — hai tay' },
+] as const;
+
+export const WEEK32: WeekPlan = {
+  week: 32,
+  island: 'Phòng Tổng Duyệt',
+  islandEmoji: '🎭',
+  title: 'Ôn & biểu diễn: tổng duyệt',
+  story: 'Sắp tới Đại hòa nhạc! Trong Phòng Tổng Duyệt, nghệ sĩ không học bài mới — chỉ đánh bóng bài cũ cho thật đẹp và tập cúi chào.',
+  leftHand: true,
+  warmup: { variant: 'theory', pool: [], rounds: 6, theoryUpTo: 31 },
+  teach: { emoji: '🎤', text: 'Con tập giới thiệu với bố mẹ: "Bài con sắp đàn là… của nhạc sĩ…".' },
+  drills: ['arm-drop', 'hand-shape'],
+  criterion: {
+    text: 'Chơi trọn "Minuet Sol trưởng", "Für Elise" và "Ô Susanna — hai tay" THEO NHỊP từ tốc độ 60 — mỗi bài đạt ít nhất một lần, trong ít nhất 2 ngày',
+    who: 'PARENT/MIC',
+  },
+  criterionSpec: { songs: ON2.map((x) => ({ songId: x.songId, tempo: true, minBpm: 60 })), spread: true },
+  kidGoal: 'Tổng duyệt 3 bài — tốc độ 60, 2 hôm! 🎭',
+  lessons: [
+    polishLesson('w32-l1', 32, '👑', ON2[0].songId, ON2[0].titleVi, [50, 60]),
+    polishLesson('w32-l2', 32, '🌹', ON2[1].songId, ON2[1].titleVi, [50, 60]),
+    polishLesson('w32-l3', 32, '🪕', ON2[2].songId, ON2[2].titleVi, [50, 60]),
+    recitalLesson(32, '🎤 Tổng duyệt', ON2.map((x) => x.songId)),
+  ],
+};
+
+export const WEEK33: WeekPlan = {
+  week: 33,
   island: 'Đại hòa nhạc',
   islandEmoji: '🎆',
   title: 'Đại hòa nhạc',
   story: 'Pháo hoa đã sẵn sàng! Đây là buổi hòa nhạc lớn nhất — con là nghệ sĩ piano thật sự.',
   leftHand: true,
   warmup: null,
-  teach: { emoji: '🎤', text: 'Con kể cho khán giả nghe hành trình 31 tuần học đàn của con.' },
+  teach: { emoji: '🎤', text: 'Con kể cho khán giả nghe hành trình 33 tuần học đàn của con.' },
   criterion: { text: 'Đại hòa nhạc — bố mẹ trao huy chương vàng', who: 'PARENT' },
   kidGoal: 'Đại hòa nhạc — nhận huy chương vàng! 🎆',
-  lessons: [{ id: 'w31-stage', week: 31, title: 'Đại hòa nhạc', emoji: '🏆', isWeekTest: true, activities: [{ kind: 'stage', level: 3 }] }],
+  lessons: [{ id: 'w33-stage', week: 33, title: 'Đại hòa nhạc', emoji: '🏆', isWeekTest: true, activities: [{ kind: 'stage', level: 3 }] }],
 };
 
-export const LEVEL3_WEEKS: readonly WeekPlan[] = [WEEK22, WEEK23, WEEK24, WEEK25, WEEK26, WEEK27, WEEK28, WEEK29, WEEK30, WEEK31];
+export const LEVEL3_WEEKS: readonly WeekPlan[] = [WEEK22, WEEK23, WEEK24, WEEK25, WEEK26, WEEK27, WEEK28, WEEK29, WEEK30, WEEK31, WEEK32, WEEK33];

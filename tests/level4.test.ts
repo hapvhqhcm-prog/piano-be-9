@@ -44,28 +44,30 @@ const run = (songId: string, o: Partial<SongRun> = {}): Omit<SongRun, 'ts'> => (
 });
 
 describe('cấu trúc Cấp 4', () => {
-  it('12 tuần 32–43 ở CUỐI giáo trình; Cấp 4 = [32, 43]; MAX_WEEK 43; hòa nhạc (huy chương) tuần 43', () => {
-    expect(LEVEL4_WEEKS.map((w) => w.week)).toEqual(Array.from({ length: 12 }, (_, i) => 32 + i));
+  // (2026-10-17) rev 5: tuần ôn 27 · 32 chèn vào Cấp 3 → Cấp 4 = 34–46 (13 tuần, có tuần ôn 38)
+  it('13 tuần 34–46 ở CUỐI giáo trình; Cấp 4 = [34, 46]; MAX_WEEK 46; hòa nhạc (huy chương) tuần 46', () => {
+    expect(LEVEL4_WEEKS.map((w) => w.week)).toEqual(Array.from({ length: 13 }, (_, i) => 34 + i));
     // (2026-10-15) WEEKS = dữ liệu gốc + bước "Từng câu rồi cả bài" (phraseSteps.ts) → so với dữ liệu GỐC
-    expect(SOURCE_WEEKS.slice(31)).toEqual(LEVEL4_WEEKS);
-    expect(WEEKS.slice(31).map((w) => w.lessons.map((l) => l.id))).toEqual(LEVEL4_WEEKS.map((w) => w.lessons.map((l) => l.id)));
-    expect(MAX_WEEK).toBe(43);
-    expect(LEVELS[3]).toMatchObject({ level: 4, weeks: [32, 43] });
-    expect(levelOf(32).name).toContain('Cấp 4');
-    const last = WEEKS[42];
+    expect(SOURCE_WEEKS.slice(33)).toEqual(LEVEL4_WEEKS);
+    expect(WEEKS.slice(33).map((w) => w.lessons.map((l) => l.id))).toEqual(LEVEL4_WEEKS.map((w) => w.lessons.map((l) => l.id)));
+    expect(MAX_WEEK).toBe(46);
+    expect(LEVELS[3]).toMatchObject({ level: 4, weeks: [34, 46] });
+    expect(levelOf(34).name).toContain('Cấp 4');
+    const last = WEEKS[45];
     expect(last.lessons).toHaveLength(1);
-    expect(last.lessons[0]).toMatchObject({ id: 'w43-stage', isWeekTest: true });
+    expect(last.lessons[0]).toMatchObject({ id: 'w46-stage', isWeekTest: true });
     expect(last.lessons[0].activities).toEqual([{ kind: 'stage', level: 4 }]);
-    expect(criterionProgress(43, new ProgressStore(new MemoryStorage()).get())).toBeNull();
+    expect(criterionProgress(46, new ProgressStore(new MemoryStorage()).get())).toBeNull();
   });
 
-  it('không đổi curriculumRev (thêm tuần ở cuối — mã tuần/bài cũ giữ nguyên)', () => {
-    expect(CURRICULUM_REV).toBe(4);
-    for (const w of WEEKS.slice(0, 31)) for (const l of w.lessons) expect(Number(l.id.slice(1).split('-')[0])).toBeLessThanOrEqual(31);
+  it('rev 5 (2026-10-17): Cấp 1–3 = tuần 1–33, mã bài của mỗi tuần mang đúng số tuần', () => {
+    expect(CURRICULUM_REV).toBe(5);
+    for (const w of WEEKS) for (const l of w.lessons) expect(Number(l.id.slice(1).split('-')[0]), l.id).toBe(w.week);
+    for (const w of WEEKS.slice(0, 33)) expect(w.week).toBeLessThanOrEqual(33);
   });
 
-  it('mỗi tuần 32–42: tiêu chí "2 ngày" + phiếu xem tay; có ứng tấu; có bài hai tay tách tay sẵn ở câu khó (trừ tuần hợp âm rải / La thứ đầu)', () => {
-    for (const w of LEVEL4_WEEKS.slice(0, 11)) {
+  it('mỗi tuần 34–45: tiêu chí "2 ngày" + phiếu xem tay; có ứng tấu (trừ tuần ôn 38); có bài hai tay tách tay sẵn ở câu khó (trừ tuần hợp âm rải / La thứ đầu)', () => {
+    for (const w of LEVEL4_WEEKS.slice(0, 12)) {
       expect(w.criterion.text, `tuần ${w.week}`).toMatch(/2 ngày/);
       expect(w.criterion.text).toMatch(/bố mẹ/);
       expect(w.criterionSpec, `tuần ${w.week}`).toBeDefined();
@@ -77,20 +79,20 @@ describe('cấu trúc Cấp 4', () => {
         const used = w.lessons.some((l) => l.activities.some((a) => a.kind === 'song' && a.songId === s.songId && !a.hand && !a.phrase && (!s.tempo || a.mode === 'tempo')));
         expect(used, `tuần ${w.week}: ${s.songId}`).toBe(true);
       }
-      expect(w.lessons.some((l) => l.activities.some((a) => a.kind === 'improv')), `tuần ${w.week} ứng tấu`).toBe(true);
+      if (!w.criterionSpec!.spread) expect(w.lessons.some((l) => l.activities.some((a) => a.kind === 'improv')), `tuần ${w.week} ứng tấu`).toBe(true);
     }
-    expect(WEEKS[37].criterionSpec!.parentChecks).toContain(PEDAL_CHECK);
-    expect(WEEKS[39].criterionSpec!.parentChecks).toContain(HAIRPIN_CHECK);
+    expect(WEEKS[40].criterionSpec!.parentChecks).toContain(PEDAL_CHECK);
+    expect(WEEKS[42].criterionSpec!.parentChecks).toContain(HAIRPIN_CHECK);
   });
 
-  it('mẹo bố mẹ tuần 32–43; tuần 32 có PHIẾU XEM TAY (vai · khớp đầu ngón · cổ tay); tuần pedal nói rõ micro không nghe pedal', () => {
-    for (let w = 32; w <= 43; w++) expect(PARENT_TIPS[w]?.length, `tuần ${w}`).toBeGreaterThan(40);
-    expect(PARENT_TIPS[32]).toMatch(/vai/);
-    expect(PARENT_TIPS[32]).toMatch(/khớp đầu ngón/);
-    expect(PARENT_TIPS[32]).toMatch(/cổ tay/);
-    expect(PARENT_TIPS[38]).toMatch(/Nhả trước — nhấn sau|nhả trước — nhấn sau/i);
-    expect(PARENT_TIPS[38]).toMatch(/Micro KHÔNG nghe được pedal/);
-    expect(PARENT_TIPS[39]).toMatch(/MỘT-hai-ba BỐN-năm-sáu/);
+  it('mẹo bố mẹ tuần 34–46; tuần 34 có PHIẾU XEM TAY (vai · khớp đầu ngón · cổ tay); tuần pedal nói rõ micro không nghe pedal', () => {
+    for (let w = 34; w <= 46; w++) expect(PARENT_TIPS[w]?.length, `tuần ${w}`).toBeGreaterThan(40);
+    expect(PARENT_TIPS[34]).toMatch(/vai/);
+    expect(PARENT_TIPS[34]).toMatch(/khớp đầu ngón/);
+    expect(PARENT_TIPS[34]).toMatch(/cổ tay/);
+    expect(PARENT_TIPS[41]).toMatch(/Nhả trước — nhấn sau|nhả trước — nhấn sau/i);
+    expect(PARENT_TIPS[41]).toMatch(/Micro KHÔNG nghe được pedal/);
+    expect(PARENT_TIPS[42]).toMatch(/MỘT-hai-ba BỐN-năm-sáu/);
   });
 });
 
@@ -103,7 +105,7 @@ describe('tiêu chí Cấp 4 (dữ liệu): bài ở 2 ngày + thẻ bố mẹ �
     if (checks) for (const c of w.criterionSpec!.parentChecks ?? []) st.addParentAssessment(s.id, c, checks);
   };
 
-  it.each(LEVEL4_WEEKS.slice(0, 11).map((w) => w.week))('tuần %i', (week) => {
+  it.each(LEVEL4_WEEKS.slice(0, 12).map((w) => w.week))('tuần %i', (week) => {
     const { st, day } = clock();
     play(st, week, null);
     expect(weekPassed(week, st.get())).toBe(false);
@@ -122,59 +124,59 @@ describe('tiêu chí Cấp 4 (dữ liệu): bài ở 2 ngày + thẻ bố mẹ �
     expect(weekPassed(week, st.get())).toBe(false);
   });
 
-  it('bài cần THEO NHỊP: lượt chờ không tính; tuần 36/38 cần tốc độ ≥ 50; lượt tách tay không tính', () => {
+  it('bài cần THEO NHỊP: lượt chờ không tính; tuần 39/41 cần tốc độ ≥ 50; lượt tách tay không tính', () => {
     const { st, day } = clock();
     for (let k = 0; k < 2; k++) {
       day(k);
-      const s = st.startSession('w38-l1');
+      const s = st.startSession('w41-l1');
       st.addSongRun(s.id, run('silent_night_ped', { bpm: 40 }));
       st.addSongRun(s.id, run('silent_night_ped', { mode: 'wait' }));
       st.addSongRun(s.id, run('silent_night_ped', { hand: 'RH' }));
       for (const c of [PEDAL_CHECK, ...RELAX_CHECKS]) st.addParentAssessment(s.id, c, 'correct');
     }
-    expect(weekPassed(38, st.get())).toBe(false);
+    expect(weekPassed(41, st.get())).toBe(false);
     for (let k = 0; k < 2; k++) {
       day(k);
-      st.addSongRun(st.startSession('w38-l3').id, run('silent_night_ped', { bpm: 50 }));
+      st.addSongRun(st.startSession('w41-l3').id, run('silent_night_ped', { bpm: 50 }));
     }
-    expect(weekPassed(38, st.get())).toBe(true);
+    expect(weekPassed(41, st.get())).toBe(true);
   });
 
-  it('mọi tuần 32–42 có bài "giúp đạt tiêu chí" (Học tiếp không kẹt)', () => {
+  it('mọi tuần 34–45 có bài "giúp đạt tiêu chí" (Học tiếp không kẹt)', () => {
     const st = new ProgressStore(new MemoryStorage(), () => new Date(2026, 9, 10));
-    for (const w of LEVEL4_WEEKS.slice(0, 11)) expect(criterionLesson(w.week, st.get()), `tuần ${w.week}`).not.toBeNull();
+    for (const w of LEVEL4_WEEKS.slice(0, 12)) expect(criterionLesson(w.week, st.get()), `tuần ${w.week}`).not.toBeNull();
   });
 });
 
-describe('bé đã xong tuần 31 (dữ liệu cũ) → sang Cấp 4', () => {
-  it('xong hòa nhạc tuần 31: "Học tiếp" = luyện tập mỗi ngày (không lỗi); tuần 31 xong & < MAX_WEEK → app chuyển tuần 32 (Cấp 4)', () => {
+describe('bé đã xong tuần 33 (hòa nhạc Cấp 3) → sang Cấp 4', () => {
+  it('xong hòa nhạc tuần 33: "Học tiếp" = luyện tập mỗi ngày (không lỗi); tuần 33 xong & < MAX_WEEK → app chuyển tuần 34 (Cấp 4)', () => {
     const st = new ProgressStore(new MemoryStorage(), () => new Date(2026, 9, 10));
-    st.setCurrentWeek(31);
-    const s = st.startSession('w31-stage');
+    st.setCurrentWeek(33);
+    const s = st.startSession('w33-stage');
     st.addParentAssessment(s.id, 'medal', 'correct');
     st.finishSession(s.id);
-    st.markLessonCompleted('w31-stage');
+    st.markLessonCompleted('w33-stage');
     const data = st.get();
-    expect(weekComplete(31, data)).toBe(true);
-    expect(curriculumDone(data)).toBe(false); // giáo trình nay tới tuần 43
+    expect(weekComplete(33, data)).toBe(true);
+    expect(curriculumDone(data)).toBe(false); // giáo trình nay tới tuần 46
     const next = nextLesson(data, () => 0.4);
-    expect(next.id).toBe('w31-daily');
-    expect(next.week).toBe(31); // session.ts: lesson.week === currentWeek && weekComplete → setCurrentWeek(32)
+    expect(next.id).toBe('w33-daily');
+    expect(next.week).toBe(33); // session.ts: lesson.week === currentWeek && weekComplete → setCurrentWeek(34)
     // (mô phỏng session.ts) sang tuần mới
-    expect(31 < MAX_WEEK).toBe(true);
-    st.setCurrentWeek(32);
-    expect(levelOf(32).level).toBe(4);
+    expect(33 < MAX_WEEK).toBe(true);
+    st.setCurrentWeek(34);
+    expect(levelOf(34).level).toBe(4);
     expect(validateAppData(st.get())).toEqual([]);
-    expect(nextLesson(st.get()).id).toBe('w32-l1');
+    expect(nextLesson(st.get()).id).toBe('w34-l1');
   });
 
-  it('xong tuần 43 → luyện tập mỗi ngày (có thể là thế Rê / La thứ); đọc nhạc sinh được với mọi rng', () => {
+  it('xong tuần 46 → luyện tập mỗi ngày (có thể là thế Rê / La thứ); đọc nhạc sinh được với mọi rng', () => {
     const st = new ProgressStore(new MemoryStorage(), () => new Date(2026, 9, 10));
-    st.setCurrentWeek(43);
-    const s = st.startSession('w43-stage');
+    st.setCurrentWeek(46);
+    const s = st.startSession('w46-stage');
     st.addParentAssessment(s.id, 'medal', 'correct');
     expect(curriculumDone(st.get())).toBe(true);
-    expect(nextLesson(st.get(), () => 0.4).id).toBe('w43-daily');
+    expect(nextLesson(st.get(), () => 0.4).id).toBe('w46-daily');
     const seen = new Set<string>();
     for (let i = 0; i < 60; i++) {
       let k = i;
@@ -192,30 +194,30 @@ describe('bé đã xong tuần 31 (dữ liệu cũ) → sang Cấp 4', () => {
 describe('bài hát Cấp 4', () => {
   const songs = L4_SONG_IDS.map((id) => findTune(id) as Tune);
 
-  it('đủ bài, đúng tuần (32–42), đều có trong bài học Cấp 4 không sớm hơn tuần của bài; bài cũ (≤ tuần 31) không dùng ký hiệu mới', () => {
+  it('đủ bài, đúng tuần (34–45), đều có trong bài học Cấp 4 không sớm hơn tuần của bài; bài cũ (≤ tuần 33) không dùng ký hiệu mới', () => {
     for (const [i, t] of songs.entries()) {
       expect(t, L4_SONG_IDS[i]).toBeDefined();
-      expect(t.week).toBeGreaterThanOrEqual(32);
-      expect(t.week).toBeLessThanOrEqual(42);
+      expect(t.week).toBeGreaterThanOrEqual(34);
+      expect(t.week).toBeLessThanOrEqual(45);
       expect(validateTune(t), t.id).toEqual([]);
       const uses = WEEKS.flatMap((w) => w.lessons).filter((l) => l.activities.some((a) => a.kind === 'song' && a.songId === t.id));
       expect(uses.length, t.id).toBeGreaterThan(0);
       for (const l of uses) expect(l.week, `${t.id} ở ${l.id}`).toBeGreaterThanOrEqual(t.week!);
     }
-    expect(SONGS.filter((s) => (s.week ?? 0) >= 32).map((s) => s.id).sort()).toEqual([...L4_SONG_IDS].sort());
-    for (const t of SONGS.filter((s) => (s.week ?? 0) <= 31)) {
+    expect(SONGS.filter((s) => (s.week ?? 0) >= 34).map((s) => s.id).sort()).toEqual([...L4_SONG_IDS].sort());
+    for (const t of SONGS.filter((s) => (s.week ?? 0) <= 33)) {
       expect(t.tempoTerm, t.id).toBeUndefined();
       expect(t.timeSignature).not.toBe('6/8');
       for (const n of [...t.notes, ...(t.lh ?? [])]) expect(n.ped ?? n.hairpin ?? n.rit, t.id).toBeUndefined();
     }
   });
 
-  it('pedal từ tuần 38, 6/8 từ tuần 39, hairpin / thuật ngữ tốc độ / rit. từ tuần 40', () => {
+  it('pedal từ tuần 41, 6/8 từ tuần 42, hairpin / thuật ngữ tốc độ / rit. từ tuần 43 (rev 5)', () => {
     for (const t of songs) {
       const all = [...t.notes, ...(t.lh ?? [])];
-      if (all.some((n) => n.ped)) expect(t.week, t.id).toBeGreaterThanOrEqual(38);
-      if (t.timeSignature === '6/8') expect(t.week, t.id).toBeGreaterThanOrEqual(39);
-      if (all.some((n) => n.hairpin || n.rit) || t.tempoTerm) expect(t.week, t.id).toBeGreaterThanOrEqual(40);
+      if (all.some((n) => n.ped)) expect(t.week, t.id).toBeGreaterThanOrEqual(41);
+      if (t.timeSignature === '6/8') expect(t.week, t.id).toBeGreaterThanOrEqual(42);
+      if (all.some((n) => n.hairpin || n.rit) || t.tempoTerm) expect(t.week, t.id).toBeGreaterThanOrEqual(43);
     }
     expect(['silent_night_ped', 'largo_ped'].every((id) => findTune(id)!.lh!.some((n) => n.ped === 'start'))).toBe(true);
     expect(findTune('waves_andante')!.tempoTerm).toBe('Andante');

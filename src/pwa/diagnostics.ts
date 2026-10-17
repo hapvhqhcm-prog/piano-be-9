@@ -125,6 +125,8 @@ export interface DiagSnapshot {
     /** giây — iPadOS 15/16 không có */
     outputLatency: number | null;
     heard: Heard;
+    /** (+ 2026-10-17) Loa / tai nghe đang dùng (audio/outputRoute.ts) — không có = không đọc */
+    route?: { wireless: boolean; reason: 'latency' | 'label' | null; latencyMs: number | null; outputs: string[]; timingPaused: boolean } | null;
   };
   voice: {
     supported: boolean;
@@ -153,6 +155,9 @@ export interface DiagSnapshot {
     autoSens?: { at: string; from: string; to: string; missed: number } | null;
     /** (+ 2026-10-09) Báo cáo "🎙️ Đo micro & tạo báo cáo" gần nhất (micLogStore.loadMicReport) */
     lastReport?: { at: string; summary: string[] } | null;
+    /** (+ 2026-10-17) Tên micro đang dùng (track.label) + các micro iPad thấy (enumerateDevices — có khi đã cho phép micro) */
+    trackLabel?: string | null;
+    inputs?: string[];
   };
   storage: {
     text: string;
@@ -183,6 +188,10 @@ export interface DiagSnapshot {
   };
   /** (+ 2026-10-08) Nhật ký lỗi gần đây (errorLog.ts, cũ → mới); không có = không đọc */
   errors?: ErrorEntry[];
+  /** (+ 2026-10-17) Giữ màn hình sáng (ui/screenAwake.ts) — không có = không đọc */
+  wake?: { supported: boolean; held: boolean; denials: number; deniedAt: number | null } | null;
+  /** (+ 2026-10-17) Nhắc vận hành (pwa/opsState.ts opsNotes): đổi iPadOS, nghỉ lâu, mất giọng, cần cài lại micro… */
+  opsNotes?: string[];
 }
 
 // ---------------------------------------------------------------- Chấm từng mục
@@ -198,6 +207,9 @@ function fmtTime(ms: number): string {
   return `${fmtDay(ms)} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 const msText = (sec: number | null): string | null => (sec === null || !isFinite(sec) ? null : `${Math.round(sec * 1000)} ms`);
+
+/** (+ 2026-10-17) Lời khuyên khi iPad không cho giữ màn hình sáng (giống pwa/opsState.ts WAKE_TIP) */
+const WAKE_TIP_TEXT = 'Cài đặt → Màn hình & Độ sáng → Tự động khóa: 5 phút (hoặc Không bao giờ khi tập); tắt Chế độ nguồn điện thấp.';
 
 const SENS_TEXT: Record<string, string> = { low: 'Thấp', normal: 'Vừa', high: 'Cao' };
 
@@ -264,6 +276,25 @@ function deviceRows(s: DiagSnapshot): DiagRow[] {
     value: s.appVersion + (s.updateReady ? ' (đã tải bản mới — sẽ dùng khi về màn của bé)' : ''),
     explain: 'Người hỗ trợ cần số này để biết bé đang dùng bản nào.',
   });
+  // (+ 2026-10-17) Giữ màn hình sáng
+  const w = s.wake;
+  if (w)
+    rows.push(
+      !w.supported
+        ? { id: 'wake', label: 'Giữ màn hình sáng', status: 'info', value: 'iPad không hỗ trợ', explain: 'iPadOS cũ không cho app giữ màn hình sáng.', tip: WAKE_TIP_TEXT }
+        : w.denials > 0 || w.deniedAt
+          ? {
+              id: 'wake',
+              label: 'Giữ màn hình sáng',
+              status: 'warn',
+              value: `Bị từ chối${w.denials ? ` ${w.denials} lần` : ''}${w.deniedAt ? ` · gần nhất ${fmtTime(w.deniedAt)}` : ''}`,
+              explain: 'iPad không cho app giữ màn hình sáng (thường do Chế độ nguồn điện thấp / pin yếu) → màn tắt khi bé đang đàn, micro bị cắt.',
+              tip: WAKE_TIP_TEXT,
+            }
+          : { id: 'wake', label: 'Giữ màn hình sáng', status: 'ok', value: w.held ? 'Đang giữ sáng' : 'Sẵn sàng (giữ sáng khi bé đang học)', explain: 'App giữ màn hình sáng khi bé đang học, tự thả sau 5 phút không có gì.' },
+    );
+  for (const [i, t] of (s.opsNotes ?? []).entries())
+    rows.push({ id: `ops${i}`, label: 'Nên kiểm tra', status: 'warn', value: t, explain: 'App tự nhận thấy điều có thể làm buổi học trục trặc.' });
   if (s.errors) {
     const n = s.errors.length;
     const last = s.errors[n - 1];
@@ -327,6 +358,21 @@ function audioRows(s: DiagSnapshot): DiagRow[] {
       tip: slow ? 'Độ trễ lớn — có thể đang dùng loa/tai nghe Bluetooth. Dùng loa của iPad khi tập theo nhịp.' : undefined,
     });
   }
+  // (+ 2026-10-17) Loa / tai nghe đang dùng (Bluetooth?)
+  const r = a.route;
+  if (r)
+    rows.push(
+      r.wireless
+        ? {
+            id: 'route',
+            label: 'Loa / tai nghe',
+            status: 'warn',
+            value: `Có lẽ Bluetooth (${r.reason === 'label' ? 'tên thiết bị' : `trễ ${r.latencyMs ?? '?'} ms`})${r.outputs.length ? ` · ${r.outputs.join(', ')}` : ''}${r.timingPaused ? ' · đang tạm không chấm nhịp' : ''}`,
+            explain: 'Loa / tai nghe Bluetooth trễ nhiều → micro chấm nhịp kém (app tạm chỉ chấm đúng nốt).',
+            tip: 'Dùng loa iPad (tắt Bluetooth), hoặc Cài micro → “Đo lại độ trễ” khi vẫn muốn dùng loa Bluetooth.',
+          }
+        : { id: 'route', label: 'Loa / tai nghe', status: 'ok', value: r.outputs.length ? r.outputs.join(', ') : 'Loa iPad (hoặc loa có dây)', explain: 'Không thấy dấu hiệu loa / tai nghe Bluetooth.' },
+    );
   rows.push(heardRow('heard', 'Bố mẹ nghe thử', a.heard, 'Bấm “🔊 Phát thử” — app đàn Đô–Mi–Son–Đô.', SILENT_TIP));
   return rows;
 }
@@ -474,6 +520,19 @@ function micRows(s: DiagSnapshot): DiagRow[] {
       status: 'info',
       value: `${SENS_TEXT[a.from] ?? a.from} → ${SENS_TEXT[a.to] ?? a.to}${isNaN(t) ? '' : ` · ${fmtDay(t)}`}`,
       explain: `Trong buổi học có ${a.missed} lần bé đàn khẽ micro chưa nghe được → app tự tăng một bậc (mỗi lần bật micro tối đa một lần).`,
+    });
+  }
+  // (+ 2026-10-17) Micro đang dùng (AirPods kéo cả micro sang tai nghe)
+  if (m.trackLabel !== undefined || m.inputs?.length) {
+    const label = m.trackLabel ?? null;
+    const bt = !!label && /airpods|bluetooth|bt|beats|wireless|không dây|buds/i.test(label);
+    rows.push({
+      id: 'track',
+      label: 'Micro đang dùng',
+      status: bt ? 'warn' : 'info',
+      value: (label ?? (m.state === 'on' ? 'iPad không báo tên' : 'micro đang tắt')) + (m.inputs?.length ? ` · iPad thấy: ${m.inputs.join(', ')}` : ''),
+      explain: 'Tên micro iPad đang thu tiếng (có khi micro đã bật).',
+      tip: bt ? 'Đang thu bằng micro tai nghe Bluetooth — tắt Bluetooth để dùng micro của iPad.' : undefined,
     });
   }
   const rep = m.lastReport;

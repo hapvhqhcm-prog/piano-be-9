@@ -130,21 +130,22 @@ export const EAR_TIMES_NEED = 2;
 export const MAIN_TEMPO_SONG: Readonly<Record<number, { songId: string; minBpm: number }>> = {
   5: { songId: 'frog_hop', minBpm: 0 },
   6: { songId: 'ode_to_joy_easy', minBpm: 60 },
-  8: { songId: 'ode_to_joy_easy', minBpm: 0 },
+  8: { songId: 'jingle_bells', minBpm: 0 },
   9: { songId: 'inh_la_oi', minBpm: 0 },
-  12: { songId: 'ode_to_joy_both', minBpm: 0 },
+  12: { songId: 'hot_cross_buns_both', minBpm: 0 },
   13: { songId: 'bell_tower', minBpm: 0 },
   14: { songId: 'ode_to_joy_g', minBpm: 60 },
   15: { songId: 'waltz_cat', minBpm: 0 },
   16: { songId: 'ode_to_joy_d', minBpm: 60 },
-  17: { songId: 'ode_to_joy_original', minBpm: 60 },
+  17: { songId: 'camel_walk', minBpm: 60 },
   18: { songId: 'ly_cay_da', minBpm: 0 },
   19: { songId: 'bac_kim_thang', minBpm: 0 },
-  22: { songId: 'ode_to_joy_chords', minBpm: 0 },
+  22: { songId: 'twinkle_both', minBpm: 0 },
   24: { songId: 'silent_night', minBpm: 50 },
-  28: { songId: 'saints_both', minBpm: 0 },
-  29: { songId: 'minuet_g', minBpm: 50 },
-  30: { songId: 'fur_elise', minBpm: 50 },
+  // (giáo trình rev 5, 2026-10-17) tuần 27–30 cũ → 28–31; tuần ôn 27 · 32 · 38 nhiều bài → bài đã thuộc mới nhất
+  29: { songId: 'saints_both', minBpm: 0 },
+  30: { songId: 'minuet_g', minBpm: 50 },
+  31: { songId: 'fur_elise', minBpm: 50 },
 };
 
 /** Tốc độ thử thách: nấc tốc độ đầu tiên ≥ (tốc độ tiêu chí + 10). Không đòi tốc độ → lấy tốc độ bài (tối đa 60). */

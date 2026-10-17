@@ -12,6 +12,7 @@ import { SONGS, type Tune } from '../music/tune';
 import type { AppData, Session } from '../progress/schema';
 import { isNewSong } from './discovery';
 import { REWARD_LESSON_PREFIX, isRewardLessonId, songStats } from './songStats';
+import { KIND_STOP_TRIES, hadKindStop } from './adaptive';
 
 export { REWARD_LESSON_PREFIX };
 /** Mã buổi của lượt chơi phần thưởng: `reward-song-<songId>`. */
@@ -20,31 +21,30 @@ export const isRewardSession = (s: Pick<Session, 'lessonId'>): boolean => isRewa
 
 /** Số lượt chơi đạt trong buổi để được thưởng (khi bài chưa học xong). */
 export const REWARD_MIN_PASSED = 2;
-/** Một bài thử chưa được ngần này lần trong buổi = buổi có "dừng nhẹ nhàng" (songResult MAX_TRIES). */
-export const KIND_STOP_TRIES = 3;
+/** (+ 2026-10-16) "Dừng nhẹ nhàng" (KIND_STOP_TRIES, hadKindStop) nay ở lessons/adaptive.ts — export lại giữ API cũ. */
+export { KIND_STOP_TRIES, hadKindStop };
 export const REWARD_MIN = 3;
 export const REWARD_MAX = 6;
 /** Tốc độ "thoải mái" khi chơi theo nhịp bài đã thuộc. */
 export const REWARD_COMFY_BPM = 60;
 
-/** Buổi có lần "dừng nhẹ nhàng" (một bài ≥ KIND_STOP_TRIES lượt chưa đạt và không có lượt đạt sau đó). */
-export function hadKindStop(s: Pick<Session, 'songRuns'>): boolean {
-  const fails = new Map<string, number>();
-  for (const r of [...s.songRuns].sort((a, b) => a.ts - b.ts)) {
-    if (r.passed) fails.set(r.songId, 0);
-    else fails.set(r.songId, (fails.get(r.songId) ?? 0) + 1);
-  }
-  return [...fails.values()].some((n) => n >= KIND_STOP_TRIES);
-}
-
 /**
- * Buổi SUÔN SẺ → mời chọn bài thưởng: học xong bài mà không phải dừng nhẹ nhàng, HOẶC ≥ REWARD_MIN_PASSED lượt đạt.
+ * Buổi SUÔN SẺ → mời chọn bài thưởng. (+ 2026-10-17, rà soát kỹ sư trưởng) Cần CẢ HAI: KHÔNG có "dừng nhẹ nhàng" (hadKindStop —
+ * cùng định nghĩa với chỉ số độ khó) VÀ có tiến bộ của BÀI HỌC: học xong bài, hoặc ≥ REWARD_MIN_PASSED lượt ĐẠT trong các
+ * HOẠT ĐỘNG BÀI HỌC (`lessonPassed` — session.ts đếm; lượt bài tập về nhà / "Ôn bài cũ" không tính). Trước đây buổi có dừng
+ * nhẹ nhàng vẫn được thưởng nếu có 2 lượt đạt ở đâu đó trong buổi.
  * Chơi lại bài vừa học → không mời lần nữa.
  */
-export function rewardEligible(o: { session: Pick<Session, 'songRuns'> | null | undefined; lessonFinished: boolean; replay?: boolean }): boolean {
+export function rewardEligible(o: {
+  session: (Pick<Session, 'songRuns'> & { kindStops?: readonly string[] }) | null | undefined;
+  lessonFinished: boolean;
+  /** Số lượt bài hát ĐẠT trong các hoạt động bài học của buổi */
+  lessonPassed: number;
+  replay?: boolean;
+}): boolean {
   if (o.replay || !o.session) return false;
-  if (o.lessonFinished && !hadKindStop(o.session)) return true;
-  return o.session.songRuns.filter((r) => r.passed).length >= REWARD_MIN_PASSED;
+  if (hadKindStop(o.session)) return false;
+  return o.lessonFinished || o.lessonPassed >= REWARD_MIN_PASSED;
 }
 
 export interface RewardChoice {

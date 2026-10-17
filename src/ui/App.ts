@@ -7,6 +7,8 @@ import { requestPersistentStorage } from '../progress/backup';
 import { markSafePoint } from '../pwa/updater';
 import { logError, setScreenProbe } from '../pwa/errorLog';
 import type { ProgressStore } from '../progress/ProgressStore';
+import type { OutputRouteWatcher } from '../audio/outputRoute';
+import { installOps } from './opsWatch';
 
 /**
  * (+ 2026-10-09) Micro nằm trong chunk riêng (ui/micSetup.ts) — App nạp ngầm ngay khi khởi động. Màn chính và mọi
@@ -26,6 +28,8 @@ export type Screen = (root: HTMLElement) => (() => void) | void;
 export class App {
   /** Giữ màn hình sáng theo hoạt động (screenAwake.ts) */
   readonly screenAwake: ActivityWakeLock;
+  /** (+ 2026-10-17) Theo dõi loa / tai nghe Bluetooth (audio/outputRoute.ts) — songTempo hỏi timingPaused */
+  readonly route: OutputRouteWatcher;
   private cleanup: (() => void) | null = null;
   private _started = false;
   /** Đã chờ lần chạm kế tiếp để bật lại micro (sau khi iOS cắt ngầm) */
@@ -50,6 +54,13 @@ export class App {
     micModule.prefetch();
     // (2026-10-12) Giữ màn hình sáng khi bé đang học (chạm / micro nghe tiếng đàn) — xem screenAwake.ts
     this.screenAwake = installWakeLock();
+    // (+ 2026-10-17) Vận hành thực tế: Bluetooth, đổi iPadOS / nghỉ lâu, màn hình không giữ sáng, mất giọng (ui/opsWatch.ts)
+    this.route = installOps(this);
+  }
+
+  /** (+ 2026-10-17) Micro đã tạo (không tạo mới, không ném lỗi khi chunk micro chưa nạp) — chẩn đoán / theo dõi Bluetooth. */
+  get micIfReady(): MicListener | null {
+    return this._mic;
   }
 
   /**
@@ -70,13 +81,16 @@ export class App {
     mic.externalBusy = () => m.speechBusy();
     // Bé đàn khẽ nhiều lần không nghe được → micro tự tăng độ nhạy MỘT bậc: lưu, ghi nhật ký, báo phụ huynh
     mic.onAutoSensitivity((c) => {
+      if (this.store.guest) return; // 👤 khách chơi: micro không tự học
       this.store.updateSettings({ micSensitivity: c.to });
       m.saveAutoSens({ at: new Date().toISOString(), ...c });
       toast(`🎤 Micro chưa nghe rõ tiếng đàn khẽ → đã tăng độ nhạy: ${m.SENS_NAME[c.from]} → ${m.SENS_NAME[c.to]}`, 4500);
     });
     // (+ 2026-10-09) Tự học lệch dây đàn nhà (autoTune.ts): nạp kết quả đã lưu, lưu lại khi có số đo mới
     mic.loadAutoTune(this.store.settings.micAutoTune);
-    mic.onAutoTune((st) => this.store.updateSettings({ micAutoTune: st }));
+    mic.onAutoTune((st) => {
+      if (!this.store.guest) this.store.updateSettings({ micAutoTune: st });
+    });
     // Bé đàn trên đàn thật (không chạm màn hình) vẫn là đang học → giữ màn hình sáng
     mic.onOnset(() => this.screenAwake.poke());
     // (2026-10-12) Tắt micro trong Cài đặt → bỏ luồng micro đang giữ chờ màn kế (đèn micro iPad tắt ngay)
@@ -117,6 +131,11 @@ export class App {
     this.mic.tuningCents = this.store.settings.micTuningCents;
     this.mic.sensitivity = this.store.settings.micSensitivity;
     this.mic.latencyMs = this.store.settings.micLatencyMs;
+    // (+ 2026-10-17) 👤 khách chơi: tiếng đàn của khách không được dạy micro (độ nhạy / lệch dây) — ui/guest.ts bật lại khi thoát
+    if (this.store.guest) {
+      this.mic.autoSensitivity = false;
+      this.mic.autoTuneEnabled = false;
+    }
     return (await this.mic.start()) === 'on';
   }
 

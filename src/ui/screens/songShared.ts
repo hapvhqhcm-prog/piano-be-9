@@ -36,6 +36,36 @@ export type HandSel = 'BOTH' | 'RH' | 'LH';
 export const MIC_LATENCY = 0.07;
 /** Thang tốc độ (nhịp/phút): đạt ở nấc chậm → gợi ý lên nấc tiếp. */
 export const TEMPOS = [40, 50, 60, 72];
+/** (+ 2026-10-17) Các nấc tốc độ hiện ở ⚙️ Tùy chọn: thang TEMPOS + tốc độ đang mở nếu không nằm trên thang (vd 56 của bài quen). */
+export const tempoChoices = (bpm: number): number[] => (TEMPOS.includes(bpm) ? TEMPOS : [...TEMPOS, bpm].sort((a, b) => a - b));
+
+/**
+ * (+ 2026-10-17, OWNER duyệt "Nhạc đệm + bài vui hơn") Lượt theo nhịp: "🥁 Nhạc đệm" (mặc định — trống nhịp vui + bè đệm khi
+ * micro tắt, music/groove.ts) hay "🔔 Chỉ tiếng tích" (máy đếm nhịp như cũ). Chỉ là tiện ích trong máy (localStorage).
+ */
+export type TempoSound = 'backing' | 'click';
+const TEMPO_SOUND_KEY = 'piano-be-9:tempo-sound';
+export function tempoSound(storage: Pick<Storage, 'getItem'> | null = safeStorage()): TempoSound {
+  try {
+    return storage?.getItem(TEMPO_SOUND_KEY) === 'click' ? 'click' : 'backing';
+  } catch {
+    return 'backing';
+  }
+}
+export function setTempoSound(v: TempoSound, storage: Pick<Storage, 'setItem'> | null = safeStorage()): void {
+  try {
+    storage?.setItem(TEMPO_SOUND_KEY, v);
+  } catch {
+    /* không có bộ nhớ → chỉ đổi cho lần này không được; bỏ qua */
+  }
+}
+function safeStorage(): Storage | null {
+  try {
+    return typeof localStorage === 'undefined' ? null : localStorage;
+  } catch {
+    return null;
+  }
+}
 /** "Lặp câu này N lần đúng liên tiếp" */
 export const LOOP_TARGET = 3;
 /** v5.1 — Lời dẫn trên màn chỉ MỘT dòng ngắn; dài hơn thì app đọc to cả câu (nút 🔊 đọc lại). */

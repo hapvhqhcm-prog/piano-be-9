@@ -6,6 +6,7 @@ import { BLUETOOTH_LIKELY_MS, LATENCY_GAP, LATENCY_MAX, LATENCY_PINGS, estimateL
 import { noteLabel, pitchFreq, type Pitch } from '../../piano/pitchTable';
 import { button, h, toast } from '../components/dom';
 import { saveMicLog } from '../../audio/micLogStore';
+import { clearMicSetupNeeded } from '../../progress/newDevice';
 import { describeAutoTune } from '../../audio/autoTune';
 import { lazy, lazyScreen } from '../lazy';
 import { FREE_LOG_MAX, SENS_LABEL, buildMicLog, type FreeNote, type MicTestCtx } from './micTestShared';
@@ -74,6 +75,10 @@ export function createSupportTools(c: MicTestCtx): SupportTools {
     }
     store.updateSettings({ micLatencyMs: est.ms });
     app.mic.latencyMs = est.ms;
+    // (+ 2026-10-17) Đo lại độ trễ (kể cả qua Bluetooth) → chấm nhịp lại được; bỏ dấu "cần cài lại micro"
+    app.route?.noteMeasured();
+    const cleared = clearMicSetupNeeded(store.settings);
+    if (cleared) store.updateSettings({ ops: cleared });
     showLatency();
     calib.textContent =
       `⏱️ Độ trễ loa → micro: ${est.ms} ms (đo được ${est.used}/${est.total} lần, lệch ±${est.spreadMs} ms). ` +

@@ -3,7 +3,8 @@
  *
  * - Mỗi tuần giáo trình tối đa MỘT buổi diễn (và một sticker "🎤 Buổi diễn"), được MỜI (không bắt buộc) ở màn kết buổi
  *   khi tuần đó đã đạt tiêu chí — hoặc tuần vừa đi qua (đã xong / bố mẹ cho qua) mà chưa diễn.
- * - Tuần hòa nhạc cuối cấp (10 / 21 / 31 — sân khấu + huy chương, stage.ts) KHÔNG mời thêm: đã có buổi diễn riêng.
+ * - Tuần hòa nhạc cuối cấp (10 / 21 / 33 / 46 — sân khấu + huy chương, stage.ts) KHÔNG mời thêm: đã có buổi diễn riêng.
+ * - (+ 2026-10-17) "🎤 Buổi diễn nhỏ" trong bài học (lessons/musician.ts recitalLesson, ~4 tuần một lần) lưu cùng nhật ký này.
  * - Bé chọn MỘT bài đã chơi đạt / đã thuộc → đếm vào, đàn theo nhịp (songScreen chế độ sân khấu) → khán giả chạm 👏 ❤️ 🌟,
  *   ghi ai nghe → lưu nhật ký AppData.concerts (tách khỏi sessions: gộp lịch sử không đụng tới, không ảnh hưởng tiêu chí).
  * Hàm thuần — có test (tests/concert.test.ts).

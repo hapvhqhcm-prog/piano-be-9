@@ -57,7 +57,7 @@ describe('Việc cần làm tối nay (màn Phụ huynh)', () => {
   it('một câu hành động cụ thể; không có chỗ khó → nhắc học đủ buổi hoặc khen', () => {
     expect(actionFor({ kind: 'note', key: 'D4', label: 'Nốt Rê (D4)', misses: 2 }, 2)).toContain('tìm Rê (D4) 5 lần');
     expect(actionFor({ kind: 'song', key: 'song:x', label: 'Bài “X”', misses: 1 }, 2)).toContain('Từng nốt');
-    expect(actionFor(undefined, 1)).toContain('Học tiếp');
+    expect(actionFor(undefined, 1)).toContain('nút ▶ to');
     expect(actionFor(undefined, 5)).toContain('làm tốt');
   });
 

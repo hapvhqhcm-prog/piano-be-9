@@ -544,3 +544,16 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* (+ 2026-10-17) Bảng tiến độ chi tiết (từ màn Phụ huynh) ở cuối trang Báo cáo — không in */
+.rp-extra {
+  margin-top: 24px;
+}
+.rp-extra .progress-details-title {
+  margin: 0 0 12px;
+}
+@media print {
+  .rp-extra {
+    display: none !important;
+  }
+}

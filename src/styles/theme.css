@@ -967,6 +967,30 @@ input[type='range']:focus-visible {
 .keyboard-wrap.song-kb.short {
   flex-basis: 23vh;
 }
+/*
+ * (+ 2026-10-16, OWNER duyệt) BÀN PHÍM TO HƠN KHI CÒN CHỖ (màn ngang): khung khuông chỉ xin đúng chiều cao thẻ cần khi
+ * trải hết bề ngang (--staff-want, staffView.fitCard đo); chỗ trống còn lại → bàn phím lớn lên (hệ số giãn rất lớn),
+ * tối thiểu như cũ (30vh / 23vh bài hai tay — không co), tối đa 42vh; quá 42vh thì phần dư trả lại khung khuông.
+ * Chưa đo được (--staff-want chưa có) → khung khuông xin 100vh → bàn phím đứng yên ở mức tối thiểu như trước.
+ * Thanh nút + lề an toàn dưới đáy không đổi (.actions có flex: 0 0 auto).
+ */
+@media (orientation: landscape) {
+  .screen > .song-staff,
+  .screen > .song-staff.grand {
+    flex: 1 1 var(--staff-want, 100vh);
+  }
+  .keyboard-wrap.song-kb {
+    flex: 1000 0 30vh;
+    max-height: 42vh;
+  }
+  .keyboard-wrap.song-kb.short {
+    flex-basis: 23vh;
+  }
+  /* Bàn phím không "nhảy" lúc bấm Bắt đầu: dòng trạng thái giữ sẵn chỗ bằng dòng đếm vào (số to + "Đếm to theo nhé!") */
+  .screen > .song-status {
+    min-height: 72px;
+  }
+}
 .song-legend {
   display: flex;
   flex-wrap: wrap;

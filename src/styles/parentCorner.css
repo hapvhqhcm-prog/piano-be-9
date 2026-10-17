@@ -1,0 +1,66 @@
+/* (+ 2026-10-17, OWNER duyệt "Buổi học ≥ 60% đàn thật") Góc 👪 bố mẹ thu gọn (ui/components/parentCorner.ts) */
+.pcorner {
+  position: fixed;
+  top: calc(env(safe-area-inset-top) + 8px);
+  right: calc(env(safe-area-inset-right) + 8px);
+  z-index: 46;
+  max-width: min(420px, calc(100vw - 24px));
+}
+.pcorner-btn {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  width: 44px;
+  height: 44px;
+  font-size: 22px;
+  border-radius: 999px;
+  background: var(--sun-50, #fff8e1);
+  border: 1px solid var(--sun-300, #ffd96a);
+  box-shadow: 0 2px 8px rgba(61, 52, 102, 0.14);
+  cursor: pointer;
+  user-select: none;
+}
+.pcorner-btn::-webkit-details-marker {
+  display: none;
+}
+.pcorner[open] .pcorner-btn {
+  background: var(--sun-100, #ffefb8);
+}
+.pcorner-body {
+  margin-top: 6px;
+  padding: 10px 14px;
+  font-size: 15px;
+  line-height: 1.35;
+  color: var(--sun-800, #6e4700);
+  background: var(--sun-50, #fff8e1);
+  border: 1px solid var(--sun-300, #ffd96a);
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(61, 52, 102, 0.16);
+}
+.pcorner-line {
+  margin: 0 0 6px;
+}
+.pcorner-line:last-child {
+  margin-bottom: 0;
+}
+/* bản rút gọn khởi động tay của buổi: bỏ chú thích dài cạnh tranh (giọng đọc đã đọc câu hướng dẫn) */
+.tq-mini .tq-principle,
+.tq-mini .ta-speed-btn:not(.ta-next) {
+  display: none;
+}
+/* (+ 2026-10-17) Màn kết: chip KHÔNG bắt buộc "📘 1 thẻ mới" (screens/rating.ts) */
+.closing-theory {
+  display: block;
+  margin: 12px auto 0;
+  padding: 8px 18px;
+  font: inherit;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--violet-700, #3f3a9e);
+  background: var(--violet-50, #f3f1ff);
+  border: 1px solid var(--violet-200, #d3ccff);
+  border-radius: 999px;
+  cursor: pointer;
+}

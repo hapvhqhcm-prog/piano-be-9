@@ -26,6 +26,8 @@ export function chantSongIds(): ReadonlySet<string> {
  * Lần đầu gặp bài (chưa đạt lượt chờ nào) → chưa quen → giữ màu / tên nốt.
  */
 export function songFamiliar(data: Readonly<AppData>, songId: string): boolean {
+  // (+ 2026-10-17, hiệu chỉnh) chế độ nhẹ tay KHÔNG giữ tên nốt & màu cho bài bé ĐÃ đạt (chỉ bài mới — vốn đã giữ ở đây):
+  // trước đây 'gentle' coi mọi bài là chưa quen → bé lùi lại dựa vào màu ở cả bài đã đọc được
   return !songId.startsWith('sight') && songStats(data)[songId]?.h === 1;
 }
 

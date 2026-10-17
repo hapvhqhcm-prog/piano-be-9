@@ -152,7 +152,34 @@ export type Activity =
    * bàn phím, nút "Nghe thử") + 2 câu hỏi nhanh. Nội dung ở lessons/theory.ts (THEORY). Không ghi điểm, không tính tiêu chí.
    * Tuần 1–5 chỉ THÊM VÀO CUỐI bài (mã "<bài>#<i>" đã lưu giữ nguyên nghĩa).
    */
-  | { kind: 'theory'; ids: TheoryId[] };
+  | { kind: 'theory'; ids: TheoryId[] }
+  /**
+   * (+ 2026-10-17, OWNER duyệt — rà soát giáo viên dài hạn) "🎹 NHẠC CÔNG NHỎ": các kỹ năng nhạc công (màn riêng
+   * ui/screens/musician.ts, hàm thuần lessons/musician.ts) — đánh bóng bài cũ (leo thang tốc độ + to – nhỏ), DỊCH GIỌNG
+   * (app hiện bản thế Đô, bé đàn ở thế khác), ĐỆM HỢP ÂM I – V7 / I – IV – V7 dưới giai điệu quen, ĐÀN THEO TAI, BUỔI DIỄN NHỎ.
+   * Ghi PARENT_ASSESSMENT `<loại>:<bài>…` (không tính tiêu chí tuần — trừ lượt bài hát "đánh bóng", ghi như bài hát thường).
+   * Song tấu với thầy KHÔNG ở đây: là bài hát thường có bè thầy (`Tune.duet`).
+   */
+  | { kind: 'musician'; title: string; intro: string; task: MusicianTask };
+
+/** Hợp âm đệm tay trái (thế Đô): I = Đô–Mi–Sol · IV = Đô–Fa–La · V7 = Si–Fa–Sol (Sol bảy giản lược). */
+export type ChordSymbol = 'I' | 'IV' | 'V7';
+
+export type MusicianTask =
+  /** Đánh bóng một bài cũ: leo thang tốc độ (`ladder`, nhịp/phút, tăng dần) rồi bố mẹ nghe to – nhỏ (nếu bài có sắc thái). */
+  | { type: 'polish'; songId: string; ladder: number[] }
+  /** Dịch giọng: app hiện `measures` ô đầu bài `songId` (thế Đô), bé đàn CÙNG SỐ NGÓN ở thế mới (+`semitones` nửa cung). */
+  | { type: 'transpose'; songId: string; semitones: number; keyName: string; measures?: number }
+  /** Đệm hợp âm: mỗi ô nhịp của `songId` một hợp âm (`chords`, thế Đô tay trái) — bé bấm hợp âm, app hát giai điệu ô đó. */
+  | { type: 'accompany'; songId: string; chords: ChordSymbol[]; style?: 'block' | 'broken' }
+  /** Đàn theo tai: app đàn `count` nốt đầu của bài quen `songId`; bé tìm lại trên đàn (không chấm nhịp; gợi ý tăng dần). */
+  | { type: 'by-ear'; songId: string; count: number }
+  /**
+   * 🎤 Buổi diễn nhỏ: bé chọn 1–2 bài đã đàn được, diễn cho cả nhà (sân khấu, không huy chương) → sticker "Buổi diễn".
+   * `program` (tuần ôn): chương trình CỐ ĐỊNH — các bài đã đánh bóng là các hoạt động bài hát ĐỨNG TRƯỚC trong bài học
+   * (lượt thường, tính tiêu chí); bước này chỉ còn cúi chào + vỗ tay + lưu buổi diễn.
+   */
+  | { type: 'recital'; program?: string[] };
 
 /** Khái niệm nhạc lý (thẻ "📘 Biết thêm", Từ điển nhạc nhỏ) — dữ liệu ở lessons/theory.ts. */
 export type TheoryId =
@@ -180,7 +207,10 @@ export type TheoryId =
   | 'key-sig-g'
   | 'key-sig-f'
   | 'tempo'
-  | 'cresc-dim';
+  | 'cresc-dim'
+  // (+ 2026-10-17, OWNER duyệt) dịch giọng · hợp âm Sol bảy (V7)
+  | 'transpose'
+  | 'dominant-7';
 
 /** Một lượt "hát rồi đàn": 2–3 nốt; ngón cho từng nốt (mặc định theo thế Đô) */
 export interface SingRound {
@@ -241,9 +271,14 @@ export interface WeekPlan {
 export interface CriterionSpec {
   songs: Array<{ songId: string; tempo?: boolean; minBpm?: number }>;
   parentChecks?: string[];
+  /**
+   * (+ 2026-10-17) Tuần ÔN & BIỂU DIỄN (27 · 32 · 38): MỖI bài đạt ít nhất MỘT lần và các lượt đạt TRẢI trên ≥ 2 ngày
+   * (thay "mỗi bài ở 2 ngày" — 3 bài × 2 ngày quá dài cho tuần ôn; mỗi bài đã được đánh bóng + thu biểu diễn trong bài học).
+   */
+  spread?: boolean;
 }
 
-/** Cấp độ: v5.1 — Cấp 1 tuần 1–10, Cấp 2 tuần 11–21, Cấp 3 tuần 22–31. */
+/** Cấp độ: rev 5 — Cấp 1 tuần 1–10, Cấp 2 tuần 11–21, Cấp 3 tuần 22–33, Cấp 4 tuần 34–46 (curriculum.ts LEVELS). */
 export interface LevelInfo {
   level: 1 | 2 | 3 | 4;
   name: string;

@@ -134,7 +134,7 @@ describe('Cấp 4 — thẻ xem tay: lời nhắc, không chấm bằng tai', ()
   it('relax:* thành lời nhắc (không Đạt được, không tính); bố mẹ ngồi cùng chấm thẻ → hết nhắc', () => {
     const { st, day } = clock();
     st.setStudyMode('self');
-    st.startSession('w32-l2');
+    st.startSession('w34-l2');
     st.deferReview({ kind: 'check', group: 'look:relax:shoulder', label: 'Vai thả lỏng (xem tay)', visual: true, notes: [{ note: 'relax:shoulder', ts: 1 }] });
     st.deferReview({ kind: 'check', group: 'look:relax:shoulder', label: 'Vai thả lỏng (xem tay)', visual: true, notes: [{ note: 'relax:shoulder', ts: 2 }] });
     expect(reminders(st.get())).toHaveLength(1);
@@ -144,7 +144,7 @@ describe('Cấp 4 — thẻ xem tay: lời nhắc, không chấm bằng tai', ()
     expect(st.approveAllReviews()).toBe(0);
     // Hôm sau có bố mẹ → chấm thẻ → lời nhắc tự xong
     day(1);
-    const s = st.startSession('w32-l2');
+    const s = st.startSession('w34-l2');
     st.addParentAssessment(s.id, 'relax:shoulder', 'correct');
     expect(reminders(st.get())).toHaveLength(0);
   });

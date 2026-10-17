@@ -9,6 +9,7 @@
  */
 import { isVisualNote, pendingCount, type ReviewInput } from '../progress/reviewQueue';
 import { reviewAudio } from '../progress/reviewAudio';
+import { isGuestMode } from '../progress/ProgressStore';
 import type { ReviewRun } from '../progress/schema';
 import type { App } from './App';
 import { h } from './components/dom';
@@ -41,7 +42,7 @@ export function deferCheck(app: App, o: { group: string; label: string; note: st
       notes: [{ note: o.note, ts: Date.now() }],
       ...(visual ? { visual: true } : {}),
       ...(o.mic ? { mic: o.mic } : {}),
-    });
+    }) || null; // '' = 👤 khách chơi (không hoãn)
   } catch {
     return null;
   }
@@ -50,7 +51,7 @@ export function deferCheck(app: App, o: { group: string; label: string; note: st
 /** Hoãn một việc bất kỳ (huy chương, thử thách…). */
 export function deferOther(app: App, input: ReviewInput): string | null {
   try {
-    return app.store.deferReview(input);
+    return app.store.deferReview(input) || null; // '' = 👤 khách chơi (không hoãn)
   } catch {
     return null;
   }
@@ -62,6 +63,7 @@ export type ClipSource = Promise<{ blob: Blob; seconds: number } | null> | null;
 /** Hoãn một lượt cả bài (phiếu 3 ý) + giữ bản ghi âm của lượt (nếu có) để bố mẹ ▶ nghe lại. */
 export function deferSong(app: App, run: ReviewRun, label: string, mic: string | undefined, clip: ClipSource): string | null {
   let id: string | null = null;
+  if (isGuestMode()) return null; // (+ 2026-10-17) 👤 khách chơi: không hoãn việc cho bố mẹ
   try {
     id = app.store.deferReview({ kind: 'song', group: `song:${run.songId}:${Date.now().toString(36)}`, label, run, ...(mic ? { mic } : {}) });
   } catch {

@@ -777,6 +777,39 @@ export class AudioEngine {
   }
 
   /**
+   * (+ 2026-10-17) Một tiếng TRỐNG NHỊP của nhạc đệm vui (music/groove.ts): sóng sin ngắn ≥ CLICK.hz (chặn dưới) — như tiếng
+   * tích, nằm hẳn trên dải micro nghe đàn (bộ lọc bậc 4 của micAnalyzer chặn) → micro không cần bỏ qua, không tính "app đang
+   * phát". Không ghi vào clickTimes. stopAll() hủy cùng tiếng tích.
+   */
+  grooveHit(when: number, hz: number, gain: number, tau: number = CLICK.tau): void {
+    const ctx = this.ctx;
+    const master = this.dry ?? this.master;
+    if (!ctx || !master) return;
+    const t = Math.max(when, ctx.currentTime);
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.value = Math.max(CLICK.hz, hz);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(Math.min(CLICK.accentGain, Math.max(0, gain)), t + CLICK.attack);
+    g.gain.setTargetAtTime(0, t + CLICK.attack, tau);
+    osc.connect(g);
+    g.connect(master);
+    osc.start(t);
+    osc.stop(t + Math.max(CLICK.length, tau * 6));
+    this.clicks.add(osc);
+    osc.onended = () => {
+      this.clicks.delete(osc);
+      try {
+        osc.disconnect();
+        g.disconnect();
+      } catch {
+        /* bỏ qua */
+      }
+    };
+  }
+
+  /**
    * Tiếng "tinh" ngắn để ĐO ĐỘ TRỄ loa → micro (latency.ts): Đô5 + họa âm, lên ~2 ms.
    * KHÔNG dùng tiếng tích (≥ 5 kHz bị bộ lọc micro chặn). Không tính là "app đang phát" để micro vẫn bắt lần gõ.
    */

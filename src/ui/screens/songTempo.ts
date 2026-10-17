@@ -38,6 +38,7 @@ import {
   record,
   sameVerdict,
   scheduleAccomp,
+  scheduleGroove,
   setBar,
   solo,
   together,
@@ -45,6 +46,13 @@ import {
 } from './songState';
 import { askParent, makeReview, showResult } from './songResult';
 import { focusStepDone } from './songFocus';
+import { BT_RESULT_NOTE } from '../../audio/outputRoute';
+
+/**
+ * (+ 2026-10-17, OWNER duyệt) Loa / tai nghe Bluetooth (audio/outputRoute.ts): TẠM KHÔNG CHẤM NHỊP — chỉ chấm đúng nốt theo
+ * thứ tự, cửa sổ rất rộng (± hơn một phách); lượt ghi như lượt "đúng nốt" (mode 'wait'), KHÔNG tính là lượt theo nhịp.
+ */
+const BT_WINDOW = { early: 1, late: 1.5 } as const;
 
 /** Con trỏ/băng chuyền theo phách hiện tại. */
 function follow(c: SongCtx, beat: number): Onset | undefined {
@@ -82,6 +90,8 @@ export function startTempo(c: SongCtx): void {
   // 6/8: mạnh–nhẹ–nhẹ–VỪA–nhẹ–nhẹ — phách 4 nhấn phụ)
   for (let b = -lead; b < total; b++) if (!muted(b)) app.audio.click(t0 + b * spb, metronomeAccent(tune, b));
   scheduleAccomp(c, t0, spb, drop);
+  // (+ 2026-10-17) trống nhịp vui theo kiểu nhạc đệm bé chọn — cả khi micro bật (micro lọc bỏ như tiếng tích)
+  scheduleGroove(c, t0, spb, drop);
   // Tập tách tay: app đàn khẽ tay kia đúng nhịp
   if (solo(c)) playOther(c, 0, Infinity, t0, spb, drop);
   const heard: HeardEvent[] = [];
@@ -92,6 +102,12 @@ export function startTempo(c: SongCtx): void {
     if (g) for (const i of idxOf(g)) c.staff.mark(i, m);
   };
   c.unTempo();
+  // (+ 2026-10-17) Đang ở màn theo nhịp: hỏi lại độ trễ ra loa định kỳ (Bluetooth?) — dừng khi hết lượt (c.unTempo)
+  const route = app.route;
+  route?.setActive(true);
+  const btAtStart = micOn(c) && !!route?.timingPaused;
+  const btPaused = () => micOn(c) && (btAtStart || !!route?.timingPaused);
+  const liveWin = btAtStart ? BT_WINDOW : win;
   // Bé đàn theo tiếng tích NGHE THẤY (trễ loa), tiếng đàn tới app trễ thêm (micro) → trừ độ trễ khứ hồi
   // đã đo ở "Thử micro → Đo độ trễ" (chưa đo: ước lượng outputLatency của trình duyệt như trước)
   const outLat = app.mic.inputOutputLatency();
@@ -101,7 +117,7 @@ export function startTempo(c: SongCtx): void {
   const unNote = app.mic.onNote((n) => {
     const at = n.at ?? app.audio.now() - MIC_LATENCY;
     heard.push({ beat: (at - outLat - t0) / spb, midi: n.midi });
-    gradeTiming(gradeInput, heard, win.early, win.late).forEach((r) => r.hit && !handGroup.has(r.index) && markGroup(r.index, 'hit'));
+    gradeTiming(gradeInput, heard, liveWin.early, liveWin.late).forEach((r) => r.hit && !handGroup.has(r.index) && markGroup(r.index, 'hit'));
   });
   /** Mỗi lần gõ: kiểm tra hai tay cho các nhóm hai tay có cửa sổ chấm chứa lần gõ (kết quả ~0,3 s sau) */
   const probes = new Map<number, HandsProbe[]>();
@@ -126,7 +142,7 @@ export function startTempo(c: SongCtx): void {
     const beat = (at - outLat - t0) / spb;
     return gs.filter((g) => Math.abs(g.start - beat) <= 1).map(midisOf).filter((ms) => ms.length === 1).map((ms) => ms[0]);
   };
-  c.unTempo = () => (unNote(), unOnset(), (c.tempoExpect = null));
+  c.unTempo = () => (unNote(), unOnset(), (c.tempoExpect = null), route?.setActive(false));
   app.mic.resetTracker();
   const countEl = h('div', { class: 'countin' });
   // Đếm to theo phần đếm vào: "1 – 2 – 3 – 4"
@@ -167,7 +183,7 @@ export function startTempo(c: SongCtx): void {
       c.unTempo();
       // Chờ các lần kiểm tra hai tay còn dở (≤ 0,3 s) rồi mới chấm
       void Promise.all(pendingHands).then(() => {
-        if (tk === c.token && !c.disposed) finishTempo(c, gradeInput, heard, markGroup, drop, bpmM, useHands ? probes : null);
+        if (tk === c.token && !c.disposed) finishTempo(c, gradeInput, heard, markGroup, drop, bpmM, useHands ? probes : null, btPaused());
       });
     }
   };
@@ -182,8 +198,23 @@ function finishTempo(
   drop: [number, number] | null = null,
   bpmM = 4,
   probes: Map<number, HandsProbe[]> | null = null,
+  bt = false,
 ): void {
   const { win, take } = c;
+  if (bt && micOn(c) && !c.focus) {
+    // 🎧 Bluetooth: chấm đúng nốt, KHÔNG chấm nhịp (độ trễ loa làm bé bị chấm "trễ" oan)
+    c.kb.setTargets([]);
+    c.lastHands = null;
+    const v = gradeTiming(gradeInput, heard, BT_WINDOW.early, BT_WINDOW.late);
+    v.forEach((r) => markGroup(r.index, r.hit ? 'hit' : 'miss'));
+    c.review = null;
+    const hits = v.filter((r) => r.hit).length;
+    const s = scoreOf(v);
+    record(c, { mode: 'wait', total: v.length, hits, source: 'mic', passed: s >= PASS_SCORE });
+    take.stop();
+    showResult(c, s, `Đúng ${hits}/${v.length} nốt · 🎧 ${BT_RESULT_NOTE}`);
+    return;
+  }
   c.kb.setTargets([]);
   c.lastHands = null;
   // (+ 2026-10-09) Chấm hai tay: kết quả từng tay của các nhóm hai tay (micro không kết luận được → giữ cách cũ)

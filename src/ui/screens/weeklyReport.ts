@@ -4,6 +4,7 @@ import type { Settings } from '../../progress/schema';
 import type { App } from '../App';
 import { islandIcon } from '../components/art/islandArt';
 import { button, h, toast } from '../components/dom';
+import { BACKUP_MESSAGE, backupFresh, exportBackup } from '../../progress/backup';
 import { highlightLines, renderWeeklyImage, weeklyFileName } from './weeklyReportImage';
 import '../../styles/report.css';
 
@@ -13,6 +14,8 @@ import '../../styles/report.css';
  * bài chơi trọn, biểu diễn, thử thách, tiến bộ, "nên khen" + "bố mẹ giúp" (progress/weeklyReport.ts — hàm thuần, có test).
  * Chia sẻ: ảnh PNG (navigator.share; không được thì tải về) + bản chữ (sao chép). App không tự gửi đi đâu.
  * Mở màn này = bố mẹ đã xem báo cáo của tuần vừa hết (settings.weeklyReportSeen) → viên "đã sẵn sàng" ẩn đi.
+ * (+ 2026-10-17, OWNER duyệt "MỘT quy tắc sao lưu") Xem xong → MỘT bước "💾 Sao lưu" (bảng Chia sẻ → Lưu vào Tệp) ngay trên
+ * màn này: việc tuần "📊 Xem báo cáo tuần & sao lưu" của thẻ "Hôm nay bố mẹ cần".
  */
 
 const DOW = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
@@ -105,6 +108,7 @@ export function weeklySheet(s: WeeklySummary): HTMLElement {
         ...s.praise.map((t) => h('li', { class: 'good' }, h('span', { 'aria-hidden': 'true' }, '👏'), t)),
         h('li', { class: 'next' }, h('span', { 'aria-hidden': 'true' }, '🤝'), s.help),
         s.homework ? h('li', { class: 'next' }, h('span', { 'aria-hidden': 'true' }, '📝'), `Bài tập về nhà: ${s.homework}`) : null,
+        s.pace ? h('li', { class: 'next' }, h('span', { 'aria-hidden': 'true' }, '🎚️'), `Độ khó: ${s.pace.text}`) : null,
       ),
     ),
     s.mic ? h('p', { class: 'wr-mic' }, `🎙️ ${s.mic.text}`) : null,
@@ -198,6 +202,32 @@ export function weeklyReportScreen(app: App, opts: { onBack: () => void; monday?
       void prepare(selected);
     };
 
+    // 💾 Bước cuối: sao lưu (một chạm) — đã sao lưu tuần này thì chỉ một dòng ✅
+    const backupBox = h('section', { class: 'card wr-backup', 'aria-live': 'polite' });
+    const renderBackup = (msg = '') => {
+      const fresh = backupFresh(store.get());
+      const last = store.settings.lastBackupAt ?? 0;
+      const day = last ? new Date(last).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }) : '';
+      const parts: (HTMLElement | null)[] = [
+        h('h2', {}, fresh ? `✅ Đã sao lưu tuần này (${day})` : '💾 Bước cuối: sao lưu tiến độ'),
+        fresh
+          ? h('p', { class: 'muted' }, 'Xong việc của tuần. Tuần sau app nhắc lại.')
+          : h(
+              'p',
+              {},
+              'Một chạm: bảng Chia sẻ mở ra → chọn ',
+              h('b', {}, '“Lưu vào Tệp”'),
+              '. Tiến độ của bé chỉ nằm trên iPad này — ',
+              h('b', {}, 'xóa biểu tượng app = mất hết dữ liệu'),
+              '.',
+            ),
+        fresh ? null : button({ icon: '💾', label: 'Sao lưu ngay', kind: 'primary', big: true, onTap: () => void exportBackup(store).then((r) => renderBackup(BACKUP_MESSAGE[r])) }),
+        msg ? h('p', { class: 'lead' }, msg) : null,
+      ];
+      backupBox.replaceChildren(...parts.filter((x): x is HTMLElement => !!x));
+    };
+    renderBackup();
+
     root.append(
       h(
         'div',
@@ -216,6 +246,7 @@ export function weeklyReportScreen(app: App, opts: { onBack: () => void; monday?
           h('p', { class: 'report-privacy' }, '🔒 Báo cáo có tên của bé (nếu đã đặt). App không tự gửi đi đâu — chỉ khi bố mẹ bấm “Gửi ảnh” / “Sao chép chữ”.'),
           tabs,
           body,
+          backupBox,
         ),
       ),
     );

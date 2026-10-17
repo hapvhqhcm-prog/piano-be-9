@@ -2,6 +2,7 @@
  * Giáo trình: danh sách tuần / cấp, tra cứu tuần & bài, hằng số dùng chung của "bộ máy bài học" (lessonEngine.ts).
  */
 import type { AppData, Session } from '../progress/schema';
+import { lessonWeek } from './sessionKind';
 import type { LevelInfo, Lesson, WeekPlan } from './types';
 import { LEVEL2_WEEKS } from './level2';
 import { LEVEL3_WEEKS } from './level3';
@@ -25,7 +26,9 @@ import { withPhraseSteps } from './phraseSteps';
  * v5.1 (OWNER duyệt 2026-10-06, rà soát chuyên gia lần 2) — 31 tuần (Cấp 2 có 11 tuần — tuần 18 cũ quá tải nên tách đôi):
  * buổi ngắn (≤ MAX_SESSION_STEPS màn, ≤ ~12 phút); khởi động kỹ thuật ~30 giây MỖI buổi (sau tư thế); "Con làm thầy" gộp
  * với tự chấm thành MỘT màn kết; tách tay sẵn ở bài hai tay đầu tuần; tiêu chí APP cũng cần 2 ngày.
- * Dữ liệu cũ (rev 1/2/3) đánh số lại ở progress/migrations.ts (bảng OLD→NEW).
+ * Dữ liệu cũ (rev 1/2/3/4) đánh số lại ở progress/migrations.ts (bảng OLD→NEW).
+ * rev 5 (OWNER duyệt 2026-10-17, rà soát giáo viên dài hạn: Cấp 3–4 "mỗi tuần một điều mới" quá nhanh cho bé < 1 năm học):
+ * 46 tuần — thêm tuần ÔN & BIỂU DIỄN 27 (Xưởng Đánh Bóng), 32 (Phòng Tổng Duyệt), 38 (Trạm Nghỉ Gió): đánh bóng 3 bài cũ, KHÔNG học gì mới.
  * Mục tiêu cuối nói thật: ≈ hoàn thành Faber cấp 1 / đầu cấp 2 (không phải "thành thạo" theo nghĩa nhạc viện).
  */
 /** Dữ liệu tuần GỐC (như viết trong week*.ts / level*.ts) — chưa thêm bước "Từng câu rồi cả bài". */
@@ -33,7 +36,8 @@ export const SOURCE_WEEKS: readonly WeekPlan[] = [
   WEEK1, WEEK2, WEEK3, WEEK4, WEEK5, WEEK6, WEEK7, WEEK8, WEEK9, WEEK10,
   ...LEVEL2_WEEKS,
   ...LEVEL3_WEEKS,
-  // Cấp 4 (OWNER duyệt 2026-10-08): tuần 32–43 thêm ở CUỐI — mã tuần/bài cũ không đổi, không cần migration
+  // Cấp 4 (OWNER duyệt 2026-10-08): thêm ở CUỐI. (2026-10-17, OWNER duyệt) rev 5: chèn 3 tuần ÔN & BIỂU DIỄN 27 · 32 · 38
+  // → tuần 27–30 cũ +1, 31–35 cũ +2, 36–43 cũ +3 (progress/migrations.ts REV5_WEEK); Cấp 3 = 22–33, Cấp 4 = 34–46
   ...LEVEL4_WEEKS,
 ];
 
@@ -59,14 +63,14 @@ export const LEVELS: readonly LevelInfo[] = [
   {
     level: 3,
     name: 'Cấp 3 · Vững vàng',
-    goal: 'Hợp âm, dòng kẻ phụ & khuông lớn, đổi thế, trưởng/thứ, đọc hai khóa, Minuet & Für Elise giản lược — ≈ hoàn thành Faber cấp 1 / đầu cấp 2',
-    weeks: [22, 31],
+    goal: 'Hợp âm & đệm I – V7, dòng kẻ phụ & khuông lớn, đổi thế, trưởng/thứ, đọc hai khóa, Minuet & Für Elise giản lược, 2 tuần ôn & biểu diễn — ≈ hoàn thành Faber cấp 1 / đầu cấp 2',
+    weeks: [22, 33],
   },
   {
     level: 4,
     name: 'Cấp 4 · Nghệ sĩ nhỏ',
     goal: 'Gam Sol, Fa, Rê trưởng & La thứ hai tay, hợp âm rải, bass Alberti, pedal, nhịp 6/8, to dần – nhỏ dần, Andante – Allegro — ≈ ABRSM Initial / đầu Grade 1',
-    weeks: [32, 43],
+    weeks: [34, 46],
   },
 ];
 
@@ -101,7 +105,7 @@ export function leftHandActive(data: Readonly<AppData>): boolean {
 }
 
 export function sessionsOfWeek(data: Readonly<AppData>, week: number): Session[] {
-  return data.sessions.filter((s) => s.lessonId.startsWith(`w${week}-`));
+  return data.sessions.filter((s) => lessonWeek(s.lessonId) === week);
 }
 
 /** Một ngày (ms). */

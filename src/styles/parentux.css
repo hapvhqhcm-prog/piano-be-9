@@ -418,3 +418,331 @@
   overflow: auto;
   text-align: left;
 }
+
+/* ======================================================================================================================
+ * (+ 2026-10-17, OWNER duyệt) Màn Phụ huynh gọn: ✅ Hôm nay bố mẹ cần · ⋯ Thêm · 🗓️ Tuần N · 💡 3 điều · 🧩 Thiết lập một lần ·
+ * 🧑‍🔧 Cho người hỗ trợ · 🩺 Kiểm tra sức khỏe app · 🆘 Khi có sự cố
+ * ==================================================================================================================== */
+.parent-menu {
+  position: relative;
+}
+.parent-menu > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 56px;
+  padding: 0 20px;
+  border-radius: var(--r-pill, 999px);
+  background: var(--surface);
+  box-shadow: var(--e1), inset 0 0 0 2px var(--line);
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink-2);
+  position: relative;
+}
+.parent-menu > summary::-webkit-details-marker {
+  display: none;
+}
+.parent-menu[open] > summary {
+  box-shadow: var(--e1), inset 0 0 0 2px var(--violet-400);
+}
+.parent-menu-list {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  min-width: 220px;
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  box-shadow: var(--e3, 0 8px 24px rgba(0, 0, 0, 0.18));
+}
+.parent-menu-list .btn {
+  justify-content: flex-start;
+}
+.parent-menu > summary .guide-hint-tag {
+  position: absolute;
+  top: -10px;
+  right: -6px;
+}
+
+/* ✅ Hôm nay bố mẹ cần */
+.today-card {
+  background: linear-gradient(180deg, #f6f4ff, var(--violet-50));
+  box-shadow: var(--e2), inset 0 0 0 3px var(--violet-200);
+}
+.today-card.all-done {
+  background: linear-gradient(180deg, #f2fff8, var(--mint-50, #eefbf4));
+  box-shadow: var(--e2), inset 0 0 0 3px var(--mint-300, #8fdcb3);
+}
+.today-card h2 {
+  font-size: 28px;
+  margin-bottom: 6px;
+}
+.today-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.today-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: var(--surface);
+  border-radius: var(--r-md);
+  padding: 12px 14px;
+}
+.today-item.done {
+  opacity: 0.75;
+  padding: 8px 14px;
+}
+.today-item.done .today-title {
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+}
+.today-tick {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 3px solid var(--violet-400);
+  background: var(--surface);
+  font-size: 26px;
+  font-weight: 900;
+  color: var(--surface);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.today-tick.on {
+  background: var(--mint-500);
+  border-color: var(--mint-500);
+}
+.today-main {
+  flex: 1;
+  min-width: 0;
+}
+.today-title {
+  margin: 6px 0 4px;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--ink);
+}
+.today-main .todo-action {
+  font-size: 20px;
+}
+.today-main > p {
+  margin: 4px 0 8px;
+}
+.today-struggles {
+  font-size: 16px;
+}
+
+/* 🗓️ Tuần N */
+.week-card h2 {
+  margin-bottom: 2px;
+}
+.week-goal {
+  font-size: 19px;
+  margin: 4px 0 6px;
+}
+.week-card .todo-meter {
+  width: 100%;
+}
+.week-card > p.muted {
+  font-size: 17px;
+  margin: 6px 0 2px;
+}
+.week-why > summary,
+.tips3 > summary,
+.setup-once > summary,
+.adv-support > summary {
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-weight: 800;
+  color: var(--violet-700);
+  padding: 8px 0;
+  font-size: 19px;
+}
+.week-why ul {
+  margin: 4px 0 8px;
+  padding-left: 22px;
+  font-size: 17px;
+}
+
+/* 💡 3 điều cần nhớ */
+.tips3 > summary {
+  list-style: none;
+  color: var(--ink-2);
+  padding: 0;
+}
+.tips3 > summary::-webkit-details-marker {
+  display: none;
+}
+.tips3 > summary h2 {
+  display: inline;
+  font-size: 24px;
+}
+.tips3 > summary::after {
+  content: ' ▸';
+  font-size: 20px;
+}
+.tips3[open] > summary::after {
+  content: ' ▾';
+}
+.tips3-list {
+  margin: 10px 0 0;
+  padding-left: 24px;
+  font-size: 18px;
+  line-height: 1.4;
+}
+.tips3-list li + li {
+  margin-top: 6px;
+}
+
+/* 🧩 Thiết lập một lần · 🧑‍🔧 Cho người hỗ trợ */
+.setup-once {
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  box-shadow: var(--e1);
+  padding: 4px 16px;
+  margin-bottom: 16px;
+}
+.setup-once > summary {
+  font-size: 22px;
+  color: var(--ink-2);
+  padding: 12px 0;
+}
+.setup-once > .card,
+.adv-support > .card {
+  box-shadow: none;
+  border: 2px solid var(--line);
+  margin-bottom: 12px;
+}
+.setup-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px;
+}
+.setup-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 18px;
+}
+.setup-mark {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: inline-grid;
+  place-items: center;
+  background: var(--line);
+  color: var(--ink-2);
+  font-weight: 900;
+}
+.setup-mark.ok {
+  background: var(--mint-500);
+  color: #fff;
+}
+.adv-support {
+  margin-bottom: 12px;
+}
+.adv-support > summary {
+  font-size: 20px;
+  color: var(--ink-2);
+}
+.week-picker select {
+  max-width: 100%;
+}
+.versions > summary {
+  cursor: pointer;
+  font-size: 18px;
+}
+.versions .wn-entry h4 {
+  margin: 10px 0 2px;
+}
+.health-flags {
+  border-left: 10px solid var(--sun-400);
+}
+.health-flags ul {
+  margin: 0 0 10px;
+  padding-left: 22px;
+  font-size: 18px;
+}
+.backup-overdue {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.backup-overdue p {
+  margin: 0;
+  flex: 1 1 320px;
+}
+
+/* 🩺 Kiểm tra sức khỏe app */
+.health-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.health-step h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 24px;
+}
+.health-n {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: inline-grid;
+  place-items: center;
+  background: var(--violet-100);
+  color: var(--violet-700);
+  font-weight: 900;
+}
+.health-step.done .health-n {
+  background: var(--mint-500);
+  color: #fff;
+}
+.health-check {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.health-check .check {
+  width: 100%;
+  text-align: left;
+}
+.health-sens {
+  align-items: center;
+}
+
+/* 🆘 Khi có sự cố (màn Hướng dẫn) */
+.trouble-item > summary {
+  cursor: pointer;
+  font-size: 19px;
+  font-weight: 800;
+  padding: 8px 0;
+}
+.trouble-item ol {
+  margin: 0 0 8px;
+  padding-left: 24px;
+  font-size: 17px;
+}

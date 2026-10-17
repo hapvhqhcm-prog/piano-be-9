@@ -4,10 +4,12 @@
  * Phần cho bố mẹ (bật/tắt, xoá Album) ở màn Phụ huynh: albumParent.ts.
  */
 import { clipFromBlob, type TakeClip } from '../../audio/recorder';
-import { albumEnabled, albumFileName, albumStore, type AlbumMeta } from '../../progress/albumStore';
+import { albumEnabled, albumFileName, albumStore, type AlbumMeta, type AlbumPair } from '../../progress/albumStore';
+import { albumFullNote } from './albumParent';
 import type { App } from '../App';
 import { actionBar, backButton, button, h, toast } from '../components/dom';
 import { songEmoji } from '../components/songArt';
+import { clipLoader, progressCompare } from '../components/progressCompare';
 import '../../styles/album.css';
 
 const fmtDay = (ms: number) => {
@@ -56,10 +58,16 @@ export function albumScreen(app: App, onBack: () => void) {
     /** Tệp đã đọc sẵn (để chạm "Gửi" lần sau gọi bảng Chia sẻ ngay — Safari cần) */
     const files = new Map<string, File>();
     const list = h('ul', { class: 'album-list' });
+    /** (+ 2026-10-16) 🌱 Con tiến bộ thế nào? — bài có cả bản đầu tiên và bản hay nhất (ẩn khi chưa có bài nào) */
+    const growth = h('section', { class: 'album-growth', hidden: true });
+    const compares: Array<{ stop(): void }> = [];
     const wrap = h(
       'div',
       { class: 'album-wrap scrollable' },
-      h('p', { class: 'album-note' }, '🔒 Bản thu chỉ nằm trên iPad này. Mỗi bài giữ bản con đàn hay nhất.'),
+      h('p', { class: 'album-note' }, '🔒 Bản thu chỉ nằm trên iPad này. Mỗi bài giữ bản con đàn hay nhất — và bản đầu tiên để nghe con tiến bộ.'),
+      // (+ 2026-10-17) 📀 Album đầy → lời nhắn cho bố mẹ + "🧹 Xóa bản hay nhất cũ" (không bao giờ xóa bản đầu tiên)
+      albumFullNote(store, () => app.show(albumScreen(app, onBack))),
+      growth,
       list,
     );
     root.append(
@@ -72,6 +80,7 @@ export function albumScreen(app: App, onBack: () => void) {
       ),
     );
 
+    const stopCompares = () => compares.forEach((x) => x.stop());
     const stopPlaying = () => {
       const p = playing;
       playing = null;
@@ -99,6 +108,7 @@ export function albumScreen(app: App, onBack: () => void) {
         onTap: async () => {
           if (playing?.songId === m.songId) return stopPlaying();
           stopPlaying();
+          stopCompares();
           const my = ++playSeq; // chạm nhanh 2 lần / chạm bài khác trong lúc đang đọc tệp → chỉ lần chạm SAU CÙNG được phát
           const f = await loadFile(m);
           if (disposed || my !== playSeq) return;
@@ -146,6 +156,31 @@ export function albumScreen(app: App, onBack: () => void) {
       return li;
     };
 
+    /** (+ 2026-10-16) Một bài trong mục "🌱 Con tiến bộ": tên bài + hai thẻ (lần đầu → bản hay nhất) + nút nghe liền mạch */
+    const growthItem = ({ first, best }: AlbumPair): HTMLElement => {
+      const pc = progressCompare(app, {
+        first: {
+          at: first.savedAt,
+          stars: first.stars,
+          accuracy: first.accuracy,
+          trueFirst: !!first.firstTake,
+          load: clipLoader(app.audio, () => store?.getSlot(first.songId, 'first') ?? Promise.resolve(null)),
+        },
+        now: { at: best.savedAt, stars: best.stars, accuracy: best.accuracy, load: clipLoader(app.audio, () => store?.getSlot(best.songId, 'best') ?? Promise.resolve(null)) },
+        onStart: () => {
+          stopPlaying();
+          for (const x of compares) if (x !== pc) x.stop();
+        },
+      });
+      compares.push(pc);
+      return h(
+        'div',
+        { class: 'album-growth-item' },
+        h('div', { class: 'album-title' }, h('span', { class: 'album-emoji-sm', 'aria-hidden': 'true' }, songEmoji({ titleVi: best.title })), ' ', best.title),
+        pc.el,
+      );
+    };
+
     const empty = (text: string) =>
       h('li', { class: 'album-empty' }, h('div', { class: 'album-empty-emoji' }, '🎧'), h('p', {}, text));
 
@@ -166,11 +201,17 @@ export function albumScreen(app: App, onBack: () => void) {
         }
         list.append(...metas.map(row));
       });
+      void store.pairs().then((pairs) => {
+        if (disposed || !pairs.length) return;
+        growth.append(h('h2', { class: 'album-growth-h' }, '🌱 Con tiến bộ thế nào?'), ...pairs.map(growthItem));
+        growth.hidden = false;
+      });
     }
 
     return () => {
       disposed = true;
       stopPlaying();
+      stopCompares();
       files.clear();
     };
   };

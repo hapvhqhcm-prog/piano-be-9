@@ -1,9 +1,11 @@
 import { POSTURE_CUE, type WarmupMusic } from '../../lessons/lessonEngine';
+import { pushWarmupSong, readWarmupSongs } from '../../lessons/sessionSelectors';
 import { posEcho } from '../../lessons/targets';
 import type { Segment } from '../../lessons/types';
 import { findTune } from '../../music/exercises';
 import type { App, Screen } from '../App';
 import { h } from '../components/dom';
+import { parentCorner } from '../components/parentCorner';
 import { handFocus, handPrinciple, readHandLook, type HandPrincipleId } from '../../lessons/handTechnique';
 import { HAND_ICON_TEXT, handIcon } from '../components/handIcon';
 import { principleFigure } from '../components/handCards';
@@ -35,8 +37,7 @@ export function warmupScreen(app: App, w: WarmupMusic, hooks: { onDone(): void; 
     root.classList.add('is-warmup');
     const bar = h('div', { class: 'warmup-bar' }, h('span', { class: 'warmup-tag' }, '🎵 Khởi động'), handChip(app), skip);
     root.append(bar);
-    const chip = parentFocusChip(app, hooks.focus);
-    if (chip) root.append(chip);
+    parentFocusChip(root, hooks.focus);
     return () => {
       root.classList.remove('is-warmup');
       window.clearTimeout(bubbleTimer);
@@ -65,7 +66,8 @@ export function homeworkScreen(
       mode: hw.mode,
       level: 2,
       hints: 'full',
-      intro: `📝 Bài tập về nhà: ${hw.text}`,
+      // (+ 2026-10-17) chữ của bé ngắn: câu nhắc tư thế + tên bài; chỗ dặn đầy đủ trong góc 👪
+      intro: `🧘 ${POSTURE_CUE} · 📝 ${tune.titleVi || tune.title}`,
       bpm: hw.bpm,
       ...(hw.phrase ? { phrase: hw.phrase } : {}),
       ...(loop ? { loop: true } : {}),
@@ -83,47 +85,39 @@ export function homeworkScreen(
       left = true;
       hooks.onDone();
     });
-    root.append(h('div', { class: 'warmup-bar' }, h('span', { class: 'warmup-tag' }, '📝 Bài tập về nhà'), skip));
-    const chip = parentFocusChip(app, hooks.focus);
-    if (chip) root.append(chip);
-    return () => cleanup?.();
+    // (+ 2026-10-17) bài tập về nhà THAY khởi động bằng nhạc → câu nhắc tư thế một dòng nằm trên chính bài này (biểu tượng tay)
+    root.classList.add('is-warmup');
+    root.append(h('div', { class: 'warmup-bar' }, h('span', { class: 'warmup-tag' }, '📝 Bài tập về nhà'), handChip(app), skip));
+    parentFocusChip(root, hooks.focus);
+    // chỗ thầy dặn (đầy đủ) cho bố mẹ
+    parentCorner(root, `📝 Bài tập về nhà: ${hw.text}`);
+    return () => {
+      root.classList.remove('is-warmup');
+      window.clearTimeout(bubbleTimer);
+      cleanup?.();
+    };
   };
 }
 
 let bubbleTimer = 0;
 
-/** Ngày bố mẹ đã đóng dải "👪 Hôm nay để ý" (chỉ là tiện ích trong máy). */
-const FOCUS_HIDDEN_KEY = 'piano-be-9:parent-focus-hidden';
-
 /**
- * (+ 2026-10-16, OWNER duyệt) "👪 Bố mẹ 30 giây — hôm nay để ý: …" — dải chữ NHỎ cho bố mẹ (không phải màn che, không đọc to)
- * ở đầu buổi (khởi động / bài tập về nhà). Chạm ✕ → ẩn tới hết hôm nay. Luật chọn: lessons/parentFocus.ts.
+ * (+ 2026-10-16, OWNER duyệt) "👪 Bố mẹ 30 giây — hôm nay để ý: …" (luật chọn: lessons/parentFocus.ts).
+ * (+ 2026-10-17, OWNER duyệt "Buổi học ≥ 60% đàn thật") không còn là dải chữ giữa màn của bé — nằm trong GÓC 👪 thu gọn
+ * (ui/components/parentCorner.ts) ở màn đầu buổi (khởi động / bài tập về nhà). Không đọc to, không ghi gì.
  */
-export function parentFocusChip(app: App, focus: ParentFocus | null | undefined): HTMLElement | null {
+export function parentFocusChip(root: HTMLElement, focus: ParentFocus | null | undefined): HTMLElement | null {
   if (!focus) return null;
-  const today = app.store.today();
-  try {
-    if (localStorage.getItem(FOCUS_HIDDEN_KEY) === today) return null;
-  } catch {
-    /* không có bộ nhớ → vẫn hiện */
-  }
-  const close = h('button', { class: 'pfocus-x', type: 'button', 'aria-label': 'Ẩn lời nhắc cho bố mẹ hôm nay' }, '✕');
-  const chip = h(
-    'aside',
-    { class: 'pfocus-chip', 'aria-label': 'Lời nhắc cho bố mẹ', 'data-focus': focus.id },
-    h('span', { class: 'pfocus-who' }, '👪 Bố mẹ 30 giây'),
-    h('span', { class: 'pfocus-text' }, `${focus.icon} Hôm nay để ý: `, h('b', {}, focus.text)),
-    close,
+  return parentCorner(
+    root,
+    h(
+      'div',
+      { class: 'pfocus-line', 'data-focus': focus.id },
+      h('b', {}, '👪 Bố mẹ 30 giây — '),
+      `${focus.icon} hôm nay để ý: `,
+      h('b', {}, focus.text),
+    ),
   );
-  close.addEventListener('click', () => {
-    chip.remove();
-    try {
-      localStorage.setItem(FOCUS_HIDDEN_KEY, today);
-    } catch {
-      /* bỏ qua */
-    }
-  });
-  return chip;
 }
 
 /**
@@ -165,11 +159,12 @@ function handChip(app: App): HTMLElement {
   return chip;
 }
 
-/** Lời dẫn (> 60 ký tự → màn bài hát hiện câu đầu = câu nhắc tư thế, và ĐỌC TO cả câu). */
+/**
+ * Lời dẫn = câu nhắc tư thế MỘT dòng (đè lên bài khởi động). (+ 2026-10-17, OWNER duyệt "Buổi học ≥ 60% đàn thật": chữ của bé
+ * ≤ 12 tiếng mỗi màn — bỏ câu "Khởi động bằng bài con đã thuộc…"; nhãn "🎵 Khởi động" ở thanh trên đã nói điều đó.)
+ */
 export function warmupIntro(w: WarmupMusic): string {
-  return w.kind === 'song'
-    ? `🧘 ${POSTURE_CUE}! Khởi động bằng bài con đã thuộc — đàn cho vui nhé 🎵`
-    : `${POSTURE_CUE}! Thầy đàn — con đàn lại nhé.`;
+  return w.kind === 'song' ? `🧘 ${POSTURE_CUE}` : `🧘 ${POSTURE_CUE} · Thầy đàn, con đàn lại`;
 }
 
 /** Màn "thầy đàn — con đàn lại" của khởi động (không có bài nào thuộc). */
@@ -188,6 +183,12 @@ function innerScreen(app: App, w: WarmupMusic, hooks: { onDone(): void; onBack()
   if (w.kind === 'song') {
     const tune = findTune(w.songId);
     if (tune) {
+      // (+ 2026-10-17) nhớ bài khởi động → buổi sau không lặp bài này (sessionSelectors.warmupMusic); chỉ là tiện ích xoay vòng
+      try {
+        app.store.updateSettings({ warmupSongs: pushWarmupSong(readWarmupSongs(app.store.settings), w.songId) });
+      } catch {
+        /* không chặn khởi động */
+      }
       return songScreen(
         app,
         tune,

@@ -4,6 +4,8 @@
  * khóa 🔒 kèm số tuần (gập trong "Sắp mở"). Màn nạp muộn (chunk riêng cùng theory.ts).
  */
 import { THEORY, theoryUnlocked, type TheoryConcept } from '../../lessons/theory';
+import { newTheoryCards, readTheorySeen, withTheorySeen } from '../../lessons/theorySeen';
+import type { AppData } from '../../progress/schema';
 import type { App, Screen } from '../App';
 import { actionBar, backButton, button, h } from '../components/dom';
 import { speakChip } from '../components/speakChip';
@@ -13,10 +15,21 @@ import { playTheorySound, theoryPicEl, type TheoryPicView } from './theory';
 /** (+ 2026-10-15) ✋ Tư thế tay — trang tranh Đúng / Chưa đúng (chunk riêng) */
 const handGuideMod = lazy(() => import('./handGuide'));
 
+/** (+ 2026-10-17) Số thẻ "📘 Biết thêm" đã mở khóa mà con chưa xem — huy hiệu "📘 N thẻ mới" (🎮 Trò chơi). */
+export function glossaryNewCount(data: Readonly<AppData>): number {
+  return newTheoryCards(data, theoryUnlocked(data)).length;
+}
+
 export function glossaryScreen(app: App, onBack: () => void): Screen {
   return (root) => {
     const data = app.store.get();
-    const open = new Set(theoryUnlocked(data).map((c) => c.id));
+    const unlocked = theoryUnlocked(data);
+    const open = new Set(unlocked.map((c) => c.id));
+    // (+ 2026-10-17, OWNER duyệt "Buổi học ≥ 60% đàn thật") thẻ "Biết thêm" nay sống ở đây (không còn trong buổi học):
+    // thẻ mới (chưa xem) có nhãn "Mới" và nằm ĐẦU danh sách; mở Từ điển = đã xem
+    const fresh = new Set(newTheoryCards(data, unlocked).map((c) => c.id));
+    const seen = withTheorySeen(readTheorySeen(data.settings), [...fresh]);
+    if (seen) app.store.updateSettings({ theorySeen: seen });
     const views: TheoryPicView[] = [];
     let token = 0;
     const item = (c: TheoryConcept) => {
@@ -34,14 +47,21 @@ export function glossaryScreen(app: App, onBack: () => void): Screen {
         : null;
       return h(
         'article',
-        { class: 'gl-item', 'data-theory': c.id },
-        h('div', { class: 'gl-head' }, h('span', { class: 'th-emoji', 'aria-hidden': 'true' }, c.emoji), h('div', { class: 'gl-title' }, c.title), listen),
+        { class: `gl-item${fresh.has(c.id) ? ' gl-new' : ''}`, 'data-theory': c.id },
+        h(
+          'div',
+          { class: 'gl-head' },
+          h('span', { class: 'th-emoji', 'aria-hidden': 'true' }, c.emoji),
+          h('div', { class: 'gl-title' }, c.title),
+          fresh.has(c.id) ? h('span', { class: 'gl-new-tag' }, '📘 Mới') : null,
+          listen,
+        ),
         h('div', { class: 'gl-terms' }, ...c.terms.map((t) => h('span', { class: 'gl-term' }, t))),
         pic.el,
         h('p', { class: 'gl-short' }, c.short, speakChip(app, `${c.title}. ${c.short}`)),
       );
     };
-    const learned = THEORY.filter((c) => open.has(c.id));
+    const learned = THEORY.filter((c) => open.has(c.id)).sort((a, b) => Number(fresh.has(b.id)) - Number(fresh.has(a.id)));
     const locked = THEORY.filter((c) => !open.has(c.id));
     root.append(
       h(

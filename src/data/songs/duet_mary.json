@@ -1,0 +1,279 @@
+{
+ "id": "duet_mary",
+ "title": "Mary Had a Little Lamb (duet with teacher)",
+ "titleVi": "Chú cừu nhỏ — song tấu với thầy",
+ "composer": "Dân ca Mỹ (traditional)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Bè bé như bài gốc; bè thầy (secondo) tự soạn cho app (piano-be-9)",
+ "attributionRequired": false,
+ "hand": "RH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 6,
+ "phrases": [
+  0,
+  4
+ ],
+ "notes": [
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "D4",
+   "beats": 2,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "G4",
+   "beats": 2,
+   "finger": 5
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "E4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "D4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "C4",
+   "beats": 4,
+   "finger": 1
+  }
+ ],
+ "duet": [
+  {
+   "pitch": "C3",
+   "beats": 1
+  },
+  {
+   "pitch": "G2",
+   "beats": 1
+  },
+  {
+   "pitch": "E3",
+   "beats": 1
+  },
+  {
+   "pitch": "G2",
+   "beats": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 1
+  },
+  {
+   "pitch": "G2",
+   "beats": 1
+  },
+  {
+   "pitch": "G2",
+   "beats": 1
+  },
+  {
+   "pitch": "G2",
+   "beats": 1
+  },
+  {
+   "pitch": "G2",
+   "beats": 1
+  },
+  {
+   "pitch": "F3",
+   "beats": 1
+  },
+  {
+   "pitch": "B2",
+   "beats": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 1
+  },
+  {
+   "pitch": "E3",
+   "beats": 1
+  },
+  {
+   "pitch": "E3",
+   "beats": 1
+  },
+  {
+   "pitch": "G2",
+   "beats": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 1
+  },
+  {
+   "pitch": "G2",
+   "beats": 1
+  },
+  {
+   "pitch": "E3",
+   "beats": 1
+  },
+  {
+   "pitch": "G2",
+   "beats": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 1
+  },
+  {
+   "pitch": "G2",
+   "beats": 1
+  },
+  {
+   "pitch": "G2",
+   "beats": 1
+  },
+  {
+   "pitch": "G2",
+   "beats": 1
+  },
+  {
+   "pitch": "G2",
+   "beats": 1
+  },
+  {
+   "pitch": "F3",
+   "beats": 1
+  },
+  {
+   "pitch": "B2",
+   "beats": 1
+  },
+  {
+   "pitch": "G2",
+   "beats": 1
+  },
+  {
+   "pitch": "G2",
+   "beats": 1
+  },
+  {
+   "pitch": "G2",
+   "beats": 1
+  },
+  {
+   "pitch": "E3",
+   "beats": 1
+  },
+  {
+   "pitch": "G2",
+   "beats": 1
+  }
+ ]
+}

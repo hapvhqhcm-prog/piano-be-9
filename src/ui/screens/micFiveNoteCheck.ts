@@ -7,6 +7,7 @@ import { CandidateTally, chooseSensitivity, type NoteCheck } from '../../audio/m
 import { noteLabel, pitchToMidi, type Pitch } from '../../piano/pitchTable';
 import { button, h } from '../components/dom';
 import { loadMicLog, saveMicLog } from '../../audio/micLogStore';
+import { clearMicSetupNeeded } from '../../progress/newDevice';
 import { CHECK_NOTES, MIC_GOOD, STEP_TIMEOUT_MS, TIP_TEXT, buildMicLog, type MicTestCtx, type StepLog } from './micTestShared';
 
 export interface FiveNoteCheck {
@@ -140,6 +141,9 @@ export function createFiveNoteCheck(c: MicTestCtx): FiveNoteCheck {
     lastOk = ok;
     everChecked = true;
     saveMicLog(buildMicLog(app, c.logState())); // cho "🩺 Kiểm tra iPad"
+    // (+ 2026-10-17) Đã kiểm tra micro trên iPad này → bỏ dấu "cần cài lại micro" (sau khi nhập dữ liệu — progress/newDevice.ts)
+    const cleared = clearMicSetupNeeded(app.store.settings);
+    if (cleared) app.store.updateSettings({ ops: cleared });
     calib.textContent =
       ok >= MIC_GOOD
         ? 'Xong bài kiểm tra — micro nghe tốt! Bước 3: bấm nút xanh bên dưới.'

@@ -211,7 +211,8 @@ function download(blob: Blob, name: string): void {
   window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
 }
 
-export function reportScreen(app: App, opts: { onBack: () => void }) {
+/** `extra`: (+ 2026-10-17) bảng tiến độ chi tiết của màn Phụ huynh — cuối trang, không in, không vào ảnh. */
+export function reportScreen(app: App, opts: { onBack: () => void; extra?: () => HTMLElement }) {
   return (root: HTMLElement) => {
     const now = new Date();
     const report = buildReport(app.store.get(), now);
@@ -262,6 +263,7 @@ export function reportScreen(app: App, opts: { onBack: () => void }) {
           ),
           h('p', { class: 'report-privacy' }, PRIVACY_TEXT),
           reportSheet(report),
+          opts.extra ? h('div', { class: 'rp-extra' }, opts.extra()) : null,
         ),
       ),
     );

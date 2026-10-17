@@ -4,6 +4,7 @@
 import { findTune } from '../music/exercises';
 import { slice } from '../music/tune';
 import type { Lesson } from './types';
+import { musicianMinutes } from './musician';
 import { MAX_QUIZ_ROUNDS, weekPlan } from './curriculum';
 
 /** v5.2 — Đọc nhạc 1 phút mỗi ngày bắt đầu từ tuần này. */
@@ -26,7 +27,7 @@ export function sightDailyFits(lesson: Lesson): boolean {
     lesson.week >= SIGHT_DAILY_WEEK &&
     !lesson.isWeekTest &&
     !lesson.id.endsWith('-daily') &&
-    !lesson.activities.some((a) => a.kind === 'sight' || a.kind === 'stage') &&
+    !lesson.activities.some((a) => a.kind === 'sight' || a.kind === 'stage' || (a.kind === 'musician' && a.task.type === 'recital')) &&
     baseLessonMinutes(lesson) + SIGHT_DAILY_MIN <= MAX_SESSION_MINUTES
   );
 }
@@ -81,6 +82,10 @@ function baseLessonMinutes(lesson: Lesson): number {
       case 'sing':
         // (2026-10-08) hát rồi đàn: ~0,6 phút/lượt (nghe – hát từng nốt – đàn)
         m += 0.6 * a.rounds.length;
+        break;
+      case 'musician':
+        // (+ 2026-10-17) nhạc công nhỏ — lessons/musician.ts musicianMinutes
+        m += musicianMinutes(a);
         break;
       case 'theory':
         // (2026-10-12) thẻ "📘 Biết thêm": đọc thẻ + nghe thử ~25" + 2 câu hỏi nhanh ~10" mỗi câu ≈ 0,75 phút/khái niệm

@@ -91,5 +91,17 @@ export const WEEK6: WeekPlan = {
         { kind: 'theory', ids: ['dotted-half'] },
       ],
     },
+    // (+ 2026-10-17, OWNER duyệt) SONG TẤU VỚI THẦY: app đàn bè thầy (Tune.duet) khi con chơi theo nhịp — cả khi micro bật
+    {
+      id: 'w6-duet',
+      week: 6,
+      title: 'Chú cừu — song tấu với thầy',
+      emoji: '🎎',
+      activities: [
+        { kind: 'song', songId: 'duet_mary', mode: 'wait', hints: 'full', intro: 'Bài quen "Chú cừu nhỏ" — nhớ lại từng nốt nhé!' },
+        { kind: 'song', songId: 'duet_mary', mode: 'tempo', level: 2, hints: 'names', intro: 'Song tấu: thầy đàn bè thấp, con đàn giai điệu!' },
+      ],
+      teach: { emoji: '🎎', text: 'Con mời bố mẹ nghe bài song tấu và kể: thầy đàn bè cao hay bè thấp?' },
+    },
   ],
 };

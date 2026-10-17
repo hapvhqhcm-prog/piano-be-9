@@ -1,0 +1,44 @@
+/* (+ 2026-10-17) 👤 Chế độ khách — băng nhỏ cố định trên cùng (ui/guest.ts) */
+.guest-banner {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 6px 4px 14px;
+  border-radius: 999px;
+  background: var(--sun-100, #ffefb8);
+  color: var(--sun-800, #6e4700);
+  font-weight: 700;
+  font-size: 15px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  max-width: calc(100vw - 32px);
+}
+.guest-banner .btn {
+  min-height: 36px;
+  padding: 4px 12px;
+  font-size: 14px;
+}
+.guest-home .guest-home-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 72px 24px 32px;
+  min-height: 100%;
+  text-align: center;
+}
+.guest-home .guest-home-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: center;
+}
+.home-guest-entry {
+  margin-top: 8px;
+  opacity: 0.85;
+}

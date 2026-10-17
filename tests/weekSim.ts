@@ -12,7 +12,8 @@ import { analyzeHands } from '../src/audio/twoHand';
 import { matchHeard } from '../src/audio/match';
 import { advanceOf, judgeWait, pairFromHands, phraseStartsFrom, waitJudgeInit, type PairCheck } from '../src/music/waitJudge';
 import { gradeTiming, TIMING_WINDOWS } from '../src/music/timing';
-import { handOnsets, phraseRanges, totalBeats, type Tune } from '../src/music/tune';
+import { groove } from '../src/music/groove';
+import { accompaniment, handOnsets, phraseRanges, totalBeats, type BackingStyle, type Tune } from '../src/music/tune';
 import { pitchToMidi } from '../src/piano/pitchTable';
 import { renderPiano, SIM_RATE, StreamNS, type SimNote, type SimOptions } from './pianoSim';
 
@@ -52,6 +53,11 @@ export interface Cond {
   autoTune?: TuningEstimator;
   /** Bù tay (Cài đặt micTuningCents) */
   tuningCents?: number;
+  /**
+   * (+ 2026-10-17) Nhạc đệm của app lọt vào micro khi chơi theo nhịp: `pitched` = bè đệm piano (accompaniment, lực ~ `vel`
+   * so với đàn của bé); `groove` = trống nhịp tần số cao (music/groove.ts, như tiếng tích — mức `level` như CLICK_LEVEL).
+   */
+  backing?: { kind: 'pitched'; vel: number; style?: BackingStyle } | { kind: 'groove'; level?: number; style?: BackingStyle };
 }
 
 /** Gắn tự học lệch dây vào MicAnalyzer (giống MicListener.learnTuning). */
@@ -488,8 +494,12 @@ export async function simulateTempo(t: Tune, c: Cond): Promise<Stats> {
     strikes.push({ midi, start, dur: Math.max(0.12, end - start), vel, intent: i, kind });
   });
   const seconds = t0 + total * spb + 1.5;
-  const clicks = Array.from({ length: Math.ceil(total) + lead }, (_, k) => ({ t: 0.4 + k * spb, accent: (k - lead) % bpmM === 0 }));
-  const sig = await render(strikes, seconds, c, { clicks, clickLevel: CLICK_LEVEL });
+  const clicks: NonNullable<SimOptions['clicks']> = Array.from({ length: Math.ceil(total) + lead }, (_, k) => ({ t: 0.4 + k * spb, accent: (k - lead) % bpmM === 0 }));
+  const bk = c.backing;
+  const extraNotes: SimNote[] =
+    bk?.kind === 'pitched' ? accompaniment(t, bk.style ?? 'basic').map((a) => ({ midi: a.midi, start: t0 + a.start * spb, dur: a.beats * spb * 0.9, vel: bk.vel })) : [];
+  if (bk?.kind === 'groove') for (const g of groove(t, bk.style ?? 'basic')) clicks.push({ t: t0 + g.beat * spb, hz: g.hz, gain: g.gain * (bk.level ?? 1), tau: g.tau });
+  const sig = await render([...strikes, ...extraNotes], seconds, c, { clicks, clickLevel: CLICK_LEVEL });
   const a = new MicAnalyzer();
   if (c.sens) a.sensitivity = c.sens;
   const learn = tuner(a, c);

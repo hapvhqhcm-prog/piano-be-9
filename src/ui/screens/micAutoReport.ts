@@ -31,7 +31,8 @@ export interface AutoReport {
   dispose(): void;
 }
 
-export function createAutoReport(c: MicTestCtx): AutoReport {
+/** `opts.onReport`: (+ 2026-10-17) báo cáo vừa soạn xong (🩺 Kiểm tra sức khỏe app lấy số đo để so với tháng trước). */
+export function createAutoReport(c: MicTestCtx, opts: { onReport?: (r: MicReport) => void } = {}): AutoReport {
   const { app, store, s } = c;
   let autoSes: MicReportSession | null = null;
   /** DEV: bài đo giả (chụp màn hình) — không cần micro */
@@ -109,6 +110,11 @@ export function createAutoReport(c: MicTestCtx): AutoReport {
     autoReport = formatMicReport(autoSes, reportEnv());
     // Lưu báo cáo cho "🩺 Kiểm tra iPad" (không phải tiến độ học)
     if (!autoDemo) saveMicReport({ at: new Date().toISOString(), summary: autoReport.summary, text: autoReport.text });
+    try {
+      opts.onReport?.(autoReport);
+    } catch {
+      /* bỏ qua */
+    }
     autoMsg = '';
     renderAuto();
   };
@@ -313,6 +319,8 @@ export function createAutoReport(c: MicTestCtx): AutoReport {
     // Hook chụp màn hình: hiện một bài đo giả (đang đo / đã xong) không cần micro
     (window as unknown as Record<string, unknown>).__micAuto = {
       show(ses: MicReportSession) {
+        // (2026-10-17) thẻ nằm trong "🔧 Dành cho người hỗ trợ" (thu gọn) → mở ra cho ảnh chụp
+        autoCard.closest('details')?.setAttribute('open', '');
         window.clearInterval(autoTimer);
         autoDemo = true;
         autoSes = ses;

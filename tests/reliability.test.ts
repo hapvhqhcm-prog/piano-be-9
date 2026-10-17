@@ -14,7 +14,7 @@ import {
 import { defaultData } from '../src/progress/schema';
 import { sessionCount } from '../src/progress/history';
 import { SaveMirror, idbBackend, restoreFromMirror, restoreFromMirrorResult, type MirrorBackend } from '../src/progress/mirror';
-import { BACKUP_NUDGE_SESSIONS, backupNudgeDue } from '../src/progress/backup';
+import { BACKUP_OVERDUE_DAYS, backupFresh, backupOverdue, daysSinceBackup } from '../src/progress/backup';
 import { ERROR_LOG_KEY, ERROR_LOG_MAX, describeError, installErrorCapture, logError, readErrors } from '../src/pwa/errorLog';
 import { composeReport, diagSections, type DiagSnapshot } from '../src/pwa/diagnostics';
 import { LAZY_RELOAD_KEY, LAZY_RELOAD_WINDOW_MS, reloadOnceForUpdate } from '../src/ui/lazy';
@@ -367,21 +367,22 @@ describe('restoreFromMirror: chỉ khi dữ liệu chính trống / hỏng', () 
 
 // ---------------------------------------------------------------- 5b: nhắc sao lưu ở màn chính
 
-describe('backupNudgeDue: nhắc bố mẹ sao lưu (không làm phiền)', () => {
+describe('backupOverdue: MỘT quy tắc sao lưu (2026-10-17) — mỗi tuần, quá 30 ngày mới nhắc nổi bật', () => {
   const T = new Date(2026, 9, 8).getTime();
-  it('chưa sao lưu lần nào: chỉ nhắc khi đã học ≥ 10 buổi', () => {
-    expect(BACKUP_NUDGE_SESSIONS).toBe(10);
-    expect(backupNudgeDue({ lastBackupAt: 0 }, 9, T)).toBe(false);
-    expect(backupNudgeDue({ lastBackupAt: 0 }, 10, T)).toBe(true);
+  const data = (lastBackupAt: number, first: string | null) =>
+    ({ settings: { lastBackupAt }, progress: { practiceDays: first ? { [first]: { minutes: 10, stars: 1 } } : {} }, sessions: [] }) as const;
+  it('chưa tập ngày nào → không nhắc; chưa sao lưu lần nào → tính từ ngày tập đầu tiên', () => {
+    expect(BACKUP_OVERDUE_DAYS).toBe(30);
+    expect(backupOverdue(data(0, null), T)).toBe(false);
+    expect(backupOverdue(data(0, '2026-09-10'), T)).toBe(false); // 28 ngày
+    expect(backupOverdue(data(0, '2026-09-08'), T)).toBe(true); // 30 ngày
   });
-  it('đã sao lưu: nhắc khi ≥ 14 ngày', () => {
-    expect(backupNudgeDue({ lastBackupAt: T - 13 * DAY }, 50, T)).toBe(false);
-    expect(backupNudgeDue({ lastBackupAt: T - 14 * DAY }, 0, T)).toBe(true);
-  });
-  it('bấm ✕ → ẩn 3 ngày rồi nhắc lại', () => {
-    const s = { lastBackupAt: T - 30 * DAY, backupNudgeHiddenAt: T - 2 * DAY };
-    expect(backupNudgeDue(s, 20, T)).toBe(false);
-    expect(backupNudgeDue(s, 20, T + 1 * DAY)).toBe(true);
+  it('đã sao lưu: quá 30 ngày mới nhắc nổi bật; trong 7 ngày = đã sao lưu tuần này', () => {
+    expect(backupOverdue(data(T - 29 * DAY, '2026-01-01'), T)).toBe(false);
+    expect(backupOverdue(data(T - 30 * DAY, '2026-01-01'), T)).toBe(true);
+    expect(backupFresh(data(T - 6 * DAY, '2026-01-01'), T)).toBe(true);
+    expect(backupFresh(data(T - 7 * DAY, '2026-01-01'), T)).toBe(false);
+    expect(daysSinceBackup(data(T - 12 * DAY, '2026-01-01'), T)).toBe(12);
   });
   it('trường backupNudgeHiddenAt lưu được (schema hợp lệ)', () => {
     const kv = new MemoryStorage();

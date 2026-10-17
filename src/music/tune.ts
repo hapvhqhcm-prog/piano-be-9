@@ -74,6 +74,12 @@ export interface Tune {
   lhPosition?: PositionId;
   phrases?: number[];
   notes: TuneNote[];
+  /**
+   * (+ 2026-10-17, OWNER duyệt) SONG TẤU VỚI THẦY: bè của thầy (kiểu "secondo" Faber) — app đàn bè này khi bé chơi THEO NHỊP
+   * (thay nhạc đệm tự động; đàn cả khi micro bật: âm vực THẤP hơn mọi nốt của bé và không trùng tên nốt bé đang đàn cùng lúc →
+   * micro chỉ chấm bè của bé như thường). Không chấm, không hiện trên khuông. Cùng tổng số phách với `notes`.
+   */
+  duet?: TuneNote[];
 }
 
 /** Nốt đã tính thời điểm (phách tính từ 0). */
@@ -299,6 +305,7 @@ export function slice(t: Tune, fromMeasure: number, toMeasure: number): Tune {
     phrases: [0],
     notes: sliceVoice(t.notes, bpm, fromMeasure, toMeasure),
     lh: t.lh ? sliceVoice(t.lh, bpm, fromMeasure, toMeasure) : undefined,
+    ...(t.duet ? { duet: sliceVoice(t.duet, bpm, fromMeasure, toMeasure) } : {}),
   };
 }
 
@@ -356,6 +363,7 @@ export function validateTune(t: Tune): string[] {
     }
   } else if (t.lh) errs.push('chỉ bài hai tay mới có bè lh');
   if (totalBeats(t) % beatsPerMeasure(t) !== 0) errs.push('tổng phách không tròn ô nhịp');
+  if (t.duet) errs.push(...validateDuet(t));
   // Cấp 4: pedal & nêm phải đóng/mở đúng cặp
   const main = mainHand(t);
   errs.push(...validateMarks(t.notes, main));
@@ -363,6 +371,29 @@ export function validateTune(t: Tune): string[] {
     errs.push(...validateMarks(t.lh, 'LH'));
     if (t.lh.some((n) => n.hairpin)) errs.push('LH: dấu to dần/nhỏ dần chỉ ghi ở bè chính');
     if (t.lh.some((n) => n.ped) && t.notes.some((n) => n.ped)) errs.push('pedal chỉ ghi ở MỘT bè (bè thấp nhất: lh)');
+  }
+  return errs;
+}
+
+/**
+ * (+ 2026-10-17) Song tấu: bè thầy dài bằng bè bé; mọi nốt bè thầy THẤP hơn nốt thấp nhất của bé, và lúc một nốt của bé
+ * vang lên (và nửa phách sau đó — cửa sổ chấm) thì bè thầy không có nốt cùng TÊN (cùng lớp cao độ) — micro không "nghe nhầm" tiếng thầy thành tiếng bé.
+ */
+export function validateDuet(t: Tune): string[] {
+  const errs: string[] = [];
+  const d = t.duet ?? [];
+  const beats = d.reduce((s, n) => s + n.beats, 0);
+  if (beats !== totalBeats(t)) errs.push(`bè thầy ${beats} phách ≠ bè bé ${totalBeats(t)}`);
+  if (t.lh) errs.push('song tấu: bè bé chỉ một tay (bài hai tay chưa hỗ trợ bè thầy)');
+  const kid = playable(t);
+  if (!kid.length) return errs;
+  const low = Math.min(...kid.map((n) => pitchToMidi(n.pitch!)));
+  const part = duetPart(t);
+  for (const a of part) if (a.midi >= low) errs.push(`bè thầy: nốt ${a.midi} không thấp hơn nốt thấp nhất của bé (${low})`);
+  for (const n of kid) {
+    const pc = pitchToMidi(n.pitch!) % 12;
+    const clash = part.find((a) => a.midi % 12 === pc && a.start < n.start + 0.5 - 1e-9 && a.start + a.beats > n.start + 1e-9);
+    if (clash) errs.push(`bè thầy trùng tên nốt bé ở phách ${n.start} (${n.pitch})`);
   }
   return errs;
 }
@@ -413,6 +444,17 @@ export interface AccompNote {
   midi: number;
 }
 
+/** (+ 2026-10-17) Song tấu — các nốt bè thầy (Tune.duet) theo phách, kể cả nốt hợp âm (`also`); [] nếu bài không có bè thầy. */
+export function duetPart(t: Tune): AccompNote[] {
+  const out: AccompNote[] = [];
+  let start = 0;
+  for (const n of t.duet ?? []) {
+    if (!n.rest && n.pitch) for (const p of [n.pitch, ...(n.also ?? []).map((a) => a.pitch)]) out.push({ start, beats: n.beats, midi: pitchToMidi(p) });
+    start += n.beats;
+  }
+  return out;
+}
+
 /**
  * (+ 2026-10-08) 🎁 Kiểu nhạc đệm (quà mở khóa theo đảo — lessons/unlocks.ts): 'basic' = như cũ (gốc phách 1 + quãng 5),
  * 'march' = gốc / quãng 5 xen kẽ MỖI phách, 'arpeggio' = rải gốc–3–5–3 mỗi phách, 'bounce' = "bùm-tách" (gốc trầm ở phách
@@ -433,6 +475,8 @@ export const backingStyle = (): BackingStyle => currentBacking;
  * (+ 2026-10-08) `style` khác 'basic': cùng hợp âm, đổi cách đánh (xem BackingStyle).
  */
 export function accompaniment(t: Tune, style: BackingStyle = currentBacking): AccompNote[] {
+  // (+ 2026-10-17) Song tấu: bè của thầy thay nhạc đệm tự động
+  if (t.duet) return duetPart(t);
   if (t.lh) return [];
   const bpm = beatsPerMeasure(t);
   const notes = playable(t);

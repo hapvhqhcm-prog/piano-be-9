@@ -23,6 +23,11 @@ export const SONG_ADDITIONS: readonly SongAddition[] = [
       'spring_comes', 'sakura', 'mountain_king', 'swan_lake', 'shooting_star', 'lion_dance',
     ],
   },
+  {
+    // (2026-10-17, OWNER duyệt — rà soát giáo viên dài hạn) bài tiêu chí mới tuần 17 + 5 bài SONG TẤU VỚI THẦY (Tune.duet)
+    added: '2026-10-17',
+    ids: ['camel_walk', 'duet_mary', 'duet_lightly_row', 'duet_aunt_rhody_g', 'duet_twinkle', 'duet_minuet'],
+  },
 ];
 
 const ADDED = new Map<string, string>(SONG_ADDITIONS.flatMap((a) => a.ids.map((id) => [id, a.added] as [string, string])));

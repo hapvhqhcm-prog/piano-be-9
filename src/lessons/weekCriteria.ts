@@ -65,6 +65,8 @@ export function runDays(sessions: readonly Session[], ok: (r: Run) => boolean): 
 /** Bài có hoạt động bài hát THEO NHỊP (tuần 4: dạy giữ nhịp Mức 2). */
 const hasTempoSong = (l: Lesson) => l.activities.some((a) => a.kind === 'song' && a.mode === 'tempo');
 /** Bài có lượt THEO NHỊP chỉ nhìn KHUÔNG của `songId` (tuần 8: Bài ca niềm vui — bài cũ của tuần 6, kỹ năng mới là đọc khuông). */
+/** (2026-10-17, OWNER duyệt) bài tiêu chí "chỉ nhìn khuông" của tuần 8 */
+export const W8_SONG = 'jingle_bells';
 const hasStaffTempo = (songId: string) => (l: Lesson) =>
   l.activities.some((a) => a.kind === 'song' && a.songId === songId && a.mode === 'tempo' && a.hints === 'staff');
 
@@ -141,13 +143,15 @@ function criterionDays(week: number, all: readonly Session[]): { days: number; e
       return ear((a) => isPitch(a.expected) && a.expected.endsWith('3'));
     case 8:
       // (+ 2026-10-15) bài cũ (tuần 6) → chỉ tính từ ngày học bài "chỉ nhìn khuông" của tuần 8
-      return { days: runDays(win(hasStaffTempo('ode_to_joy_easy')), (r) => passedWhole(r, 'ode_to_joy_easy', true) && r.hints === 'staff'), extra: true };
+      // (2026-10-17, OWNER duyệt "Bớt Bài ca niềm vui") "Chuông ngân vang" (cũng bài tuần 6, thế Đô) thay "Bài ca niềm vui"
+      return { days: runDays(win(hasStaffTempo(W8_SONG)), (r) => passedWhole(r, W8_SONG, true) && r.hints === 'staff'), extra: true };
     case 9:
       return song('inh_la_oi', true);
     case 11:
       return song('question_answer');
     case 12:
-      return song('ode_to_joy_both', true);
+      // (2026-10-17) "Bánh nóng — hai tay" (bài hai tay cùng lúc chính của tuần) thay "Bài ca niềm vui — hai tay"
+      return song('hot_cross_buns_both', true);
     case 13:
       return song('bell_tower', true);
     case 14:
@@ -157,7 +161,8 @@ function criterionDays(week: number, all: readonly Session[]): { days: number; e
     case 16:
       return song('ode_to_joy_d', true, 60);
     case 17:
-      return song('ode_to_joy_original', true, 60);
+      // (2026-10-17) "Lạc đà đi chợ" (tự sáng tác, "Đi-chấm chạy") thay "Bài ca niềm vui — chấm dôi"
+      return song('camel_walk', true, 60);
     case 18:
       // Bài có móc kép khởi đầu ở tốc độ 40 — tiêu chí là ĐÚNG NHỊP, không đòi nhanh
       return song('ly_cay_da', true);
@@ -171,7 +176,8 @@ function criterionDays(week: number, all: readonly Session[]): { days: number; e
       return { days: Math.min(rh.days, lh.days), extra: true };
     }
     case 22:
-      return song('ode_to_joy_chords', true);
+      // (2026-10-17) "Ngôi sao nhỏ — hai tay hợp âm" thay "Bài ca niềm vui — hai tay hợp âm"
+      return song('twinkle_both', true);
     case 23:
       // APP: đọc nốt có dòng kẻ phụ ≥ 5/6 (2 ngày) + v5.1: một lượt ĐỌC NHẠC qua vạch phụ đạt (thế La thứ / Đô giữa tay trái)
       return ear((a) => LEDGER_NOTES.includes(a.expected), sightOk(['Am', 'MC']));
@@ -183,22 +189,29 @@ function criterionDays(week: number, all: readonly Session[]): { days: number; e
     case 26:
       // APP: đọc nốt cao (Đô5–Sol5) ≥ 5/6 (2 ngày) + v5.1: một lượt đọc nhạc thế Đô cao đạt
       return ear((a) => HIGH_NOTES.includes(a.expected), sightOk(['C5']));
-    case 27: {
+    case 28: {
       // Đọc nhạc ngẫu nhiên: ≥ 5 đoạn đạt (bằng chứng hợp lệ), trải trên ≥ 2 ngày
       const sight = (r: Run) => r.songId.startsWith('sight');
       const n = sessions.flatMap((s) => s.songRuns).filter((r) => sight(r) && runIsEvidence(r)).length;
       return { days: runDays(sessions, sight), extra: n >= 5 };
     }
-    case 28:
-      return song('saints_both', true);
     case 29:
-      return song('minuet_g', true, 50);
+      return song('saints_both', true);
     case 30:
+      return song('minuet_g', true, 50);
+    case 31:
       return song('fur_elise', true, 50);
     default: {
       // Cấp 4 (2026-10-08): tiêu chí dạng dữ liệu — mọi bài đạt ở ≥ 2 ngày (tiến độ = bài chậm nhất) + thẻ bố mẹ xác nhận
       const spec = WEEKS[week - 1]?.criterionSpec;
       if (!spec) return null;
+      if (spec.spread) {
+        // (+ 2026-10-17) tuần ôn: mỗi bài đạt ≥ 1 lần, các lượt đạt trải trên ≥ 2 ngày
+        const ok = (x: (typeof spec.songs)[number]) => (r: Run) => passedWhole(r, x.songId, !!x.tempo, x.minBpm ?? 0);
+        const days = runDays(sessions, (r) => spec.songs.some((x) => ok(x)(r)));
+        const each = spec.songs.every((x) => runDays(sessions, ok(x)) >= 1);
+        return { days, extra: each && (spec.parentChecks ?? []).every((note) => parentCheckOk(sessions, note)) };
+      }
       const days = Math.min(...spec.songs.map((x) => song(x.songId, !!x.tempo, x.minBpm ?? 0).days));
       return { days, extra: (spec.parentChecks ?? []).every((note) => parentCheckOk(sessions, note)) };
     }
@@ -259,10 +272,10 @@ export function weekComplete(week: number, data: Readonly<AppData>): boolean {
 
 /**
  * v5.1 — Tiến độ tiêu chí theo NGÀY cho màn chính (vd ●○ "còn 1 hôm"): null = tiêu chí không tính theo ngày
- * (tuần 1 — một buổi thử thách; tuần huy chương 10/21/31; tuần ngoài giáo trình).
+ * (tuần 1 — một buổi thử thách; tuần huy chương 10/21/33/46; tuần ngoài giáo trình).
  * - `needDays` = CRITERION_DAYS (2).
  * - `days` = số ngày KHÁC NHAU (session.date) đã đạt phần tiêu chí theo ngày, tối đa `needDays`.
- *   Tuần gam (20): ngày của tay chậm hơn. Tuần cần thêm điều kiện phụ (23, 26: một lượt đọc nhạc đạt; 27: đủ 5 đoạn):
+ *   Tuần gam (20): ngày của tay chậm hơn. Tuần cần thêm điều kiện phụ (23, 26: một lượt đọc nhạc đạt; 28: đủ 5 đoạn):
  *   khi đủ ngày mà còn thiếu điều kiện phụ thì `days` = needDays − 1 — để "●●" LUÔN đồng nghĩa với weekPassed.
  * Hàm thuần — có test (tests/criteria-v51.test.ts).
  */

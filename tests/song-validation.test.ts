@@ -21,7 +21,11 @@ const ALLOWED = [
   'hand', 'bpm', 'timeSignature', 'week', 'extension', 'position', 'lh', 'lhPosition', 'phrases', 'notes',
   // Cấp 4 (2026-10-08): thuật ngữ tốc độ (Andante, Allegro…) — chỉ hiển thị
   'tempoTerm',
+  // (2026-10-17) song tấu với thầy: bè thầy (tune.validateDuet)
+  'duet',
 ];
+/** (2026-10-17) "Lạc đà đi chợ" + 5 bài song tấu với thầy (tests/musician.test.ts kiểm nội dung) */
+const REVIEW_2026_10_17 = 6;
 /** Cấp 4 (2026-10-08): số bài mới tuần 32–43 (tests/level4.test.ts kiểm nội dung) */
 const LEVEL4_SONGS = 29;
 /** (2026-10-09, OWNER duyệt "Thêm bài hát") bài CHỈ ĐỂ TRONG THƯ VIỆN, tuần 3–28 (tests/library-2026-10-09.test.ts kiểm nội dung) */
@@ -32,12 +36,14 @@ it('có 97 bài hát (56 cũ + 14 bài tự sáng tác v5 + 12 bài Việt Nam +
   // v5 (OWNER duyệt 2026-10-05): + 14 bài tự sáng tác cho tuần củng cố / tuần nhịp mới (giữ đủ 56 bài cũ)
   // 2026-10-06: + 9 dân ca + 3 ca khúc nhạc sĩ Việt Nam đã thuộc về công chúng (Lý ngựa ô thay bằng bản đầy đủ — cùng id)
   // 2026-10-06 (rà soát kho bài): + 13 bài tự sáng tác lấp tuần mỏng — mỗi tuần 2–30 (trừ 21) giờ có ≥ 2 bài, tuần 29–30 có 2
-  expect(SONGS).toHaveLength(97 + LEVEL4_SONGS + LIBRARY_2026_10_09);
-  expect(new Set(SONGS.map((s) => s.id)).size).toBe(97 + LEVEL4_SONGS + LIBRARY_2026_10_09);
-  for (let w = 32; w <= 42; w++) expect(SONGS.filter((s) => s.week === w).length, `tuần ${w}`).toBeGreaterThanOrEqual(2);
+  expect(SONGS).toHaveLength(97 + LEVEL4_SONGS + LIBRARY_2026_10_09 + REVIEW_2026_10_17);
+  expect(new Set(SONGS.map((s) => s.id)).size).toBe(97 + LEVEL4_SONGS + LIBRARY_2026_10_09 + REVIEW_2026_10_17);
+  // (2026-10-17) rev 5: tuần ÔN 27 · 32 · 38 chỉ đánh bóng bài cũ (không có bài mới); hòa nhạc 21 · 33 · 46
+  const NO_NEW = new Set([21, 27, 32, 33, 38, 46]);
+  for (let w = 34; w <= 45; w++) if (!NO_NEW.has(w)) expect(SONGS.filter((s) => s.week === w).length, `tuần ${w}`).toBeGreaterThanOrEqual(2);
   const weeks = new Set(SONGS.map((s) => s.week));
-  for (let w = 2; w <= 30; w++) if (w !== 21) expect(weeks.has(w), `tuần ${w}`).toBe(true);
-  for (let w = 2; w <= 30; w++) if (w !== 21) expect(SONGS.filter((s) => s.week === w).length, `tuần ${w}`).toBeGreaterThanOrEqual(2);
+  for (let w = 2; w <= 31; w++) if (!NO_NEW.has(w)) expect(weeks.has(w), `tuần ${w}`).toBe(true);
+  for (let w = 2; w <= 31; w++) if (!NO_NEW.has(w)) expect(SONGS.filter((s) => s.week === w).length, `tuần ${w}`).toBeGreaterThanOrEqual(2);
 });
 
 it('bài Việt Nam (2026-10-06): 15 dân ca (+ 2 Cấp 4) vn=folk; 3 ca khúc PD vn=composed; bài quen hát lời Việt vn=lyrics, tên gọi khác chỉ là tên', () => {

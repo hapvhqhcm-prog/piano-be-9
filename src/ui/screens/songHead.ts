@@ -4,7 +4,7 @@
  */
 import { phraseRanges, type Tune } from '../../music/tune';
 import { h } from '../components/dom';
-import { TEMPOS, expressionLegend, type HandSel, type SongOptions } from './songShared';
+import { TEMPOS, expressionLegend, setTempoSound, tempoChoices, tempoSound, type HandSel, type SongOptions, type TempoSound } from './songShared';
 import { noteColorMode, setNoteColorMode, type NoteColorMode } from '../components/noteColors';
 
 /** Các lựa chọn bé/bố mẹ đổi được trên đầu trang. */
@@ -24,6 +24,8 @@ export interface SongHeadDeps {
   canEdit(): boolean;
   /** Áp dụng lựa chọn mới (rồi song.ts dựng lại màn) */
   pick(patch: Partial<SongChoices>): void;
+  /** (+ 2026-10-17) Bố mẹ bật "nhạc đệm" (settings.accompaniment) — tắt thì không hiện lựa chọn 🥁 Nhạc nền */
+  backingAllowed?: () => boolean;
 }
 
 /** (+ 2026-10-15) Công tắc "✋ Hiện bàn tay" (bàn tay mờ trên bàn phím — ui/components/keyboardHand.ts) */
@@ -138,8 +140,21 @@ export class SongHead {
       }
       section(
         '⏱ Tốc độ',
-        ...TEMPOS.map((t) => chip(`${t === TEMPOS[0] ? '🐢 ' : t === TEMPOS[TEMPOS.length - 1] ? '🐇 ' : ''}${t}`, c.bpm === t, { bpm: t })),
+        ...tempoChoices(c.bpm).map((t) => chip(`${t === TEMPOS[0] ? '🐢 ' : t === TEMPOS[TEMPOS.length - 1] ? '🐇 ' : ''}${t}`, c.bpm === t, { bpm: t })),
       );
+      // (+ 2026-10-17) 🥁 Nhạc đệm (trống nhịp vui + bè đệm khi micro tắt) hay 🔔 chỉ tiếng tích — nhớ trong máy, áp từ lượt sau
+      if (this.d.backingAllowed?.() !== false) {
+        const cur = tempoSound();
+        const sndChip = (label: string, v: TempoSound) => {
+          const b = h('button', { class: `seg-btn small${cur === v ? ' on' : ''}`, type: 'button' }, label);
+          b.addEventListener('click', () => {
+            setTempoSound(v);
+            this.refresh();
+          });
+          return b;
+        };
+        section('🎶 Nhạc nền', sndChip('🥁 Nhạc đệm', 'backing'), sndChip('🔔 Chỉ tiếng tích', 'click'));
+      }
     }
     const hg = this.handGuide;
     if (hg && c.hints === 'full') {

@@ -3,17 +3,17 @@
  * (~2 phút/ngày): mỗi mục một dòng, ▶ nghe bản ghi, ✅ Đạt / 🔁 Chưa đạt, "✅ Đạt hết". Thẻ xem tay (Cấp 4) không chấm
  * bằng tai được → lời nhắc "Lần sau ngồi cùng xem tay nhé" (nút "Đã nhớ").
  * Logic: progress/reviewQueue.ts (✅ Đạt ghi như bố mẹ chấm vào ĐÚNG ngày bé đàn). Bản ghi: progress/reviewAudio.ts.
- * Thẻ ở đầu màn Phụ huynh: reviewCard().
+ * Mở từ việc "🕑 Nghe lại việc bé tự học" của thẻ "✅ Hôm nay bố mẹ cần" (parentToday.ts). (2026-10-17) Bỏ chip
+ * "Mặc định mỗi ngày" trùng với màn của bé (studyModeRow ở màn chính vẫn còn).
  */
 import { clipFromBlob, type TakeClip } from '../../audio/recorder';
 import { gradable, reminders } from '../../progress/reviewQueue';
 import { reviewAudio } from '../../progress/reviewAudio';
-import type { AppData, ReviewItem } from '../../progress/schema';
+import type { ReviewItem } from '../../progress/schema';
 import { localDateStr } from '../../progress/schema';
 import type { App } from '../App';
 import { actionBar, backButton, button, confirmDialog, h, toast } from '../components/dom';
 import { cleanReviewAudio } from '../selfStudy';
-import type { ParentCtx } from './parentShared';
 import '../../styles/selfstudy.css';
 
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -39,55 +39,6 @@ function metaText(r: ReviewItem, now: Date): string {
   if (r.mic) parts.push(`🎤 ${r.mic}`);
   else if (r.kind === 'song') parts.push(r.audio ? '🎧 có bản ghi' : 'micro tắt — không có bản ghi');
   return parts.join(' · ');
-}
-
-/** Thẻ đầu màn Phụ huynh: "🕑 Chờ bố mẹ xem (N)" + cách học mặc định. Không có mục chờ → thẻ nhỏ (chỉ cài đặt). */
-export function reviewCard(c: ParentCtx, d: Readonly<AppData>, open: () => void): HTMLElement {
-  const n = gradable(d).length;
-  const rem = reminders(d).length;
-  const def = d.settings.studyDefault ?? 'parent';
-  const chip = (m: 'parent' | 'self', label: string) =>
-    h(
-      'button',
-      {
-        type: 'button',
-        class: `study-chip${def === m ? ' on' : ''}`,
-        'data-mode': m,
-        'aria-pressed': String(def === m),
-        onClick: () => c.set({ studyDefault: m } as never),
-      },
-      label,
-    );
-  return h(
-    'section',
-    { class: `card review-card${n || rem ? ' has-items' : ''}` },
-    h('h2', {}, n ? `🕑 Chờ bố mẹ xem (${n})` : '👦 Bé tự học'),
-    n || rem
-      ? h(
-          'div',
-          { class: 'review-card-row' },
-          h(
-            'p',
-            {},
-            n ? `Bé tự học và có ${n} việc cần bố mẹ nghe lại (~${Math.max(1, Math.round(n / 3))} phút).` : '',
-            rem ? ` ${rem} lời nhắc xem tay.` : '',
-            ' Chỉ việc bố mẹ chấm ✅ Đạt mới tính cho tiêu chí tuần.',
-          ),
-          button({ icon: '▶', label: 'Xem ngay', kind: 'primary', onTap: open }),
-        )
-      : h(
-          'p',
-          {},
-          'Hôm bố mẹ bận: ở màn của bé chọn “👦 Con tự học”. App tự chấm bằng micro; việc cần bố mẹ được để dành vào hàng “🕑 Chờ bố mẹ xem”.',
-        ),
-    h(
-      'div',
-      { class: 'study-default', role: 'group', 'aria-label': 'Cách học mặc định khi mở app' },
-      h('span', {}, 'Mặc định mỗi ngày:'),
-      chip('parent', '👪 Có bố mẹ ngồi cùng'),
-      chip('self', '👦 Con tự học'),
-    ),
-  );
 }
 
 /** Màn chờ bố mẹ xem. */

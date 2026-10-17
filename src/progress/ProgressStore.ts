@@ -5,6 +5,7 @@ import { RATING_STARS, bumpDataRev, hist, sessionCount } from './history';
 import { confirmSelfChallenge, recordChallenges } from '../lessons/challenges';
 import { upsertConcert } from '../lessons/concert';
 import { stampMasteryRule } from '../lessons/songStats';
+import { resetDeviceSpecific } from './newDevice';
 import {
   addReview,
   approveAll,
@@ -110,6 +111,11 @@ export function isEmptySession(s: Session): boolean {
 let activeStore: ProgressStore | null = null;
 
 /** Tình trạng lưu trữ của store đang chạy (giao diện hiện băng khi !ok / full / futureVersion). */
+/** (+ 2026-10-17) 👤 Đang chơi CHẾ ĐỘ KHÁCH (store đang chạy) — Album / hàng chờ / micro tự học hỏi ở đây. */
+export function isGuestMode(): boolean {
+  return activeStore?.guest ?? false;
+}
+
 export function storageStatus(): StorageStatus {
   return (
     activeStore?.storageStatus() ??
@@ -161,6 +167,14 @@ export class ProgressStore {
   private readonly windowDays: number;
   private detach: (() => void) | null = null;
   private readonly mirror: StoreOptions['mirror'] | null;
+  /**
+   * (+ 2026-10-17, OWNER duyệt) 👤 CHẾ ĐỘ KHÁCH (anh chị em / bạn bè chơi thử): bản chụp JSON dữ liệu lúc vào. Trong lúc
+   * khách chơi KHÔNG GHI gì xuống localStorage / IndexedDB, các hàm ghi lượt chơi / trò chơi / buổi học là no-op; thoát →
+   * trả lại đúng bản chụp (mọi thay đổi trong bộ nhớ bị bỏ). App tắt giữa chừng → chưa ghi gì nên dữ liệu của bé nguyên vẹn.
+   */
+  private guestSnapshot: { json: string; dropped: number; activeSessionId: string | null } | null = null;
+  /** (+ 2026-10-17) Lần nhập JSON gần nhất: micro cần "Cài micro 3 bước" lại trên iPad này (newDevice.ts) */
+  lastImportNeedsMicSetup = false;
 
   constructor(
     private readonly kv: KeyValueStorage,
@@ -211,7 +225,7 @@ export class ProgressStore {
 
   /** Gửi dữ liệu hiện tại sang bản sao IndexedDB. Không bao giờ ném lỗi. */
   private mirrorNow(): void {
-    if (!this.mirror) return;
+    if (!this.mirror || this.guestSnapshot) return;
     try {
       this.mirror.save(JSON.stringify(this.data));
     } catch {
@@ -286,6 +300,7 @@ export class ProgressStore {
     }
     this.dirty = false;
     if (this.futureVersion) return this.storageStatus(); // không bao giờ ghi đè dữ liệu của bản mới hơn
+    if (this.guestSnapshot) return this.storageStatus(); // 👤 khách chơi: không ghi gì
     const wasOk = !this.lastSaveError;
     let err = this.tryWrite();
     if (err !== null && isQuotaError(err)) {
@@ -351,6 +366,40 @@ export class ProgressStore {
 
   get(): Readonly<AppData> {
     return this.data;
+  }
+
+  // ---------------- (+ 2026-10-17) 👤 Chế độ khách ----------------
+
+  /** Đang chơi chế độ khách (không lưu gì). */
+  get guest(): boolean {
+    return this.guestSnapshot !== null;
+  }
+
+  /** Vào chế độ khách: ghi nốt thay đổi còn chờ, chụp dữ liệu. Không vào được khi dữ liệu là của bản app mới hơn. */
+  enterGuest(): boolean {
+    if (this.guestSnapshot || this.futureVersion) return !!this.guestSnapshot;
+    this.flush();
+    this.flushMirror();
+    this.guestSnapshot = { json: JSON.stringify(this.data), dropped: this.droppedReviews.length, activeSessionId: this.activeSessionId };
+    this.listeners.forEach((fn) => fn());
+    return true;
+  }
+
+  /** Thoát chế độ khách: trả lại đúng dữ liệu lúc vào (bỏ mọi thay đổi trong lúc khách chơi). */
+  exitGuest(): void {
+    const g = this.guestSnapshot;
+    if (!g) return;
+    this.guestSnapshot = null;
+    if (this.timer) {
+      clearTimeout(this.timer);
+      this.timer = null;
+    }
+    this.dirty = false;
+    this.data = JSON.parse(g.json) as AppData;
+    this.droppedReviews.length = Math.min(this.droppedReviews.length, g.dropped);
+    this.activeSessionId = g.activeSessionId;
+    bumpDataRev(this.data);
+    this.listeners.forEach((fn) => fn());
   }
 
   get settings(): Readonly<Settings> {
@@ -426,6 +475,7 @@ export class ProgressStore {
       minutes: 0,
       completed: false,
       checklist: {},
+      kindStops: [],
     };
     this.data.sessions.push(s);
     this.activeSessionId = id;
@@ -472,6 +522,7 @@ export class ProgressStore {
    * của cùng buổi nếu có). Ghi ngay.
    */
   deferReview(input: ReviewInput): string {
+    if (this.guestSnapshot) return ''; // 👤 khách chơi: không hoãn việc cho bố mẹ
     const sessionId = input.sessionId ?? (input.kind === 'challenge' ? undefined : this.activeSessionId ?? undefined);
     const valid = sessionId && this.data.sessions.some((s) => s.id === sessionId) ? sessionId : undefined;
     const id = addReview(this.data, { ...input, ...(valid ? { sessionId: valid } : { sessionId: undefined }) }, this.now().getTime());
@@ -520,6 +571,7 @@ export class ProgressStore {
 
   /** Lấy (và xoá khỏi danh sách) mã các mục đã hết hạn / đã xử lý — để xoá bản ghi âm của chúng. */
   takeDroppedReviews(): string[] {
+    if (this.guestSnapshot) return []; // 👤 khách chơi: thoát ra sẽ trả lại hàng chờ — không xoá bản ghi âm nào
     return this.droppedReviews.splice(0);
   }
 
@@ -563,8 +615,19 @@ export class ProgressStore {
     this.save();
   }
 
+  /**
+   * (+ 2026-10-17) Thẻ "dừng nhẹ nhàng" vừa hiện ở màn bài hát của một HOẠT ĐỘNG BÀI HỌC (session.ts gọi) — lessons/adaptive.ts
+   * hadKindStop đọc trường này (một định nghĩa cho độ khó + bài thưởng).
+   */
+  markKindStop(sessionId: string, songId: string): void {
+    const s = this.session(sessionId);
+    (s.kindStops ??= []).push(songId);
+    this.save();
+  }
+
   /** Lượt chơi bài hát (theo nhịp / chế độ chờ). */
   addSongRun(sessionId: string, run: Omit<SongRun, 'ts'>): void {
+    if (this.guestSnapshot) return; // 👤 khách chơi: không ghi lượt
     const s = this.session(sessionId);
     s.songRuns.push({ ...run, ts: this.now().getTime() });
     this.touch(s);
@@ -611,6 +674,7 @@ export class ProgressStore {
 
   /** (v5) Bài bé tự sáng tác — trò "Sáng tác"; hiện trong Thư viện mục "Bài của con". */
   addComposition(c: Composition): void {
+    if (this.guestSnapshot) return;
     const list = (this.data.compositions ??= []);
     const i = list.findIndex((x) => x.id === c.id);
     const copy: Composition = { ...c, notes: c.notes.map((n) => ({ ...n })) };
@@ -697,6 +761,11 @@ export class ProgressStore {
     score: number,
     extra: { level?: number; streak?: number } = {},
   ): { best: number; prevBest: number; record: boolean } {
+    // 👤 khách chơi: không ghi kỷ lục (vẫn báo điểm so với kỷ lục của bé, không "Kỷ lục mới")
+    if (this.guestSnapshot) {
+      const prevBest = this.data.games?.[id]?.best ?? 0;
+      return { best: prevBest, prevBest, record: false };
+    }
     const s = Number.isFinite(score) ? Math.max(0, score) : 0;
     const games = (this.data.games ??= {});
     const prev = games[id];
@@ -720,6 +789,7 @@ export class ProgressStore {
    * Lưu riêng ở AppData.concerts (không trong sessions) → gộp lịch sử không đụng tới. Trả về false nếu không lưu.
    */
   saveConcert(c: ConcertEntry): boolean {
+    if (this.guestSnapshot) return false;
     if (!upsertConcert(this.data, c)) return false;
     this.save();
     this.flush();
@@ -731,7 +801,7 @@ export class ProgressStore {
    * Chỉ ghi khi có đổi.
    */
   recordChallenges(): void {
-    if (this.futureVersion) return;
+    if (this.futureVersion || this.guestSnapshot) return;
     if (recordChallenges(this.data, this.today(), this.now().getTime())) {
       this.save();
       this.flush();
@@ -740,7 +810,7 @@ export class ProgressStore {
 
   /** (+ 2026-10-08) 👪 Bố mẹ xác nhận thử thách "ngoài đời" của tuần này (chỉ thêm). true = đã ghi. */
   confirmChallenge(id: string): boolean {
-    if (this.futureVersion) return false;
+    if (this.futureVersion || this.guestSnapshot) return false;
     if (!confirmSelfChallenge(this.data, this.today(), id, this.now().getTime())) return false;
     this.save();
     this.flush();
@@ -749,6 +819,7 @@ export class ProgressStore {
 
   /** Đánh dấu xong bài / xong một hoạt động ("<bài>#<i>") — cuối hoạt động → ghi ngay. */
   markLessonCompleted(lessonId: string): void {
+    if (this.guestSnapshot) return;
     if (!this.data.progress.lessonsCompleted.includes(lessonId)) {
       this.data.progress.lessonsCompleted.push(lessonId);
       this.save();
@@ -779,6 +850,7 @@ export class ProgressStore {
    * → TỪ CHỐI ({ ok: false, archiveFailed: true }) trừ khi `force` (phụ huynh xác nhận chấp nhận mất bản hiện tại).
    */
   importJSON(text: string, opts: { force?: boolean } = {}): ReplaceResult {
+    if (this.guestSnapshot) return { ok: false, error: 'Đang ở chế độ khách — thoát chế độ khách trước.' };
     let parsed: unknown;
     try {
       parsed = JSON.parse(text);
@@ -801,12 +873,19 @@ export class ProgressStore {
     this.lastArchiveKey = arch.key;
     const prev = this.beginReplace();
     this.data = d;
+    // (+ 2026-10-17) Có thể là iPad khác: số đo micro của máy cũ → mặc định, đánh dấu "cần cài lại micro" (newDevice.ts)
+    const needsMic = resetDeviceSpecific(this.data, this.now().getTime()).needsMicSetup;
     stampMasteryRule(this.data, this.now().getTime()); // (+ 2026-10-15) dữ liệu nhập chưa có mốc → lượt cũ giữ luật cũ
     this.recomputePracticeDays();
     this.compact();
     archiveCorrupt(this.kv); // dữ liệu nhập là ý muốn của phụ huynh → bản sao lưu cũ không được đè lên
     pruneArchives(this.kv);
-    return this.commitReplace(prev);
+    const r = this.commitReplace(prev);
+    if (r.ok && needsMic) {
+      this.lastImportNeedsMicSetup = true;
+      this.listeners.forEach((fn) => fn());
+    }
+    return r;
   }
 
   /** Giữ dữ liệu đang dùng trước khi thay (để trả lại nếu không ghi được). */
@@ -839,6 +918,7 @@ export class ProgressStore {
    * Xóa hết (về dữ liệu mới). Cất bản hiện tại trước; không cất được → TỪ CHỐI trừ khi `force`.
    */
   resetAll(opts: { force?: boolean } = {}): ReplaceResult {
+    if (this.guestSnapshot) return { ok: false, error: 'Đang ở chế độ khách — thoát chế độ khách trước.' };
     const arch = archiveCurrent(this.kv, this.data, this.futureVersion, this.now); // lỡ tay "Xóa hết" vẫn còn bản cất
     if (arch.needed && !arch.key && !opts.force) {
       return { ok: false, error: 'Không cất được bản dữ liệu hiện tại (bộ nhớ đầy) — hãy xuất JSON sao lưu trước.', archiveFailed: true };

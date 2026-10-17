@@ -20,6 +20,9 @@ import { backButton, button, h } from '../components/dom';
 import { speakChip } from '../components/speakChip';
 import { StaffView } from '../components/staffView';
 import type { QuizHooks } from './ear';
+
+/** (+ 2026-10-17) Đúng → khen nháy ngần này ms rồi tự sang câu sau (cùng nhịp với trò đố tai nghe — ear.ts). */
+const CORRECT_FLASH_MS = 800;
 import '../../styles/theory.css';
 
 export interface TheoryPicView {
@@ -165,7 +168,18 @@ function askCheck(
       // Không có âm "sai" (§10) — chỉ nhẹ nhàng chỉ đáp án
       verdict.textContent = `👀 Đáp án là: ${right}`;
     }
-    if (c.play && pic) void playTheorySound(app, c.play.map((p) => ({ p, d: 0.6, gap: 0.1 })), () => stage.isConnected, pic.flash);
+    const sound = c.play && pic ? playTheorySound(app, c.play.map((p) => ({ p, d: 0.6, gap: 0.1 })), () => stage.isConnected, pic.flash) : null;
+    if (ok) {
+      // (+ 2026-10-17, OWNER duyệt "Buổi học ≥ 60% đàn thật") đúng → "khen nháy" rồi tự sang câu sau (không nút "Tiếp")
+      setBar(backButton(hooks.onBack));
+      const row0 = row;
+      void (sound ?? Promise.resolve()).then(() =>
+        window.setTimeout(() => {
+          if (row0.isConnected) hooks.onNext();
+        }, CORRECT_FLASH_MS),
+      );
+      return;
+    }
     setBar(backButton(hooks.onBack), button({ icon: '▶', label: 'Tiếp', kind: 'primary', onTap: hooks.onNext }));
   }
 }
@@ -297,9 +311,12 @@ export function theoryQuizScreen(app: App, hooks: QuizHooks): Screen {
       stage.replaceChildren(
         h('div', { class: 'hero-emoji' }, good ? '🏆' : '📘'),
         h('h1', { class: 'title' }, `Con đúng ${score} / ${spec.rounds}`),
-        h('p', { class: 'lead' }, good ? 'Con hiểu nhạc lý giỏi quá!' : 'Xem lại Từ điển nhạc nhỏ trong Thư viện nhé!'),
+        h('p', { class: 'lead' }, good ? 'Con giỏi quá!' : 'Xem lại Từ điển nhé!'),
       );
-      setBar(button({ icon: '▶', label: 'Tiếp', kind: 'primary', onTap: hooks.onDone }));
+      // (+ 2026-10-17, OWNER duyệt) điểm hiện ~1,2 giây rồi tự đi tiếp (không màn phải bấm)
+      setBar();
+      const tk = token;
+      window.setTimeout(() => tk === token && hooks.onDone(), 1200);
     }
 
     intro();

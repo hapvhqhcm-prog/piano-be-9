@@ -8,6 +8,7 @@
  * object dữ liệu và tăng mỗi lần đổi. Dữ liệu không có số phiên bản (test, bản sao `{ ...data }`) → luôn tính lại.
  */
 import type { AppData, CountPair, History, SelfRating } from './schema';
+import { lessonWeek } from '../lessons/sessionKind';
 
 /**
  * Sao thưởng cho việc HOÀN THÀNH buổi — bằng nhau cho mọi câu trả lời: bé nói thật "khó quá" không bị ít sao hơn.
@@ -138,8 +139,7 @@ export function lastSessionDate(data: Readonly<AppData>): string | null {
 
 /** Tuần giáo trình của mã bài ("w12-l3" → 12); null = không theo tuần. */
 export function weekOfLessonId(lessonId: string): number | null {
-  const m = /^w(\d+)-/.exec(lessonId);
-  return m ? Number(m[1]) : null;
+  return lessonWeek(lessonId);
 }
 
 /**

@@ -27,6 +27,8 @@ import {
 } from '../../pwa/diagnostics';
 import { APP_VERSION, isUpdateReady } from '../../pwa/updater';
 import { readErrors } from '../../pwa/errorLog';
+import { opsNotes, osVersionOf, readOps } from '../../pwa/opsState';
+import { hasVietnameseVoice } from '../../audio/voice';
 import type { App, Screen } from '../App';
 import { actionBar, backButton, button, h, toast } from '../components/dom';
 import { lazy, lazyScreen } from '../lazy';
@@ -129,6 +131,11 @@ export function diagnosticsScreen(app: App) {
         baseLatency: ctx ? num(safe(() => ctx.baseLatency, null)) : null,
         outputLatency: ctx ? num(safe(() => ctx.outputLatency, null)) : null,
         heard: snap?.audio.heard ?? null,
+        // (+ 2026-10-17) Loa / tai nghe Bluetooth (audio/outputRoute.ts)
+        route: safe(() => {
+          const r = app.route.check();
+          return { wireless: r.wireless, reason: r.reason, latencyMs: r.latencyMs, outputs: [...r.outputs], timingPaused: app.route.timingPaused };
+        }, null),
       };
     };
     const micInfo = (): DiagSnapshot['mic'] => {
@@ -145,6 +152,8 @@ export function diagnosticsScreen(app: App) {
         latencyMs: st.micLatencyMs,
         lastCheck: safe(() => micCheckFromLog(loadMicLog()), null),
         autoSens: safe(() => loadAutoSens().slice(-1)[0] ?? null, null),
+        trackLabel: safe(() => app.micIfReady?.trackLabel() ?? null, null),
+        inputs: safe(() => [...app.route.state.inputs], []),
         lastReport: safe(() => {
           const r = loadMicReport();
           return r ? { at: r.at, summary: r.summary } : null;
@@ -167,6 +176,24 @@ export function diagnosticsScreen(app: App) {
         week: d.progress.currentWeek,
       };
     };
+
+    // (+ 2026-10-17) Giữ màn hình sáng + nhắc vận hành (đổi iPadOS, nghỉ lâu, mất giọng, cần cài lại micro)
+    const wakeInfo = (): DiagSnapshot['wake'] =>
+      safe(() => {
+        const w = app.screenAwake;
+        return { supported: w.supported, held: w.held, denials: w.denials, deniedAt: readOps(store.settings).wakeDeniedAt ?? null };
+      }, null);
+    const opsInfo = (): string[] =>
+      safe(
+        () =>
+          opsNotes(store.get(), {
+            now: Date.now(),
+            osVersion: osVersionOf(navigator.userAgent, navigator.maxTouchPoints || 0),
+            wakeLockDenied: app.screenAwake.denials > 0,
+            voiceAvailable: hasVietnameseVoice() ? true : null,
+          }),
+        [],
+      );
 
     let snap: DiagSnapshot | null = null;
     snap = {
@@ -205,6 +232,8 @@ export function diagnosticsScreen(app: App) {
         memoryGB: safe(() => (navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? null, null),
       },
       errors: safe(() => readErrors(), []), // (+ 2026-10-08) nhật ký lỗi gần đây → vào bản kết quả gửi người hỗ trợ
+      wake: wakeInfo(),
+      opsNotes: opsInfo(),
     };
     const s: DiagSnapshot = snap;
 
@@ -233,6 +262,8 @@ export function diagnosticsScreen(app: App) {
       s.mic = micInfo();
       s.storage = storageInfo();
       s.errors = safe(() => readErrors(), s.errors ?? []);
+      s.wake = wakeInfo();
+      s.opsNotes = opsInfo();
       s.offline.online = safe(() => navigator.onLine !== false, true);
       s.offline.controller = safe(() => !!navigator.serviceWorker?.controller, false);
       const sections = diagSections(s);
@@ -401,6 +432,10 @@ export function diagnosticsScreen(app: App) {
     refresh();
 
     // ---------- đo bất đồng bộ (mỗi phép đo xong là cập nhật dòng của nó)
+    // (+ 2026-10-17) Tên các thiết bị âm thanh (enumerateDevices) — Bluetooth?
+    void safe<Promise<unknown>>(() => app.route.refresh(), Promise.resolve(null))
+      .then(() => refresh())
+      .catch(() => undefined);
     void loadVoices().then(({ list }) => {
       s.voice.loaded = true;
       s.voice.total = list.length;

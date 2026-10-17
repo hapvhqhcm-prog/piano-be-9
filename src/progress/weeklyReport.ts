@@ -15,6 +15,7 @@ import { AUDIENCE_CHIPS, concertLog } from '../lessons/concert';
 import { MAX_WEEK, criterionProgress, songStats, weekComplete, weekPassed, weekPlan } from '../lessons/lessonEngine';
 import { findTune } from '../music/exercises';
 import { readHomework } from '../lessons/homework';
+import { difficulty, difficultyText } from '../lessons/adaptive';
 import { customTuneTitle } from '../practice/parentSongs';
 import { topStruggles } from '../ui/screens/tonight';
 import { sessionAnswers } from './answers';
@@ -103,6 +104,11 @@ export interface WeeklySummary {
   help: string;
   /** (+ 2026-10-15) 📝 Bài tập về nhà thầy giao trong tuần (còn chưa xong — lessons/homework.ts); null = không có */
   homework: string | null;
+  /**
+   * (+ 2026-10-16, OWNER duyệt "Tự cân độ khó theo bé") Chế độ độ khó HIỆN TẠI (lessons/adaptive.ts) — chỉ ở tuần này và tuần
+   * vừa hết (báo cáo cũ hơn không ghi trạng thái hôm nay); null = không hiện.
+   */
+  pace: { mode: 'gentle' | 'normal' | 'stretch'; text: string } | null;
 }
 
 /* ---------------- Ngày ---------------- */
@@ -175,6 +181,27 @@ function skillPct(sessions: readonly Session[]): Record<keyof typeof SKILL_LABEL
   return out;
 }
 
+/** Bài có % nốt đúng tốt nhất trong tuần ≥ tốt nhất trước tuần + SONG_GAIN_MIN (và ≥ 60%). */
+function songGains(week: readonly Session[], before: readonly Session[]): Array<{ id: string; from: number; to: number }> {
+  const now = bestBySong(week);
+  const old = bestBySong(before);
+  const out: Array<{ id: string; from: number; to: number }> = [];
+  for (const [id, to] of now) {
+    const from = old.get(id);
+    if (from === undefined || to < 60 || to - from < SONG_GAIN_MIN) continue;
+    out.push({ id, from, to });
+  }
+  return out;
+}
+
+/** Mã các bài tiến bộ rõ trong tuần `monday` (cùng quy tắc với improvementsOf). */
+export function improvedSongIds(d: Readonly<AppData>, monday: string): string[] {
+  const end = addDays(monday, 7);
+  const week = d.sessions.filter((s) => inWeek(s.date, monday, end));
+  const before = d.sessions.filter((s) => s.date < monday);
+  return songGains(week, before).map((x) => x.id);
+}
+
 /**
  * Tiến bộ trong tuần so với trước đó (chỉ từ các buổi CÒN GIỮ):
  * - bài: % nốt đúng tốt nhất trong tuần ≥ tốt nhất trước tuần + SONG_GAIN_MIN (và ≥ 60%);
@@ -191,13 +218,7 @@ export function improvementsOf(d: Readonly<AppData>, monday: string): Improvemen
   const prevWeek = before.filter((s) => s.date >= prevMon);
   const out: Array<Improvement & { gain: number }> = [];
 
-  const now = bestBySong(week);
-  const old = bestBySong(before);
-  for (const [id, to] of now) {
-    const from = old.get(id);
-    if (from === undefined || to < 60 || to - from < SONG_GAIN_MIN) continue;
-    out.push({ kind: 'song', label: songTitle(id, d), from, to, unit: '%', gain: to - from });
-  }
+  for (const { id, from, to } of songGains(week, before)) out.push({ kind: 'song', label: songTitle(id, d), from, to, unit: '%', gain: to - from });
 
   const hNow = handsPctOf(week);
   const hPrev = handsPctOf(prevWeek);
@@ -437,7 +458,11 @@ export function buildWeeklySummary(d: Readonly<AppData>, monday: string, now: Da
   const handsPct = full ? handsPctOf(week) : null;
   const mic = full ? micNoteOf(week) : null;
   const struggleAt = inProgress ? now : new Date(msOf(end) - 1);
-  const top = full ? topStruggles({ ...d, sessions: week } as AppData, struggleAt, 8, 1)[0] : undefined;
+  // (+ 2026-10-17) Không vừa khen vừa chê MỘT bài: bài tuần này mới thuộc / chơi trọn & đạt / tiến bộ rõ → không vào "hay vấp"
+  const good = new Set<string>([...mastered.map((x) => x.id), ...(wholeSongs ?? []).map((x) => x.id), ...(full ? improvedSongIds(d, mon) : [])]);
+  const top = full
+    ? topStruggles({ ...d, sessions: week } as AppData, struggleAt, 8, 20).find((x) => !(x.kind === 'song' && good.has(x.key.slice(5))))
+    : undefined;
 
   const base: AdviceInput = {
     name: d.learner.name.trim(),
@@ -465,6 +490,7 @@ export function buildWeeklySummary(d: Readonly<AppData>, monday: string, now: Da
     praise: praiseFor(base),
     help: helpFor(base),
     homework: ((hw) => (hw && hw.date >= mon && hw.date < end ? hw.text : null))(readHomework(d.settings)),
+    pace: end > addDays(today, -7) ? ((m) => ({ mode: m, text: difficultyText({ mode: m }) }))(difficulty(d, now).mode) : null,
   };
 }
 
@@ -550,6 +576,7 @@ export function weeklyText(s: WeeklySummary): string {
   for (const p of s.praise) L.push(`👏 Nên khen: ${p}`);
   L.push(`🤝 Bố mẹ giúp: ${s.help}`);
   if (s.homework) L.push(`📝 Bài tập về nhà: ${s.homework}`);
+  if (s.pace) L.push(`🎚️ Độ khó: ${s.pace.text}`);
   if (s.mic) L.push(`🎙️ ${s.mic.text}`);
   if (s.detail !== 'full') L.push('(Tuần cũ: app đã gộp bớt chi tiết để tiết kiệm bộ nhớ — chỉ còn ngày tập, bài thuộc, biểu diễn, thử thách.)');
   return L.join('\n');

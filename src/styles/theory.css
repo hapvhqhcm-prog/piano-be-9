@@ -201,3 +201,18 @@
   width: 100%;
   max-width: 460px;
 }
+
+/* (+ 2026-10-17) Từ điển: thẻ mới con chưa xem */
+.gl-item.gl-new {
+  border-color: var(--sun-300, #ffd96a);
+  box-shadow: 0 0 0 3px var(--sun-100, #ffefb8);
+}
+.gl-new-tag {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--sun-800, #6e4700);
+  background: var(--sun-50, #fff8e1);
+  border: 1px solid var(--sun-300, #ffd96a);
+  border-radius: 999px;
+  padding: 2px 10px;
+}

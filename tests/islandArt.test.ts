@@ -45,9 +45,9 @@ function balanced(markup: string): boolean {
 }
 
 describe('islandIcon', () => {
-  it('trả về <svg> cho mọi tuần 1–43 (v5.1 + Cấp 4) và mọi trạng thái', async () => {
+  it('trả về <svg> cho mọi tuần 1–46 (v5.1 + Cấp 4 + tuần ôn rev 5) và mọi trạng thái', async () => {
     const { islandIcon } = await import('../src/ui/components/art/islandArt');
-    for (let w = 1; w <= 43; w++) {
+    for (let w = 1; w <= 46; w++) {
       for (const s of ['done', 'current', 'locked'] as const) {
         const el = islandIcon(w, s) as unknown as FakeEl;
         expect(el.tagName).toBe('svg');
@@ -65,11 +65,12 @@ describe('islandIcon', () => {
   it('mỗi tuần có hình riêng; khóa có bộ lọc mờ, xong có ngôi sao', async () => {
     const { islandIcon } = await import('../src/ui/components/art/islandArt');
     const arts = new Set<string>();
-    for (let w = 1; w <= 31; w++) arts.add((islandIcon(w, 'current') as unknown as FakeEl).innerHTML);
-    expect(arts.size).toBe(31);
-    // Cấp 4 (2026-10-08): tuần 32–43 dùng lại tranh có sẵn theo chủ đề (ART_OF_WEEK) — không rơi vào hình dự phòng
+    // (2026-10-17) rev 5: Cấp 1–3 = tuần 1–33 (tuần ôn 27, 32 có hình riêng)
+    for (let w = 1; w <= 33; w++) arts.add((islandIcon(w, 'current') as unknown as FakeEl).innerHTML);
+    expect(arts.size).toBe(33);
+    // Cấp 4 (2026-10-08): tuần 34–46 dùng lại tranh có sẵn theo chủ đề (ART_OF_WEEK) — không rơi vào hình dự phòng
     const fallback = (islandIcon(99, 'current') as unknown as FakeEl).innerHTML.replace(/data-week="\d+"/, '');
-    for (let w = 32; w <= 43; w++) expect(arts.has((islandIcon(w, 'current') as unknown as FakeEl).innerHTML), `tuần ${w}`).toBe(true);
+    for (let w = 34; w <= 46; w++) expect(arts.has((islandIcon(w, 'current') as unknown as FakeEl).innerHTML), `tuần ${w}`).toBe(true);
     expect(arts.has(fallback)).toBe(false);
     const locked = (islandIcon(3, 'locked') as unknown as FakeEl).innerHTML;
     expect(locked).toContain('feColorMatrix');

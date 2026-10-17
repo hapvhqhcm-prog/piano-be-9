@@ -519,6 +519,17 @@ async function tapBy(finder, what, timeoutMs = 15_000) {
 const tapText = (t, ms) => tapBy(`btn(${JSON.stringify(t)})`, t, ms);
 const tapTextStarts = (t, ms) => tapBy(`btnStarts(${JSON.stringify(t)})`, t, ms);
 const tapSel = (s, ms) => tapBy(`document.querySelector(${JSON.stringify(s)})`, s, ms);
+
+/**
+ * (2026-10-17) Màn chính "1 nút to": danh sách bài / 🎹 Đàn tự do / 👤 Khách chơi nằm sau link "Xem các bài"
+ * ([data-test="lessons-toggle"]) — mở ra trước khi chạm các nút đó (không có link / đã mở thì thôi).
+ */
+const openLessons = async () => {
+  const opened = await evaluate(
+    `(() => { const p = document.getElementById('home-lessons'); const t = document.querySelector('[data-test="lessons-toggle"]'); if (p && p.hidden && t) { t.click(); return true; } return false; })()`,
+  ).catch(() => false);
+  if (opened) await sleep(250);
+};
 /** Chạm phần tử bất kỳ (không phải <button>) có chữ đúng bằng `t` */
 const tapAnyText = (sel, t, ms) =>
   tapBy(`[...document.querySelectorAll(${JSON.stringify(sel)})].find((e) => vis(e) && txt(e) === ${JSON.stringify(t)})`, t, ms);
@@ -589,8 +600,12 @@ const REVIEW_SEEN = `
 `;
 async function runSession(label, start, o = {}) {
   const tStart = Date.now();
-  if (start === 'next') await tapTextStarts('Học tiếp:');
-  else await tapSel(`[data-lesson="${start}"]`);
+  // (2026-10-17) nút ▶ to của màn chính mang tên bài hát hôm nay → chạm theo data-test (không theo chữ "Học tiếp:")
+  if (start === 'next') await tapSel('[data-test="continue"]');
+  else {
+    await openLessons();
+    await tapSel(`[data-lesson="${start}"]`);
+  }
   log(`  ▶ buổi ${label}`);
   // Màn buổi học tải lười: chờ rời màn chính (tối đa 10 s) — tránh tưởng buổi đã kết thúc ngay lần đọc đầu
   for (let i = 0; i < 100; i++) {
@@ -607,6 +622,7 @@ async function runSession(label, start, o = {}) {
   const songKeys = { taps: 0, songs: new Set() };
   const reviews = new Map();
   let concert = null;
+  let offerSeen = null;
   for (;;) {
     let d;
     try {
@@ -652,8 +668,10 @@ async function runSession(label, start, o = {}) {
       }
     }
     // Màn kết buổi có lời mời 🎤 Biểu diễn cho cả nhà
+    // (2026-10-17) MỘT màn kết, MỘT lời mời: buổi suôn sẻ → "🎁 Chọn 1 bài con thích" thay lời mời biểu diễn
     if (d.kind === 'session-end' && concert === null) {
       concert = await evaluate(inPage(`return !!btn('Biểu diễn cho cả nhà');`)).catch(() => false);
+      offerSeen = await evaluate(inPage(`return btn('Biểu diễn cho cả nhà') ? 'concert' : btn('Chọn 1 bài con thích') ? 'reward' : btnStarts('⭐') ? 'stretch' : null;`)).catch(() => null);
       if (concert && o.concert) {
         await shot(`${label}-concert-offer`);
         await exploreConcert(label);
@@ -680,7 +698,7 @@ async function runSession(label, start, o = {}) {
   const last = data.sessions[data.sessions.length - 1];
   assert(!verdicts.wrong.length, `Buổi ${label}: đáp án đọc từ khuông bị chấm sai: ${verdicts.wrong.join(', ')}`);
   assert(last?.completed, `Buổi ${label} chưa được lưu là hoàn thành`);
-  return { kinds, seq, banner, ms, songTaps: songKeys.taps, reviews: [...reviews.values()], concert };
+  return { kinds, seq, banner, ms, songTaps: songKeys.taps, reviews: [...reviews.values()], concert, offer: offerSeen };
 }
 
 /** 🎤 Biểu diễn cho cả nhà: chọn bài → mời khán giả → sân khấu (đếm vào) → quay ra → chọn bài khác → về màn chính. */
@@ -735,6 +753,27 @@ async function openAdvanced() {
   if (!open) await tapSel('details.adv > summary');
   await waitFor(`document.querySelector('details.adv')?.open`, 'mở Nâng cao');
 }
+/** (2026-10-17) 🔧 Công cụ (🩺 Kiểm tra iPad, 🎤 Chỉnh micro), Album, Nhập / xóa nằm trong "🧑‍🔧 Cho người hỗ trợ" (thu gọn, trong Nâng cao) */
+/** (2026-10-17) 🎤 Micro / 📝 Bài bố mẹ thêm / ⏰ Giờ tập nằm trong "🧩 Thiết lập một lần" (thu gọn) */
+async function openSetup() {
+  const has = await evaluate(`!!document.querySelector('details.setup-once')`);
+  if (!has) return;
+  const open = await evaluate(`!!document.querySelector('details.setup-once')?.open`);
+  if (!open) await tapSel('details.setup-once > summary');
+  await waitFor(`document.querySelector('details.setup-once')?.open`, 'mở Thiết lập một lần');
+}
+async function openSupport() {
+  await openAdvanced();
+  const open = await evaluate(`!!document.querySelector('details.adv-support')?.open`);
+  if (!open) await tapSel('details.adv-support > summary');
+  await waitFor(`document.querySelector('details.adv-support')?.open`, 'mở Cho người hỗ trợ');
+}
+/** (2026-10-17) 📊 Báo cáo tuần / 📊 Báo cáo / 📖 Hướng dẫn / 👀 Xem tay nằm trong menu "⋯ Thêm" ở đầu màn Phụ huynh */
+async function openParentMenu() {
+  const open = await evaluate(`!!document.querySelector('details.parent-menu')?.open`);
+  if (!open) await tapSel('details.parent-menu > summary');
+  await waitFor(`document.querySelector('details.parent-menu')?.open`, 'mở menu ⋯ Thêm');
+}
 async function backToKid() {
   await tapText('Về màn của bé');
   await waitFor(`screenKind() === 'home'`, 'về màn chính');
@@ -742,13 +781,18 @@ async function backToKid() {
 async function setWeek(week) {
   await openParent();
   await openAdvanced();
-  const sel = await page.evaluateHandle(
-    () => [...document.querySelectorAll('details.adv select')].find((s) => [...s.options].some((o) => o.value === '12')) ?? null,
-  );
-  assert(await sel.evaluate((s) => !!s), 'Không thấy ô chọn tuần');
-  await sel.evaluate((s) => s.scrollIntoView({ block: 'center' }));
+  // (2026-10-17) Ô chọn tuần = chọn Cấp (.week-pick-level) rồi Tuần trong cấp (.week-pick-week)
+  const lv = await page.$('details.adv .week-pick-level');
+  assert(lv, 'Không thấy ô chọn tuần');
+  await lv.evaluate((s) => s.scrollIntoView({ block: 'center' }));
+  const lvVal = await lv.evaluate((s, w) => [...s.options].find((o) => Number(o.dataset.from) <= w && w <= Number(o.dataset.to))?.value ?? null, week);
+  assert(lvVal !== null, `Không có Cấp chứa tuần ${week}`);
   // selectOption = chọn như người dùng (bắn input + change)
-  await sel.asElement().selectOption(String(week));
+  await lv.selectOption(String(lvVal));
+  await sleep(200);
+  const wk = await page.$('details.adv .week-pick-week');
+  assert(wk, 'Không thấy ô chọn tuần trong cấp');
+  await wk.selectOption(String(week));
   await sleep(300);
   if (await evaluate(`!!document.querySelector('.dialog-backdrop')`)) {
     await shot(`confirm-week-${week}`);
@@ -795,6 +839,10 @@ async function setClockDays(days) {
   await evaluate(`localStorage.setItem('e2e-clock-days', '${days}')`);
   await page.reload({ waitUntil: 'load', timeout: 20_000 });
   await waitFor(`screenKind() === 'home' || screenKind() === 'start'`, `app mở lại ở ngày +${days}`, 20_000);
+  await toHome();
+  // (2026-10-17) WebKit: trang có thể tự tải lại thêm một lần ngay sau khi mở (service worker nhận trang) → chờ yên rồi về màn chính lần nữa
+  await sleep(2000);
+  await waitFor(`screenKind() === 'home' || screenKind() === 'start'`, `app ổn định ở ngày +${days}`, 20_000);
   await toHome();
   return evaluate(`(() => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); })()`);
 }
@@ -1008,6 +1056,7 @@ async function main() {
       notes.push(`💾 Sao lưu (nút nhanh): "${await evaluate(inPage(`return [...document.querySelectorAll('.banner')].map(txt).filter((t) => /^[✅❌]/.test(t)).pop() || ''`))}"`);
     }
     // 📊 Báo cáo
+    await openParentMenu();
     await tapText('Báo cáo');
     await sleep(1500);
     await shot('report');
@@ -1043,6 +1092,7 @@ async function main() {
       throw new Fail('Không về được màn Phụ huynh từ màn micro');
     });
     // Soạn bài
+    await openSetup();
     await tapText('Thêm bài hát');
     await waitFor(`!!document.querySelector('.se-area')`, 'màn soạn bài');
     await shot('editor-empty');
@@ -1067,6 +1117,7 @@ async function main() {
     await backToKid();
 
     // Đàn tự do + trò Đàn theo thầy
+    await openLessons();
     await tapText('Đàn tự do');
     await waitFor(`!!document.querySelector('.echo-box')`, 'màn Đàn tự do');
     await tapBy(`keyFor('E4')`, 'phím E4');
@@ -1106,15 +1157,16 @@ async function main() {
   // ---------- H (+ 2026-10-16): bài tập về nhà → ngày sau (Tìm Đô giữa, Bỏ qua) → ngày sau nữa (đàn bài tập) + bài thưởng ----------
   // Cùng luồng với kịch bản F của e2e.mjs (cờ trong LIB: __e2eFailSongs / __e2eReward / __e2eSkipWarmup / __e2eDoHomework;
   // đồng hồ giả CLOCK_SHIM + __e2eClockExtraMs: nhảy 30 phút ở khởi động → app tự rút gọn buổi như khi hết giờ)
-  await scenario('H', 'Bài tập về nhà: lượt chưa đạt + bài thưởng → ngày sau: Tìm Đô giữa → Bỏ qua → khởi động → … → ngày sau nữa: đàn bài tập', async (notes) => {
+  await scenario('H', 'Bài tập về nhà: lượt chưa đạt + bài thưởng → ngày sau: Tìm Đô giữa → Bỏ qua (thay khởi động) → … → ngày sau nữa: đàn bài tập', async (notes) => {
     await gotoApp();
     await toHome();
     const flags = (o) => evaluate(`Object.assign(window, ${JSON.stringify(o)}); true`);
     const order = (seq, ...ks) => ks.every((k, i) => seq.indexOf(k) >= 0 && (i === 0 || seq.indexOf(k) > seq.indexOf(ks[i - 1])));
+    // (+ 2026-10-17) bài nhạc đầu buổi = bài tập về nhà (THAY khởi động bằng nhạc) hoặc khởi động
     const jumpAtWarmup = () => {
       let done = false;
       return async (d) => {
-        if (done || d.kind !== 'warmup') return;
+        if (done || (d.kind !== 'warmup' && d.kind !== 'homework')) return;
         done = true;
         await flags({ __e2eClockExtraMs: 30 * 60_000 });
       };
@@ -1136,21 +1188,24 @@ async function main() {
       assert(hw0 && hw0.songId === 'mary_lamb' && hw0.date === d0, `Lượt chưa đạt mà không có bài tập về nhà: ${JSON.stringify(hw0)}`);
       assert(order(s0.seq, 'closing', 'session-end', 'reward') && picked.song && picked.opened, `Không mời / không mở được bài thưởng (${JSON.stringify(picked)})`);
       notes.push(`Bài thưởng: "${picked.song}" → mở "${picked.opened}"`);
-      // Ngày +1 — tuần 4: 📍 Tìm Đô giữa → 📝 Bài tập về nhà → Bỏ qua → khởi động → … → màn kết
+      // Ngày +1 — tuần 4 + bé vừa lệch quãng 8 (nhật ký trong máy): 📍 Tìm Đô giữa → 📝 Bài tập về nhà (THAY khởi động — 2026-10-17)
+      // → Bỏ qua → … → màn kết
       const d1 = await setClockDays(1);
       assert(d1 > d0, `Đồng hồ giả chưa sang ngày mới (${d1} / ${d0})`);
       await setWeek(4);
+      await evaluate(`localStorage.setItem('piano-be-9-octave-log', JSON.stringify({ events: [Date.now() - 3 * 3600e3, Date.now() - 2 * 3600e3] })); true`);
       await flags({ __e2eSkipWarmup: true });
       const s1 = await runSession('H-day1', 'next', { onStep: jumpAtWarmup() });
       notes.push(`Ngày +1 ${d1} (Bỏ qua): ${s1.seq.join(' → ')} (${(s1.ms / 1000).toFixed(0)}s)`);
-      assert(order(s1.seq, 'middle-c', 'homework', 'warmup', 'closing', 'session-end'), 'Ngày +1: thiếu Tìm Đô giữa → Bài tập về nhà → khởi động → … → màn kết');
+      assert(order(s1.seq, 'middle-c', 'homework', 'closing', 'session-end'), 'Ngày +1: thiếu Tìm Đô giữa → Bài tập về nhà → … → màn kết');
+      assert(!s1.seq.includes('warmup'), 'Ngày +1: có bài tập về nhà mà vẫn có khởi động bằng nhạc');
       assert((await appData()).settings.homework?.at === hw0.at, 'Bỏ qua mà bài tập về nhà bị xóa / đổi');
-      // Ngày +2 — 📝 đàn bài tập (đạt) → bài tập xóa → khởi động → … → màn kết
+      // Ngày +2 — 📝 đàn bài tập (đạt) → bài tập xóa → … → màn kết
       const d2 = await setClockDays(2);
       await flags({ __e2eDoHomework: true, __e2eSkipWarmup: true });
       const s2 = await runSession('H-day2', 'next', { onStep: jumpAtWarmup() });
       notes.push(`Ngày +2 ${d2} (đàn bài tập): ${s2.seq.join(' → ')} (${(s2.ms / 1000).toFixed(0)}s)`);
-      assert(order(s2.seq, 'homework', 'warmup', 'closing', 'session-end'), 'Ngày +2: thiếu Bài tập về nhà → khởi động → … → màn kết');
+      assert(order(s2.seq, 'homework', 'closing', 'session-end') && !s2.seq.includes('warmup'), 'Ngày +2: thiếu Bài tập về nhà → … → màn kết (không khởi động)');
       const data2 = await appData();
       assert(!data2.settings.homework, `Đàn đạt bài tập mà settings.homework còn: ${JSON.stringify(data2.settings.homework)}`);
       assert(data2.sessions.some((x) => x.date === d2 && x.songRuns.some((r) => r.songId === 'mary_lamb' && r.passed)), 'Không có lượt đạt bài tập ở ngày +2');
@@ -1173,8 +1228,9 @@ async function main() {
     notes.push(
       `Bài hát: chạm phím ảo ${s.songTaps} lần; kết quả: ${s.reviews.map((x) => `"${x.title}" khuông=${x.rv} lời="${(x.teacher || x.next).slice(0, 60)}"`).join(' · ') || '(không có màn kết quả)'}`,
     );
-    notes.push(`Mời biểu diễn ở màn kết: ${s.concert ? 'có → đã mở chọn bài / mời khán giả / sân khấu' : 'KHÔNG'}`);
-    assert(s.concert, 'Màn kết buổi không mời biểu diễn (dữ liệu bé tuần 4 đã qua tuần 3)');
+    notes.push(`Lời mời ở màn kết: ${s.concert ? 'biểu diễn → đã mở chọn bài / mời khán giả / sân khấu' : s.offer ?? 'KHÔNG'}`);
+    // (2026-10-17) MỘT lời mời mỗi màn kết: bài thưởng (buổi suôn sẻ) đứng trước lời mời biểu diễn
+    assert(s.concert || s.offer === 'reward', 'Màn kết buổi không có lời mời (biểu diễn / bài thưởng) — dữ liệu bé tuần 4 đã qua tuần 3');
     // Thư viện → bài hát "🐢 Từng nốt": chạm phím ảo (một lần nhầm) → bố mẹ chấm → kết quả có nhận xét thầy → Album
     await tapText('Bài hát');
     await waitFor(`screenKind() === 'library'`, 'Thư viện');
@@ -1288,7 +1344,8 @@ async function main() {
     const cardsTxt = await evaluate(inPage(`return [...document.querySelectorAll('.screen section.card h2, .screen .card > h2')].map(txt)`));
     notes.push(`Thẻ màn Phụ huynh (${cardsTxt.length}): ${cardsTxt.join(' | ')}`);
     // 📊 Báo cáo tuần + ảnh (canvas → toBlob → share / tải về)
-    await tapBy(`btn('Xem báo cáo tuần') || btn('Mở báo cáo tuần')`, 'Báo cáo tuần');
+    if (!(await evaluate(inPage(`return !!btn('Xem báo cáo tuần')`)))) await openParentMenu();
+    await tapBy(`btn('Xem báo cáo tuần') || btn('Báo cáo tuần')`, 'Báo cáo tuần');
     await waitFor(`!!document.querySelector('.wr-tabs')`, 'màn Báo cáo tuần');
     await sleep(800);
     await shot('weekly');
@@ -1316,7 +1373,9 @@ async function main() {
     await waitFor(`screenKind() === 'parent'`, 'về Phụ huynh từ báo cáo tuần');
     // 💾 Sao lưu → tệp JSON hợp lệ, đủ buổi
     const b0 = downloads.length;
-    await tapText('Sao lưu');
+    // (2026-10-17) MỘT quy tắc sao lưu: nút cố định ở Nâng cao ("Sao lưu dữ liệu"); băng "Sao lưu ngay" chỉ khi quá 30 ngày
+    await openAdvanced();
+    await tapText('Sao lưu dữ liệu');
     await sleep(2000);
     const js = downloads.slice(b0).find((d) => d.name.endsWith('.json'));
     let backupOk = false;
@@ -1333,6 +1392,7 @@ async function main() {
     assert(backupOk, 'Sao lưu không ra tệp JSON đủ dữ liệu');
     // 🩺 Kiểm tra iPad
     await openAdvanced();
+    await openSupport();
     await tapText('Kiểm tra iPad (gửi người hỗ trợ)');
     await waitFor(`!!btn('Phát thử')`, 'màn Kiểm tra iPad');
     await sleep(1200);
@@ -1443,6 +1503,7 @@ async function main() {
       await waitFor(`!!document.querySelector('.games-hub')`, 'về Trò chơi');
       await tapText('Quay lại');
       await waitFor(`screenKind() === 'home'`, 'màn chính');
+      await openLessons();
       await tapText('Đàn tự do');
       await waitFor(`!!document.querySelector('.echo-box')`, 'Đàn tự do');
       await tapBy(`keyFor('E4')`, 'E4');
@@ -1555,12 +1616,14 @@ async function main() {
       await tapText('Quay lại');
       await openParent();
       await shot('parent');
-      await tapBy(`btn('Xem báo cáo tuần') || btn('Mở báo cáo tuần')`, 'Báo cáo tuần');
+      if (!(await evaluate(inPage(`return !!btn('Xem báo cáo tuần')`)))) await openParentMenu();
+    await tapBy(`btn('Xem báo cáo tuần') || btn('Báo cáo tuần')`, 'Báo cáo tuần');
       await waitFor(`!!document.querySelector('.wr-tabs')`, 'Báo cáo tuần');
       await shot('weekly');
       await tapText('Quay lại');
       await waitFor(`screenKind() === 'parent'`, 'Phụ huynh');
-      await tapText('Báo cáo');
+      await openParentMenu();
+    await tapText('Báo cáo');
       await sleep(1200);
       await shot('report');
       await tapText('Quay lại');
@@ -1573,7 +1636,8 @@ async function main() {
       await waitFor(`screenKind() === 'parent'`, 'Phụ huynh');
       await openAdvanced();
       await shot('parent-advanced');
-      await tapText('Kiểm tra iPad (gửi người hỗ trợ)');
+      await openSupport();
+    await tapText('Kiểm tra iPad (gửi người hỗ trợ)');
       await waitFor(`!!btn('Phát thử')`, '🩺');
       await shot('diagnostics');
       await tapText('Quay lại');

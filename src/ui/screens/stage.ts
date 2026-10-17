@@ -45,7 +45,7 @@ export function stageSongScreen(
 export function stageScreen(app: App, hooks: StageHooks) {
   return (root: HTMLElement) => {
     const level = hooks.level ?? 1;
-    // Tuần cuối của cấp (LEVELS — v5.1: tuần 10 / 21 / 31)
+    // Tuần cuối của cấp (LEVELS — rev 5: tuần 10 / 21 / 33 / 46)
     const upTo = LEVELS[level - 1].weeks[1];
     // Cấp 1: bài tay phải; Cấp 2–3: mọi bài đã mở (ưu tiên bài mới của cấp đó lên đầu)
     const choices = songsUpToWeek(upTo)

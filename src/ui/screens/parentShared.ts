@@ -30,6 +30,9 @@ export const weeklyReportScreen = (app: App, opts: WeeklyReportOpts): Screen =>
   lazyScreen(weeklyReportMod, (m) => m.weeklyReportScreen(app, opts));
 /** 🩺 Kiểm tra iPad (âm thanh, giọng đọc, micro, lưu trữ…) → gửi kết quả cho người hỗ trợ */
 export const diagnosticsScreen = (app: App): Screen => lazyScreen(diagnosticsMod, (m) => m.diagnosticsScreen(app));
+/** (+ 2026-10-17) 🩺 Kiểm tra sức khỏe app hằng tháng (~3 phút) — chunk riêng */
+const healthCheckMod = lazy(() => import('./healthCheck'));
+export const healthCheckScreen = (app: App, onBack?: () => void): Screen => lazyScreen(healthCheckMod, (m) => m.healthCheckScreen(app, onBack));
 
 /** Settings thêm (cộng dồn, không cần migration) của màn Phụ huynh. */
 export type ParentUxSettings = Settings &
@@ -37,7 +40,7 @@ export type ParentUxSettings = Settings &
   PostureSettings & {
     /** Bố mẹ bấm "Để sau" ở thẻ Cài micro → không hiện thẻ đầu trang nữa (vẫn cài được ở Nâng cao) */
     micSetupHidden?: boolean;
-    /** Lần cuối hỏi "Sao lưu luôn?" sau khi xem Báo cáo (ms) — hỏi tối đa mỗi tuần một lần */
+    /** (cũ, không dùng từ 2026-10-17 — MỘT quy tắc sao lưu) Lần cuối hỏi "Sao lưu luôn?" sau khi xem Báo cáo (ms) */
     backupAskedAt?: number;
   };
 export const DAY_MS = 86_400_000;
@@ -53,8 +56,8 @@ export interface ParentCtx {
   /** Đổi cài đặt rồi vẽ lại */
   set(patch: Partial<ParentUxSettings>): void;
   ux(): Readonly<ParentUxSettings>;
-  /** Giữ qua các lần vẽ lại: bước "Đặt lại dữ liệu", mục "Nâng cao" / "Chi tiết" đang mở */
-  readonly ui: { resetStep: number; advOpen: boolean; detailsOpen: boolean };
+  /** Giữ qua các lần vẽ lại: bước "Đặt lại dữ liệu", mục "Nâng cao" / "Chi tiết" / "Thiết lập một lần" / "Cho người hỗ trợ" đang mở */
+  readonly ui: { resetStep: number; advOpen: boolean; detailsOpen: boolean; setupOpen: boolean; supportOpen: boolean };
 }
 
 /** "2026-10-06" → "06/10" (bố mẹ đọc ngày kiểu Việt Nam). */

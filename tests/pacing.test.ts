@@ -52,7 +52,7 @@ describe('nhịp độ giáo trình (rà soát 2026-10-05)', () => {
     const acts = buildSessionPlan(lesson, st.get()).filter((s) => s.kind === 'activity');
     expect(acts.map((s) => (s.kind === 'activity' ? s.index : -1))).toEqual(lesson.activities.map((_, i) => i).slice(1));
     // "Chơi lại" vẫn đủ cả bài
-    expect(buildSessionPlan(lesson, st.get(), { replay: true }).filter((s) => s.kind === 'activity').length).toBe(lesson.activities.length);
+    expect(buildSessionPlan(lesson, st.get(), { replay: true }).filter((s) => s.kind === 'activity').length).toBe(lesson.activities.filter((a) => a.kind !== 'theory').length);
   });
 
   it('bài ĐẦU tuần chưa học: khởi động không hỏi điều tuần này mới dạy (tuần 9 không đọc khóa Fa trước)', () => {
@@ -65,9 +65,14 @@ describe('nhịp độ giáo trình (rà soát 2026-10-05)', () => {
     // Sau khi học bài đầu → các bài sau dùng khởi động của tuần 9
     st.markLessonCompleted(first.id);
     // (2026-10-15) bài có ≥ 3 lượt bài hát (vd thêm "Câu 1 → Câu 2 → cả bài") không có khởi động → lấy bài sau đầu tiên còn khởi động
-    const second = weekPlan(9).lessons.slice(1).find((l) => l.activities.filter((a) => a.kind === 'song').length < 3)!;
-    const q2 = buildSessionPlan(second, st.get()).find((s) => s.kind === 'quiz');
-    if (w9) expect(q2 && q2.kind === 'quiz' && q2.quiz.variant).toBe(w9.variant);
+    // (+ 2026-10-17) bài đã có trò "chỉ trên iPad" (đố / sáng tạo) cũng không có khởi động (tối đa một trò như vậy mỗi buổi)
+    const second = weekPlan(9)
+      .lessons.slice(1)
+      .find((l) => l.activities.filter((a) => a.kind === 'song').length < 3 && !l.activities.some((a) => a.kind === 'quiz' || a.kind === 'improv'))!;
+    if (second) {
+      const q2 = buildSessionPlan(second, st.get()).find((s) => s.kind === 'quiz');
+      if (w9) expect(q2 && q2.kind === 'quiz' && q2.quiz.variant).toBe(w9.variant);
+    }
   });
 
   it('tuần chấm bằng khởi động (tuần 26 đọc nốt cao): buổi đầu học bài TRƯỚC rồi mới khởi động-chấm', () => {
@@ -142,7 +147,7 @@ describe('v5.1 — buổi ngắn: ≤ 7 màn, ≤ 12 phút', () => {
           expect(plan.length, `${l.id}: ${plan.map((x) => x.kind).join(',')}`).toBeLessThanOrEqual(MAX_SESSION_STEPS);
           // Màn kết luôn là bước cuối; hoạt động của bài không bao giờ bị cắt
           expect(plan[plan.length - 1].kind).toBe('closing');
-          expect(plan.filter((x) => x.kind === 'activity')).toHaveLength(l.activities.length);
+          expect(plan.filter((x) => x.kind === 'activity')).toHaveLength(l.activities.filter((a) => a.kind !== 'theory').length); // thẻ 📘 ra khỏi buổi (2026-10-17)
           counts.push(`${l.id}:${plan.length}`);
         }
         done.push(l.id);
@@ -200,7 +205,7 @@ describe('v5.1 — buổi ngắn: ≤ 7 màn, ≤ 12 phút', () => {
   it('tách tay sẵn ở bài hai tay đầu các tuần hai tay: chờ tay phải → chờ tay trái (CÂU KHÓ) → hai tay cả bài', () => {
     const lessonsWithHands = WEEKS.flatMap((w) => w.lessons).filter((l) => l.activities.some((a) => a.kind === 'song' && a.hand));
     const weeks = [...new Set(lessonsWithHands.map((l) => l.week))];
-    for (const w of [12, 13, 22, 23, 27, 28]) expect(weeks, `tuần ${w}`).toContain(w);
+    for (const w of [12, 13, 22, 23, 28, 29]) expect(weeks, `tuần ${w}`).toContain(w);
     for (const l of lessonsWithHands) {
       const songs = l.activities.filter((a) => a.kind === 'song');
       const id = songs.find((a) => a.kind === 'song' && a.hand === 'RH')!;
@@ -214,9 +219,9 @@ describe('v5.1 — buổi ngắn: ≤ 7 màn, ≤ 12 phút', () => {
   it('chơi thử 2026-10-06: tách tay chỉ trên MỘT câu khó (nhiều nốt + bước nhảy nhất), hai tay thì cả bài', () => {
     const lessonsWithHands = WEEKS.flatMap((w) => w.lessons).filter((l) => l.activities.some((a) => a.kind === 'song' && a.hand));
     expect(lessonsWithHands.map((l) => l.id).sort()).toEqual([
-      'w12-l1', 'w13-l1', 'w22-l2', 'w23-l4', 'w27-l2', 'w28-l1',
-      // Cấp 4 (2026-10-08)
-      'w32-l3', 'w33-l3', 'w34-l2', 'w36-l2', 'w37-l1', 'w38-l2', 'w39-l2', 'w41-l2', 'w42-l1',
+      'w12-l1', 'w13-l1', 'w22-l2', 'w23-l4', 'w28-l2', 'w29-l1',
+      // Cấp 4 (2026-10-08) — rev 5 (2026-10-17): tuần 31–35 cũ +2, 36–43 cũ +3
+      'w34-l3', 'w35-l3', 'w36-l2', 'w39-l2', 'w40-l1', 'w41-l2', 'w42-l2', 'w44-l2', 'w45-l1',
     ].sort());
     /** Độ khó một câu: số nốt hai tay + số bước nhảy (≥ quãng 3 thứ) mỗi tay */
     const hardness = (songId: string, [a, b]: [number, number]) => {

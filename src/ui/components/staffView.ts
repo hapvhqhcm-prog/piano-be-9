@@ -375,7 +375,13 @@ export class StaffView {
         const bs = getComputedStyle(box);
         const W = Math.min(box.clientWidth - pad(bs, 'Left', 'Right'), px(cs.maxWidth)) - padX;
         const H = Math.min(box.clientHeight - pad(bs, 'Top', 'Bottom'), px(cs.maxHeight)) - padY;
-        if (!(W > 0 && H > 0)) return;
+        if (!(W > 0)) return;
+        // (+ 2026-10-16, OWNER duyệt — "bàn phím to hơn khi còn chỗ") Chiều cao thẻ CẦN khi trải hết bề ngang → biến CSS
+        // --staff-want trên khung: khung khuông chỉ xin chừng đó, phần dư nhường bàn phím lớn lên (theme.css). Chỉ phụ
+        // thuộc bề ngang + nội dung (không phụ thuộc chiều cao khung) → không vòng lặp đo / đặt.
+        const want = `${Math.ceil(Math.min(this.height * (W / width) + padY, px(cs.maxHeight)) + pad(bs, 'Top', 'Bottom')) + 1}px`;
+        if (box.style.getPropertyValue('--staff-want') !== want) box.style.setProperty('--staff-want', want);
+        if (!(H > 0)) return;
         const k = Math.min(W / width, H / this.height);
         const key = `${Math.floor(width * k + padX)}x${Math.floor(this.height * k + padY)}`;
         if (key === last) return;
@@ -384,7 +390,16 @@ export class StaffView {
         this.el.style.width = `${w}px`;
         this.el.style.height = `${h}px`;
       };
-      ro = new ResizeObserver(refit);
+      // (+ 2026-10-17) Ghi --staff-want / kích thước thẻ làm KHUNG đang theo dõi đổi cỡ → nếu ghi ngay trong lời gọi của
+      // ResizeObserver, WebKit báo "ResizeObserver loop completed with undelivered notifications" → dời sang khung hình sau.
+      let rafId = 0;
+      ro = new ResizeObserver(() => {
+        if (rafId) return;
+        rafId = requestAnimationFrame(() => {
+          rafId = 0;
+          refit();
+        });
+      });
       ro.observe(box);
       const mo = typeof MutationObserver !== 'undefined' ? new MutationObserver(refit) : null;
       mo?.observe(this.el, { childList: true });

@@ -113,7 +113,7 @@ export function buildReminderIcs(o: ReminderOpts): string {
     `DURATION:PT${minutes}M`,
     `RRULE:FREQ=WEEKLY;BYDAY=${days.map((d) => BYDAY[d]).join(',')}`,
     `SUMMARY:${icsEscape(`🎹 Giờ tập đàn${who} — Piano bé`)}`,
-    `DESCRIPTION:${icsEscape('Mở app Piano bé, bấm "Học tiếp". 10–15 phút là đủ — nghỉ một hôm cũng không sao!')}`,
+    `DESCRIPTION:${icsEscape('Mở app Piano bé, bấm nút ▶ to. 10–15 phút là đủ — nghỉ một hôm cũng không sao!')}`,
     'BEGIN:VALARM',
     'ACTION:DISPLAY',
     `DESCRIPTION:${icsEscape('🎹 Đến giờ tập đàn rồi!')}`,

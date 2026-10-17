@@ -103,10 +103,12 @@ describe('📍 Tìm Đô giữa — khi nào hiện', () => {
     expect(middleCReason(l, d, { now: T, today: TODAY, log: { ...log(2 * DAY, DAY), shownOn: TODAY } })).toBeNull();
   });
 
-  it('buổi ĐẦU của tuần ≤ 6 → hiện ("week-start"); tuần 7+ không; buổi đầu tiên của bé (bài 1 tuần 1 đã dạy tìm Đô) không', () => {
+  // (+ 2026-10-17, OWNER duyệt "Buổi học ≥ 60% đàn thật") Đô giữa CHỈ khi bé thật sự lệch quãng 8 — không còn "buổi đầu tuần"
+  it('buổi ĐẦU của tuần ≤ 6 → KHÔNG còn hiện (chỉ khi lệch quãng 8); tuần 7+ không; buổi đầu tiên của bé không', () => {
     const d = fx();
     d.progress.currentWeek = 5;
-    expect(middleCReason(lesson('w5-l1'), d, { now: T, today: TODAY })).toBe('week-start');
+    expect(middleCReason(lesson('w5-l1'), d, { now: T, today: TODAY })).toBeNull();
+    expect(middleCReason(lesson('w5-l1'), d, { now: T, today: TODAY, log: log(2 * DAY, DAY) })).toBe('octave');
     expect(MIDDLE_C_MAX_WEEK).toBe(6);
     d.progress.currentWeek = 7;
     expect(middleCReason(lesson('w7-l1'), d, { now: T, today: TODAY })).toBeNull();
@@ -118,7 +120,7 @@ describe('📍 Tìm Đô giữa — khi nào hiện', () => {
     expect(middleCReason(lesson('w5-l2'), d, { now: T, today: TODAY })).toBeNull();
   });
 
-  it('bài mở THẾ TAY MỚI (thế Sol tuần 10, Đô giữa tay trái tuần 11, thế Rê tuần 16) → hiện; học xong bài rồi → không', () => {
+  it('bài mở THẾ TAY MỚI (thế Sol tuần 10, Đô giữa tay trái tuần 11, thế Rê tuần 16) → KHÔNG còn hiện Đô giữa (2026-10-17)', () => {
     expect(positionChange(lesson('w10-g'))?.position).toBe('G');
     expect(positionChange(lesson('w11-l2'))?.position).toBe('MC');
     expect(positionChange(lesson('w16-l2'))?.position).toBe('D');
@@ -126,7 +128,7 @@ describe('📍 Tìm Đô giữa — khi nào hiện', () => {
     const d = fx();
     d.progress.currentWeek = 10;
     for (let w = 5; w <= 10; w++) d.sessions.push(sess(`w${w}-l1`, new Date(T - (12 - w) * DAY), [run('hot_cross_buns', true, T - (12 - w) * DAY)]));
-    expect(middleCReason(lesson('w10-g'), d, { now: T, today: TODAY })).toBe('position');
+    expect(middleCReason(lesson('w10-g'), d, { now: T, today: TODAY })).toBeNull();
     d.progress.lessonsCompleted.push('w10-g');
     expect(middleCReason(lesson('w10-g'), d, { now: T, today: TODAY })).toBeNull();
   });
@@ -198,17 +200,25 @@ describe('🎁 Chọn 1 bài con thích', () => {
     expect(hadKindStop({ songRuns: [run('a', false, 1), run('b', false, 2), run('a', false, 3)] })).toBe(false);
   });
 
-  it('được thưởng: học xong bài (không dừng nhẹ nhàng) HOẶC ≥ 2 lượt đạt; chơi lại → không', () => {
+  it('được thưởng (+ 2026-10-17): KHÔNG dừng nhẹ nhàng VÀ (học xong bài HOẶC ≥ 2 lượt đạt của hoạt động bài học); chơi lại → không', () => {
     const none = { songRuns: [] as SongRun[] };
     const two = { songRuns: [run('a', true, 1), run('b', true, 2)] };
     const stop = { songRuns: [run('a', false, 1), run('a', false, 2), run('a', false, 3), run('b', true, 4)] };
-    expect(rewardEligible({ session: none, lessonFinished: true })).toBe(true);
-    expect(rewardEligible({ session: none, lessonFinished: false })).toBe(false);
-    expect(rewardEligible({ session: two, lessonFinished: false })).toBe(true);
-    expect(rewardEligible({ session: { songRuns: [run('a', true, 1)] }, lessonFinished: false })).toBe(false);
-    expect(rewardEligible({ session: stop, lessonFinished: true })).toBe(false);
-    expect(rewardEligible({ session: two, lessonFinished: true, replay: true })).toBe(false);
-    expect(rewardEligible({ session: null, lessonFinished: true })).toBe(false);
+    expect(rewardEligible({ session: none, lessonFinished: true, lessonPassed: 0 })).toBe(true);
+    expect(rewardEligible({ session: none, lessonFinished: false, lessonPassed: 0 })).toBe(false);
+    expect(rewardEligible({ session: two, lessonFinished: false, lessonPassed: 2 })).toBe(true);
+    // 2 lượt đạt nhưng là bài tập về nhà / ôn bài cũ (không phải hoạt động bài học) → không
+    expect(rewardEligible({ session: two, lessonFinished: false, lessonPassed: 0 })).toBe(false);
+    expect(rewardEligible({ session: { songRuns: [run('a', true, 1)] }, lessonFinished: false, lessonPassed: 1 })).toBe(false);
+    expect(rewardEligible({ session: stop, lessonFinished: true, lessonPassed: 1 })).toBe(false);
+    expect(rewardEligible({ session: two, lessonFinished: true, lessonPassed: 2, replay: true })).toBe(false);
+    expect(rewardEligible({ session: null, lessonFinished: true, lessonPassed: 0 })).toBe(false);
+  });
+
+  it('(+ 2026-10-17) buổi có dừng nhẹ nhàng (ghi tường minh) → KHÔNG thưởng dù có ≥ 2 lượt đạt ở đâu đó', () => {
+    const s = { songRuns: [run('hw', true, 1), run('rv', true, 2), run('a', true, 3)], kindStops: ['b'] };
+    expect(rewardEligible({ session: s, lessonFinished: false, lessonPassed: 2 })).toBe(false);
+    expect(rewardEligible({ session: s, lessonFinished: true, lessonPassed: 2 })).toBe(false);
   });
 
   it('bé thật tuần 4: 3–6 bài ĐÃ MỞ, bài con thích trước, đúng MỘT bài "Mới"', () => {

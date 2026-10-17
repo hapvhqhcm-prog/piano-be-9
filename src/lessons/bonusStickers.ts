@@ -1,4 +1,5 @@
 import type { AppData, Session } from '../progress/schema';
+import { isLessonKind, sessionKind } from './sessionKind';
 
 /**
  * STICKER BẤT NGỜ 🎁 + TÓM TẮT BUỔI — hàm thuần, KHÔNG lưu gì thêm (tính lại từ lịch sử buổi học).
@@ -121,7 +122,7 @@ export function hashStr(s: string): number {
  * Buổi BÀI HỌC — không tính lượt chơi tự do ở Thư viện (`w{n}-song-…`) và buổi "▶ Làm ngay" của bố mẹ (`w{n}-parent-…`,
  * không qua màn kết thúc nên bé không thấy trứng).
  */
-export const isLessonSession = (s: Pick<Session, 'lessonId'>): boolean => !/-song-|-parent-/.test(s.lessonId);
+export const isLessonSession = (s: Pick<Session, 'lessonId'>): boolean => isLessonKind(sessionKind(s.lessonId));
 
 export interface BonusEvent {
   sessionId: string;

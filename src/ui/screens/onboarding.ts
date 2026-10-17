@@ -9,7 +9,7 @@ import '../../styles/parentux.css';
 
 /** THẺ NHẮC NHANH CHO BỐ MẸ (5 ý) — hiện ở Hướng dẫn (thẻ 3) và màn Phụ huynh. [chữ đậm, phần còn lại] */
 export const QUICK_TIPS: ReadonlyArray<[string, string]> = [
-  ['Ngồi cạnh bé 10–15 phút', ', bấm “Học tiếp” — app tự chọn bài, không cần soạn gì.'],
+  ['Ngồi cạnh bé 10–15 phút', ', bấm nút ▶ to — app tự chọn bài, không cần soạn gì.'],
   ['Bấm “Đúng rồi”', ' khi bé đàn đúng phím sáng, đúng số ngón; sai thì “Thử lại” — không chê.'],
   ['Bé vấp?', ' Nói “Con thử chậm hơn nhé” · “Ngón số mấy nhỉ?” — chậm mà đúng hơn nhanh mà sai.'],
   ['Khen cụ thể', ' (“ngón con cong đẹp quá”), không so sánh với bạn khác.'],
@@ -36,7 +36,7 @@ function artSession(): HTMLElement {
   return h(
     'div',
     { class: 'onb-mock' },
-    h('div', { class: 'onb-mock-row' }, mascot(cue('guide'), 92), h('div', { class: 'onb-mock-btn primary' }, '▶ Học tiếp')),
+    h('div', { class: 'onb-mock-row' }, mascot(cue('guide'), 92), h('div', { class: 'onb-mock-btn primary' }, '▶ 🎵 Bài hôm nay')),
     h(
       'div',
       { class: 'onb-mock-row' },
@@ -125,7 +125,7 @@ const CARDS: Card[] = [
   },
   {
     art: artSession,
-    title: 'Mỗi buổi: bấm “Học tiếp”',
+    title: 'Mỗi buổi: bấm nút ▶ to',
     lines: [
       ['▶', 'App tự chọn bài — không cần soạn gì'],
       ['👪', 'Bố mẹ ngồi cạnh, bấm nút 👪 khi app hỏi'],
@@ -149,7 +149,7 @@ const CARDS: Card[] = [
     title: 'Khu vực bố mẹ',
     lines: [
       ['🔢', 'Nhấn giữ nút “Phụ huynh” 2 giây + tính một phép nhân'],
-      ['💾', 'Sao lưu mỗi tuần: Phụ huynh → nút “💾 Sao lưu” trên cùng'],
+      ['💾', 'Sao lưu mỗi tuần: Phụ huynh → Xem báo cáo tuần → “💾 Sao lưu”'],
     ],
     // Mở bằng tab trình duyệt → nhắc thêm vào Màn hình chính (null khi đã cài)
     extra: () => installCard(),

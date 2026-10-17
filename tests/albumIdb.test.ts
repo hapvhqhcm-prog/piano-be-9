@@ -137,3 +137,44 @@ describe('Album IndexedDB — kho thông tin riêng (v2)', () => {
     expect((await be.get('x'))?.size).toBe(500);
   });
 });
+
+describe('Album IndexedDB v3 — kho bản đầu tiên (+ 2026-10-16)', () => {
+  it('nâng cấp từ v2 (bản thu + kho meta): giữ nguyên dữ liệu cũ, thêm hai kho bản đầu', async () => {
+    const { factory, dbs } = fakeIdb();
+    const x = take('x', 700);
+    const { data: _d, ...xm } = x;
+    dbs.set('piano-be-9-album', {
+      version: 2,
+      stores: new Map([
+        ['takes', new Map<string, unknown>([['x', x]])],
+        ['meta', new Map<string, unknown>([['x', xm]])],
+      ]),
+    });
+    const be = idbAlbumBackend(factory)!;
+    expect((await be.list()).map((m) => m.songId)).toEqual(['x']);
+    expect((await be.get('x'))?.size).toBe(700);
+    expect(dbs.get('piano-be-9-album')?.version).toBe(3);
+    expect(await be.list('first')).toEqual([]);
+    // ô 'first' riêng: không lẫn với bản hay nhất; list('first') không đọc âm thanh
+    await be.put(take('x', 300), 'first');
+    expect((await be.get('x', 'first'))?.size).toBe(300);
+    expect((await be.get('x'))?.size).toBe(700);
+    expect((await be.list('first')).map((m) => m.size)).toEqual([300]);
+    await be.remove('x', 'first');
+    expect(await be.get('x', 'first')).toBeNull();
+    expect((await be.get('x'))?.size).toBe(700);
+  });
+
+  it('nâng cấp thẳng từ v1: chép meta + có kho bản đầu; clear() xóa mọi kho', async () => {
+    const { factory, dbs } = fakeIdb();
+    dbs.set('piano-be-9-album', { version: 1, stores: new Map([['takes', new Map([['y', take('y', 400)]])]]) });
+    const be = idbAlbumBackend(factory)!;
+    expect((await be.list()).map((m) => m.songId)).toEqual(['y']);
+    await be.put(take('y', 100), 'first');
+    expect((await be.list('first')).map((m) => m.songId)).toEqual(['y']);
+    await be.clear();
+    expect(await be.list()).toEqual([]);
+    expect(await be.list('first')).toEqual([]);
+    expect(await be.get('y', 'first')).toBeNull();
+  });
+});

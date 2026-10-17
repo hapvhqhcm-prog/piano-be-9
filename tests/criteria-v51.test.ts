@@ -32,8 +32,9 @@ function quizIn(st: ProgressStore, lessonId: string, note: string, n = 6, wrong:
 describe('Đêm thánh / Minuet / Für Elise: cần lượt THEO NHỊP ≥ 50', () => {
   for (const [week, songId, lessonId] of [
     [24, 'silent_night', 'w24-l2'],
-    [29, 'minuet_g', 'w29-l2'],
-    [30, 'fur_elise', 'w30-l2'],
+    // (2026-10-17) rev 5: tuần 27–30 cũ +1
+    [30, 'minuet_g', 'w30-l2'],
+    [31, 'fur_elise', 'w31-l2'],
   ] as const) {
     it(`tuần ${week} (${songId})`, () => {
       const { st, day } = clock();
@@ -111,15 +112,15 @@ describe('tiêu chí APP theo 2 ngày (tuần 3, 7, 23, 25, 26)', () => {
 });
 
 describe('criterionProgress — tiến độ theo ngày cho màn chính', () => {
-  it('null cho tiêu chí không theo ngày: tuần 1 (một buổi), tuần huy chương 10 / 21 / 31', () => {
+  it('null cho tiêu chí không theo ngày: tuần 1 (một buổi), tuần huy chương 10 / 21 / 33 / 46', () => {
     const st = new ProgressStore(new MemoryStorage(), () => new Date(2026, 9, 10));
-    for (const w of [1, 10, 21, 31, 43, 99]) expect(criterionProgress(w, st.get()), `tuần ${w}`).toBeNull();
+    for (const w of [1, 10, 21, 33, 46, 99]) expect(criterionProgress(w, st.get()), `tuần ${w}`).toBeNull();
   });
 
   it('mọi tuần còn lại (2–30 trừ 10, 21): { days: 0, needDays: 2 } khi chưa có dữ liệu', () => {
     const st = new ProgressStore(new MemoryStorage(), () => new Date(2026, 9, 10));
     for (const w of WEEKS) {
-      if ([1, 10, 21, 31, 43].includes(w.week)) continue;
+      if ([1, 10, 21, 33, 46].includes(w.week)) continue;
       expect(criterionProgress(w.week, st.get()), `tuần ${w.week}`).toEqual({ days: 0, needDays: CRITERION_DAYS });
     }
   });
@@ -130,7 +131,7 @@ describe('criterionProgress — tiến độ theo ngày cho màn chính', () => 
     const songOf = (week: number) =>
       WEEKS[week - 1].lessons.flatMap((l) => l.activities.flatMap((a) => (a.kind === 'song' && !a.hand ? [{ l: l.id, s: a.songId }] : [])));
     for (const w of WEEKS) {
-      if ([1, 10, 21, 31, 43].includes(w.week)) continue;
+      if ([1, 10, 21, 33, 46].includes(w.week)) continue;
       const { st, day } = clock();
       for (let i = 0; i < 6; i++) {
         day(Math.floor(rng() * 3));

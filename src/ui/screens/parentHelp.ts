@@ -1,10 +1,11 @@
 /**
  * (+ 2026-10-10) Màn Phụ huynh — phần "giúp bố mẹ biết app có gì":
  * - thẻ "🆕 Có gì mới" (src/pwa/changelog.ts) sau mỗi lần cập nhật — thu gọn được, "Đã xem" thì ẩn. CHỈ ở màn Phụ huynh;
+ *   (2026-10-17) chỉ hiện khi có bản `parentAction` chưa xem; mọi bản liệt kê lặng lẽ ở Nâng cao › "🆕 Bản mới" (versionsCard);
  * - nút "📖 Hướng dẫn" ở đầu màn (làm nổi MỘT lần — settings.guideHintAt) → màn Hướng dẫn nhanh (parentGuide.ts, nạp muộn);
  * - cuộn tới một thẻ khi mở từ Hướng dẫn ("Mở ngay" → `data-guide`).
  */
-import { LATEST_VERSION, whatsNew, type ChangelogEntry } from '../../pwa/changelog';
+import { CHANGELOG, LATEST_VERSION, compareVersions, isVersion, parentWhatsNew, whatsNew, type ChangelogEntry } from '../../pwa/changelog';
 import { completedSessionCount } from '../../progress/history';
 import type { AppData } from '../../progress/schema';
 import type { App, Screen } from '../App';
@@ -54,7 +55,7 @@ function entryBlock(e: ChangelogEntry, tag: 'h3' | 'h4' = 'h3'): HTMLElement {
  * Thẻ "🆕 Có gì mới". `ui.open` giữ trạng thái thu gọn qua các lần vẽ lại màn. Không còn gì mới → null.
  */
 export function whatsNewCard(c: ParentCtx, d: Readonly<AppData>, ui: { open: boolean }, onGuide: () => void): HTMLElement | null {
-  const wn = whatsNew(d.settings.lastSeenVersion, hasHistory(d));
+  const wn = parentWhatsNew(d.settings.lastSeenVersion, hasHistory(d));
   if (wn.kind !== 'update') return null;
   const [latest, ...older] = wn.entries;
   const toggle = h(
@@ -91,6 +92,22 @@ export function whatsNewCard(c: ParentCtx, d: Readonly<AppData>, ui: { open: boo
   );
 }
 
+/**
+ * (+ 2026-10-17) Nâng cao › "🆕 Bản mới": phiên bản đang chạy (.version-card) + nhật ký thay đổi (lặng lẽ, thu gọn) — bản bố
+ * mẹ chưa xem được đếm ở dòng tóm tắt.
+ */
+export function versionsCard(d: Readonly<AppData>): HTMLElement {
+  const seen = isVersion(d.settings.lastSeenVersion) ? d.settings.lastSeenVersion : null;
+  const unseen = CHANGELOG.filter((e) => !seen || compareVersions(e.version, seen) > 0).length;
+  const det = h(
+    'details',
+    { class: 'card version-card versions' },
+    h('summary', {}, h('span', {}, 'Phiên bản đang chạy: ', h('b', {}, LATEST_VERSION)), h('span', { class: 'muted' }, unseen ? ` · 🆕 Bản mới (${unseen})` : ' · 🆕 Bản mới')),
+    ...CHANGELOG.slice(0, 8).map((e) => entryBlock(e, 'h4')),
+  );
+  return det;
+}
+
 /** Nút "📖 Hướng dẫn" ở đầu màn; `hint` = làm nổi (lần đầu mở màn Phụ huynh sau bản có Hướng dẫn mới). */
 export function guideButton(onTap: () => void, hint: boolean): HTMLButtonElement {
   const b = button({ icon: '📖', label: 'Hướng dẫn', onTap });
@@ -114,6 +131,8 @@ export function focusGuideAnchor(scroller: HTMLElement, anchor: GuideAnchor): vo
   window.requestAnimationFrame(() => {
     const el = scroller.querySelector<HTMLElement>(`[data-guide="${anchor}"]`);
     if (!el) return;
+    // (2026-10-17) mốc nằm trong mục thu gọn (Thiết lập một lần, 3 điều cần nhớ…) → mở ra
+    for (let p: HTMLElement | null = el; p && p !== scroller; p = p.parentElement) if (p instanceof HTMLDetailsElement) p.open = true;
     el.scrollIntoView({ block: 'start' });
     el.classList.add('guide-flash');
     window.setTimeout(() => el.classList.remove('guide-flash'), 2600);

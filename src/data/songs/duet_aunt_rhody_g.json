@@ -1,0 +1,255 @@
+{
+ "id": "duet_aunt_rhody_g",
+ "title": "Go Tell Aunt Rhody (G position) (duet with teacher)",
+ "titleVi": "Đi báo cô Rhody — song tấu (thế Sol)",
+ "composer": "Dân ca Mỹ (traditional)",
+ "sourceStatus": "public-domain",
+ "arrangementBy": "Bè bé như bài gốc; bè thầy (secondo) tự soạn cho app (piano-be-9)",
+ "attributionRequired": false,
+ "hand": "RH",
+ "bpm": 60,
+ "timeSignature": "4/4",
+ "week": 14,
+ "position": "G",
+ "phrases": [
+  0,
+  4
+ ],
+ "notes": [
+  {
+   "pitch": "B4",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "B4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 2,
+   "finger": 1
+  },
+  {
+   "pitch": "G4",
+   "beats": 2,
+   "finger": 1
+  },
+  {
+   "pitch": "A4",
+   "beats": 2,
+   "finger": 2
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "C5",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "B4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 2,
+   "finger": 1
+  },
+  {
+   "pitch": "D5",
+   "beats": 2,
+   "finger": 5
+  },
+  {
+   "pitch": "D5",
+   "beats": 1,
+   "finger": 5
+  },
+  {
+   "pitch": "C5",
+   "beats": 1,
+   "finger": 4
+  },
+  {
+   "pitch": "B4",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "B4",
+   "beats": 2,
+   "finger": 3
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "G4",
+   "beats": 1,
+   "finger": 1
+  },
+  {
+   "pitch": "A4",
+   "beats": 1,
+   "finger": 2
+  },
+  {
+   "pitch": "B4",
+   "beats": 1,
+   "finger": 3
+  },
+  {
+   "pitch": "G4",
+   "beats": 4,
+   "finger": 1
+  }
+ ],
+ "duet": [
+  {
+   "pitch": "G2",
+   "beats": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 1
+  },
+  {
+   "pitch": "B2",
+   "beats": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 1
+  },
+  {
+   "pitch": "A2",
+   "beats": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 1
+  },
+  {
+   "pitch": "F#3",
+   "beats": 1
+  },
+  {
+   "pitch": "G2",
+   "beats": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 1
+  },
+  {
+   "pitch": "B2",
+   "beats": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 1
+  },
+  {
+   "pitch": "G2",
+   "beats": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 1
+  },
+  {
+   "pitch": "B2",
+   "beats": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 1
+  },
+  {
+   "pitch": "G2",
+   "beats": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 1
+  },
+  {
+   "pitch": "A2",
+   "beats": 1
+  },
+  {
+   "pitch": "C3",
+   "beats": 1
+  },
+  {
+   "pitch": "F#3",
+   "beats": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 1
+  },
+  {
+   "pitch": "B2",
+   "beats": 1
+  },
+  {
+   "pitch": "D3",
+   "beats": 1
+  }
+ ]
+}

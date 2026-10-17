@@ -121,36 +121,67 @@ export async function exportBackup(store: ProgressStore, env: BackupEnv = {}): P
   return 'failed';
 }
 
+/**
+ * (+ 2026-10-17, OWNER duyệt — đổi iPad an toàn) Album bản thu nằm ở IndexedDB riêng, KHÔNG có trong file sao lưu → nhắc
+ * mỗi lần sao lưu xong (giống progress/newDevice.ts ALBUM_NOT_IN_BACKUP).
+ */
+export const ALBUM_NOTE = 'Album không nằm trong bản sao lưu — chia sẻ bản thu trước khi đổi máy.';
+
 /** Lời nhắn cho phụ huynh theo kết quả exportBackup (giao diện dùng chung). */
 export const BACKUP_MESSAGE: Record<BackupResult, string> = {
-  shared: '✅ Đã mở bảng Chia sẻ — chọn "Lưu vào Tệp" để giữ bản sao lưu.',
-  downloaded: '✅ Đã tải file sao lưu (xem trong mục Tải về / Tệp).',
-  copied: '✅ Đã sao chép dữ liệu — hãy dán vào Ghi chú hoặc gửi cho chính mình.',
+  shared: `✅ Đã mở bảng Chia sẻ — chọn "Lưu vào Tệp" để giữ bản sao lưu. 📀 ${ALBUM_NOTE}`,
+  downloaded: `✅ Đã tải file sao lưu (xem trong mục Tải về / Tệp). 📀 ${ALBUM_NOTE}`,
+  copied: `✅ Đã sao chép dữ liệu — hãy dán vào Ghi chú hoặc gửi cho chính mình. 📀 ${ALBUM_NOTE}`,
   failed: '❌ Chưa sao lưu được — hãy thử lại.',
 };
 
 const DAY_MS = 86_400_000;
-/** (+ 2026-10-08) Nhắc sao lưu ở màn chính của bé khi lần sao lưu gần nhất cũ hơn ngần này ngày */
-export const BACKUP_NUDGE_DAYS = 14;
-/** …hoặc chưa sao lưu lần nào mà đã học ngần này buổi */
-export const BACKUP_NUDGE_SESSIONS = 10;
-/** Bố mẹ bấm ✕ → ẩn ngần này ngày (không làm phiền) */
-export const BACKUP_NUDGE_SNOOZE_DAYS = 3;
 
-/**
- * (+ 2026-10-08) Có hiện nhắc nhỏ "💾 Nhắc bố mẹ: sao lưu" ở màn chính của bé không.
- * `sessions` = tổng số buổi (gồm buổi đã gộp — history.sessionCount).
+/*
+ * (2026-10-17, OWNER duyệt "MỘT quy tắc sao lưu") — thay cho các ngưỡng cũ (14 ngày / 10 buổi / ẩn 3 ngày ở màn chính,
+ * 14 ngày / 3 buổi ở màn Phụ huynh, 7 ngày sau Báo cáo):
+ * - Mỗi tuần: "📊 Xem báo cáo tuần & sao lưu" (thẻ "Hôm nay bố mẹ cần") — xem báo cáo xong là một bước Chia sẻ.
+ * - Quá BACKUP_OVERDUE_DAYS ngày chưa sao lưu (hoặc chưa lần nào, tính từ ngày tập đầu tiên) → băng nổi bật (qua cổng
+ *   phụ huynh) + viên nhỏ ở màn của bé.
  */
-export function backupNudgeDue(
-  settings: { lastBackupAt?: number; backupNudgeHiddenAt?: number },
-  sessions: number,
-  now: number = Date.now(),
-): boolean {
-  const hidden = settings.backupNudgeHiddenAt ?? 0;
-  if (hidden && now - hidden >= 0 && now - hidden < BACKUP_NUDGE_SNOOZE_DAYS * DAY_MS) return false;
-  const last = settings.lastBackupAt ?? 0;
-  if (last) return now - last >= BACKUP_NUDGE_DAYS * DAY_MS;
-  return sessions >= BACKUP_NUDGE_SESSIONS;
+/** Sao lưu đều đặn: mỗi tuần một lần */
+export const BACKUP_WEEKLY_DAYS = 7;
+/** Quá ngần này ngày chưa sao lưu → nhắc nổi bật */
+export const BACKUP_OVERDUE_DAYS = 30;
+
+type BackupData = {
+  settings: { lastBackupAt?: number };
+  progress: { practiceDays?: Record<string, unknown> };
+  sessions: ReadonlyArray<{ date: string }>;
+  history?: { firstDate?: string | null };
+};
+
+/** Ngày tập đầu tiên (ms, giờ máy) — gồm phần đã gộp; null = chưa tập ngày nào. */
+export function firstPracticeMs(d: Readonly<BackupData>): number | null {
+  let first: string | null = d.history?.firstDate ?? null;
+  for (const k of Object.keys(d.progress.practiceDays ?? {})) if (first === null || k < first) first = k;
+  for (const s of d.sessions) if (first === null || s.date < first) first = s.date;
+  const m = first ? /^(\d{4})-(\d{2})-(\d{2})$/.exec(first) : null;
+  return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])).getTime() : null;
+}
+
+/** Số ngày từ lần sao lưu gần nhất (chưa lần nào → từ ngày tập đầu tiên); null = chưa tập, chưa cần sao lưu. */
+export function daysSinceBackup(d: Readonly<BackupData>, now: number = Date.now()): number | null {
+  const last = d.settings.lastBackupAt ?? 0;
+  const from = last > 0 ? last : firstPracticeMs(d);
+  return from === null ? null : Math.max(0, Math.floor((now - from) / DAY_MS));
+}
+
+/** Đã sao lưu trong tuần này (BACKUP_WEEKLY_DAYS ngày gần nhất)? */
+export function backupFresh(d: Readonly<BackupData>, now: number = Date.now()): boolean {
+  const last = d.settings.lastBackupAt ?? 0;
+  return last > 0 && now - last < BACKUP_WEEKLY_DAYS * DAY_MS;
+}
+
+/** Quá BACKUP_OVERDUE_DAYS ngày chưa sao lưu → nhắc nổi bật (màn Phụ huynh + viên ở màn của bé). */
+export function backupOverdue(d: Readonly<BackupData>, now: number = Date.now()): boolean {
+  const n = daysSinceBackup(d, now);
+  return n !== null && n >= BACKUP_OVERDUE_DAYS;
 }
 
 /**
