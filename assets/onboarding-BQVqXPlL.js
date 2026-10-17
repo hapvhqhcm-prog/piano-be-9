@@ -1,0 +1,37 @@
+import{h as n,b as u,aB as C,B as M,ao as S,Q as B,P as t,H as w,G as q,I as T,aa as P}from"./index-Vz6Y7p0N.js";import{a as H}from"./postureArt-D9x_HtGs.js";import{i as N}from"./installCard-DnkpH_gr.js";/* empty css                 */function L(e="h3"){return n("div",{class:"when-correct"},n(e,{class:"when-title"},"👪 Khi nào bấm “Đúng rồi”?"),n("ul",{},n("li",{},"Đúng phím đang sáng ",n("b",{},"+")," đúng số ngón trên màn hình → Đúng rồi"),n("li",{},"Ngập ngừng một chút, đàn còn nhỏ tiếng → vẫn là Đúng rồi"),n("li",{},"Đúng phím nhưng sai ngón → nhắc nhẹ số ngón, bé bấm lại rồi mới “Đúng rồi”"),n("li",{},"Sai phím → bấm “Thử lại” (không cần chê, app tự động viên)")))}const A=[["Ngồi cạnh bé 10–15 phút",", bấm nút ▶ to — app tự chọn bài, không cần soạn gì."],["Bấm “Đúng rồi”"," khi bé đàn đúng phím sáng, đúng số ngón; sai thì “Thử lại” — không chê."],["Bé vấp?"," Nói “Con thử chậm hơn nhé” · “Ngón số mấy nhỉ?” — chậm mà đúng hơn nhanh mà sai."],["Khen cụ thể"," (“ngón con cong đẹp quá”), không so sánh với bạn khác."],["Bé mệt hay cáu:"," “Nghỉ 1 phút rồi làm lại” — hoặc dừng buổi, mai học tiếp."]];function D(e="section"){return n(e,{class:"card quick-tips"},n("h2",{},"🗒️ Thẻ nhắc nhanh cho bố mẹ"),n("ol",{},...A.map(([r,s])=>n("li",{},n("b",{},r),s))))}function K(){return n("div",{class:"onb-mock"},n("div",{class:"onb-mock-row"},M(S("guide"),92),n("div",{class:"onb-mock-btn primary"},"▶ 🎵 Bài hôm nay")),n("div",{class:"onb-mock-row"},n("div",{class:"onb-mock-btn good"},"👪 Đúng rồi"),n("div",{class:"onb-mock-btn plain"},"↻ Thử lại")))}function j(){const e=[0,1,2,3,4].map(r=>{const s=40+r*32;return`<rect x="${s}" y="150" width="30" height="46" rx="5" fill="#fff" stroke="${t.stone}" stroke-width="2"/>
+        <text x="${s+15}" y="186" text-anchor="middle" font-size="15" font-weight="800" font-family="'Baloo 2',system-ui,sans-serif" fill="${t.indigo}">${["Đô","Rê","Mi","Fa","Sol"][r]}</text>
+        ${P(s+15,148,8)}`}).join("");return B("0 0 240 210","onb-art",`<circle cx="120" cy="78" r="66" fill="${t.lavender}"/>
+     <path d="M62 50 q-12 28 0 56 M44 38 q-20 40 0 80 M178 50 q12 28 0 56 M196 38 q20 40 0 80" fill="none" stroke="${t.violetLight}" stroke-width="5" stroke-linecap="round"/>
+     <rect x="100" y="22" width="40" height="74" rx="20" fill="${t.indigo}"/>
+     <path d="M108 42 H132 M108 56 H132 M108 70 H132" stroke="#fff" stroke-opacity=".45" stroke-width="3" stroke-linecap="round"/>
+     <path d="M86 76 q0 38 34 38 q34 0 34 -38" fill="none" stroke="${t.ink}" stroke-opacity=".7" stroke-width="6" stroke-linecap="round"/>
+     <path d="M120 114 V132 M104 134 H136" stroke="${t.ink}" stroke-opacity=".7" stroke-width="6" stroke-linecap="round"/>
+     ${w(206,120,6,t.coral)}${w(30,126,5,t.mint)}${q(196,22,8,t.sun)}
+     ${e}`)}function z(){return B("0 0 240 210","onb-art",`<!-- nút Phụ huynh đang nhấn giữ (vòng đếm 2 giây) -->
+     <rect x="10" y="34" width="140" height="66" rx="33" fill="#fff" stroke="${t.stone}" stroke-width="2.5"/>
+     <rect x="10" y="34" width="96" height="66" rx="33" fill="${t.lavender}"/>
+     <text x="80" y="62" text-anchor="middle" font-size="21" font-weight="800" font-family="'Baloo 2',system-ui,sans-serif" fill="${t.ink}">Phụ huynh</text>
+     <!-- ngón tay nhấn giữ -->
+     <g transform="rotate(-12 104 120)">
+       <rect x="90" y="76" width="30" height="92" rx="15" fill="${t.skin}" stroke="${t.skinDark}" stroke-width="2.4"/>
+       <path d="M96 88 q9 -9 18 0 v6 q-9 5 -18 0 Z" fill="#fff" opacity=".75"/>
+       <path d="M92 124 q12 6 24 0" fill="none" stroke="${t.skinDark}" stroke-width="2" stroke-linecap="round"/>
+     </g>
+     <path d="M60 22 l-5 -9 M80 18 v-11 M100 22 l5 -9" stroke="${t.violet}" stroke-width="3.5" stroke-linecap="round"/>
+     <g transform="translate(190 66)">
+       <circle r="26" fill="#fff" stroke="${t.stone}" stroke-width="4"/>
+       <path d="M0 -26 A26 26 0 1 1 -22.5 13" fill="none" stroke="${t.violet}" stroke-width="5" stroke-linecap="round"/>
+       <text y="8" text-anchor="middle" font-size="22" font-weight="800" font-family="'Baloo 2',system-ui,sans-serif" fill="${t.indigo}">2s</text>
+     </g>
+     <!-- tệp JSON sao lưu -->
+     <g transform="translate(140 112)">
+       <path d="M0 0 H62 L80 18 V74 H0 Z" fill="#fff" stroke="${t.indigo}" stroke-width="3" stroke-linejoin="round"/>
+       <path d="M62 0 V18 H80" fill="${t.lavender}" stroke="${t.indigo}" stroke-width="3" stroke-linejoin="round"/>
+       <rect x="10" y="30" width="60" height="22" rx="6" fill="${t.sun}"/>
+       <text x="40" y="47" text-anchor="middle" font-size="16" font-weight="800" font-family="'Baloo 2',system-ui,sans-serif" fill="#8a5a00">JSON</text>
+     </g>
+     <g transform="translate(214 178)">
+       <circle r="20" fill="${t.mint}" stroke="#fff" stroke-width="3"/>
+       <path d="M0 -12 V10 M-10 1 L0 11 L10 1" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+     </g>
+     <path d="${T(36,150,10)}" fill="${t.sun}"/>${q(52,186,7,t.coral)}`)}const d=[{art:()=>H("all"),title:"Chuẩn bị chỗ học",lines:[["📱","Đặt iPad trên giá nhạc của đàn"],["🪑","Bé ngồi thẳng lưng, chân đặt vững"],["⏱️","10–15 phút/ngày · 4–5 buổi/tuần"]]},{art:K,title:"Mỗi buổi: bấm nút ▶ to",lines:[["▶","App tự chọn bài — không cần soạn gì"],["👪","Bố mẹ ngồi cạnh, bấm nút 👪 khi app hỏi"]],extra:()=>L("div")},{art:()=>M("wave",150),title:"Ngồi cạnh bé thế nào?",lines:[],extra:()=>D("div")},{art:j,title:"Micro nghe đàn (tùy chọn)",lines:[["🎤","App tự nghe và chấm nốt bé đàn"]],chain:["Phụ huynh","🎤 Cài micro (3 bước)","Kiểm tra 5 nốt","✅ Dùng micro cho các buổi học"]},{art:z,title:"Khu vực bố mẹ",lines:[["🔢","Nhấn giữ nút “Phụ huynh” 2 giây + tính một phép nhân"],["💾","Sao lưu mỗi tuần: Phụ huynh → Xem báo cáo tuần → “💾 Sao lưu”"]],extra:()=>N()}];function X(e,r){return s=>{let a=0;const b=()=>{e.store.settings.onboardedAt||e.store.updateSettings({onboardedAt:Date.now()}),r.onDone()},l=n("div",{class:"onb-stage"}),y=n("div",{class:"onb-dots","aria-hidden":"true"}),p=n("div",{class:"actions onb-actions"}),v=(o=0)=>{const i=d[a],m=i.art();l.replaceChildren(n("section",{class:`onb-card${o>0?" from-right":o<0?" from-left":""}`,"aria-live":"polite"},n("div",{class:"onb-art-wrap"},m),n("div",{class:"onb-text"},n("div",{class:"onb-step"},`${a+1}/${d.length}`),n("h1",{class:"onb-title"},i.title),n("ul",{class:"onb-lines"},...i.lines.map(([g,c])=>n("li",{},n("span",{class:"onb-ic","aria-hidden":"true"},g),n("span",{},c)))),i.chain?n("ol",{class:"onb-chain","aria-label":"Các bước bật micro"},...i.chain.map((g,c)=>n("li",{},n("b",{},String(c+1)),g))):null,i.extra?.()??null)),y),y.replaceChildren(...d.map((g,c)=>n("span",{class:`dot${c===a?" on":""}`})));const k=a===d.length-1,$=u({label:"Bỏ qua",onTap:b});$.classList.add("btn-back"),p.replaceChildren(),C(p,[$,a>0?u({icon:"←",label:"Trước",onTap:()=>f(-1)}):null,u({icon:k?"✓":"▶",label:k?"Bắt đầu học":"Tiếp",kind:"primary",big:!0,onTap:()=>k?b():f(1)})])},f=o=>{const i=a+o;i<0||i>=d.length||(a=i,v(o))};let h=null,x=0;l.addEventListener("pointerdown",o=>{h=o.clientX,x=o.clientY}),l.addEventListener("pointerup",o=>{if(h===null)return;const i=o.clientX-h,m=o.clientY-x;h=null,Math.abs(i)>60&&Math.abs(i)>Math.abs(m)*1.5&&f(i<0?1:-1)}),l.addEventListener("pointercancel",()=>h=null),s.append(n("div",{class:"screen onboarding"},n("header",{class:"topbar onb-top"},n("div",{class:"topbar-title"},"📖 Hướng dẫn nhanh cho bố mẹ")),l,p)),v()}}export{A as QUICK_TIPS,X as onboardingScreen,D as quickTipsCard};
