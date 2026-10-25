@@ -4,18 +4,19 @@ import { STAC_FRACTION, expressionUsed, noteStyles, onsets, tunePedal, type Tune
 import type { Hand } from '../../piano/fingering';
 import type { PianoKeyboard } from '../../piano/PianoKeyboard';
 import { pitchFreq, pitchToMidi, viName, type Pitch } from '../../piano/pitchTable';
-import { HAND_VIEW, RH_TIP_X, handArt, type HandArt } from './handArt';
 import { FINGER_NAMES } from './handDiagram';
+import { badgeY } from './fingerMapGeo';
 
 /**
  * "VIDEO MINH HỌA" — hoạt hình thầy đàn mẫu, sinh tự động cho mọi bài học / bài hát:
- * bàn tay hoạt hình trượt trên chính bàn phím của màn hình, nhấn đúng NGÓN vào đúng PHÍM, có tiếng và phụ đề.
+ * số ngón trượt trên chính bàn phím của màn hình, nhấn đúng NGÓN vào đúng PHÍM, có tiếng và phụ đề.
  * Không dùng file video → app vẫn nhẹ, chạy offline.
  *
- * (+ 2026-10-15) Mặc định chính BÀN TAY MỜ trên bàn phím (keyboardHand.ts) đàn mẫu — demoHands.ts (nạp muộn): đúng
- * ngón nhấn đúng phím lúc nốt kêu, đổi thế / luồn ngón đi trước, hai tay, ngắt / luyến, chân pedal; hình chạy theo
- * đồng hồ AudioContext trong MỘT vòng requestAnimationFrame. Bàn tay hoạt hình cũ (HandOverlay) chỉ còn là đường dự
- * phòng (`hand: 'teacher'`, hoặc không nạp được demoHands).
+ * (+ 2026-10-15) Mặc định chính BẢN ĐỒ NGÓN trên bàn phím (keyboardHand.ts) đàn mẫu — demoHands.ts (nạp muộn): đúng
+ * ngón nhấn đúng phím lúc nốt kêu, đổi thế / luồn ngón đi trước, hai tay, ngắt / luyến, pedal; hình chạy theo
+ * đồng hồ AudioContext trong MỘT vòng requestAnimationFrame. Lớp "thầy đàn mẫu" đơn giản (HandOverlay — một huy hiệu số
+ * ngón mỗi tay) chỉ còn là đường dự phòng (`hand: 'teacher'`, hoặc không nạp được demoHands) và gợi ý "phím + ngón" khi
+ * micro nghe sai nhiều lần. (2026-10-18: không còn hình bàn tay người.)
  */
 
 export interface DemoNote {
@@ -141,10 +142,14 @@ export function eventsFromTargets(targets: Target[]): DemoEvent[] {
   return out;
 }
 
-/** Hai bàn tay hoạt hình phủ lên bàn phím (không nhận chạm). */
+/**
+ * Lớp "thầy đàn mẫu" phủ lên bàn phím (không nhận chạm): mỗi tay MỘT huy hiệu số ngón to (màu tay) trượt tới phím cần đàn
+ * và nảy lên khi "nhấn". Đặt đúng chỗ số ngón to của chính phím (fingerMapGeo) và tạm ẩn số đó → không hiện hai số trùng.
+ * (2026-10-18 — OWNER: bỏ hình bàn tay hoạt hình.)
+ */
 export class HandOverlay {
   readonly el: HTMLDivElement;
-  private hands: Record<Hand, { box: HTMLDivElement; art: HandArt; placed: boolean; at: [Pitch, number] | null }>;
+  private hands: Record<Hand, { box: HTMLDivElement; badge: HTMLDivElement; placed: boolean; at: [Pitch, number] | null; key: HTMLElement | null; timer: number }>;
   /** Kích thước bàn phím (px) — đo bằng ResizeObserver, không đọc bố cục ngay sau khi vừa ghi style */
   private kbW = 0;
   private kbH = 0;
@@ -156,10 +161,11 @@ export class HandOverlay {
     const mk = (hand: Hand) => {
       const box = document.createElement('div');
       box.className = `hand-pos hand-pos-${hand.toLowerCase()}`;
-      const art = handArt(hand, { className: 'overlay-hand' });
-      box.append(art.el);
+      const badge = document.createElement('div');
+      badge.className = 'ho-badge';
+      box.append(badge);
       this.el.append(box);
-      return { box, art, placed: false, at: null as [Pitch, number] | null };
+      return { box, badge, placed: false, at: null as [Pitch, number] | null, key: null as HTMLElement | null, timer: 0 };
     };
     this.hands = { RH: mk('RH'), LH: mk('LH') };
     kb.el.append(this.el);
@@ -167,7 +173,7 @@ export class HandOverlay {
       this.ro = new ResizeObserver(() => {
         this.kbW = this.kb.el.clientWidth;
         this.kbH = this.kb.el.clientHeight;
-        // Xoay màn hình giữa chừng: đặt lại tay đang hiện theo kích thước mới
+        // Xoay màn hình giữa chừng: đặt lại số ngón đang hiện theo kích thước mới
         for (const hand of ['RH', 'LH'] as Hand[]) {
           const h = this.hands[hand];
           if (h.placed && h.at) this.place(hand, h.at[0], h.at[1], true);
@@ -177,14 +183,11 @@ export class HandOverlay {
     }
   }
 
-  /** Đặt bàn tay để ngón `finger` nằm trên phím `pitch`. */
+  /** Đặt số ngón `finger` lên phím `pitch`. */
   place(hand: Hand, pitch: Pitch, finger: number, instant = false): void {
     const g = this.kb.keyCenter(pitch);
     if (!g) return;
     const h = this.hands[hand];
-    const widthPct = (this.kb.whiteKeyWidth * HAND_VIEW.w) / HAND_VIEW.spacing;
-    const tip = hand === 'RH' ? RH_TIP_X[finger - 1] : HAND_VIEW.w - RH_TIP_X[finger - 1];
-    const left = g.center - (tip / HAND_VIEW.w) * widthPct;
     if (!this.kbW) {
       // Chưa có số đo (lần đầu, trước khi ResizeObserver báo) → đọc một lần
       this.kbW = this.kb.el.clientWidth;
@@ -192,36 +195,42 @@ export class HandOverlay {
     }
     const kbW = this.kbW || 1000;
     const kbH = this.kbH || 300;
-    const handPxH = ((widthPct / 100) * kbW * HAND_VIEW.h) / HAND_VIEW.w;
-    // Đầu ngón chạm phím ở ~45% chiều cao (phím đen: cao hơn, ~28%)
-    const tipLine = (g.black ? 0.28 : 0.45) * kbH;
-    const top = tipLine - (HAND_VIEW.tipY / HAND_VIEW.h) * handPxH;
     h.box.classList.toggle('instant', instant || !h.placed);
-    const w = `${widthPct}%`;
-    if (h.box.style.width !== w) h.box.style.width = w;
-    // Trượt tay bằng transform (GPU) thay cho left/top (mỗi khung hình chuyển động phải tính lại bố cục)
-    h.box.style.transform = `translate3d(${((left * kbW) / 100).toFixed(1)}px,${top.toFixed(1)}px,0)`;
+    // Trượt bằng transform (GPU) thay cho left/top (mỗi khung hình chuyển động phải tính lại bố cục)
+    h.box.style.transform = `translate3d(${((g.center * kbW) / 100).toFixed(1)}px,${badgeY(kbH, g.black).toFixed(1)}px,0)`;
+    h.badge.textContent = String(finger);
     h.at = [pitch, finger];
     h.placed = true;
     h.box.classList.add('show');
-    // (+ 2026-10-15) bàn tay mờ (keyboardHand.ts) ẩn khi thầy đàn mẫu đang hiện
+    // số to của chính phím tạm ẩn (đã có số ngón của thầy đúng chỗ đó)
+    h.key?.classList.remove('fm-own');
+    h.key = this.kb.el.querySelector<HTMLElement>(`.key[data-pitch="${pitch}"]`);
+    h.key?.classList.add('fm-own');
+    // (+ 2026-10-15) bản đồ ngón (keyboardHand.ts) ẩn khi thầy đàn mẫu đang hiện
     this.kb.el.classList.add('demo-hand-on');
   }
 
-  press(hand: Hand, finger: number, ms: number): void {
-    const a = this.hands[hand].art;
-    a.setActive(finger);
-    a.press(finger, ms);
+  press(hand: Hand, _finger: number, ms: number): void {
+    const h = this.hands[hand];
+    window.clearTimeout(h.timer);
+    h.box.classList.remove('press');
+    void h.box.offsetWidth; // chạy lại hiệu ứng nảy
+    h.box.classList.add('press');
+    h.timer = window.setTimeout(() => h.box.classList.remove('press'), ms);
   }
 
   release(hand: Hand): void {
-    this.hands[hand].art.setActive(null);
+    const h = this.hands[hand];
+    window.clearTimeout(h.timer);
+    h.box.classList.remove('press');
   }
 
   hide(): void {
     for (const h of Object.values(this.hands)) {
-      h.box.classList.remove('show');
-      h.art.setActive(null);
+      window.clearTimeout(h.timer);
+      h.box.classList.remove('show', 'press');
+      h.key?.classList.remove('fm-own');
+      h.key = null;
       h.placed = false;
     }
     this.kb.el.classList.remove('demo-hand-on');
@@ -248,15 +257,15 @@ export interface DemoOptions {
   /** (+ 2026-10-12) Cấp 4 — các khoảng pedal đạp (phách, xem pedalOfTune) */
   pedal?: ReadonlyArray<readonly [number, number]>;
   /**
-   * (+ 2026-10-15) Ai đàn mẫu: 'ghost' (mặc định) = bàn tay mờ trên bàn phím đàn cả bài (demoHands.ts);
-   * 'teacher' = bàn tay hoạt hình cũ (HandOverlay).
+   * (+ 2026-10-15) Ai đàn mẫu: 'ghost' (mặc định) = bản đồ ngón trên bàn phím đàn cả bài (demoHands.ts);
+   * 'teacher' = lớp số ngón đơn giản (HandOverlay).
    */
   hand?: 'ghost' | 'teacher';
   /** (+ 2026-10-15) Giờ bắt đầu (đồng hồ AudioContext) — mặc định now + 0.35 s (để nhạc đệm hẹn cùng mốc) */
   t0?: number;
 }
 
-/** Hình vẽ ra màn hình chậm hơn lệnh vẽ khoảng một khung hình → bàn tay đi trước chừng ấy để khớp tiếng */
+/** Hình vẽ ra màn hình chậm hơn lệnh vẽ khoảng một khung hình → số ngón đi trước chừng ấy để khớp tiếng */
 export const FRAME_LEAD_S = 1 / 60;
 
 /** Giờ "đang nghe thấy" theo đồng hồ âm thanh: currentTime − độ trễ ra loa + một khung hình. */
@@ -302,7 +311,7 @@ export function playDemo(
     resolveDone();
   };
 
-  /** Đường cũ: bàn tay hoạt hình (HandOverlay) + phím sáng hẹn bằng setTimeout. */
+  /** Đường dự phòng: số ngón của thầy (HandOverlay) + phím sáng hẹn bằng setTimeout. */
   const teacher = () => {
     for (const hand of ['RH', 'LH'] as Hand[]) {
       const first = events.flatMap((e) => e.notes).find((n) => n.hand === hand && n.finger);
@@ -333,7 +342,7 @@ export function playDemo(
     }
   };
 
-  // MỘT vòng rAF: bàn tay mẫu + con trỏ khuông nhạc theo đồng hồ âm thanh; hết bài → xong
+  // MỘT vòng rAF: bản đồ ngón đàn mẫu + con trỏ khuông nhạc theo đồng hồ âm thanh; hết bài → xong
   const loop = () => {
     if (cancelled || finished) return;
     const t = heardClock(audio);
@@ -352,7 +361,7 @@ export function playDemo(
         hands.tick(heardClock(audio));
       })
       .catch(() => {
-        if (!cancelled && !finished) teacher(); // không nạp được → bàn tay hoạt hình cũ
+        if (!cancelled && !finished) teacher(); // không nạp được → lớp số ngón đơn giản
       });
   } else teacher();
 

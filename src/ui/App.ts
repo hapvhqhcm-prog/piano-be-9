@@ -56,6 +56,12 @@ export class App {
     this.screenAwake = installWakeLock();
     // (+ 2026-10-17) Vận hành thực tế: Bluetooth, đổi iPadOS / nghỉ lâu, màn hình không giữ sáng, mất giọng (ui/opsWatch.ts)
     this.route = installOps(this);
+    // (2026-10-25, OWNER "bỏ phần phụ huynh") hàng chờ bố mẹ xem CŨ vừa được dọn (ProgressStore → settleLegacyReviews) →
+    // xoá lặng lẽ MỌI bản ghi âm của hàng chờ (IndexedDB, progress/reviewAudio.ts). Không có mục cũ → không mở IndexedDB.
+    if (store.takeDroppedReviews().length)
+      void import('../progress/reviewAudio')
+        .then((m) => m.reviewAudio()?.prune(new Set()))
+        .catch(() => undefined);
   }
 
   /** (+ 2026-10-17) Micro đã tạo (không tạo mới, không ném lỗi khi chunk micro chưa nạp) — chẩn đoán / theo dõi Bluetooth. */
@@ -64,7 +70,7 @@ export class App {
   }
 
   /**
-   * Micro nghe đàn — chỉ bật khi phụ huynh cho phép trong Cài đặt. Tạo ở lần dùng đầu (chunk micro phải nạp xong —
+   * Micro nghe đàn — chỉ bật khi micro được bật trong cài đặt (mặc định bật; bé tự bật được — components/micAllow.ts). Tạo ở lần dùng đầu (chunk micro phải nạp xong —
    * màn chính đã chờ sẵn; MicListener mới tạo ở trạng thái 'off', như lúc khởi động trước đây).
    */
   get mic(): MicListener {
@@ -79,12 +85,12 @@ export class App {
     });
     // Giọng đọc hướng dẫn không đi qua AudioEngine → micro hỏi ở đây để không tính tiếng đọc là "bé đàn khẽ"
     mic.externalBusy = () => m.speechBusy();
-    // Bé đàn khẽ nhiều lần không nghe được → micro tự tăng độ nhạy MỘT bậc: lưu, ghi nhật ký, báo phụ huynh
+    // Bé đàn khẽ nhiều lần không nghe được → micro tự tăng độ nhạy MỘT bậc: lưu, ghi nhật ký, báo bé một câu nhẹ
     mic.onAutoSensitivity((c) => {
       if (this.store.guest) return; // 👤 khách chơi: micro không tự học
       this.store.updateSettings({ micSensitivity: c.to });
       m.saveAutoSens({ at: new Date().toISOString(), ...c });
-      toast(`🎤 Micro chưa nghe rõ tiếng đàn khẽ → đã tăng độ nhạy: ${m.SENS_NAME[c.from]} → ${m.SENS_NAME[c.to]}`, 4500);
+      toast('🎤 Micro sẽ nghe kỹ hơn — con cứ đàn bình thường nhé!', 3500);
     });
     // (+ 2026-10-09) Tự học lệch dây đàn nhà (autoTune.ts): nạp kết quả đã lưu, lưu lại khi có số đo mới
     mic.loadAutoTune(this.store.settings.micAutoTune);

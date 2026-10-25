@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DRILL_PRINCIPLE } from '../src/lessons/handTechnique';
 import type { TechniqueDrill } from '../src/lessons/types';
-import { HAND_POSES, armHand, poseFromForward, sideHand } from '../src/ui/components/art/handKit';
 import {
   DRILL_ANIM_IDS,
   EASE,
@@ -14,7 +13,6 @@ import {
   stillBeat,
   totalBeats,
   wrapBeat,
-  wristIk,
   type AnimId,
   type Keyframe,
 } from '../src/ui/components/techniqueAnim';
@@ -213,30 +211,38 @@ describe('khung hình SVG', () => {
   });
 });
 
-describe('bộ vẽ tay (bổ sung)', () => {
-  it('armHand (dựng từ khuỷu) trùng sideHand cùng dáng', () => {
-    const fwd = [-12, -18, 28, 58, 85] as const;
-    const a = armHand({ elbow: [10, 80], fwd, scale: 1.5 });
-    const back = poseFromForward(fwd);
-    expect(back).toEqual([...HAND_POSES.curved]);
-    const b = sideHand({ tip: a.pts[0], pose: back, scale: 1.5 });
-    a.pts.forEach((p, i) => {
-      expect(p[0]).toBeCloseTo(b.pts[i][0], 6);
-      expect(p[1]).toBeCloseTo(b.pts[i][1], 6);
-    });
-    expect(a.pts[5][0]).toBeCloseTo(10, 6);
-    expect(a.pts[5][1]).toBeCloseTo(80, 6);
+describe('sơ đồ trừu tượng (không vẽ bàn tay người)', () => {
+  const at = (id: AnimId, b: number) => TECH_ANIMS[id].draw(sampleKeys(TECH_ANIMS[id].keys, totalBeats(TECH_ANIMS[id]), b), b).at;
+
+  it('xoay cổ tay: cổ tay đi đúng vòng tròn, chấm đầu ngón đứng yên', () => {
+    const pts = [0, 1, 2, 3].map((b) => at('wrist-circle', b).wrist!);
+    const cx = (pts[1][0] + pts[3][0]) / 2;
+    const cy = (pts[0][1] + pts[2][1]) / 2;
+    for (const p of pts) expect(Math.hypot(p[0] - cx, p[1] - cy)).toBeCloseTo(14, 0);
+    expect(pts[0][1]).toBeLessThan(pts[2][1]); // phách 1: cổ tay ở trên
+    expect(pts[1][0]).toBeGreaterThan(pts[3][0]); // phách 2: tới trước (về phía đàn)
+    const tips = new Set([0, 0.7, 1.9, 3.3].map((b) => at('wrist-circle', b).tip!.join(',')));
+    expect(tips.size).toBe(1);
   });
 
-  it('xoay cổ tay: IK đưa cổ tay đúng lên vòng tròn, đầu ngón đứng yên', () => {
-    const tip: [number, number] = [178, 122 - 4.5 * 1.9];
-    const c = sideHand({ tip, pose: 'curved', scale: 1.9 }).pts[4];
-    for (let k = 0; k < 8; k++) {
-      const th = (k / 8) * Math.PI * 2;
-      const target: [number, number] = [c[0] + 12 * Math.sin(th), c[1] - 12 * Math.cos(th)];
-      const pts = sideHand({ tip, pose: wristIk(target), scale: 1.9 }).pts;
-      expect(Math.hypot(pts[4][0] - target[0], pts[4][1] - target[1])).toBeLessThan(0.5);
-      expect(pts[0]).toEqual(tip);
-    }
+  it('cầu vồng rơi: quả nặng ở trên cao khi nhấc, đáp xuống phím rồi nảy nhẹ lên', () => {
+    const up = at('arm-drop', 1).tip![1];
+    const land = at('arm-drop', 2.5).tip![1];
+    const float = at('arm-drop', 3.6).tip![1];
+    expect(up).toBeLessThan(land - 20);
+    expect(float).toBeLessThan(land);
+    expect(float).toBeGreaterThan(up);
+  });
+
+  it('ngón cái chui hầm: ngón cái tới phím Fa (sang phải 3 phím) rồi cả cầu dời theo, cuối vòng về chỗ cũ', () => {
+    const t0 = at('thumb-under', 0.2).thumb!;
+    const t2 = at('thumb-under', 2.3).thumb!;
+    expect(t2[0] - t0[0]).toBeCloseTo(81, 0);
+    expect(at('thumb-under', 3).finger![0] - at('thumb-under', 0.2).finger![0]).toBeCloseTo(81, 0);
+    expect(at('thumb-under', 3.99).thumb![0]).toBeCloseTo(t0[0], 0);
+  });
+
+  it('không còn hình bàn tay người: không dùng bộ vẽ bàn tay cũ (không có màu da)', () => {
+    for (const id of ALL) for (const b of [0.3, 1.3, 2.3, 3.3]) expect(frameInner(id, b)).not.toMatch(/#ffd5b5|#f3ad88/i);
   });
 });

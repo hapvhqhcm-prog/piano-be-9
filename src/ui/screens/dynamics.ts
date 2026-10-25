@@ -17,7 +17,7 @@ import { confetti } from '../components/celebrate';
 import { HandOverlay, playDemo, type DemoEvent } from '../components/demo';
 import { backButton, button, h } from '../components/dom';
 import { cue, mascot } from '../components/mascot';
-import { deferCheck, selfStudy } from '../selfStudy';
+import { selfCheck } from '../selfCheck';
 import { principleFigure } from '../components/handCards';
 
 type DynActivity = Extract<Activity, { kind: 'dynamics' }>;
@@ -29,17 +29,17 @@ export interface DynamicsHooks {
   intro: string;
   mode: DynActivity['mode'];
   rounds: DynRound[];
-  /** PARENT_ASSESSMENT (micro hoặc bố mẹ chấm) — noteId `dyn:${mode}:${i}` */
+  /** PARENT_ASSESSMENT (micro chấm hoặc bé tự kiểm tra — by: 'self') — noteId `dyn:${mode}:${i}` */
   record(noteId: string, result: ParentResult): void;
   onDone(): void;
   onBack(): void;
 }
 
 const WANT: Record<Want, { emoji: string; word: string; sym: string; how: string; ask: string }> = {
-  f: { emoji: '🦁', word: 'TO', sym: 'f', how: 'Đàn TO — như sư tử gầm!', ask: 'bé đàn TO chưa?' },
-  p: { emoji: '🐭', word: 'NHỎ', sym: 'p', how: 'Đàn NHỎ — rón rén như chuột nhắt', ask: 'bé đàn NHỎ (mà vẫn rõ tiếng) chưa?' },
-  stac: { emoji: '🐇', word: 'NGẮT', sym: '•', how: 'Chạm phím rồi nhấc ngay — thỏ nhảy!', ask: 'bé đàn NGẮT (nhấc tay nhanh) chưa?' },
-  leg: { emoji: '🐢', word: 'LIỀN', sym: '⌒', how: 'Giữ phím tới khi bấm nốt sau — liền tiếng', ask: 'bé đàn LIỀN (không hở) chưa?' },
+  f: { emoji: '🦁', word: 'TO', sym: 'f', how: 'Đàn TO — như sư tử gầm!', ask: 'Con đàn TO chưa?' },
+  p: { emoji: '🐭', word: 'NHỎ', sym: 'p', how: 'Đàn NHỎ — rón rén như chuột nhắt', ask: 'Con đàn NHỎ (mà vẫn rõ tiếng) chưa?' },
+  stac: { emoji: '🐇', word: 'NGẮT', sym: '•', how: 'Chạm phím rồi nhấc ngay — thỏ nhảy!', ask: 'Con đàn NGẮT (nhấc tay nhanh) chưa?' },
+  leg: { emoji: '🐢', word: 'LIỀN', sym: '⌒', how: 'Giữ phím tới khi bấm nốt sau — liền tiếng', ask: 'Con đàn LIỀN (không hở) chưa?' },
 };
 
 const PRAISE: Record<Want, string[]> = {
@@ -62,7 +62,7 @@ const BPM = 72;
 /**
  * v4 — Trò SẮC THÁI (to/nhỏ) & KIỂU ĐÀN (ngắt/liền): thầy đàn mẫu (bàn tay hoạt hình), bé đàn lại trên đàn thật.
  * Micro bật: to/nhỏ so với tiếng "vừa" của chính bé (đo ở lượt đầu); ngắt/liền đo tiếng ngân (src/audio/expression.ts).
- * Không micro → bố mẹ xác nhận. Micro trượt 2 lần → "Bố mẹ: qua" (không bao giờ kẹt).
+ * Không micro → bé tự kiểm tra (👍 Rồi / 🔁 Làm lại). Micro trượt 2 lần → "👍 Con tự chấm" (không bao giờ kẹt).
  */
 export function dynamicsScreen(app: App, hooks: DynamicsHooks) {
   return (root: HTMLElement) => {
@@ -74,7 +74,7 @@ export function dynamicsScreen(app: App, hooks: DynamicsHooks) {
     let calFails = 0;
     /** Tiếng "vừa" của bé (đỉnh âm lượng) — đo một lần cho cả hoạt động */
     let ref: number | null = null;
-    /** Micro không đo được tiếng vừa → bố mẹ chấm cả hoạt động */
+    /** Micro không đo được tiếng vừa → bé tự kiểm tra cả hoạt động */
     let parentOnly = false;
     let unFrame: () => void = () => undefined;
     let demoRun: { cancel: () => void; done: Promise<void> } | null = null;
@@ -160,7 +160,7 @@ export function dynamicsScreen(app: App, hooks: DynamicsHooks) {
     /** Lượt i: thẻ to (sư tử / chuột / thỏ / rùa), phím sáng kèm số ngón, thầy tự đàn mẫu. */
     function show(autoDemo = true): void {
       halt();
-      // Đếm lần micro chấm trượt theo TỪNG LƯỢT — xem thầy đàn mẫu lại không xóa (để vẫn tới được "Bố mẹ: qua")
+      // Đếm lần micro chấm trượt theo TỪNG LƯỢT — xem thầy đàn mẫu lại không xóa (để vẫn tới được "Con tự chấm")
       if (failsRound !== i) {
         failsRound = i;
         micFails = 0;
@@ -256,7 +256,7 @@ export function dynamicsScreen(app: App, hooks: DynamicsHooks) {
       const tk0 = halt();
       await app.ensureMic();
       if (tk0 !== token) return;
-      if (app.mic.state !== 'on' || parentOnly) return askParent();
+      if (app.mic.state !== 'on' || parentOnly) return askSelf();
       if (loudSoft && ref === null) return calibrate();
       listenRound();
     }
@@ -297,12 +297,12 @@ export function dynamicsScreen(app: App, hooks: DynamicsHooks) {
           button({ icon: '↻', label: 'Đàn lại', kind: 'primary', onTap: () => calibrate() }),
           calFails >= 2
             ? button({
-                icon: '👪',
-                label: 'Bố mẹ: qua',
+                icon: '👍',
+                label: 'Con tự chấm',
                 onTap: () => {
-                  // Micro không đo được → bố mẹ chấm cả trò này
+                  // Micro không đo được → bé tự kiểm tra cả trò này
                   parentOnly = true;
-                  askParent();
+                  askSelf();
                 },
               })
             : null,
@@ -371,58 +371,33 @@ export function dynamicsScreen(app: App, hooks: DynamicsHooks) {
         backButton(() => show(false)),
         button({ icon: '↻', label: ok ? 'Đàn lại' : 'Thử lại', onTap: () => listenRound() }),
         button({ icon: '🎬', label: 'Thầy đàn', onTap: () => show(true) }),
-        // Micro có thể chấm trượt → sau 2 lần, bố mẹ được cho qua — không kẹt bé lại
-        !ok && micFails >= 2 ? button({ icon: '👪', label: 'Bố mẹ: qua', onTap: () => askParent() }) : null,
+        // Micro có thể chấm trượt → sau 2 lần, bé tự kiểm tra — không kẹt bé lại
+        !ok && micFails >= 2 ? button({ icon: '👍', label: 'Con tự chấm', onTap: () => askSelf() }) : null,
         ok ? button({ icon: '▶', label: 'Tiếp', kind: 'primary', onTap: next }) : null,
       );
     }
 
-    function askParent(): void {
+    function askSelf(): void {
       halt();
       const r = hooks.rounds[i];
       const id = `dyn:${hooks.mode}:${i}`;
       kb.clear();
       light(r);
-      // (+ 2026-10-12) 👦 Bé tự học: bé tự đi tiếp — lượt này vào hàng "🕑 Chờ bố mẹ xem"
-      if (selfStudy(app)) {
-        stage.replaceChildren(card(r.want, false), h('h1', { class: 'title' }, 'Con đàn xong chưa? Bố mẹ sẽ xem lại sau nhé!'));
-        setBar(
-          backButton(() => show(false)),
-          button({
-            icon: '✋',
-            label: 'Con đàn xong',
-            kind: 'good',
-            onTap: () => {
-              deferCheck(app, { group: `dyn:${hooks.mode}`, label: hooks.title, note: id });
-              next();
-            },
-          }),
-        );
-        return;
-      }
-      stage.replaceChildren(card(r.want, false), h('h1', { class: 'title' }, `👪 Bố mẹ: ${WANT[r.want].ask}`));
-      setBar(
-        backButton(() => show(false)),
-        button({
-          icon: '👪',
-          label: 'Đúng rồi',
-          kind: 'good',
-          onTap: () => {
-            hooks.record(id, 'correct');
-            void app.audio.chime();
-            next();
-          },
-        }),
-        button({
-          icon: '↻',
-          label: 'Thử lại',
-          kind: 'retry',
-          onTap: () => {
-            hooks.record(id, 'retry');
-            show(false);
-          },
-        }),
-      );
+      // (2026-10-25, OWNER "bỏ phần phụ huynh") BÉ TỰ KIỂM TRA (micro tắt / không đo được): 👍 Rồi / 🔁 Làm lại
+      const sc = selfCheck({
+        question: WANT[r.want].ask,
+        onOk: () => {
+          hooks.record(id, 'correct');
+          void app.audio.chime();
+          next();
+        },
+        onAgain: () => {
+          hooks.record(id, 'retry');
+          show(false);
+        },
+      });
+      stage.replaceChildren(card(r.want, false), sc.ask);
+      setBar(backButton(() => show(false)), sc.again, sc.ok);
     }
 
     function next(): void {

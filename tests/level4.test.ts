@@ -69,7 +69,9 @@ describe('cấu trúc Cấp 4', () => {
   it('mỗi tuần 34–45: tiêu chí "2 ngày" + phiếu xem tay; có ứng tấu (trừ tuần ôn 38); có bài hai tay tách tay sẵn ở câu khó (trừ tuần hợp âm rải / La thứ đầu)', () => {
     for (const w of LEVEL4_WEEKS.slice(0, 12)) {
       expect(w.criterion.text, `tuần ${w.week}`).toMatch(/2 ngày/);
-      expect(w.criterion.text).toMatch(/bố mẹ/);
+      // (2026-10-25, bỏ phần phụ huynh) bé TỰ xem tay (tự kiểm tra) — không cần bố mẹ
+      expect(w.criterion.text).toMatch(/xem tay|tự kiểm tra/);
+      expect(w.criterion.text).not.toMatch(/bố mẹ/);
       expect(w.criterionSpec, `tuần ${w.week}`).toBeDefined();
       for (const c of RELAX_CHECKS) expect(w.criterionSpec!.parentChecks).toContain(c);
       // thẻ của tiêu chí nằm trong bài học của tuần

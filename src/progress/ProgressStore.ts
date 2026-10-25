@@ -6,18 +6,7 @@ import { confirmSelfChallenge, recordChallenges } from '../lessons/challenges';
 import { upsertConcert } from '../lessons/concert';
 import { stampMasteryRule } from '../lessons/songStats';
 import { resetDeviceSpecific } from './newDevice';
-import {
-  addReview,
-  approveAll,
-  approveReview,
-  dismissReview,
-  expireReviews,
-  pinnedSessionIds,
-  resolveReminders,
-  setReviewAudio,
-  studyModeToday,
-  type ReviewInput,
-} from './reviewQueue';
+import { settleLegacyReviews } from './reviewQueue';
 import {
   defaultData,
   localDateStr,
@@ -33,8 +22,6 @@ import {
   type SelfRating,
   type SongRun,
   type Settings,
-  type ReviewItem,
-  type StudyMode,
 } from './schema';
 import {
   FUTURE_VERSION_MESSAGE,
@@ -152,12 +139,12 @@ export class ProgressStore {
   futureVersion = false;
   /** Khóa bản cất ("archived-*") vừa tạo ở lần nhập JSON / đặt lại gần nhất */
   lastArchiveKey: string | null = null;
-  /**
-   * (+ 2026-10-12) Buổi mở GẦN NHẤT (startSession) — việc bé tự học được hoãn vào hàng chờ của buổi này
-   * (màn hoạt động không cần biết mã buổi). null = chưa mở buổi nào từ lúc mở app.
-   */
+  /** (+ 2026-10-12) Buổi mở GẦN NHẤT (startSession). null = chưa mở buổi nào từ lúc mở app. */
   activeSessionId: string | null = null;
-  /** (+ 2026-10-12) Mã các mục chờ vừa hết hạn / được xử lý — giao diện xoá bản ghi âm tương ứng (xem takeDroppedReviews). */
+  /**
+   * (2026-10-25, bỏ phần phụ huynh) Mã các mục của hàng chờ CŨ vừa được dọn (reviewQueue.settleLegacyReviews) — giao diện
+   * xoá bản ghi âm tương ứng (takeDroppedReviews).
+   */
   private droppedReviews: string[] = [];
   private listeners = new Set<() => void>();
   private dirty = false;
@@ -172,7 +159,7 @@ export class ProgressStore {
    * khách chơi KHÔNG GHI gì xuống localStorage / IndexedDB, các hàm ghi lượt chơi / trò chơi / buổi học là no-op; thoát →
    * trả lại đúng bản chụp (mọi thay đổi trong bộ nhớ bị bỏ). App tắt giữa chừng → chưa ghi gì nên dữ liệu của bé nguyên vẹn.
    */
-  private guestSnapshot: { json: string; dropped: number; activeSessionId: string | null } | null = null;
+  private guestSnapshot: { json: string; activeSessionId: string | null } | null = null;
   /** (+ 2026-10-17) Lần nhập JSON gần nhất: micro cần "Cài micro 3 bước" lại trên iPad này (newDevice.ts) */
   lastImportNeedsMicSetup = false;
 
@@ -190,10 +177,11 @@ export class ProgressStore {
     if (!this.futureVersion) stampMasteryRule(this.data, this.now().getTime());
     pruneUnreadableCorrupt(this.kv);
     bumpDataRev(this.data);
-    // (+ 2026-10-12) Mục chờ bố mẹ xem quá 14 ngày → bỏ (trước khi gộp lịch sử: buổi của chúng hết bị giữ lại)
-    const expired = this.futureVersion ? [] : expireReviews(this.data, this.now().getTime());
-    this.droppedReviews.push(...expired);
-    if (this.compact() || expired.length) this.writeNow();
+    // (2026-10-25, bỏ phần phụ huynh) Hàng chờ bố mẹ xem CŨ → giải quyết một lần (trước khi gộp lịch sử)
+    const settled = this.futureVersion ? [] : settleLegacyReviews(this.data).dropped;
+    this.droppedReviews.push(...settled);
+    if (settled.length) this.recomputePracticeDays();
+    if (this.compact() || settled.length) this.writeNow();
     // Bản sao IndexedDB có ngay từ lần mở đầu (không chờ tới lần đổi đầu tiên). Dữ liệu mới tinh (chưa học buổi nào,
     // chưa có tên) thì KHÔNG gửi: không có gì để giữ, mà có thể đè mất bản sao tốt khi localStorage vừa bị xóa.
     if (!this.recoveredFromCorrupt && !this.futureVersion && (sessionCount(this.data) > 0 || this.data.learner.name)) this.mirrorNow();
@@ -380,7 +368,7 @@ export class ProgressStore {
     if (this.guestSnapshot || this.futureVersion) return !!this.guestSnapshot;
     this.flush();
     this.flushMirror();
-    this.guestSnapshot = { json: JSON.stringify(this.data), dropped: this.droppedReviews.length, activeSessionId: this.activeSessionId };
+    this.guestSnapshot = { json: JSON.stringify(this.data), activeSessionId: this.activeSessionId };
     this.listeners.forEach((fn) => fn());
     return true;
   }
@@ -396,7 +384,6 @@ export class ProgressStore {
     }
     this.dirty = false;
     this.data = JSON.parse(g.json) as AppData;
-    this.droppedReviews.length = Math.min(this.droppedReviews.length, g.dropped);
     this.activeSessionId = g.activeSessionId;
     bumpDataRev(this.data);
     this.listeners.forEach((fn) => fn());
@@ -428,8 +415,6 @@ export class ProgressStore {
   discardSessionIfEmpty(sessionId: string): void {
     const i = this.data.sessions.findIndex((s) => s.id === sessionId);
     if (i < 0 || !isEmptySession(this.data.sessions[i])) return;
-    // (+ 2026-10-12) Buổi tự học chỉ có việc chờ bố mẹ xem → vẫn là một buổi thật (bé đã đàn), giữ lại
-    if (pinnedSessionIds(this.data).has(sessionId)) return;
     this.data.sessions.splice(i, 1);
     this.recomputePracticeDays();
     this.save();
@@ -451,6 +436,21 @@ export class ProgressStore {
     // (+ 2026-10-06) Lùi tuần: lưu lại sticker đảo / huy chương đã nhận để không bị mất
     if (week < this.data.progress.currentWeek) recordMonotonicStickers(this.data);
     this.data.progress.currentWeek = week;
+    this.save();
+    this.flush();
+  }
+
+  /**
+   * (+ 2026-10-25, OWNER duyệt "Bé thấy dễ quá") Ghi kết quả ⚡ Thi vượt tuần / 🧭 kiểm tra xếp lớp: `change` sửa dữ liệu (các hàm
+   * thuần lessons/testOut.ts applyTestOutPass / noteTestOutFail, lessons/placement.ts applyPlacement — chỉ THÊM bản ghi
+   * progress.skips / skipTries / placement và chỉ TĂNG currentWeek), rồi lưu ngay. Khách chơi: không ghi.
+   */
+  applySkipChange(change: (d: AppData) => void): void {
+    if (this.guestSnapshot) return;
+    const before = this.data.progress.currentWeek;
+    change(this.data);
+    // An toàn: không bao giờ lùi tuần ở đây
+    if (this.data.progress.currentWeek < before) this.data.progress.currentWeek = before;
     this.save();
     this.flush();
   }
@@ -489,89 +489,20 @@ export class ProgressStore {
     this.recomputePracticeDays();
   }
 
-  /** PARENT_ASSESSMENT: chỉ lưu nút người lớn bấm. */
+  /**
+   * PARENT_ASSESSMENT — (2026-10-25, bỏ phần phụ huynh) giờ là kết quả BÉ TỰ KIỂM TRA ("👍 Rồi / 🔁 Làm lại") ở chỗ micro
+   * không chấm được (tư thế, ngón, kỹ thuật, micro tắt…) → luôn đóng dấu `by: 'self'`. Tiêu chí tuần đọc như cũ.
+   */
   addParentAssessment(sessionId: string, note: string, result: ParentResult): void {
     const s = this.session(sessionId);
-    s.parentAssessments.push({ note, result, ts: this.now().getTime() });
-    // (+ 2026-10-12) Bố mẹ ngồi cùng & chấm thẻ xem tay → lời nhắc "Lần sau ngồi cùng xem tay nhé" của thẻ đó xong
-    if (this.studyMode() === 'parent') this.droppedReviews.push(...resolveReminders(this.data, note));
+    s.parentAssessments.push({ note, result, ts: this.now().getTime(), by: 'self' });
     this.touch(s);
     this.save();
   }
 
-  // ---------------- (+ 2026-10-12) 👦 Bé tự học — hàng chờ bố mẹ xem (progress/reviewQueue.ts) ----------------
-
-  /** Cách học hôm nay ('self' = 👦 Con tự học · 'parent' = 👪 Có bố mẹ ngồi cùng). */
-  studyMode(): StudyMode {
-    return studyModeToday(this.data.settings, this.today());
-  }
-
-  /** Bé / bố mẹ chọn cách học HÔM NAY (một chạm, nhớ tới hết ngày). */
-  setStudyMode(mode: StudyMode): void {
-    if (this.studyMode() === mode && this.data.settings.studyMode?.date === this.today()) return;
-    this.updateSettings({ studyMode: { mode, date: this.today() } });
-  }
-
-  /** Các mục chờ (cũ → mới). */
-  reviews(): readonly ReviewItem[] {
-    return this.data.reviews ?? [];
-  }
-
-  /**
-   * Hoãn một việc cần bố mẹ vào hàng chờ (buổi mặc định = buổi mở gần nhất). Trả về mã mục (gộp vào mục cùng nhóm
-   * của cùng buổi nếu có). Ghi ngay.
-   */
-  deferReview(input: ReviewInput): string {
-    if (this.guestSnapshot) return ''; // 👤 khách chơi: không hoãn việc cho bố mẹ
-    const sessionId = input.sessionId ?? (input.kind === 'challenge' ? undefined : this.activeSessionId ?? undefined);
-    const valid = sessionId && this.data.sessions.some((s) => s.id === sessionId) ? sessionId : undefined;
-    const id = addReview(this.data, { ...input, ...(valid ? { sessionId: valid } : { sessionId: undefined }) }, this.now().getTime());
-    if (valid) this.touch(this.session(valid));
-    this.save();
-    this.flush();
-    return id;
-  }
-
-  /** ✅ Đạt (ghi như bố mẹ chấm vào đúng ngày bé làm). false = không có mục / là lời nhắc. */
-  approveReview(id: string): boolean {
-    const done = approveReview(this.data, id);
-    if (!done) return false;
-    this.droppedReviews.push(id);
-    this.recomputePracticeDays();
-    this.save();
-    this.flush();
-    return true;
-  }
-
-  /** ✅ Đạt hết các mục chấm được. Trả về số mục. */
-  approveAllReviews(): number {
-    const done = approveAll(this.data);
-    if (!done.length) return 0;
-    this.droppedReviews.push(...done.map((r) => r.id));
-    this.recomputePracticeDays();
-    this.save();
-    this.flush();
-    return done.length;
-  }
-
-  /** 🔁 Chưa đạt / "Đã nhớ": bỏ mục, không ghi kết quả. */
-  dismissReview(id: string): boolean {
-    if (!dismissReview(this.data, id)) return false;
-    this.droppedReviews.push(id);
-    this.save();
-    this.flush();
-    return true;
-  }
-
-  /** Mục đã có bản ghi âm (IndexedDB) / không còn. */
-  setReviewAudio(id: string, has: boolean): void {
-    if (!setReviewAudio(this.data, id, has)) return;
-    this.save();
-  }
-
-  /** Lấy (và xoá khỏi danh sách) mã các mục đã hết hạn / đã xử lý — để xoá bản ghi âm của chúng. */
+  /** Lấy (và xoá khỏi danh sách) mã các mục của hàng chờ cũ vừa dọn — để xoá bản ghi âm của chúng. */
   takeDroppedReviews(): string[] {
-    if (this.guestSnapshot) return []; // 👤 khách chơi: thoát ra sẽ trả lại hàng chờ — không xoá bản ghi âm nào
+    if (this.guestSnapshot) return [];
     return this.droppedReviews.splice(0);
   }
 
@@ -629,7 +560,8 @@ export class ProgressStore {
   addSongRun(sessionId: string, run: Omit<SongRun, 'ts'>): void {
     if (this.guestSnapshot) return; // 👤 khách chơi: không ghi lượt
     const s = this.session(sessionId);
-    s.songRuns.push({ ...run, ts: this.now().getTime() });
+    // (2026-10-25, bỏ phần phụ huynh) lượt không do micro chấm = bé tự kiểm tra → đóng dấu `by: 'self'`
+    s.songRuns.push({ ...run, ...(run.source === 'parent' ? { by: 'self' as const } : {}), ts: this.now().getTime() });
     this.touch(s);
     this.save();
     this.flush(); // hết một lượt chơi = hết một hoạt động nhỏ → ghi ngay
@@ -660,7 +592,6 @@ export class ProgressStore {
     // (+ 2026-10-07) 🏆 Lưu tuần vừa hoàn thành thử thách (đánh dấu dữ liệu mới trước — bỏ ghi nhớ cũ)
     bumpDataRev(this.data);
     recordChallenges(this.data, this.today(), s.endedAt);
-    this.droppedReviews.push(...expireReviews(this.data, s.endedAt));
     // Gộp lịch sử cũ (nếu có) rồi ghi ngay
     this.compact();
     this.save();
@@ -875,6 +806,8 @@ export class ProgressStore {
     this.data = d;
     // (+ 2026-10-17) Có thể là iPad khác: số đo micro của máy cũ → mặc định, đánh dấu "cần cài lại micro" (newDevice.ts)
     const needsMic = resetDeviceSpecific(this.data, this.now().getTime()).needsMicSetup;
+    // (2026-10-25) bản sao lưu cũ còn hàng chờ bố mẹ xem → giải quyết một lần (reviewQueue.settleLegacyReviews)
+    this.droppedReviews.push(...settleLegacyReviews(this.data).dropped);
     stampMasteryRule(this.data, this.now().getTime()); // (+ 2026-10-15) dữ liệu nhập chưa có mốc → lượt cũ giữ luật cũ
     this.recomputePracticeDays();
     this.compact();

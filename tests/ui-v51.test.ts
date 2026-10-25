@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { SONG_CHECKS, SONG_CHECKS_WAIT } from '../src/ui/components/parentCheck';
+import { SONG_SELF_POINTS, SONG_SELF_POINTS_WAIT } from '../src/ui/selfCheck';
 import { hardestPhrase, shortIntro } from '../src/ui/screens/song';
 
 describe('v5.1 giao diện bài hát', () => {
-  it('phiếu chấm chế độ chờ chỉ 2 ý (không "Đều nhịp"); theo nhịp giữ 3 ý', () => {
-    expect(SONG_CHECKS_WAIT.map((c) => c.key)).toEqual(['notes', 'fingers']);
-    expect(SONG_CHECKS.map((c) => c.key)).toEqual(['notes', 'beat', 'fingers']);
+  // (2026-10-25) phiếu của bố mẹ → bé tự kiểm tra cùng các ý
+  it('bé tự kiểm tra: chế độ chờ chỉ 2 ý (không "Đều nhịp"); theo nhịp giữ 3 ý', () => {
+    expect(SONG_SELF_POINTS_WAIT).toHaveLength(2);
+    expect(SONG_SELF_POINTS_WAIT.some((c) => /nhịp/.test(c))).toBe(false);
+    expect(SONG_SELF_POINTS).toHaveLength(3);
+    expect(SONG_SELF_POINTS[1]).toMatch(/nhịp/);
   });
 
   it('lời dẫn: ngắn giữ nguyên; dài → câu đầu hoặc cắt "…" (≤ 61 ký tự)', () => {

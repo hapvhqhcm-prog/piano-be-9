@@ -3,13 +3,14 @@
  * ở ĐẦU buổi (session.ts, khi sessionPlan cho `middleC` ≠ null — luật: lessons/middleC.ts). Chunk riêng (nạp lười).
  * Tranh đàn 88 phím: Đô giữa gần giữa đàn, ngay dưới tên hãng đàn / ổ khóa, bên TRÁI nhóm 2 phím đen → "Đàn Đô giữa nhé":
  * - micro bật: nghe Đô4 → "Đúng Đô giữa rồi!" rồi đi tiếp; nghe Đô3 / Đô5 → "cao / thấp hơn một quãng tám — dời tay";
- * - micro tắt (hoặc micro nghe chưa ra): bố mẹ chạm "👪 Đã tìm đúng".
+ * - micro tắt (hoặc micro nghe chưa ra): BÉ TỰ KIỂM TRA, chạm "👍 Đã tìm đúng" (2026-10-25, bỏ phần phụ huynh).
  * Luôn có "Bỏ qua ⏭"; hết MIDDLE_C_MS tự đi tiếp. KHÔNG ghi gì vào buổi / tiêu chí — chỉ nhật ký nhỏ trong máy
  * (đã hiện hôm nay, lần tìm đúng gần nhất).
  */
 import { cancelSpeech, speak, speechBusy } from '../../audio/voice';
 import { MIDDLE_C_MIDI, MIDDLE_C_MS, markMiddleCFound, markMiddleCShown, type MiddleCReason } from '../../lessons/middleC';
 import type { App, Screen } from '../App';
+import { selfOkButton } from '../selfCheck';
 import { middleCArt } from '../components/art/middleCArt';
 import { backButton, button, h } from '../components/dom';
 import '../../styles/middleC.css';
@@ -54,7 +55,7 @@ export function middleCScreen(app: App, reason: MiddleCReason, hooks: { onDone()
     const fill = h('i');
     const setStatus = () => {
       if (found) return;
-      status.textContent = micOn() ? '🎹 Con đàn Đô giữa nhé — micro đang nghe!' : '🎹 Con chỉ (hoặc đàn) Đô giữa — 👪 bố mẹ xem đúng thì chạm “Đã tìm đúng”.';
+      status.textContent = micOn() ? '🎹 Con đàn Đô giữa nhé — micro đang nghe!' : '🎹 Con chỉ (hoặc đàn) Đô giữa — tìm đúng thì chạm 👍 “Đã tìm đúng”.';
     };
     const success = (byMic: boolean) => {
       if (found || left) return;
@@ -86,12 +87,12 @@ export function middleCScreen(app: App, reason: MiddleCReason, hooks: { onDone()
       backButton(() => leave(hooks.onBack)),
       button({ icon: '🔊', label: 'Nghe Đô giữa', onTap: () => void app.audio.playPitch('C4', 0.9) }),
       button({ icon: '⏭', label: 'Bỏ qua', onTap: () => leave(hooks.onDone) }),
-      button({ icon: '👪', label: 'Đã tìm đúng', kind: 'good', onTap: () => success(false) }),
+      selfOkButton(() => success(false), { label: 'Đã tìm đúng' }),
     );
     root.append(h('div', { class: 'screen' }, stage, bar));
     setStatus();
 
-    // Micro: bật nếu bố mẹ cho phép (iOS cần một lần chạm — thử ngay, và lần chạm đầu tiên trên màn)
+    // Micro: bật nếu cài đặt cho phép (iOS cần một lần chạm — thử ngay, và lần chạm đầu tiên trên màn)
     const tryMic = () => {
       if (!app.micWanted || micOn()) return;
       void app.ensureMic().then(() => !left && setStatus()).catch(() => undefined);

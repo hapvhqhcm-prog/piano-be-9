@@ -5,6 +5,10 @@
  * - tiếng ồn phòng + tiếng ù điện 50 Hz, lực bấm to/nhỏ khác nhau
  */
 import { CLICK } from '../src/audio/AudioEngine';
+import { MicAnalyzer } from '../src/audio/micAnalyzer';
+
+/** (+ 2026-10-25) VOICE_GUARD=off → đo "trước" (MicAnalyzer không phân biệt giọng / đàn — src/audio/voiceGuard.ts). */
+if ((globalThis as { process?: { env: Record<string, string | undefined> } }).process?.env.VOICE_GUARD === 'off') MicAnalyzer.voiceGuardDefault = false;
 
 export interface SimNote {
   midi: number;

@@ -19,7 +19,6 @@ export const ROUTE_POLL_MS = 4000;
 export const WIRELESS_LABEL = /airpods|bluetooth|\bbt\b|beats|wireless|không dây|buds/i;
 
 export const BT_NOTE = 'Đang dùng loa/tai nghe Bluetooth — micro chấm nhịp kém. Dùng loa iPad nhé';
-export const BT_PARENT_HINT = 'Bố mẹ: tắt Bluetooth, hoặc vào Cài micro → “Đo lại độ trễ”';
 export const BT_RESULT_NOTE = 'chưa chấm nhịp vì loa Bluetooth';
 
 export interface RouteState {

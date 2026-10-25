@@ -4,7 +4,6 @@ import type { SongRun } from '../../progress/schema';
 import type { App } from '../App';
 import { backButton, button, h } from '../components/dom';
 import { songScreen } from './song';
-import { deferOther, selfStudy } from '../selfStudy';
 import { shortTitle, songEmoji } from '../components/songArt';
 import '../../styles/kidux.css';
 
@@ -15,7 +14,7 @@ export interface StageHooks {
   /** Cấp của buổi hòa nhạc (tuần cuối mỗi cấp, xem LEVELS): 1 = bài tay phải, 2 = thêm bài hai tay, 3 = mọi bài */
   level?: 1 | 2 | 3 | 4;
   onRun(run: Omit<SongRun, 'ts'>): void;
-  /** Phụ huynh tặng huy chương — tiêu chí tuần hòa nhạc cuối cấp (PARENT) */
+  /** Bé nhận huy chương sau buổi diễn — tiêu chí tuần hòa nhạc cuối cấp ((2026-10-25) bé tự chạm, không cần bố mẹ) */
   onMedal(): void;
   onDone(): void;
   onBack(): void;
@@ -156,19 +155,18 @@ export function stageScreen(app: App, hooks: StageHooks) {
           { class: 'screen center' },
           h('div', { class: 'hero-emoji huge' }, '👏'),
           h('h1', { class: 'hero-title' }, 'Bravo! Buổi biểu diễn tuyệt vời!'),
-          h('p', { class: 'lead' }, selfStudy(app) ? '🏅 Huy chương của con! Bố mẹ sẽ nghe lại buổi diễn nhé' : '👪 Bố mẹ: hãy trao huy chương cho nghệ sĩ nhỏ'),
+          h('p', { class: 'lead' }, '🏅 Con diễn xong cả buổi rồi — huy chương này là của con!'),
           h(
             'div',
             { class: 'end-actions' },
             button({
               icon: '🏅',
-              label: 'Tặng huy chương',
+              label: 'Nhận huy chương',
               kind: 'primary',
               big: true,
               onTap: () => {
-                // (+ 2026-10-12) 👦 Bé tự học: huy chương (tiêu chí tuần cuối cấp) chỉ tính khi bố mẹ duyệt ở hàng chờ
-                if (selfStudy(app)) deferOther(app, { kind: 'check', group: 'medal', label: 'Buổi biểu diễn cuối cấp — trao huy chương', notes: [{ note: 'medal', ts: Date.now() }] });
-                else hooks.onMedal();
+                // (2026-10-25, bỏ phần phụ huynh) bé tự nhận huy chương sau khi diễn hết các bài — ghi ngay (tiêu chí tuần cuối cấp)
+                hooks.onMedal();
                 root.replaceChildren(
                   h(
                     'div',

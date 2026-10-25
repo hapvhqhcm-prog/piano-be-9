@@ -1,15 +1,13 @@
 /**
- * (+ 2026-10-17, OWNER duyệt) Màn Phụ huynh — phần TUẦN:
+ * (+ 2026-10-17, OWNER duyệt) Màn ⚙️ Cài đặt (trước: Phụ huynh) — phần TUẦN:
  * - "🗓️ Tuần N" — tiến độ mục tiêu tuần + "Vì sao?" bằng số liệu của app (tiêu chí theo ngày, độ khó + lý do từ
  *   lessons/adaptive.ts, khi nào sang tuần mới) + "⏸ Ở lại tuần này thêm";
- * - "💡 Tuần N: 3 điều cần nhớ" — gộp 3 thẻ mẹo cũ (bố mẹ chú ý tuần này · khi nào bấm "Đúng rồi" · thẻ nhắc nhanh);
- *   lần đầu mỗi tuần mở sẵn, sau đó thu gọn;
+ * - (2026-10-25, OWNER "bỏ phần phụ huynh") đã bỏ "💡 Tuần N: 3 điều cần nhớ" (mẹo cho bố mẹ ngồi cùng);
  * - "🧩 Thiết lập một lần" (thu gọn, có ✓): micro, Màn hình chính, giờ tập, bài bố mẹ thêm.
  */
 import type { AppData } from '../../progress/schema';
 import { criterionProgress, weekPassed, weekPlan, levelOf } from '../../lessons/lessonEngine';
 import { difficulty, difficultyText, DIFFICULTY_MIN_SESSIONS, type Difficulty } from '../../lessons/adaptive';
-import { parentTip } from '../../lessons/parentTips';
 import { isStandalone } from '../../progress/backup';
 import { button, h } from '../components/dom';
 import { installCard } from '../components/installCard';
@@ -119,59 +117,6 @@ export function weekCard(c: ParentCtx, d: Readonly<AppData>, now: Date): HTMLEle
   );
 }
 
-/* ---------------- 💡 3 điều cần nhớ ---------------- */
-
-const TIPS_KEY = 'piano-be-9:tips-seen-week';
-function tipsSeen(week: number): boolean {
-  try {
-    return localStorage.getItem(TIPS_KEY) === String(week);
-  } catch {
-    return false;
-  }
-}
-function markTips(week: number): void {
-  try {
-    localStorage.setItem(TIPS_KEY, String(week));
-  } catch {
-    /* bỏ qua */
-  }
-}
-
-/** 3 điều — thuần (test): mẹo của tuần, chuẩn bấm "Đúng rồi", cách nói khi bé vấp / mệt. */
-export function threeTips(week: number): Array<{ icon: string; title: string; text: string }> {
-  return [
-    { icon: '👪', title: `Tuần ${week} chú ý`, text: parentTip(week) },
-    {
-      icon: '✅',
-      title: 'Khi nào bấm “Đúng rồi”',
-      text: 'Đúng phím sáng + đúng số ngón (ngập ngừng, còn nhỏ tiếng vẫn là Đúng). Sai ngón: nhắc nhẹ cho bé bấm lại. Sai phím: “Thử lại” — không chê.',
-    },
-    {
-      icon: '💬',
-      title: 'Khi bé vấp / mệt',
-      text: '“Con thử chậm hơn nhé” · “Ngón số mấy nhỉ?” — chậm mà đúng hơn nhanh mà sai. Khen cụ thể; mệt thì nghỉ 1 phút hoặc mai học tiếp.',
-    },
-  ];
-}
-
-/** 💡 Tuần N: 3 điều cần nhớ — mở sẵn lần đầu mỗi tuần, sau đó thu gọn. Mốc Hướng dẫn: 'tips'. */
-export function tipsCard(week: number): HTMLElement {
-  const first = !tipsSeen(week);
-  const det = h(
-    'details',
-    { class: 'card tips3', 'data-guide': 'tips' },
-    h('summary', {}, h('h2', {}, `💡 Tuần ${week}: 3 điều cần nhớ`)),
-    h(
-      'ol',
-      { class: 'tips3-list' },
-      ...threeTips(week).map((x) => h('li', {}, h('b', {}, `${x.icon} ${x.title}: `), x.text)),
-    ),
-  );
-  det.open = first;
-  if (first) markTips(week);
-  return det;
-}
-
 /* ---------------- 🧩 Thiết lập một lần ---------------- */
 
 export function setupSection(c: ParentCtx, d: Readonly<AppData>, back: () => void): HTMLElement {
@@ -199,7 +144,7 @@ export function setupSection(c: ParentCtx, d: Readonly<AppData>, back: () => voi
       ),
       h('li', {}, mark(homeDone), h('b', {}, '📲 Màn hình chính'), h('span', { class: 'muted' }, homeDone ? ' — app đang mở từ biểu tượng 🎹.' : ' — chưa thêm (xem hướng dẫn bên dưới).')),
       h('li', {}, mark(reminderDone), h('b', {}, '⏰ Giờ tập'), h('span', { class: 'muted' }, reminderDone ? ' — đã đặt lời nhắc trong Lịch.' : ' — chưa đặt.')),
-      h('li', {}, mark(songsDone), h('b', {}, '📝 Bài bố mẹ thêm'), h('span', { class: 'muted' }, songsDone ? ` — ${c.store.parentSongs().length} bài.` : ' — tùy chọn.')),
+      h('li', {}, mark(songsDone), h('b', {}, '📝 Bài thêm'), h('span', { class: 'muted' }, songsDone ? ` — ${c.store.parentSongs().length} bài.` : ' — tùy chọn.')),
     ),
     installCard(),
     tagGuide(reminderCard(app), 'reminder'),

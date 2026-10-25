@@ -89,8 +89,8 @@ export function songEditorScreen(app: App, existing: ParentSong | null, hooks: S
     const defTitle = () => {
       let n = store.parentSongs().length + 1;
       const names = new Set(store.parentSongs().map((x) => x.title));
-      while (names.has(`Bài bố mẹ thêm số ${n}`)) n++;
-      return `Bài bố mẹ thêm số ${n}`;
+      while (names.has(`Bài thêm số ${n}`)) n++;
+      return `Bài thêm số ${n}`;
     };
     const titleIn = h('input', {
       class: 'se-title',
@@ -522,7 +522,7 @@ export function songEditorScreen(app: App, existing: ParentSong | null, hooks: S
         store.updateParentSong(existing.id, { ...patch, text: song.text, phrases: song.phrases });
       } else store.addParentSong(song);
       dirty = false;
-      toast(`💾 Đã lưu “${song.title}” — bé mở ở Thư viện › 📝 Bài bố mẹ thêm`, 3000);
+      toast(`💾 Đã lưu “${song.title}” — bé mở ở Thư viện › 📝 Bài thêm`, 3000);
       hooks.onDone(store.findParentSong(song.id) ?? song);
     }
 

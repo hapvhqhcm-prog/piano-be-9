@@ -17,7 +17,7 @@ import {
   type HandVariant,
 } from '../src/lessons/handTechnique';
 import { RELAX_CHECKS } from '../src/lessons/level4';
-import { HAND_POSES, chain, n, sideHand } from '../src/ui/components/art/handKit';
+import { archAt, n, step } from '../src/ui/components/art/diagramKit';
 import { placeTag, principleMarkup, principleSvg } from '../src/ui/components/handTechniqueArt';
 import { postureMarkup } from '../src/ui/components/postureArt';
 import { handIconMarkup } from '../src/ui/components/handIcon';
@@ -169,7 +169,7 @@ describe('tranh nguyên tắc tay', () => {
   });
 });
 
-describe('bộ vẽ bàn tay (handKit)', () => {
+describe('bộ vẽ sơ đồ (diagramKit) — không còn hình bàn tay người', () => {
   it('n(): không bao giờ in NaN', () => {
     expect(n(NaN)).toBe('0');
     expect(n(Infinity)).toBe('0');
@@ -177,36 +177,29 @@ describe('bộ vẽ bàn tay (handKit)', () => {
     expect(n(1.26)).toBe('1.3');
   });
 
-  it('chain: độ dài đoạn đúng', () => {
-    const pts = chain([0, 0], [
-      { len: 10, deg: 0 },
-      { len: 5, deg: 90 },
-    ]);
-    expect(pts[1][0]).toBeCloseTo(10);
-    expect(pts[2][1]).toBeCloseTo(5);
+  it('step / cây cầu: đỉnh cầu cao đúng `lift` ở giữa, hai chân đúng hai đầu', () => {
+    const p = step([0, 0], 10, 90);
+    expect(p[0]).toBeCloseTo(0);
+    expect(p[1]).toBeCloseTo(10);
+    const a: [number, number] = [40, 100];
+    const b: [number, number] = [200, 100];
+    expect(archAt(a, b, 60, 0)).toEqual(a);
+    expect(archAt(a, b, 60, 1)).toEqual(b);
+    expect(archAt(a, b, 60, 0.5)[1]).toBeCloseTo(100 - 60, 0);
+    expect(archAt(a, b, -8, 0.5)[1]).toBeGreaterThan(100); // cầu sụp: võng xuống
   });
 
-  it('dáng "cong": khớp gốc (cây cầu) cao nhất; dáng "bẹp": khớp gốc thấp hơn cổ tay; cổ tay võng/nhô đúng hướng', () => {
-    const tip: [number, number] = [170, 110];
-    const curved = sideHand({ tip, pose: 'curved' }).pts;
-    // y nhỏ hơn = cao hơn
-    expect(curved[3][1]).toBeLessThan(curved[2][1]);
-    expect(curved[3][1]).toBeLessThan(curved[4][1]);
-    expect(curved[1][1]).toBeLessThan(curved[0][1]); // đốt đầu đứng (khớp đầu cao hơn đầu ngón)
-    // nhìn là thấy: khớp gốc cao hơn cổ tay và khớp giữa RÕ RỆT (≥ 6 đơn vị ở tỉ lệ 1); đốt đầu gần thẳng đứng
-    expect(curved[4][1] - curved[3][1]).toBeGreaterThanOrEqual(6);
-    expect(curved[2][1] - curved[3][1]).toBeGreaterThanOrEqual(6);
-    expect(Math.abs(curved[1][0] - curved[0][0])).toBeLessThan(3);
-    const flat = sideHand({ tip, pose: 'flat' }).pts;
-    expect(flat[3][1]).toBeGreaterThan(flat[4][1]);
-    const low = sideHand({ tip, pose: 'wristLow' }).pts;
-    const high = sideHand({ tip, pose: 'wristHigh' }).pts;
-    expect(low[4][1]).toBeGreaterThan(curved[4][1] + 10);
-    expect(high[4][1]).toBeLessThan(curved[4][1] - 10);
-    // gãy khớp đầu: đốt đầu gần như nằm ngang (khớp đầu thấp, sát mặt phím)
-    const col = sideHand({ tip, pose: 'collapsed' }).pts;
-    expect(Math.abs(col[1][1] - col[0][1])).toBeLessThan(4);
-    for (const k of Object.keys(HAND_POSES)) expect(sideHand({ tip, pose: k as keyof typeof HAND_POSES }).svg).not.toMatch(/NaN/);
+  it('mọi tranh tư thế: không dùng màu da / hình bàn tay cũ (trừ tranh bé ngồi đàn)', () => {
+    for (const p of HAND_PRINCIPLES) {
+      if (p.id === 'sit') continue;
+      for (const v of variantsOf(p.id)) expect(principleMarkup(p.id, v).inner, `${p.id}/${v}`).not.toMatch(/#ffd5b5|#f3ad88|#f4bc98/i);
+    }
+    expect(handIconMarkup(false)).not.toMatch(/#ffd5b5/i);
+  });
+
+  it('cây cầu: đúng = cầu cao, chưa đúng = cầu sụp (tranh dáng tay khác nhau rõ)', () => {
+    expect(principleMarkup('shape', 'good').label).toMatch(/cây cầu cao/);
+    expect(principleMarkup('shape', 'bad').label).toMatch(/sụp/);
   });
 });
 

@@ -44,7 +44,7 @@ import {
   together,
   type SongCtx,
 } from './songState';
-import { askParent, makeReview, showResult } from './songResult';
+import { askSelf, makeReview, showResult } from './songResult';
 import { focusStepDone } from './songFocus';
 import { BT_RESULT_NOTE } from '../../audio/outputRoute';
 
@@ -236,7 +236,7 @@ function finishTempo(
     return v;
   };
   if (c.focus) {
-    // 🎯 Luyện một chỗ: chỉ tô xanh/cam rồi sang bước sau (không ghi lượt, không hỏi bố mẹ)
+    // 🎯 Luyện một chỗ: chỉ tô xanh/cam rồi sang bước sau (không ghi lượt, không hỏi bé tự kiểm tra)
     const v = micOn(c) ? timingWithHands() : null;
     v?.forEach((r) => markGroup(r.index, r.hit ? 'hit' : 'miss'));
     return focusStepDone(c, v ? scoreOf(v) >= PASS_SCORE : null);
@@ -283,6 +283,6 @@ function finishTempo(
     showResult(c, s, `Đúng nhịp ${hits}/${v.length} nốt${handTxt}${pulse ? ` · ${pulse}` : ''}`);
   } else {
     take.drop();
-    askParent(c, drop ? 'Bé giữ nhịp đều (cả lúc máy im) và đàn trọn bài chưa?' : 'Bé giữ nhịp đều và đàn trọn bài chưa?', gradeInput.length);
+    askSelf(c, drop ? 'Con giữ nhịp đều (cả lúc máy im) và đàn trọn bài chưa?' : 'Con giữ nhịp đều và đàn trọn bài chưa?', gradeInput.length);
   }
 }

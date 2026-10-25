@@ -1,7 +1,7 @@
 import { songEverPlayed, songFresh, songMastered, songStats } from '../../lessons/lessonEngine';
 import { SONGS, type Tune } from '../../music/tune';
 import { compositionToTune } from '../../practice/compose';
-import { PRIVACY_NOTE, parentSongToTune } from '../../practice/parentSongs';
+import { parentSongToTune } from '../../practice/parentSongs';
 import type { Composition, ParentSong } from '../../progress/schema';
 import type { App } from '../App';
 import { actionBar, backButton, h, toast } from '../components/dom';
@@ -107,7 +107,7 @@ export function libraryScreen(app: App, filter?: 'all' | 'vn') {
         h('div', { class: 'song-card-week' }, `📅 ${d.getDate()} thg ${d.getMonth() + 1}`),
       );
     };
-    // "📝 Bài bố mẹ thêm": bài bố mẹ tự nhập (chỉ lưu trên iPad này) — sửa/xóa ở màn Phụ huynh
+    // "📝 Bài thêm": bài người lớn tự nhập ở ⚙️ Cài đặt (chỉ lưu trên iPad này) — sửa/xóa ở đó
     const parents = [...(data.parentSongs ?? [])].sort((a, b) => b.createdAt - a.createdAt);
     const parentCard = (c: ParentSong) => {
       const t = parentSongToTune(c);
@@ -116,7 +116,7 @@ export function libraryScreen(app: App, filter?: 'all' | 'vn') {
         'button',
         { class: 'song-card parent-song-card', type: 'button', onClick: () => playSong(app, t) },
         h('div', { class: 'song-card-title' }, h('span', {}, '📝 ', c.title)),
-        h('div', { class: 'song-card-sub' }, `Bố mẹ thêm · ${bars} ô nhịp${t.hand === 'LH' ? ' · tay trái' : ''}`),
+        h('div', { class: 'song-card-sub' }, `Bài thêm · ${bars} ô nhịp${t.hand === 'LH' ? ' · tay trái' : ''}`),
         h('div', { class: 'song-card-week' }, `Nhịp ${c.timeSignature}`),
       );
     };
@@ -124,8 +124,8 @@ export function libraryScreen(app: App, filter?: 'all' | 'vn') {
       ? h(
           'section',
           { class: 'lib-parent' },
-          h('h2', { class: 'lib-level' }, '📝 Bài bố mẹ thêm'),
-          h('p', { class: 'lib-private' }, `🔒 ${PRIVACY_NOTE}`),
+          h('h2', { class: 'lib-level' }, '📝 Bài thêm'),
+          h('p', { class: 'lib-private' }, '🔒 Chỉ lưu trên iPad này, dùng riêng trong gia đình.'),
           h('div', { class: 'library' }, ...parents.map(parentCard)),
         )
       : null;
@@ -152,7 +152,6 @@ export function libraryScreen(app: App, filter?: 'all' | 'vn') {
       grid('🎼 Nhạc sĩ Việt Nam xưa', SONGS.filter((x) => x.vn === 'composed')),
       grid('🎶 Bài quen hát lời Việt', SONGS.filter((x) => x.vn === 'lyrics')),
       parentSection,
-      parents.length ? null : h('p', { class: 'muted lib-note' }, '📝 Bố mẹ có thể thêm bài con thích ở màn Phụ huynh → "📝 Thêm bài hát".'),
     ];
     // Playtest 2026-10: bé thấy NGAY bài đang tập + bài đã thuộc; bài đã mở khác ở dưới; bài chưa mở gom vào "Sắp mở" (gập)
     const isOpen = (x: Tune) => (x.week ?? 1) <= week;

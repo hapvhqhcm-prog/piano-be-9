@@ -102,7 +102,7 @@ export class TakeReplay {
       const v = await store.consider({ songId: a.songId, title: a.title, blob, seconds: c.seconds, ...score });
       if (my !== this.gen || this.d.disposed()) return;
       if (v.saved) this.showSaved(a.songId, v.previous);
-      else if (v.reason === 'full') this.note(h('span', { class: 'take-album-text' }, '📀 Album đầy — bố mẹ xóa bớt ở màn Phụ huynh nhé'));
+      else if (v.reason === 'full') this.note(h('span', { class: 'take-album-text' }, '📀 Album đầy rồi — bản này không lưu nhé'));
     }).catch(() => undefined);
   }
 
@@ -166,7 +166,7 @@ export class TakeReplay {
           undo.remove();
           void albumStore()
             ?.undo(songId, previous)
-            .then((ok) => (text.textContent = ok ? 'Không lưu bản này.' : '📀 Chưa bỏ được — bố mẹ xóa ở Album nhé'));
+            .then((ok) => (text.textContent = ok ? 'Không lưu bản này.' : '📀 Chưa bỏ được bản này — không sao đâu!'));
         },
       },
       'Không lưu',
@@ -175,7 +175,7 @@ export class TakeReplay {
   }
 
   /**
-   * (+ 2026-10-12) Bản ghi của lượt vừa dừng (Blob + giây) — cho hàng "🕑 Chờ bố mẹ xem" (bé tự học). null = không có
+   * (+ 2026-10-12) Bản ghi của lượt vừa dừng (Blob + giây) — (bé nghe lại / Album). null = không có
    * (micro tắt / lượt đã bị bỏ). Lấy Blob NGAY khi bản ghi tới (trước khi lượt mới / rời màn giải phóng nó).
    */
   clipNow(): Promise<{ blob: Blob; seconds: number } | null> | null {

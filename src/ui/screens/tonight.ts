@@ -47,8 +47,9 @@ export interface TonightPlan {
 }
 
 export const WHO_TEXT: Record<CriterionWho, string> = {
-  PARENT: 'bố mẹ xác nhận',
-  'PARENT/MIC': 'bố mẹ hoặc micro xác nhận',
+  // (2026-10-25, OWNER "bỏ phần phụ huynh") chỗ trước đây bố mẹ xác nhận → bé tự kiểm tra (👍 Rồi / 🔁 Làm lại)
+  PARENT: 'bé tự kiểm tra',
+  'PARENT/MIC': 'micro chấm hoặc bé tự kiểm tra',
   SELF: 'bé tự đánh giá',
   APP: 'app tự chấm',
 };

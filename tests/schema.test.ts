@@ -18,7 +18,7 @@ describe('schema v1 (§7)', () => {
       autoAdvanceDelaySec: 4,
       leftHandEnabled: false,
       dailyLimit: 'none',
-      micEnabled: false, // micro mặc định TẮT
+      micEnabled: true, // (2026-10-25, bỏ phần phụ huynh) người dùng mới: micro BẬT sẵn (bé tự cho phép)
       micTuningCents: 0,
       micAutoNext: true,
       micSensitivity: 'normal',
@@ -83,7 +83,8 @@ describe('ProgressStore', () => {
     st.addParentAssessment(s.id, 'D4', 'retry');
     st.addAppAssessment(s.id, 'C4', 'D4');
     const saved = st.get().sessions[0];
-    expect(saved.parentAssessments).toEqual([{ note: 'D4', result: 'retry', ts: expect.any(Number) }]);
+    // (2026-10-25) kết quả không qua micro = bé tự kiểm tra → đóng dấu by: 'self'
+    expect(saved.parentAssessments).toEqual([{ note: 'D4', result: 'retry', ts: expect.any(Number), by: 'self' }]);
     expect(saved.appAssessments).toEqual([
       { expected: 'C4', actual: 'D4', correct: false, ts: expect.any(Number) },
     ]);
@@ -110,6 +111,8 @@ describe('ProgressStore', () => {
 
   it('xuất → nhập lại cho cùng dữ liệu; nhập rác bị từ chối và không mất dữ liệu', () => {
     const st = new ProgressStore(new MemoryStorage(), fixedNow);
+    // micro tắt: nhập dữ liệu có micro bật đánh dấu "cần cài lại micro" trên iPad mới (realWorldOps.test) — ở đây so khớp y nguyên
+    st.updateSettings({ micEnabled: false });
     st.startSession('w1-l1');
     const json = st.exportJSON();
     const other = new ProgressStore(new MemoryStorage(), fixedNow);

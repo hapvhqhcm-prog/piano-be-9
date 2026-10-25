@@ -1,0 +1,109 @@
+/* (+ 2026-10-25) ⚡ Thi vượt tuần · 🧭 Kiểm tra xếp lớp (screens/testOut.ts, placement.ts, skipRunner.ts, components/skipEntries.ts) */
+.skip-stage {
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+}
+.skip-hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 8px;
+  min-height: 110px;
+}
+.skip-island svg {
+  width: 150px;
+  height: auto;
+  display: block;
+}
+.skip-title {
+  max-width: 760px;
+  margin: 4px auto 0;
+}
+.skip-lead {
+  max-width: 720px;
+  margin: 0 auto;
+  color: var(--ink-2);
+}
+.skip-list {
+  list-style: none;
+  padding: 0;
+  margin: 6px auto 0;
+  display: grid;
+  gap: 8px;
+  max-width: 640px;
+  width: 100%;
+}
+.skip-list li {
+  background: var(--surface-2);
+  border: 2px solid var(--line);
+  border-radius: 16px;
+  padding: 10px 16px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ink);
+  text-align: left;
+}
+.skip-pass .skip-title {
+  color: var(--mint-700);
+}
+
+/* Câu hỏi tự xác nhận (micro không chấm được) */
+.skip-self {
+  gap: 12px;
+  padding: 16px;
+  text-align: center;
+}
+.skip-self-q {
+  max-width: 760px;
+  margin: 0 auto;
+}
+.skip-self-note {
+  max-width: 680px;
+  margin: 0 auto;
+  color: var(--ink-2);
+}
+.skip-self-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+/* Màn chính: hàng trong 📋 Xem các bài + lời mời kiểm tra xếp lớp */
+.lesson-row.skip-row {
+  border-style: dashed;
+}
+.lesson-row.skip-row[disabled] {
+  opacity: 0.6;
+}
+.skip-invite {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 10px auto 0;
+  padding: 10px 14px;
+  max-width: 720px;
+  border-radius: 18px;
+  background: var(--sun-50);
+  border: 2px solid var(--sun-300);
+  color: var(--sun-800);
+  font-weight: 700;
+}
+.skip-invite-text {
+  font-size: 18px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.skip-invite .btn {
+  min-height: 48px;
+  padding: 6px 16px;
+}
+.skip-invite .btn-plain {
+  box-shadow: none;
+  background: transparent;
+  color: var(--sun-800);
+}

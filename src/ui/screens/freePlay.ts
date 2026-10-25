@@ -12,14 +12,21 @@ import { pitchFreq } from '../../piano/pitchTable';
 import { isTimbre, playTimbre } from '../../audio/timbres';
 import { unlockedItems } from '../../lessons/unlocks';
 import { applyCosmetics, currentTimbre, setTimbre } from '../components/unlocksUi';
+import { lazy, lazyScreen } from '../lazy';
 import '../../styles/kidux.css';
+
+// (+ 2026-10-25) 🎙️ Máy ghi âm — chunk riêng, chỉ nạp khi bé chạm ⏺
+const tapeMod = lazy(() => import('./tapeRecorder'));
 
 /** Trò "Đàn theo thầy": thầy đàn vài nốt (thế Đô), bé đàn lại đúng thứ tự — đúng thì dài thêm một nốt. */
 const ECHO_NOTES: Pitch[] = ['C4', 'D4', 'E4', 'F4', 'G4'];
 const ECHO_START = 3;
 const ECHO_MAX = 6;
 
-/** Đàn tự do — chạm phím → tiếng + sáng phím + ngón nào (tay phải; tay trái từ tuần 6). Kèm trò "🎵 Đàn theo thầy". */
+/**
+ * Đàn tự do — chạm phím → tiếng + sáng phím + ngón nào (tay phải; tay trái từ tuần 6). Kèm trò "🎵 Đàn theo thầy".
+ * (+ 2026-10-25) Thanh trên: nút đỏ "⏺ Ghi âm" → 🎙️ Máy ghi âm (kèm phím đàn trên màn; Quay lại → về đây).
+ */
 export function freePlayScreen(app: App) {
   return (root: HTMLElement) => {
     const lhOn = leftHandActive(app.store.get());
@@ -187,11 +194,21 @@ export function freePlayScreen(app: App) {
       range.textContent = `${WINDOWS[wi][2]}: ${WINDOWS[wi][0]}–${WINDOWS[wi][1]}`;
     };
     const range = h('div', { class: 'range-label' }, 'Giữa: C3–C5');
+    const recBtn = button({
+      icon: '⏺︎', // ⏺ dạng chữ (không thành ô emoji xám trên nút đỏ)
+      label: 'Ghi âm',
+      onTap: () => app.show(lazyScreen(tapeMod, (m) => m.tapeRecorderScreen(app, () => app.show(freePlayScreen(app)), { keys: true }))),
+    });
+    recBtn.classList.add('fp-rec');
+    recBtn.setAttribute('data-test', 'fp-rec');
+    recBtn.setAttribute('aria-label', 'Máy ghi âm');
     root.append(
       h(
         'div',
-        { class: 'screen' },
-        h('div', { class: 'stage scrollable' }, timbreRow, echoBox, big, row, small),
+        { class: 'screen free-play' },
+        // Thanh trên: tên màn · chọn tiếng đàn · ⏺ Ghi âm (chọn tiếng nằm đây để màn không cao thêm)
+        h('header', { class: 'fp-top' }, h('h1', { class: 'fp-title' }, '🎹 Đàn tự do'), timbreRow, recBtn),
+        h('div', { class: 'stage scrollable' }, echoBox, big, row, small),
         h('div', { class: 'keyboard-wrap' }, kb.el),
         actionBar(
           backButton(() => app.show(homeScreen(app))),

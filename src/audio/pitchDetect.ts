@@ -251,6 +251,18 @@ export class NoteTracker {
     this.prevLeft = 0;
   }
 
+  /**
+   * (+ 2026-10-25) Nốt vừa báo bị bỏ vì là GIỌNG bé (voiceGuard.ts): không được coi là "lần bấm" — lần gõ phím ngay sau
+   * đó (bé hát trước rồi mới bấm phím cùng nốt) không bị nuốt như "tiếng búa trễ của chính nốt vừa báo".
+   */
+  voiceRejected(midi: number): void {
+    if (this.lastEmit === midi) {
+      this.lastEmit = null;
+      this.sinceEmit = 1e9;
+    }
+    if (this.suppress === midi) this.suppress = null;
+  }
+
   /** Đưa vào kết quả 1 khung; trả về nốt khi có nốt mới được đánh. */
   push(result: PitchResult | null, tuningCents = 0, onsetIn?: boolean, frameRms?: number, silenceBelow = 0.006): HeardNote | null {
     const r = frameRms ?? result?.rms ?? 0;

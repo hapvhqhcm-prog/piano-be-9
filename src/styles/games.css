@@ -997,3 +997,13 @@
   background: transparent;
   font-weight: 600;
 }
+/* (+ 2026-10-25) 🎙️ Máy ghi âm — thẻ thứ 8 của lưới (4 + 4) */
+.gc-recorder {
+  background: linear-gradient(180deg, var(--coral-50, #fff3ef), var(--surface) 70%);
+  box-shadow: var(--e2), inset 0 -6px 0 var(--coral-100, #ffd9cf);
+}
+.gc-recorder .gc-best {
+  color: #fff;
+  background: #e53935;
+  box-shadow: none;
+}

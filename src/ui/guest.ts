@@ -4,10 +4,13 @@
  * tiêu chí tuần, micro không tự học (độ nhạy / lệch dây). Chặn ở tầng dữ liệu: ProgressStore.enterGuest / exitGuest
  * (không ghi xuống bộ nhớ, thoát = trả lại đúng dữ liệu lúc vào). Băng "👤 Đang chơi chế độ khách — không lưu" + nút Thoát
  * luôn hiện trên cùng.
+ * (+ 2026-10-25) 🎙️ Máy ghi âm: bản ghi của khách vào danh sách TẠM trong bộ nhớ (progress/recordingsStore.guestRecordings),
+ * KHÔNG ghi xuống iPad, xoá khi vào / thoát chế độ khách.
  */
 import type { App, Screen } from './App';
 import { button, h, toast } from './components/dom';
 import { lazy, lazyScreen } from './lazy';
+import { clearGuestRecordings } from '../progress/recordingsStore';
 import '../styles/guest.css';
 
 export const GUEST_BANNER_TEXT = '👤 Đang chơi chế độ khách — không lưu';
@@ -52,6 +55,7 @@ export function enterGuest(app: App): void {
     return;
   }
   setMicLearning(app, false);
+  clearGuestRecordings(); // (+ 2026-10-25) 🎙️ Máy ghi âm: khách bắt đầu với danh sách tạm trống
   showBanner(app);
   app.show(guestHomeScreen(app));
 }
@@ -59,6 +63,7 @@ export function enterGuest(app: App): void {
 /** Thoát chế độ khách: trả lại dữ liệu của bé, về màn chính của bé. */
 export function exitGuest(app: App): void {
   app.store.exitGuest();
+  clearGuestRecordings(); // (+ 2026-10-25) bản ghi tạm của khách (chỉ trong bộ nhớ) bị xoá khi thoát
   removeBanner();
   setMicLearning(app, true);
   toast('👋 Hết lượt khách — về với bé nhé!');

@@ -6,12 +6,11 @@ import type { App } from '../App';
 import { backButton, button, h } from '../components/dom';
 import { cancelSpeech, speak } from '../../audio/voice';
 import { speakChip } from '../components/speakChip';
-import { TEACH_TITLE, teachCard } from './teach';
-import { parentCorner } from '../components/parentCorner';
+import { TEACH_TITLE, kidTeachText, teachCard } from './teach';
 
 /**
  * Câu nào cũng là câu trả lời tốt — số sao KHÔNG phụ thuộc câu trả lời (sao = đúng ngay lần đầu trong buổi, ≥ 1).
- * Bé nói thật "khó quá" = thông tin quý cho bố mẹ, không bao giờ bị ít sao hơn.
+ * Bé nói thật "khó quá" = thông tin quý (app tự cân độ khó — lessons/adaptive.ts), không bao giờ bị ít sao hơn.
  */
 const OPTIONS: Array<{ rating: SelfRating; emoji: string; label: string; praise: string }> = [
   // (+ 2026-10-17, OWNER duyệt "Buổi học ≥ 60% đàn thật") nhãn & lời khen NGẮN (chữ của bé ≤ 12 tiếng mỗi màn)
@@ -34,16 +33,16 @@ function sessionStars(app: App): 1 | 2 | 3 {
 export interface ClosingHooks {
   /** Thẻ "Con làm thầy" ở đầu màn; null = chỉ tự chấm (chơi lại / sân khấu) */
   teach: { emoji: string; text: string } | null;
-  /** (+ 2026-10-15) Dòng "📝 Bài tập về nhà" cho BỐ MẸ (chỗ thầy dặn hôm nay — lessons/homework.ts); null/không có = không hiện */
+  /** (2026-10-25, bỏ phần phụ huynh) KHÔNG còn hiện (trước: dòng "📝 Bài tập về nhà" cho bố mẹ) — giữ để không vỡ chỗ gọi */
   homework?: string | null;
-  /** (+ 2026-10-17) Lời nhắn cho bố mẹ: bài tập về nhà vừa TẠM DỪNG (lessons/homework.ts reassignHomework); null/không có = không hiện */
+  /** (2026-10-25) KHÔNG còn hiện (trước: lời nhắn cho bố mẹ khi bài tập tạm dừng) */
   homeworkNote?: string | null;
   /**
    * (+ 2026-10-17, OWNER duyệt "Buổi học ≥ 60% đàn thật") Chip KHÔNG bắt buộc "📘 1 thẻ mới" (thẻ "Biết thêm" của bài — đã ra khỏi
    * buổi). null/không có = không hiện.
    */
   theory?: { label: string; onOpen(): void } | null;
-  /** Bố mẹ bấm "Bố mẹ đã học xong" (PARENT_ASSESSMENT 'teach-back') — tối đa một lần */
+  /** Bé chạm "Con giảng xong rồi" (giảng cho Bé Nốt — PARENT_ASSESSMENT 'teach-back', by: 'self') — tối đa một lần */
   onTaught(): void;
   onRate(r: SelfRating): void;
   onDone(): void;
@@ -52,7 +51,7 @@ export interface ClosingHooks {
 
 /**
  * v5.1 — MÀN KẾT (OWNER duyệt 2026-10-06 — buổi ≤ 7 màn): gộp "Con làm thầy" + tự chấm vào MỘT màn.
- * Trên: thẻ "Con làm thầy" (bé dạy lại bố mẹ, bố mẹ bấm xác nhận — không bắt buộc). Dưới: "Hôm nay con thấy thế nào?"
+ * Trên: thẻ "Con làm thầy" (bé giảng cho Bé Nốt nghe rồi chạm "Con giảng xong rồi" — không bắt buộc). Dưới: "Hôm nay con thấy thế nào?"
  * Dễ / Vừa / Khó → sao như nhau cho mọi câu (§10) → Tiếp. Không có đáp án "thua".
  */
 export function closingScreen(app: App, hooks: ClosingHooks) {
@@ -88,12 +87,6 @@ export function closingScreen(app: App, hooks: ClosingHooks) {
         h('div', { class: 'rating-options' }, ...options),
         theory ?? '',
       );
-      // (+ 2026-10-17, OWNER duyệt) chữ cho bố mẹ (bài tập về nhà / lời nhắn) → góc 👪 thu gọn, không giữa màn của bé
-      parentCorner(
-        root,
-        hooks.homework ? h('p', { class: 'closing-homework' }, h('b', {}, '📝 Bài tập về nhà: '), hooks.homework) : null,
-        !hooks.homework && hooks.homeworkNote ? h('p', { class: 'closing-homework' }, hooks.homeworkNote) : null,
-      );
       bar.replaceChildren(backButton(hooks.onBack));
     };
 
@@ -116,7 +109,7 @@ export function closingScreen(app: App, hooks: ClosingHooks) {
     };
     let rated = 0;
     ask();
-    const said = hooks.teach ? `${TEACH_TITLE} ${hooks.teach.text} Xong rồi, ${QUESTION.toLowerCase()}` : QUESTION;
+    const said = hooks.teach ? `${TEACH_TITLE} ${kidTeachText(hooks.teach.text)} Xong rồi, ${QUESTION.toLowerCase()}` : QUESTION;
     const timer = window.setTimeout(() => void speak(app, said), 400);
     return () => {
       window.clearTimeout(timer);

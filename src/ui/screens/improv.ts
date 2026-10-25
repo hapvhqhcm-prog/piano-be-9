@@ -27,7 +27,7 @@ import { confetti } from '../components/celebrate';
 import { HandOverlay, playDemo, type DemoEvent } from '../components/demo';
 import { backButton, button, h, toast } from '../components/dom';
 import { mascot } from '../components/mascot';
-import { selfStudy } from '../selfStudy';
+import { selfAgainButton, selfOkButton } from '../selfCheck';
 import { speakChip } from '../components/speakChip';
 import { StaffView } from '../components/staffView';
 
@@ -82,7 +82,7 @@ function staffOf(notes: readonly ComposeNote[], hand: 'RH' | 'LH', bars: number,
 /**
  * v5 — SÁNG TẠO (OWNER duyệt 2026-10-05):
  * - black-keys: app đàn nền ngũ cung nhẹ (không chiếm micro), bé ứng tấu trên PHÍM ĐEN — nốt nào cũng hay ✨.
- * - question-answer: app đàn "câu hỏi" 2 ô, bé đàn "câu trả lời" kết về nốt nhà (micro/phím ảo, không micro → bố mẹ xác nhận).
+ * - question-answer: app đàn "câu hỏi" 2 ô, bé đàn "câu trả lời" kết về nốt nhà (micro/phím ảo, không micro → bé tự kiểm tra).
  * - compose: bé viết `bars` ô nhịp bằng phím ảo + bảng nhịp, nghe lại, đặt tên, lưu vào Thư viện ("Bài của con").
  */
 export function improvScreen(app: App, hooks: ImprovHooks) {
@@ -323,7 +323,7 @@ export function improvScreen(app: App, hooks: ImprovHooks) {
       );
       setBar(
         backButton(intro),
-        qaFails >= 2 ? button({ icon: selfStudy(app) ? '▶' : '👪', label: selfStudy(app) ? 'Đi tiếp' : 'Bố mẹ: qua', onTap: qaGood }) : null,
+        qaFails >= 2 ? button({ icon: '▶', label: 'Đi tiếp', onTap: qaGood }) : null,
         button({ icon: '↻', label: 'Trả lời lại', kind: 'primary', onTap: () => qaAnswer(q) }),
       );
     }
@@ -331,13 +331,13 @@ export function improvScreen(app: App, hooks: ImprovHooks) {
     function qaParent(q: ComposeNote[]): void {
       halt();
       stage.replaceChildren(
-        h('h1', { class: 'title' }, selfStudy(app) ? `Câu trả lời của con kết thúc ở ${viName(tonic)} chưa?` : `👪 Bố mẹ: câu trả lời của bé kết thúc ở ${viName(tonic)} chưa?`),
-        h('p', { class: 'lead' }, 'Con đàn trên đàn thật — bố mẹ nghe giúp nhé'),
+        h('h1', { class: 'title' }, `🤔 Câu trả lời của con kết thúc ở ${viName(tonic)} 🏠 chưa?`),
+        h('p', { class: 'lead' }, 'Con đàn trên đàn thật rồi tự nghe nhé — thật thà nha!'),
       );
       setBar(
         backButton(() => qaAnswer(q)),
-        button({ icon: '↻', label: 'Làm lại', kind: 'retry', onTap: () => qaAnswer(q) }),
-        button({ icon: selfStudy(app) ? '✋' : '👪', label: 'Về nhà rồi!', kind: 'good', onTap: qaGood }),
+        selfAgainButton(() => qaAnswer(q)),
+        selfOkButton(qaGood, { label: 'Về nhà rồi!' }),
       );
     }
 
@@ -446,7 +446,7 @@ export function improvScreen(app: App, hooks: ImprovHooks) {
         h('div', { class: 'hero-emoji' }, '🎼'),
         h('h1', { class: 'title' }, 'Đặt tên cho bài của con'),
         input,
-        h('p', { class: 'muted' }, 'Bố mẹ gõ giúp con nhé — hoặc giữ tên này'),
+        h('p', { class: 'muted' }, 'Con gõ tên mới — hoặc giữ tên này'),
       );
       setBar(
         backButton(() => compose()),

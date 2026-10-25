@@ -3,7 +3,7 @@
  * lần đầu bé mở THEO NHỊP một bài có cờ `chant` (lessons/readingAids.ts chantDue), app hiện màn Nhịp (rhythm.ts) với mẫu rút từ
  * câu 1 của chính bài (music/chant.ts) — MỘT lượt: nghe mẫu, rồi bé vỗ tay + đọc vần / đếm số theo tiếng tích; xong (hoặc
  * "⏭ Bỏ qua") thì vào màn bài hát như thường. Nằm TRONG màn bài hát (không phải hoạt động mới) → tiến độ "<bài>#<i>" đã lưu
- * của tuần 1–5 không đổi. Không ghi điểm (bố mẹ chấm cho vui; bé tự học → vào hàng "Chờ bố mẹ xem" như màn Nhịp).
+ * của tuần 1–5 không đổi. Không ghi điểm (bé tự kiểm tra cho vui, như màn Nhịp).
  */
 import { chantFor } from '../../music/chant';
 import type { Tune } from '../../music/tune';

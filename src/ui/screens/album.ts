@@ -10,6 +10,7 @@ import type { App } from '../App';
 import { actionBar, backButton, button, h, toast } from '../components/dom';
 import { songEmoji } from '../components/songArt';
 import { clipLoader, progressCompare } from '../components/progressCompare';
+import { shareFile } from '../components/shareFile';
 import '../../styles/album.css';
 
 const fmtDay = (ms: number) => {
@@ -20,33 +21,6 @@ const fmtLen = (sec: number) => {
   const s = Math.max(0, Math.round(sec));
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 };
-
-/** Gửi tệp: bảng Chia sẻ của iOS (navigator.share có tệp) → không có thì tải tệp xuống. */
-async function shareFile(file: File, title: string): Promise<'shared' | 'cancel' | 'download' | 'retry'> {
-  const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
-  if (typeof nav.share === 'function' && (!nav.canShare || nav.canShare({ files: [file] }))) {
-    try {
-      await nav.share({ files: [file], title });
-      return 'shared';
-    } catch (e) {
-      const name = (e as { name?: string })?.name;
-      if (name === 'AbortError') return 'cancel';
-      // Safari đòi chạm trực tiếp: lần chạm đầu phải chờ đọc tệp → chạm lại là gửi được (tệp đã sẵn)
-      if (name === 'NotAllowedError') return 'retry';
-    }
-  }
-  try {
-    const url = URL.createObjectURL(file);
-    const a = h('a', { href: url, download: file.name });
-    document.body.append(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 60_000);
-    return 'download';
-  } catch {
-    return 'cancel';
-  }
-}
 
 export function albumScreen(app: App, onBack: () => void) {
   return (root: HTMLElement) => {
@@ -194,7 +168,7 @@ export function albumScreen(app: App, onBack: () => void) {
             empty(
               albumEnabled()
                 ? 'Chưa có bản thu nào. Bật micro rồi đàn cả bài — bản hay nhất sẽ vào đây!'
-                : 'Album đang tắt — bố mẹ bật lại ở màn Phụ huynh nhé.',
+                : 'Album đang nghỉ — chưa lưu bản thu mới.',
             ),
           );
           return;

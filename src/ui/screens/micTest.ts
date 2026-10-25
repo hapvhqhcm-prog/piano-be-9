@@ -142,7 +142,7 @@ export function micTestScreen(app: App) {
           h('p', { class: 'lead' }, '✅ Đã chọn dùng micro cho các buổi học — khi bé học, app tự nghe và chấm nốt.'),
           button({
             icon: '🔇',
-            label: 'Tắt micro (bố mẹ tự bấm “Đúng rồi”)',
+            label: 'Tắt micro (bé tự kiểm tra 👍 / 🔁)',
             onTap: () => {
               store.updateSettings({ micEnabled: false });
               toast('Đã tắt micro cho buổi học');
@@ -165,7 +165,7 @@ export function micTestScreen(app: App) {
                   renderSteps();
                 },
               })
-            : h('p', { class: 'muted' }, 'Micro mới nghe đúng ' + lastOk + '/5 nốt — chưa nên dùng. Bố mẹ vẫn chấm bằng nút “Đúng rồi” như thường.'),
+            : h('p', { class: 'muted' }, 'Micro mới nghe đúng ' + lastOk + '/5 nốt — chưa nên dùng. Micro tắt thì bé tự kiểm tra (👍 Rồi / 🔁 Làm lại) như thường.'),
         );
       } else useBox.replaceChildren(...notChecked);
     }

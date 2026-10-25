@@ -177,7 +177,7 @@ describe('adaptive — chỉ số thành công & chế độ', () => {
 
   it('dòng cho bố mẹ', () => {
     expect(difficultyText({ mode: 'gentle' })).toBe('Đang nhẹ tay vì con vấp nhiều — 2 buổi tới ôn kỹ');
-    expect(difficultyText({ mode: 'stretch' })).toBe('Con đang làm tốt — thêm thử thách nhỏ');
+    expect(difficultyText({ mode: 'stretch' })).toBe('Con đang làm tốt — buổi học thêm thử thách (nhanh hơn, bài khó hơn)');
   });
 });
 

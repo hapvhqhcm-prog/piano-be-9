@@ -24,6 +24,7 @@ import { RATING_STARS, bumpDataRev, emptyHistory, foldParentStats, mondayKey, we
 import { sessionAnswers } from './answers';
 import { recordChallenges } from '../lessons/challenges';
 import { pinnedSessionIds } from './reviewQueue';
+import { skipOf, withoutSkips } from '../lessons/weekSkips';
 import { localDateStr, type AppData, type CountPair, type History, type Session } from './schema';
 
 /** Giữ nguyên các buổi trong ngần này ngày gần nhất (8 tuần). */
@@ -70,8 +71,13 @@ export function compactData(data: AppData, now: Date, windowDays: number = COMPA
       continue;
     }
     // Các buổi cũ CỦA RIÊNG tuần này (không dùng tổng hợp) đã đủ đạt tiêu chí? (tiêu chí chỉ tăng theo số buổi)
-    if (weekPassed(w, { ...data, sessions: g, history: undefined })) {
+    // (+ 2026-10-25) hỏi bằng BẰNG CHỨNG thật (bỏ bản ghi thi vượt tuần / xếp lớp — progress.skips): tuần chỉ "qua" nhờ bản ghi
+    // KHÔNG vào history.passedWeeks (passedWeeks = đạt bằng buổi học → huy chương cấp đọc nó), nhưng buổi vẫn gộp được vì
+    // bản ghi nằm trong progress (gộp không đụng tới) → tuần vẫn qua mãi.
+    if (weekPassed(w, withoutSkips({ ...data, sessions: g, history: undefined }))) {
       newlyPassed.push(w);
+      g.forEach((s) => fold.add(s));
+    } else if (skipOf(data, w)) {
       g.forEach((s) => fold.add(s));
     } else if (w < data.progress.currentWeek) {
       // Tuần bé ĐÃ ĐI QUA mà chưa đạt (bố mẹ cho qua tay): tiêu chí tuần này không còn quyết định gì (đảo < tuần hiện tại

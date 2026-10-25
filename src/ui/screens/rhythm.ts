@@ -3,8 +3,7 @@ import type { ParentResult } from '../../progress/schema';
 import type { App } from '../App';
 import { backButton, button, h } from '../components/dom';
 import { confetti } from '../components/celebrate';
-import { RHYTHM_CHECKS, parentChecklist } from '../components/parentCheck';
-import { deferCheck, selfStudy } from '../selfStudy';
+import { selfCheck } from '../selfCheck';
 import { TIMING_WINDOWS, countBridgeFor, countLine, countWords, gradeTiming, type CountBridgeStage } from '../../music/timing';
 import { cancelSpeech, speak } from '../../audio/voice';
 
@@ -58,7 +57,7 @@ export interface RhythmHooks {
   title: string;
   intro: string;
   patterns: RhythmSymbol[][];
-  /** PARENT_ASSESSMENT: bố mẹ xác nhận bé vỗ đều */
+  /** PARENT_ASSESSMENT: micro chấm / bé tự kiểm tra (by: 'self') bé vỗ đều */
   record(noteId: string, result: ParentResult): void;
   /**
    * (2026-10-15) "Đọc nhịp trước" (songChant.ts): mỗi mẫu chỉ MỘT lượt (không lặp đôi) — mẫu dài vài ô rút từ bài hát.
@@ -77,7 +76,7 @@ export interface RhythmHooks {
 
 /**
  * Nhịp Mức 1 (tuần 2 & 4): vỗ tay theo máy gõ nhịp 60, đọc "Đi / Chạy-chạy / Đi-i / Suỵt".
- * Mỗi mẫu 1 ô nhịp, chơi 2 lần liền. App vỗ mẫu trước, rồi đến lượt bé; bố mẹ xác nhận.
+ * Mỗi mẫu 1 ô nhịp, chơi 2 lần liền. App vỗ mẫu trước, rồi đến lượt bé; micro chấm, hoặc bé tự kiểm tra.
  */
 export function rhythmScreen(app: App, hooks: RhythmHooks) {
   return (root: HTMLElement) => {
@@ -246,7 +245,7 @@ export function rhythmScreen(app: App, hooks: RhythmHooks) {
           unOnset();
           if (demo) show();
           else if (useMic) grade(seq, starts, els, claps);
-          else askParent();
+          else askSelf();
         }
       };
       raf = requestAnimationFrame(loop);
@@ -281,8 +280,8 @@ export function rhythmScreen(app: App, hooks: RhythmHooks) {
       setBar(
         backButton(show),
         button({ icon: '↻', label: 'Vỗ lại', onTap: () => void play(false) }),
-        // Micro có thể chấm trượt (phòng ồn, vỗ nhỏ) → sau 2 lần, bố mẹ được cho qua — không kẹt bé lại
-        !ok && micFails >= 2 ? button({ icon: '👪', label: 'Bố mẹ: qua', onTap: () => askParent() }) : null,
+        // Micro có thể chấm trượt (phòng ồn, vỗ nhỏ) → sau 2 lần, bé tự kiểm tra — không kẹt bé lại
+        !ok && micFails >= 2 ? button({ icon: '👍', label: 'Con tự chấm', onTap: () => askSelf() }) : null,
         // (+ 2026-10-17) Bước phụ ("Đọc nhịp trước"): chưa đạt vẫn "⏭ Bỏ qua" được — không bao giờ chặn bé
         !ok ? skipBtn() : null,
         ok
@@ -300,39 +299,27 @@ export function rhythmScreen(app: App, hooks: RhythmHooks) {
       );
     }
 
-    function askParent(): void {
+    function askSelf(): void {
       const p = hooks.patterns[i];
       const id = `rhythm:${p.join('-')}`;
-      // (+ 2026-10-12) 👦 Bé tự học: bé tự đi tiếp — lượt vỗ này vào hàng "🕑 Chờ bố mẹ xem"
-      if (selfStudy(app)) {
-        stage.replaceChildren(h('h1', { class: 'title' }, 'Con vỗ xong chưa?'), cells(p).row, h('p', { class: 'lead' }, 'Bố mẹ sẽ xem lại sau nhé!'));
-        setBar(
-          backButton(show),
-          button({
-            icon: '✋',
-            label: 'Con vỗ xong',
-            kind: 'good',
-            onTap: () => {
-              deferCheck(app, { group: `rhythm:${hooks.title}`, label: hooks.title, note: id });
-              i++;
-              if (i >= hooks.patterns.length) done();
-              else show();
-            },
-          }),
-        );
-        return;
-      }
-      // v5 — bố mẹ chấm 2 ý (Đúng tiếng vỗ · Đều nhịp); đạt khi cả hai được tích
-      const { row, done: doneBtn } = parentChecklist(RHYTHM_CHECKS, (_v, all) => {
-        hooks.record(id, all ? 'correct' : 'retry');
-        if (!all) return show();
-        void app.audio.chime();
-        i++;
-        if (i >= hooks.patterns.length) done();
-        else show();
+      // (2026-10-25, OWNER "bỏ phần phụ huynh") BÉ TỰ KIỂM TRA: vỗ đủ tiếng, dài–ngắn giống mẫu, đều nhịp → 👍 Rồi / 🔁 Làm lại
+      const sc = selfCheck({
+        question: 'Con vỗ đúng chưa?',
+        points: ['👏 Đủ tiếng, dài–ngắn giống mẫu', '🥁 Đều nhịp, không dừng'],
+        onOk: () => {
+          hooks.record(id, 'correct');
+          void app.audio.chime();
+          i++;
+          if (i >= hooks.patterns.length) done();
+          else show();
+        },
+        onAgain: () => {
+          hooks.record(id, 'retry');
+          show();
+        },
       });
-      stage.replaceChildren(h('h1', { class: 'title' }, '👪 Bố mẹ: bé vỗ thế nào?'), cells(p).row, h('p', { class: 'lead' }, 'Chạm các ý bé làm được:'), row);
-      setBar(backButton(show), doneBtn);
+      stage.replaceChildren(h('h1', { class: 'title' }, 'Con vỗ thế nào?'), cells(p).row, sc.ask);
+      setBar(backButton(show), sc.again, sc.ok);
     }
 
     function done(): void {

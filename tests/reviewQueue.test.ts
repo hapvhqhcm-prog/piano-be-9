@@ -1,224 +1,179 @@
 import { describe, expect, it } from 'vitest';
 import { criterionProgress, weekPassed } from '../src/lessons/lessonEngine';
 import { compactData } from '../src/progress/compaction';
-import { MemoryStorage, ProgressStore } from '../src/progress/ProgressStore';
-import {
-  REVIEW_EXPIRE_DAYS,
-  addReview,
-  approveAll,
-  approveReview,
-  dismissReview,
-  expireReviews,
-  pendingCount,
-  pinnedSessionIds,
-  reminders,
-  resolveReminders,
-  studyModeToday,
-} from '../src/progress/reviewQueue';
+import { MemoryStorage, ProgressStore, STORAGE_KEY } from '../src/progress/ProgressStore';
+import { SETTLE_PASS, micHeard, pinnedSessionIds, settleLegacyReviews } from '../src/progress/reviewQueue';
 import { ReviewAudioStore, memoryReviewBackend } from '../src/progress/reviewAudio';
-import { defaultData, sanitizeReviews, validReviewItem, validateAppData, type ReviewRun } from '../src/progress/schema';
+import { defaultData, sanitizeReviews, validReviewItem, validateAppData, type AppData, type ReviewItem, type ReviewRun } from '../src/progress/schema';
 
 /**
- * (+ 2026-10-12, OWNER duyệt "Bé tự học, bố mẹ đỡ vất"): hàng "🕑 Chờ bố mẹ xem".
- * - Mục chờ KHÔNG tính tiêu chí tuần tới khi bố mẹ "✅ Đạt"; Đạt = ghi như bố mẹ chấm vào ĐÚNG buổi / ngày bé làm
- *   (quy tắc "2 ngày khác nhau" vẫn đúng dù bố mẹ duyệt cả hai hôm cùng một lúc).
- * - Chưa đạt = bỏ, không ghi. Thẻ xem tay = lời nhắc. Hết hạn 14 ngày. Gộp lịch sử không gộp buổi còn mục chờ.
+ * (2026-10-25, OWNER "bỏ phần phụ huynh") Hàng "🕑 Chờ bố mẹ xem" (2026-10-12) KHÔNG CÒN: app luôn là bé tự học — micro
+ * chấm, chỗ micro không chấm được thì bé tự kiểm tra. Dữ liệu cũ còn mục chờ → dọn MỘT lần (settleLegacyReviews):
+ * - lượt cả bài micro đã nghe ≥ 80% → ghi như micro chấm ĐẠT vào ĐÚNG buổi / ngày (quy tắc "2 ngày khác nhau" giữ đúng);
+ * - còn lại (phiếu bố mẹ, thẻ xem tay, huy chương, thử thách) → bỏ, không ghi gì.
+ * (Thay cho các test "Đạt / Chưa đạt / lời nhắc / hết hạn" của hàng chờ cũ.)
  */
 
-/** Kho có đồng hồ chỉnh được: day(k) = 1/10/2026 + k, 17h. */
-function clock(start = 1) {
-  let d = start;
-  const st = new ProgressStore(new MemoryStorage(), () => new Date(2026, 9, d, 17), { autoCompact: false });
-  return { st, day: (k: number) => (d = start + k), now: () => new Date(2026, 9, d, 17).getTime() };
-}
 const frog: ReviewRun = { songId: 'frog_hop', mode: 'tempo', level: 2, bpm: 60, hints: 'names', phrase: null, total: 20 };
-/** Bé tự học: mở buổi tuần 5, đàn trọn "frog_hop" theo nhịp (micro tắt) → mục chờ */
-function selfRun(st: ProgressStore, lessonId = 'w5-l1') {
-  st.setStudyMode('self');
-  st.startSession(lessonId);
-  return st.deferReview({ kind: 'song', group: `song:${Math.random()}`, label: 'Ếch nhảy — theo nhịp 60', run: frog });
-}
+const T = (day: number) => new Date(2026, 9, day, 17).getTime();
+const date = (day: number) => `2026-10-${String(day).padStart(2, '0')}`;
 
-describe('cách học hôm nay', () => {
-  it('mặc định có bố mẹ; chọn hôm nay chỉ có hiệu lực hôm nay; mặc định của bố mẹ', () => {
-    const s = defaultData().settings;
-    expect(studyModeToday(s, '2026-10-12')).toBe('parent');
-    expect(studyModeToday({ ...s, studyMode: { mode: 'self', date: '2026-10-12' } }, '2026-10-12')).toBe('self');
-    expect(studyModeToday({ ...s, studyMode: { mode: 'self', date: '2026-10-11' } }, '2026-10-12')).toBe('parent');
-    expect(studyModeToday({ ...s, studyDefault: 'self', studyMode: { mode: 'parent', date: '2026-10-11' } }, '2026-10-12')).toBe('self');
-  });
-  it('store nhớ lựa chọn tới hết ngày', () => {
-    const { st, day } = clock();
-    st.setStudyMode('self');
-    expect(st.studyMode()).toBe('self');
-    day(1);
-    expect(st.studyMode()).toBe('parent');
+/** Dữ liệu tuần 5 có buổi ngày `days` (mã s<day>) */
+function week5(days: number[]): AppData {
+  const d = defaultData(new Date(2026, 9, 1));
+  d.progress.currentWeek = 5;
+  for (const k of days)
+    d.sessions.push({
+      id: `s${k}`,
+      date: date(k),
+      lessonId: 'w5-l1',
+      parentAssessments: [],
+      appAssessments: [],
+      micAssessments: [],
+      songRuns: [],
+      selfRating: null,
+      startedAt: T(k),
+      endedAt: T(k) + 600_000,
+      minutes: 10,
+      completed: true,
+      checklist: {},
+    });
+  return d;
+}
+const song = (k: number, heard: number | null, p: Partial<ReviewItem> = {}): ReviewItem => ({
+  id: `rv-${k}-${heard}`,
+  kind: 'song',
+  group: `song:${k}:${heard}`,
+  label: 'Ếch nhảy — theo nhịp 60',
+  date: date(k),
+  ts: T(k) + 1000,
+  sessionId: `s${k}`,
+  lessonId: 'w5-l1',
+  run: frog,
+  ...(heard === null ? {} : { mic: `micro nghe chưa rõ (nghe được ${heard}/20 nốt)` }),
+  ...p,
+});
+
+describe('micHeard: đọc nhận xét tạm của micro', () => {
+  it('"nghe được X/Y nốt" → số; không có / sai → null', () => {
+    expect(micHeard('micro nghe chưa rõ (nghe được 7/10 nốt)')).toEqual({ hits: 7, total: 10 });
+    expect(micHeard('micro nghe chưa rõ')).toBeNull();
+    expect(micHeard(undefined)).toBeNull();
+    expect(micHeard('nghe được 12/10')).toBeNull();
+    expect(SETTLE_PASS).toBe(0.8);
   });
 });
 
-describe('tiêu chí tuần: chỉ tính sau khi bố mẹ Đạt, vào ĐÚNG ngày bé đàn', () => {
-  it('hai hôm tự học → chưa đạt; bố mẹ duyệt cả hai vào hôm thứ 3 → đạt 2 ngày', () => {
-    const { st, day } = clock();
-    day(0);
-    selfRun(st);
-    day(1);
-    selfRun(st);
-    expect(pendingCount(st.get())).toBe(2);
-    expect(weekPassed(5, st.get())).toBe(false);
-    expect(criterionProgress(5, st.get())).toEqual({ days: 0, needDays: 2 });
-    day(2);
-    expect(st.approveAllReviews()).toBe(2);
-    expect(pendingCount(st.get())).toBe(0);
-    expect(weekPassed(5, st.get())).toBe(true);
-    // Lượt ghi vào đúng buổi / ngày 1 & 2 (không phải hôm duyệt)
-    const dates = st.get().sessions.filter((s) => s.songRuns.length).map((s) => s.date);
-    expect(dates).toEqual(['2026-10-01', '2026-10-02']);
-    const r = st.get().sessions[0].songRuns[0];
-    expect(r).toMatchObject({ source: 'parent', passed: true, hits: 20, checklist: { notes: true, beat: true, fingers: true } });
+describe('settleLegacyReviews: dọn hàng chờ cũ một lần', () => {
+  it('không có hàng chờ → không đổi gì', () => {
+    const d = week5([1]);
+    const before = JSON.stringify(d.sessions);
+    expect(settleLegacyReviews(d)).toEqual({ dropped: [], counted: 0 });
+    expect(JSON.stringify(d.sessions)).toBe(before);
   });
-  it('hai lượt cùng MỘT ngày được duyệt = một ngày', () => {
-    const { st } = clock();
-    selfRun(st);
-    selfRun(st);
-    st.approveAllReviews();
-    expect(criterionProgress(5, st.get())).toEqual({ days: 1, needDays: 2 });
+  it('hai hôm micro nghe ≥ 80% → tính như micro chấm, vào ĐÚNG ngày → đạt 2 ngày', () => {
+    const d = week5([1, 2]);
+    d.reviews = [song(1, 17), song(2, 20)];
+    expect(weekPassed(5, d)).toBe(false);
+    const r = settleLegacyReviews(d);
+    expect(r.counted).toBe(2);
+    expect(r.dropped).toHaveLength(2);
+    expect(d.reviews).toBeUndefined();
+    expect(weekPassed(5, d)).toBe(true);
+    const dates = d.sessions.filter((s) => s.songRuns.length).map((s) => s.date);
+    expect(dates).toEqual([date(1), date(2)]);
+    expect(d.sessions[0].songRuns[0]).toMatchObject({ source: 'mic', passed: true, hits: 17, total: 20, ts: T(1) + 1000 });
   });
-  it('🔁 Chưa đạt: bỏ mục, không ghi gì', () => {
-    const { st } = clock();
-    const id = selfRun(st);
-    const before = JSON.stringify(st.get().sessions);
-    expect(st.dismissReview(id)).toBe(true);
-    expect(JSON.stringify(st.get().sessions)).toBe(before);
-    expect(st.get().reviews).toBeUndefined();
+  it('hai lượt cùng MỘT ngày = một ngày', () => {
+    const d = week5([1]);
+    d.reviews = [song(1, 18), song(1, 19, { id: 'b', group: 'b' })];
+    settleLegacyReviews(d);
+    expect(criterionProgress(5, d)).toEqual({ days: 1, needDays: 2 });
   });
-  it('kết quả micro vẫn tính ngay (hôm nay) — cùng tiêu chí với lượt được duyệt hôm trước', () => {
-    const { st, day } = clock();
-    selfRun(st); // hôm 1: chờ bố mẹ
-    day(1);
-    st.addSongRun(st.startSession('w5-l1').id, { ...frog, hits: 19, source: 'mic', passed: true });
-    expect(criterionProgress(5, st.get())?.days).toBe(1);
-    st.approveAllReviews();
-    expect(weekPassed(5, st.get())).toBe(true);
+  it('micro nghe < 80% / không có số → bỏ, không ghi gì', () => {
+    const d = week5([1, 2]);
+    d.reviews = [song(1, 15), song(2, null)];
+    const before = JSON.stringify(d.sessions);
+    expect(settleLegacyReviews(d)).toMatchObject({ counted: 0 });
+    expect(JSON.stringify(d.sessions)).toBe(before);
+    expect(weekPassed(5, d)).toBe(false);
   });
-  it('tuần 1 (tìm Đô 10 lần): các lần bé tự chạm gộp vào MỘT mục; Đạt → qua tuần 1', () => {
-    const { st } = clock();
-    st.setStudyMode('self');
-    st.startSession('w1-test');
-    for (let i = 0; i < 10; i++) st.deferReview({ kind: 'check', group: 'notes:w1-test', label: 'Tìm Đô', notes: [{ note: 'C4', ts: Date.now() + i }] });
-    expect(st.reviews()).toHaveLength(1);
-    expect(st.reviews()[0].notes).toHaveLength(10);
-    expect(weekPassed(1, st.get())).toBe(false);
-    st.approveReview(st.reviews()[0].id);
-    expect(weekPassed(1, st.get())).toBe(true);
-  });
-  it('huy chương cuối cấp (tuần 10) tính khi bố mẹ duyệt', () => {
-    const { st } = clock();
-    st.setStudyMode('self');
-    st.startSession('w10-l3');
-    st.deferReview({ kind: 'check', group: 'medal', label: 'Huy chương', notes: [{ note: 'medal', ts: 1 }] });
-    expect(weekPassed(10, st.get())).toBe(false);
-    st.approveAllReviews();
-    expect(weekPassed(10, st.get())).toBe(true);
+  it('thẻ / nốt bố mẹ xác nhận, lời nhắc xem tay, huy chương, thử thách → bỏ (không tính)', () => {
+    const d = week5([1]);
+    d.reviews = [
+      { id: 'c4', kind: 'check', group: 'notes:w1-test', label: 'Tìm Đô', date: date(1), ts: T(1), sessionId: 's1', notes: Array.from({ length: 10 }, (_, i) => ({ note: 'C4', ts: T(1) + i })) },
+      { id: 'look', kind: 'check', group: 'look:relax:wrist', label: 'xem tay', date: date(1), ts: T(1), visual: true, notes: [{ note: 'relax:wrist', ts: T(1) }] },
+      { id: 'medal', kind: 'check', group: 'medal', label: 'Huy chương', date: date(1), ts: T(1), notes: [{ note: 'medal', ts: T(1) }] },
+      { id: 'ch', kind: 'challenge', group: 'challenge:x', label: 'Thử thách', date: date(1), ts: T(1), challenge: 'teach' },
+    ];
+    const before = JSON.stringify(d.sessions);
+    expect(settleLegacyReviews(d)).toEqual({ dropped: ['c4', 'look', 'medal', 'ch'], counted: 0 });
+    expect(JSON.stringify(d.sessions)).toBe(before);
+    expect(d.reviews).toBeUndefined();
   });
   it('buổi đã bị xoá → tạo buổi tối thiểu cùng ngày & mã bài', () => {
     const d = defaultData(new Date(2026, 9, 1));
-    const id = addReview(d, { kind: 'song', group: 'g', label: 'x', run: frog, lessonId: 'w5-l1', date: '2026-10-01', ts: 5 }, 10);
-    approveReview(d, id);
+    d.reviews = [song(3, 20, { sessionId: 'gone' })];
+    settleLegacyReviews(d);
     expect(d.sessions).toHaveLength(1);
-    expect(d.sessions[0]).toMatchObject({ date: '2026-10-01', lessonId: 'w5-l1' });
-    expect(d.sessions[0].songRuns[0].ts).toBe(5);
+    expect(d.sessions[0]).toMatchObject({ date: date(3), lessonId: 'w5-l1' });
+    expect(d.sessions[0].songRuns[0].ts).toBe(T(3) + 1000);
+  });
+  it('gọi lại → an toàn (không ghi hai lần)', () => {
+    const d = week5([1]);
+    d.reviews = [song(1, 20)];
+    settleLegacyReviews(d);
+    expect(settleLegacyReviews(d)).toEqual({ dropped: [], counted: 0 });
+    expect(d.sessions[0].songRuns).toHaveLength(1);
   });
 });
 
-describe('Cấp 4 — thẻ xem tay: lời nhắc, không chấm bằng tai', () => {
-  it('relax:* thành lời nhắc (không Đạt được, không tính); bố mẹ ngồi cùng chấm thẻ → hết nhắc', () => {
-    const { st, day } = clock();
-    st.setStudyMode('self');
-    st.startSession('w34-l2');
-    st.deferReview({ kind: 'check', group: 'look:relax:shoulder', label: 'Vai thả lỏng (xem tay)', visual: true, notes: [{ note: 'relax:shoulder', ts: 1 }] });
-    st.deferReview({ kind: 'check', group: 'look:relax:shoulder', label: 'Vai thả lỏng (xem tay)', visual: true, notes: [{ note: 'relax:shoulder', ts: 2 }] });
-    expect(reminders(st.get())).toHaveLength(1);
-    expect(reminders(st.get())[0].notes).toHaveLength(1); // nhắc một lần mỗi thẻ
-    expect(pendingCount(st.get())).toBe(0);
-    expect(st.approveReview(reminders(st.get())[0].id)).toBe(false);
-    expect(st.approveAllReviews()).toBe(0);
-    // Hôm sau có bố mẹ → chấm thẻ → lời nhắc tự xong
-    day(1);
-    const s = st.startSession('w34-l2');
-    st.addParentAssessment(s.id, 'relax:shoulder', 'correct');
-    expect(reminders(st.get())).toHaveLength(0);
-  });
-  it('bé tự học chấm thẻ (store ở chế độ tự học) → lời nhắc giữ nguyên', () => {
-    const d = defaultData();
-    addReview(d, { kind: 'check', group: 'look:relax:joint', label: 'x', visual: true, notes: [{ note: 'relax:joint', ts: 1 }] }, 1);
-    expect(resolveReminders(d, 'relax:wrist')).toEqual([]);
-    expect(reminders(d)).toHaveLength(1);
-  });
-});
-
-describe('hết hạn & gộp lịch sử', () => {
-  it(`mục quá ${REVIEW_EXPIRE_DAYS} ngày tự bỏ`, () => {
-    const d = defaultData();
-    const day = 86_400_000;
-    addReview(d, { kind: 'challenge', group: 'c1', label: 'x', challenge: 'c', ts: 0 }, 0);
-    addReview(d, { kind: 'challenge', group: 'c2', label: 'y', challenge: 'c', ts: 10 * day }, 10 * day);
-    expect(expireReviews(d, 15 * day)).toHaveLength(1);
-    expect(d.reviews).toHaveLength(1);
-    expect(expireReviews(d, 30 * day)).toHaveLength(1);
-    expect(d.reviews).toBeUndefined();
-  });
-  it('mở app (store mới) bỏ mục quá hạn', () => {
+describe('kho: dọn khi mở app / nhập; gộp lịch sử', () => {
+  it('mở app với dữ liệu còn hàng chờ → dọn, ghi xuống; takeDroppedReviews trả mã để xoá bản ghi âm', () => {
+    const d = week5([1, 2]);
+    d.reviews = [song(1, 20), song(2, 3)];
     const kv = new MemoryStorage();
-    let d = 1;
-    const st = new ProgressStore(kv, () => new Date(2026, 9, d, 17), { autoCompact: false });
-    selfRun(st);
-    st.flush();
-    d = 20;
-    const st2 = new ProgressStore(kv, () => new Date(2026, 9, d, 17), { autoCompact: false });
-    expect(st2.reviews()).toHaveLength(0);
-    expect(st2.takeDroppedReviews()).toHaveLength(1);
+    kv.setItem(STORAGE_KEY, JSON.stringify(d));
+    const st = new ProgressStore(kv, () => new Date(2026, 9, 5, 9), { autoCompact: false });
+    expect(st.get().reviews).toBeUndefined();
+    expect(st.takeDroppedReviews()).toHaveLength(2);
+    expect(st.takeDroppedReviews()).toEqual([]);
+    expect(JSON.parse(kv.getItem(STORAGE_KEY)!).reviews).toBeUndefined();
+    expect(criterionProgress(5, st.get())).toEqual({ days: 1, needDays: 2 });
   });
-  it('gộp lịch sử KHÔNG gộp buổi còn mục chờ; duyệt xong thì gộp được, tiêu chí giữ nguyên', () => {
-    const { st, day } = clock();
-    day(0);
-    selfRun(st);
-    day(1);
-    selfRun(st);
-    const data = st.get() as ReturnType<ProgressStore['get']> & object;
-    const d = JSON.parse(JSON.stringify(data));
+  it('xuất / nhập JSON: bản sao lưu cũ có hàng chờ (kể cả mục hỏng) → nhập được, được dọn', () => {
+    const d = week5([1]);
+    d.reviews = [song(1, 20)];
+    const json = JSON.parse(JSON.stringify(d));
+    json.reviews.push({ id: 'bad', kind: 'song', label: 'x' });
+    const st = new ProgressStore(new MemoryStorage(), () => new Date(2026, 9, 2, 17), { autoCompact: false });
+    expect(st.importJSON(JSON.stringify(json))).toEqual({ ok: true });
+    expect(st.get().reviews).toBeUndefined();
+    expect(st.get().sessions[0].songRuns).toHaveLength(1);
+  });
+  it('gộp lịch sử: dữ liệu CHƯA dọn vẫn giữ buổi còn mục chờ; sau khi dọn thì gộp được, tiêu chí giữ nguyên', () => {
+    const d = week5([1, 2]);
+    d.reviews = [song(1, 20), song(2, 20)];
     d.progress.currentWeek = 6;
     const far = new Date(2026, 11, 30);
     expect(pinnedSessionIds(d).size).toBe(2);
     expect(compactData(d, far).folded).toBe(0);
-    expect(d.sessions).toHaveLength(2);
-    // Bố mẹ duyệt (muộn — buổi vẫn còn để ghi đúng ngày) → gộp được
-    approveAll(d);
+    settleLegacyReviews(d);
+    expect(pinnedSessionIds(d).size).toBe(0);
     expect(weekPassed(5, d)).toBe(true);
     expect(compactData(d, far).folded).toBe(2);
     expect(d.sessions).toHaveLength(0);
     expect(weekPassed(5, d)).toBe(true);
   });
-  it('buổi chỉ có mục chờ không bị xoá khi "Quay lại" (discardSessionIfEmpty)', () => {
-    const { st } = clock();
-    selfRun(st);
-    const sid = st.activeSessionId!;
+  it('buổi vừa mở rồi Quay lại (trống) → bỏ như mọi buổi trống', () => {
+    const st = new ProgressStore(new MemoryStorage(), () => new Date(2026, 9, 2, 17), { autoCompact: false });
+    const sid = st.startSession('w5-l1').id;
     st.discardSessionIfEmpty(sid);
-    expect(st.get().sessions.some((s) => s.id === sid)).toBe(true);
+    expect(st.get().sessions.some((s) => s.id === sid)).toBe(false);
   });
 });
 
-describe('dữ liệu: kiểm tra, sao lưu / nhập', () => {
-  it('xuất / nhập JSON giữ hàng chờ (thông tin, không âm thanh); mục hỏng bị bỏ', () => {
-    const { st } = clock();
-    selfRun(st);
-    const json = JSON.parse(st.exportJSON());
-    json.reviews.push({ id: 'bad', kind: 'song', label: 'x' });
-    const st2 = new ProgressStore(new MemoryStorage(), () => new Date(2026, 9, 2, 17), { autoCompact: false });
-    expect(st2.importJSON(JSON.stringify(json))).toEqual({ ok: true });
-    expect(st2.reviews()).toHaveLength(1);
-    expect(st2.approveAllReviews()).toBe(1);
-    expect(st2.get().sessions[0].songRuns).toHaveLength(1);
-  });
+describe('dữ liệu cũ: kiểm tra cấu trúc (vẫn đọc được bản sao lưu cũ)', () => {
   it('validateAppData chặn hàng chờ / cài đặt sai kiểu', () => {
     const d = defaultData() as unknown as Record<string, unknown>;
     expect(validateAppData({ ...d, reviews: 'x' })).toContain('reviews');
@@ -238,14 +193,9 @@ describe('dữ liệu: kiểm tra, sao lưu / nhập', () => {
     expect(sanitizeReviews([ok, ok, { x: 1 }])).toHaveLength(1);
     expect(sanitizeReviews([])).toBeUndefined();
   });
-  it('dismissReview / approveReview với mã không có', () => {
-    const d = defaultData();
-    expect(dismissReview(d, 'nope')).toBeNull();
-    expect(approveReview(d, 'nope')).toBeNull();
-  });
 });
 
-describe('bản ghi âm chờ bố mẹ nghe (reviewAudio)', () => {
+describe('bản ghi âm cũ của hàng chờ (reviewAudio — App xoá hết sau khi dọn)', () => {
   const blob = (n: number) => new Blob([new Uint8Array(n)], { type: 'audio/mp4' });
   it('lưu / đọc; quá dài / quá ngắn không lưu', async () => {
     const s = new ReviewAudioStore(memoryReviewBackend());

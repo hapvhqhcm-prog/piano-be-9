@@ -2,7 +2,7 @@
  * (+ 2026-10-08, OWNER duyệt) "🎤 BIỂU DIỄN CHO CẢ NHÀ" — buổi diễn nhỏ HẰNG TUẦN.
  *
  * - Mỗi tuần giáo trình tối đa MỘT buổi diễn (và một sticker "🎤 Buổi diễn"), được MỜI (không bắt buộc) ở màn kết buổi
- *   khi tuần đó đã đạt tiêu chí — hoặc tuần vừa đi qua (đã xong / bố mẹ cho qua) mà chưa diễn.
+ *   khi tuần đó đã đạt tiêu chí — hoặc tuần vừa đi qua (đã xong / được cho qua) mà chưa diễn.
  * - Tuần hòa nhạc cuối cấp (10 / 21 / 33 / 46 — sân khấu + huy chương, stage.ts) KHÔNG mời thêm: đã có buổi diễn riêng.
  * - (+ 2026-10-17) "🎤 Buổi diễn nhỏ" trong bài học (lessons/musician.ts recitalLesson, ~4 tuần một lần) lưu cùng nhật ký này.
  * - Bé chọn MỘT bài đã chơi đạt / đã thuộc → đếm vào, đàn theo nhịp (songScreen chế độ sân khấu) → khán giả chạm 👏 ❤️ 🌟,
@@ -79,7 +79,7 @@ export function concertSongs(data: Readonly<AppData>, week: number = data.progre
 /**
  * Tuần được MỜI biểu diễn ở cuối buổi (null = không mời):
  * - tuần hiện tại đã ĐẠT tiêu chí mà chưa diễn → tuần hiện tại;
- * - tuần hiện tại chưa đạt → tuần vừa đi qua (đã xong / bố mẹ cho qua) nếu chưa diễn;
+ * - tuần hiện tại chưa đạt → tuần vừa đi qua (đã xong / được cho qua) nếu chưa diễn;
  * - bỏ tuần hòa nhạc cuối cấp (đã có sân khấu riêng); cần ít nhất một bài bé chơi được.
  */
 export function concertOfferWeek(data: Readonly<AppData>): number | null {

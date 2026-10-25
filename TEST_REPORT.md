@@ -997,3 +997,21 @@ Cả 9 bài chờ tuần 4–6 (`CHILD_SIM=full`, 16 nốt đầu mỗi bài, c�
   - Micro BẬT: phần đàn ≈ 39–43 %, bố mẹ chạm 1–2 lần mỗi buổi (chỉ "Con làm đúng rồi" ở bài kỹ thuật + "Bố mẹ đã học xong").
   - Mọi bài hát đạt bằng micro, không có bài tập về nhà, không kẹt.
   - Micro giảm hẳn số chạm của bố mẹ nhưng KHÔNG nâng phần đàn lên 60 %: phần không đàn là lời/chữ (~470–590 từ/buổi), thẻ kỹ thuật, trò chơi và màn chuyển tiếp.
+
+## 53. Phản hồi của bé + bỏ phần phụ huynh (2026-10-18 → 10-26)
+- **Hình bàn tay "xấu":** đã bỏ hết bàn tay vẽ.
+  - Trên bàn phím chỉ còn huy hiệu số ngón 1–5 (phím đích: số to, nhấp nháy; luồn ngón có mũi tên).
+  - Thẻ tư thế và hoạt hình dùng sơ đồ trừu tượng (cầu, chấm đầu ngón, bóng sức nặng) kèm emoji gốc của iPad.
+- **Micro phân biệt giọng / đàn** (`src/audio/voiceGuard.ts`)
+  - Dựa vào: tiếng búa, độ tắt dần, độ ổn định / rung cao độ, độ tinh khiết, độ lệch hoà âm.
+  - Kết quả: hát không đàn 35 → 2 nốt bị nhận nhầm; ngân nga và huýt sáo → 0.
+  - Đàn thật: không mất nốt nào; các bench cũ không đổi.
+- **Đàn tự do** trở lại dock màn chính.
+- **🎙️ Máy ghi âm:** IndexedDB riêng, tối đa 30 bản / 80 MB; có phát chậm, phát lặp, chia sẻ; chế độ khách.
+- **⚡ Thi vượt tuần** (một buổi, micro chấm), **🧭 Kiểm tra xếp lớp** (chỉ nhảy tới, đánh dấu tuần là `placedOut`), **stretch** sau 2 buổi tốt.
+- **Bỏ phần phụ huynh** (OWNER: "tôi hầu như không có thời gian vào app")
+  - Chấm bằng micro, hoặc bé tự kiểm tra (`selfCheck.ts`, lưu kèm `by: 'self'`).
+  - Bỏ hàng chờ duyệt: mục cũ còn tồn được tự xử lý.
+  - Bỏ mọi nhắc nhở phụ huynh; nút ⚙️ chỉ còn để cài đặt.
+  - Bé tự xong được cả 46 tuần (có test).
+- **Kiểm tra:** 2944 test; e2e A–F; WebKit 11 kịch bản.

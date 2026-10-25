@@ -3,7 +3,7 @@
  * Mỗi ô nhịp: app hiện ký hiệu hợp âm (lượt 1: phím sáng + số ngón; lượt 2: chỉ ký hiệu) → bé bấm hợp âm tay trái
  * (rải: từng nốt từ dưới lên) → micro kiểm tra "đủ nốt" (MicListener.verifyChord — như hợp âm ở màn Từng nốt) → app HÁT
  * giai điệu ô đó (tiếng app tính "đang phát" → micro không nghe nhầm) → ô sau. Không chấm nhịp (bé bấm khi sẵn sàng).
- * Không micro: bé bấm, bố mẹ chạm "Đúng rồi". Ghi PARENT_ASSESSMENT `accomp:<bài>` ở cuối lượt 2.
+ * Không micro: bé bấm rồi TỰ KIỂM TRA, chạm "👍 Đúng rồi". Ghi PARENT_ASSESSMENT `accomp:<bài>` ở cuối lượt 2.
  */
 import { cancelSpeech, speak } from '../../audio/voice';
 import { SeqJudge, accompanyBars, chordOf } from '../../lessons/musician';
@@ -16,7 +16,7 @@ import { confetti } from '../components/celebrate';
 import { backButton, button, h } from '../components/dom';
 import { mascot } from '../components/mascot';
 import { speakChip } from '../components/speakChip';
-import { selfStudy } from '../selfStudy';
+import { selfOkButton } from '../selfCheck';
 import type { MusicianHooks } from './musician';
 import '../../styles/musician.css';
 
@@ -131,7 +131,7 @@ export function accompanyScreen(app: App, a: MusicianActivity, task: Extract<Mus
       setBar(
         backButton(intro),
         button({ icon: '🔊', label: 'Nghe hợp âm', onTap: () => playChord(s) }),
-        button({ icon: selfStudy(app) ? '✋' : '👪', label: 'Đúng rồi', kind: micOn() ? 'plain' : 'good', onTap: () => good() }),
+        selfOkButton(() => good(), { label: 'Đúng rồi', primary: !micOn() }),
       );
       const wrong = (text: string) => {
         misses++;
@@ -224,7 +224,7 @@ export function accompanyScreen(app: App, a: MusicianActivity, task: Extract<Mus
 
     function done(): void {
       halt();
-      // Micro: đạt khi lượt 2 sai ≤ 1 ô; không micro: bố mẹ đã xác nhận từng ô
+      // Micro: đạt khi lượt 2 sai ≤ 1 ô; không micro: bé đã tự xác nhận từng ô
       hooks.record(`accomp:${task.songId}`, !micOn() || missedBars.size <= 1 ? 'correct' : 'retry');
       confetti(24);
       void app.audio.chime();

@@ -10,12 +10,13 @@ import {
   ghostLevel,
   ghostMode,
   ghostVisible,
-  handPose,
+  badgeRadius,
+  badgeSpots,
+  crossArc,
   planFromTune,
   planKey,
   setGhostMode,
   type HandFrame,
-  type Part,
 } from '../src/ui/components/keyboardHand';
 import { findSong } from '../src/music/tune';
 import { midiToPitch, pitchToMidi } from '../src/piano/pitchTable';
@@ -134,49 +135,56 @@ describe('bàn tay mờ — kế hoạch theo bài (đổi thế, luồn ngón, 
   });
 });
 
-/** Áp biến hình của một phần (translate · scale(dir,1) · rotate · scale) lên điểm cục bộ */
-function apply(p: Part, dir: number, x: number, y: number): [number, number] {
-  const a = (p.rot * Math.PI) / 180;
-  const sx = x * p.sx;
-  const sy = y * p.sy;
-  const rx = sx * Math.cos(a) - sy * Math.sin(a);
-  const ry = sx * Math.sin(a) + sy * Math.cos(a);
-  return [p.x + dir * rx, p.y + ry];
-}
-
-describe('bàn tay mờ — hình học', () => {
+describe('bản đồ ngón — chỗ đặt huy hiệu số ngón', () => {
   const u = 70;
-  const H = 240;
-  const keys = (hand: Hand, xs: number[], black: boolean[] = []) =>
-    handPose(xs.map((x, i) => ({ x, black: !!black[i] })), hand, u, H);
+  const H = 300;
+  const spots = (hand: Hand, xs: number[], black: boolean[] = []) => badgeSpots(xs.map((x, i) => ({ x, black: !!black[i] })), hand, u, H);
 
   for (const hand of ['RH', 'LH'] as const) {
-    it(`${hand}: đầu từng ngón nằm đúng tâm phím (kể cả phím đen), ngón chỉ vào trong đàn`, () => {
+    it(`${hand}: mỗi huy hiệu nằm đúng tâm phím của ngón; phím đen cao hơn, phím trắng trên tên nốt`, () => {
       const dir = hand === 'RH' ? 1 : -1;
       const xs = [0, 1, 2, 3, 4].map((i) => 400 + dir * i * u);
-      const pose = keys(hand, xs, [false, false, true, false, false]);
-      pose.fingers.forEach((p, i) => {
-        const [x, y] = apply(p, dir, 0, -100);
-        expect(x).toBeCloseTo(xs[i], 0);
-        expect(y).toBeCloseTo(pose.tips[i].y, 0);
-        expect(pose.roots[i].y).toBeGreaterThan(pose.tips[i].y); // gốc ngón ở phía bé ngồi
+      const s = spots(hand, xs, [false, false, true, false, false]);
+      s.forEach((b, i) => {
+        expect(b.x).toBeCloseTo(xs[i], 1);
+        expect(b.float).toBe(false);
       });
-      // phím đen: đầu ngón vào sâu hơn
-      expect(pose.tips[2].y).toBeLessThan(pose.tips[1].y);
-      // ngón cái ở phía ngón trỏ, gốc thấp hơn hàng khớp
-      expect((pose.roots[0].x - pose.roots[1].x) * dir).toBeLessThan(0);
-      expect(pose.roots[0].y).toBeGreaterThan(pose.roots[1].y);
-      // không che phần dưới phím (nhãn + số ngón của phím đích ở ~70% trở xuống)
-      for (const r of pose.roots.slice(1)) expect(r.y).toBeLessThan(0.66 * H);
-      // số ngón nằm gần đầu ngón
-      pose.nums.forEach((n, i) => expect(Math.abs(n.x - xs[i])).toBeLessThan(u));
+      // phím đen: huy hiệu trên thân phím đen (phím đen cao 60%)
+      expect(s[2].black).toBe(true);
+      expect(s[2].y).toBeLessThan(0.6 * H);
+      expect(s[1].y).toBeGreaterThan(0.6 * H);
+      // huy hiệu to (phím cần đàn) vẫn không chạm tên nốt ở đáy phím (~40 px dưới cùng)
+      expect(s[1].y + badgeRadius(u, true)).toBeLessThan(H - 40);
+      // cùng hàng với nhau trên phím trắng
+      expect(s[0].y).toBe(s[1].y);
     });
   }
 
-  it('ngón lơ lửng (null) được nội suy giữa hai ngón kề', () => {
-    const pose = handPose([{ x: 100, black: false }, null, { x: 240, black: false }, null, null], 'RH', u, H);
-    expect(pose.tips[1].x).toBeCloseTo(170);
-    expect(pose.tips[3].x).toBeCloseTo(240 + u);
+  it('ngón lơ lửng (null) được nội suy giữa hai ngón kề / kéo dài một phím, vẽ mờ', () => {
+    const s = badgeSpots([{ x: 100, black: false }, null, { x: 240, black: false }, null, null], 'RH', u, H);
+    expect(s[1].x).toBeCloseTo(170);
+    expect(s[3].x).toBeCloseTo(240 + u);
+    expect(s[1].float).toBe(true);
+    expect(s[0].float).toBe(false);
+  });
+
+  it('cỡ huy hiệu theo phím: nhỏ 11–16 px, phím cần đàn 18–28 px', () => {
+    expect(badgeRadius(70)).toBeGreaterThanOrEqual(11);
+    expect(badgeRadius(70)).toBeLessThanOrEqual(16);
+    expect(badgeRadius(20)).toBe(11);
+    expect(badgeRadius(200, true)).toBe(28);
+    expect(badgeRadius(70, true)).toBeGreaterThan(badgeRadius(70));
+  });
+
+  it('mũi tên cong: luồn ngón đi vòng phía DƯỚI, vắt ngón vòng phía TRÊN; không NaN', () => {
+    const a = { x: 100, y: 220 };
+    const b = { x: 310, y: 220 };
+    const ctrlY = (d: string) => Number(/Q[\d.-]+ ([\d.-]+)/.exec(d)![1]);
+    const under = crossArc(a, b, 'under', H, 26);
+    const over = crossArc(b, a, 'over', H, 26);
+    expect(ctrlY(under.line)).toBeGreaterThan(220);
+    expect(ctrlY(over.line)).toBeLessThan(220);
+    for (const x of [under, over]) expect(x.line + x.head).not.toMatch(/NaN|Infinity/);
   });
 });
 

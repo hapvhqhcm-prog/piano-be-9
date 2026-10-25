@@ -1,8 +1,8 @@
 /**
  * (+ 2026-10-17, OWNER duyệt) ✨ ĐÁNH BÓNG bài cũ & 🎤 BUỔI DIỄN NHỎ (hoạt động `musician`).
  *  · Đánh bóng: thang tốc độ (task.ladder — vd 50 → 60 → 72) bằng màn bài hát THEO NHỊP (lượt ghi như bài hát thường:
- *    micro / phiếu bố mẹ); đạt → lên nấc, chưa đạt → thử lại (tối đa POLISH_TRIES lượt mỗi nấc — chưa được thì "mai leo tiếp").
- *    Bài có sắc thái → bố mẹ nghe "to – nhỏ rõ chưa?" (micro chưa chấm sắc thái trong bài). Ghi `polish:<bài>:<nấc cao nhất>`.
+ *    micro / bé tự kiểm tra); đạt → lên nấc, chưa đạt → thử lại (tối đa POLISH_TRIES lượt mỗi nấc — chưa được thì "mai leo tiếp").
+ *    Bài có sắc thái → bé tự nghe "to – nhỏ rõ chưa?" (micro chưa chấm sắc thái trong bài). Ghi `polish:<bài>:<nấc cao nhất>`.
  *  · Buổi diễn nhỏ: bé chọn 1–2 bài đã đàn được → mời khán giả → diễn (màn sân khấu stage.ts, KHÔNG huy chương) → lưu nhật ký
  *    buổi diễn (AppData.concerts — mỗi tuần một buổi) → sticker "🎤 Buổi diễn tuần N".
  */
@@ -18,7 +18,7 @@ import { confetti } from '../components/celebrate';
 import { backButton, button, h } from '../components/dom';
 import { mascot } from '../components/mascot';
 import { shortTitle, songEmoji } from '../components/songArt';
-import { selfStudy } from '../selfStudy';
+import { selfAgainButton, selfOkButton } from '../selfCheck';
 import type { MusicianHooks } from './musician';
 import { songScreen } from './song';
 import { stageSongScreen } from './stage';
@@ -123,18 +123,17 @@ export function polishScreen(app: App, a: MusicianActivity, task: Extract<Musici
     };
 
     const dynamics = () => {
-      const by = selfStudy(app) ? 'Con' : '👪 Bố mẹ';
       const answer = (ok: boolean) => {
         hooks.record(`polish:dyn:${task.songId}`, ok ? 'correct' : 'retry');
         hooks.onDone();
       };
       page(
         h('div', { class: 'hero-emoji' }, '🎚️'),
-        h('h1', { class: 'title' }, `${by}: lượt vừa rồi, to – nhỏ nghe rõ chưa?`),
+        h('h1', { class: 'title' }, '🤔 Lượt vừa rồi, con đàn to – nhỏ rõ chưa?'),
         h('p', { class: 'lead' }, 'Chỗ p đàn NHỎ, chỗ f đàn TO — như kể chuyện.'),
       )([
-        button({ icon: '↻', label: 'Chưa rõ lắm', kind: 'retry', onTap: () => answer(false) }),
-        button({ icon: selfStudy(app) ? '✋' : '👪', label: 'Rõ rồi!', kind: 'good', onTap: () => answer(true) }),
+        selfAgainButton(() => answer(false), { label: 'Chưa rõ lắm' }),
+        selfOkButton(() => answer(true), { label: 'Rõ rồi!' }),
       ]);
     };
 
@@ -153,7 +152,7 @@ export function recitalScreen(app: App, a: MusicianActivity, hooks: MusicianHook
     const week = hooks.week;
     const level = levelOf(week).level;
     let choices: Tune[] = concertSongs(data, week);
-    // Chưa có bài nào chơi đạt (dữ liệu mới / bố mẹ cho qua tuần): gợi ý bài mới nhất đã mở
+    // Chưa có bài nào chơi đạt (dữ liệu mới / được cho qua tuần): gợi ý bài mới nhất đã mở
     if (!choices.length) choices = [...songsUpToWeek(week)].sort((x, y) => (y.week ?? 0) - (x.week ?? 0));
     choices = choices.slice(0, SUGGEST);
     const picked: Tune[] = [];

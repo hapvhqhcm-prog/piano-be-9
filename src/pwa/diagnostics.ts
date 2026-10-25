@@ -218,7 +218,7 @@ export const VOICE_INSTALL_STEPS = [
   'Chọn Trợ năng → Nội dung được đọc → Giọng nói.',
   'Chọn Tiếng Việt → bấm “Linh” → bấm biểu tượng tải về (☁︎) và đợi tải xong (cần Wi‑Fi).',
   'Đóng hẳn app Piano bé (vuốt lên từ đáy màn hình) rồi mở lại.',
-  'Trong app: Phụ huynh → Nâng cao → Cài đặt → “Giọng đọc hướng dẫn” chọn Bật → bấm “Nghe thử”.',
+  'Trong app: ⚙️ Cài đặt → “Giọng đọc hướng dẫn” chọn Bật → bấm “Nghe thử”.',
 ];
 
 const SILENT_TIP =
@@ -413,7 +413,7 @@ function voiceRows(s: DiagSnapshot): DiagRow[] {
           status: 'warn',
           value: 'Tắt',
           explain: 'Bố mẹ đã tắt “Giọng đọc hướng dẫn”.',
-          tip: 'Phụ huynh → Nâng cao → Cài đặt → Giọng đọc hướng dẫn → Bật.',
+          tip: '⚙️ Cài đặt → Giọng đọc hướng dẫn → Bật.',
         },
   );
   rows.push(
@@ -451,7 +451,7 @@ function micRows(s: DiagSnapshot): DiagRow[] {
       tip: 'Cài đặt → Safari → Micrô → chọn “Hỏi” hoặc “Cho phép”, rồi đóng hẳn app và mở lại.',
     });
   else if (p === 'prompt')
-    rows.push({ id: 'perm', label: 'Quyền micro', status: 'info', value: 'Chưa hỏi', explain: 'iPad sẽ hỏi khi bố mẹ bấm “Cho phép micro” — chọn Cho phép.' });
+    rows.push({ id: 'perm', label: 'Quyền micro', status: 'info', value: 'Chưa hỏi', explain: 'iPad sẽ hỏi khi bé / người lớn bật micro — chọn Cho phép.' });
   else
     rows.push({
       id: 'perm',
@@ -468,7 +468,7 @@ function micRows(s: DiagSnapshot): DiagRow[] {
           id: 'use',
           label: 'Dùng micro cho buổi học',
           status: 'info',
-          value: 'Tắt — bố mẹ bấm “Đúng rồi”',
+          value: 'Tắt — bé tự kiểm tra (👍 / 🔁)',
           explain: 'Không bắt buộc. Muốn app tự nghe đàn: bấm “🎤 Mở Cài micro (3 bước)”.',
         },
   );
@@ -558,7 +558,7 @@ function storageRows(s: DiagSnapshot): DiagRow[] {
     status: st.full || !st.ok ? 'bad' : st.percent >= 80 ? 'warn' : 'ok',
     value: st.text,
     explain: 'Tiến độ của bé nằm trong bộ nhớ của app trên iPad này.',
-    tip: st.full || !st.ok || st.percent >= 80 ? 'Bấm “💾 Sao lưu” ở màn Phụ huynh ngay, rồi gửi kết quả này cho người hỗ trợ.' : undefined,
+    tip: st.full || !st.ok || st.percent >= 80 ? 'Bấm “💾 Sao lưu dữ liệu” ở ⚙️ Cài đặt ngay, rồi gửi kết quả này cho người hỗ trợ.' : undefined,
   });
   const p = st.persisted;
   rows.push(
@@ -585,7 +585,7 @@ function storageRows(s: DiagSnapshot): DiagRow[] {
     status: stale ? 'warn' : last ? 'ok' : 'info',
     value: last ? fmtDay(last) : 'Chưa lần nào',
     explain: 'Bản sao lưu giúp lấy lại tiến độ nếu iPad bị xóa dữ liệu.',
-    tip: stale ? 'Bấm “💾 Sao lưu” ở đầu màn Phụ huynh → chọn “Lưu vào Tệp”.' : undefined,
+    tip: stale ? '⚙️ Cài đặt → “💾 Sao lưu dữ liệu” → chọn “Lưu vào Tệp”.' : undefined,
   });
   rows.push({
     id: 'data',
@@ -664,7 +664,7 @@ function perfRows(s: DiagSnapshot): DiagRow[] {
       label: 'Tính bảng của bố mẹ',
       status: home,
       value: v(p.homeMs),
-      explain: 'Thời gian app đọc tiến độ để vẽ màn chính / Phụ huynh.',
+      explain: 'Thời gian app đọc tiến độ để vẽ màn chính / Cài đặt.',
       tip: home === 'warn' || home === 'bad' ? slowTip : undefined,
     },
     {

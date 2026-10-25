@@ -746,3 +746,17 @@
   padding-left: 24px;
   font-size: 17px;
 }
+
+/* (2026-10-25, bỏ phần phụ huynh) Hướng dẫn nhanh — thẻ 3: bé tự bật micro (không bắt buộc) */
+.onb-mic-allow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin-top: 10px;
+}
+.onb-mic-note {
+  margin: 0;
+  font-size: 18px;
+  color: var(--ink-2);
+}

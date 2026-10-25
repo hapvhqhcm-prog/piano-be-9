@@ -3,8 +3,14 @@
  * một cảnh chậm, lặp mãi, chia BƯỚC (nhãn ≤ 6 chữ) theo nhịp đếm "1 – 2 – 3 – 4" (hiện số + tiếng tích nhẹ),
  * phần đang chuyển động được tô sáng; nút 🐢 Chậm hơn / Nhanh hơn; vòng đầu có giọng đọc từng bước.
  *
+ * (2026-10-18, bé + bố mẹ chê "bàn tay xấu quá" → OWNER: KHÔNG vẽ bàn tay người) Mỗi cảnh dùng CHỮ HÌNH TRỪU TƯỢNG của
+ * tranh tư thế (art/diagramKit.ts): quả nặng rơi xuống phím rồi nảy lên (cầu vồng rơi); nét cổ tay đi vòng tròn trong khi
+ * chấm đầu ngón đứng yên (xoay cổ tay); chấm gõ xuống, cây cầu vẫn cao (ngón gõ cửa); năm chấm nhấn lần lượt trên phím
+ * (năm ngón leo thang); chấm ngón cái luồn DƯỚI cây cầu tới phím mới (ngón cái chui hầm); chấm xòe rộng → cây cầu tròn ôm
+ * quả bóng → đặt lên phím (ôm quả bóng).
+ *
  * - Phần THUẦN (không DOM, test trong node): mỗi bài = danh sách khung khoá (keyframe, đơn vị = phách) của các số
- *   (góc khớp, vị trí, độ nhấn phím…) → nội suy mượt (ease) → hàm vẽ trả chuỗi SVG (bộ vẽ bàn tay handKit).
+ *   (góc, vị trí, độ nhấn phím…) → nội suy mượt (ease) → hàm vẽ trả chuỗi SVG.
  * - Phần DOM (mountTechniqueAnim): vòng requestAnimationFrame (~30 khung/giây) vẽ lại cảnh; số đếm / nhãn bước là
  *   phần tử HTML có hiệu ứng CSS (techAnim.css).
  * - Giảm chuyển động (prefers-reduced-motion): khung TĨNH từng phách có mũi tên chỉ hướng, chạm để sang phách sau.
@@ -14,23 +20,24 @@
 import type { TechniqueDrill } from '../../lessons/types';
 import { P } from './art/svgKit';
 import {
+  ARCH,
+  DOT,
   GOOD,
-  OUTLINE,
-  SKIN,
-  SEG_LEN,
+  INK,
+  archAt,
+  archD,
   arrow,
-  armHand,
-  chain,
-  limbs,
+  ball,
+  dot,
+  forearm,
+  frontKeys,
+  frontX,
   n,
   panelBg,
-  seg,
-  sideHand,
   sideKeys,
-  type ForwardAngles,
-  type PoseAngles,
+  stroke,
   type Pt,
-} from './art/handKit';
+} from './art/diagramKit';
 import '../../styles/techAnim.css';
 
 // ───────────────────────────── dữ liệu & nội suy (thuần) ─────────────────────────────
@@ -161,7 +168,7 @@ export const VIEW_H = 170;
 const HL = P.orange;
 
 /** Đỉnh tô sáng (vầng sáng sau + vòng nét đứt trên), nhịp theo phách. */
-function halo(p: Pt, pulse: number, r = 15): { under: string; over: string } {
+function halo(p: Pt, pulse: number, r = 17): { under: string; over: string } {
   return {
     under: `<circle cx="${n(p[0])}" cy="${n(p[1])}" r="${n(r + 3 * pulse)}" fill="${P.sun}" opacity="${n(0.22 + 0.3 * pulse)}"/>`,
     over: `<circle cx="${n(p[0])}" cy="${n(p[1])}" r="${n(r + 3 * pulse)}" fill="none" stroke="${HL}" stroke-width="2.6" stroke-dasharray="5 4" opacity="${n(0.55 + 0.45 * pulse)}"/>`,
@@ -172,39 +179,53 @@ function halo(p: Pt, pulse: number, r = 15): { under: string; over: string } {
 function chip(x: number, y: number, text: string, color: string, size = 11): string {
   const w = Math.max(18, text.length * size * 0.58 + 10);
   return (
-    `<g transform="translate(${n(x)} ${n(y)})"><rect x="${n(-w / 2)}" y="${n(-size * 0.95)}" width="${n(w)}" height="${n(size * 1.5)}" rx="${n(size * 0.75)}" fill="#fff" stroke="${color}" stroke-width="1.4"/>` +
+    `<g transform="translate(${n(x)} ${n(y)})"><rect x="${n(-w / 2)}" y="${n(-size * 0.95)}" width="${n(w)}" height="${n(size * 1.5)}" rx="${n(size * 0.75)}" fill="#fff" stroke="${color}" stroke-width="1.6"/>` +
     `<text x="0" y="${n(size * 0.28)}" font-size="${size}" font-weight="800" font-family="Baloo 2, Nunito, sans-serif" fill="${color}" text-anchor="middle">${text}</text></g>`
   );
 }
 
-/** Số ngón trong vòng tròn nhỏ. */
-function fingerBadge(p: Pt, k: number | string, color: string = P.indigo): string {
-  return `<g transform="translate(${n(p[0])} ${n(p[1])})"><circle r="9" fill="${color}" stroke="#fff" stroke-width="2"/><text y="4.2" font-size="12" font-weight="900" font-family="Baloo 2, Nunito, sans-serif" fill="#fff" text-anchor="middle">${k}</text></g>`;
+/** Tham số t của archD có toạ độ x cho trước (giải số — x(t) đơn điệu). */
+function tAtX(a: Pt, b: Pt, x: number): number {
+  let lo = 0;
+  let hi = 1;
+  for (let k = 0; k < 22; k++) {
+    const m = (lo + hi) / 2;
+    if ((archAt(a, b, 1, m)[0] - x) * Math.sign(b[0] - a[0] || 1) < 0) lo = m;
+    else hi = m;
+  }
+  return (lo + hi) / 2;
 }
 
-const fwdOf = (v: AnimState): ForwardAngles => [v.F ?? 0, v.H ?? 0, v.p ?? 0, v.m ?? 0, v.d ?? 0];
-const backOf = (v: AnimState): PoseAngles => [v.a0 ?? 0, v.a1 ?? 0, v.a2 ?? 0, v.a3 ?? 0, v.a4 ?? 0];
-
-/** Khuỷu cần đặt ở đâu để đầu ngón (dáng xuôi `fwd`) nằm đúng `tip`. */
-export function elbowFor(tip: Pt, fwd: ForwardAngles, scale: number, forearm: number = SEG_LEN[4]): Pt {
-  const lens = [forearm, SEG_LEN[3], SEG_LEN[2], SEG_LEN[1], SEG_LEN[0]].map((l) => l * scale);
-  const end = chain([0, 0], fwd.map((deg, i) => ({ len: lens[i], deg })))[5];
-  return [tip[0] - end[0], tip[1] - end[1]];
+/** Cây cầu (nét cong a→b cao `lift`) + "cột cầu" xuống từng chấm `tips`. Trả về svg + đỉnh cầu. */
+function bridge(a: Pt, b: Pt, lift: number, tips: readonly Pt[], w = 9): { svg: string; top: Pt } {
+  let s = '';
+  for (const t of tips) {
+    const p = archAt(a, b, lift, tAtX(a, b, t[0]));
+    s += stroke(`M${n(p[0])} ${n(p[1])} L${n(t[0])} ${n(t[1])}`, ARCH, 4.5);
+  }
+  return { svg: s + stroke(archD(a, b, lift), ARCH, w), top: archAt(a, b, lift, 0.5) };
 }
 
-/** Dáng "cong chuẩn" theo góc xuôi (cẳng tay, mu, đốt gốc, đốt giữa, đốt đầu). */
-const CURVED_FWD = { F: -12, H: -18, p: 28, m: 58, d: 85 } as const;
+/** Tên nốt in trên mặt phím (nhìn thẳng) khi phím sáng. */
+function keyName(x: number, y: number, name: string, op: number): string {
+  return op > 0.05
+    ? `<text x="${n(x)}" y="${n(y)}" font-size="11" font-weight="900" font-family="Baloo 2, Nunito, sans-serif" fill="${P.ink}" text-anchor="middle" opacity="${n(op)}">${name}</text>`
+    : '';
+}
+const NOTE_VI = ['Đô', 'Rê', 'Mi', 'Fa', 'Sol', 'La', 'Si', 'Đô'];
 
 // ───────────────────────────── 1. Cầu vồng rơi (arm-drop) ─────────────────────────────
-// Nhìn ngang, khuỷu cố định bên trái: nhấc cẳng tay (bàn tay buông thõng) → rơi tự nhiên, tay cong chạm phím →
-// chìm xuống đáy phím (nỉ đỏ sáng) → cổ tay nổi lên, nhấc ra.
-const AD = { s: 1.5, fore: 62, kx: 150, ky: 128 } as const;
-const AD_TIP: Pt = [190, AD.ky - 6.8];
-const AD_ELBOW = elbowFor(AD_TIP, [CURVED_FWD.F, CURVED_FWD.H, CURVED_FWD.p, CURVED_FWD.m, CURVED_FWD.d], AD.s, AD.fore);
-const AD_REST = { ...CURVED_FWD, press: 0 };
-const AD_UP = { F: -50, H: 26, p: 58, m: 82, d: 100, press: 0 };
-const AD_BED = { F: -10, H: -15, p: 30, m: 60, d: 86, press: 1 };
-const AD_FLOAT = { F: -24, H: 6, p: 44, m: 74, d: 94, press: 0 };
+// Nhìn ngang: khuỷu (chốt) bên trái, khối cẳng tay xoay quanh khuỷu; cuối khối là cổ tay, nét bàn tay nối xuống QUẢ NẶNG.
+// Nhấc cẳng tay (quả nặng buông thõng dưới cổ tay) → thả rơi, quả nặng đáp xuống phím → phím chìm tới đáy (nỉ đỏ sáng) →
+// cổ tay nổi lên, quả nặng nảy nhẹ lên.
+const AD = { kx: 132, ky: 128, elbow: [26, 98] as Pt, fore: 92, r: 15 } as const;
+const AD_KEY: Pt = [176, AD.ky - AD.r - 1];
+const adWrist = (fa: number): Pt => [AD.elbow[0] + AD.fore * Math.cos((fa * Math.PI) / 180), AD.elbow[1] + AD.fore * Math.sin((fa * Math.PI) / 180)];
+const AD_UP_W = adWrist(-30);
+const AD_REST = { fa: 0, bx: AD_KEY[0], by: AD_KEY[1], press: 0 };
+const AD_UP = { fa: -30, bx: AD_UP_W[0] + 14, by: AD_UP_W[1] + 30, press: 0 };
+const AD_BED = { fa: 3, bx: AD_KEY[0], by: AD_KEY[1] + 6, press: 1 };
+const AD_FLOAT = { fa: -9, bx: AD_KEY[0] - 2, by: AD_KEY[1] - 14, press: 0 };
 
 const armDrop: AnimDef = {
   id: 'arm-drop',
@@ -227,67 +248,30 @@ const armDrop: AnimDef = {
   trail: { part: 'tip', from: 0.85, to: 1.5 },
   draw(v) {
     const press = clamp01(v.press);
-    const hand = armHand({ elbow: [AD_ELBOW[0], AD_ELBOW[1] + press * 2], fwd: fwdOf(v), scale: AD.s, forearm: AD.fore });
-    const [tip, , , mcp, wr, el] = hand.pts;
-    const keyPt: Pt = [AD_TIP[0] + 14, AD.ky + 19];
-    const bedGlow = press > 0.5 ? `<rect x="${AD.kx + 6}" y="${AD.ky + 15.5}" width="110" height="8" rx="4" fill="#e0605a" opacity="${n((press - 0.5) * 1.6)}"/>` : '';
-    const elbowDot = `<circle cx="${n(el[0])}" cy="${n(el[1])}" r="5" fill="${P.violetLight}" stroke="#fff" stroke-width="2"/>`;
+    const wr = adWrist(v.fa ?? 0);
+    const b: Pt = [v.bx ?? AD_KEY[0], v.by ?? AD_KEY[1]];
+    const keyPt: Pt = [AD_KEY[0] + 14, AD.ky + 19];
+    const bedGlow = press > 0.5 ? `<rect x="${AD.kx + 6}" y="${AD.ky + 15.5}" width="104" height="8" rx="4" fill="#e0605a" opacity="${n((press - 0.5) * 1.6)}"/>` : '';
+    const hand = stroke(`M${n(wr[0])} ${n(wr[1])} Q${n((wr[0] + b[0]) / 2 + 6)} ${n(Math.min(wr[1], b[1]) - 16)} ${n(b[0])} ${n(b[1] - AD.r + 2)}`, ARCH, 8);
+    const elbowDot = `<circle cx="${n(AD.elbow[0])}" cy="${n(AD.elbow[1])}" r="7" fill="${P.violetLight}" stroke="${INK}" stroke-width="3"/>`;
     return {
-      svg: sideKeys({ x: AD.kx, y: AD.ky, len: 60, press, bed: press > 0.5 }) + bedGlow + hand.svg + elbowDot,
-      at: { tip, wrist: wr, knuckle: mcp, elbow: el, key: keyPt },
+      svg: sideKeys({ x: AD.kx, y: AD.ky, len: 50, press, bed: press > 0.5 }) + bedGlow + forearm(wr, AD.fore, 22, v.fa ?? 0) + elbowDot + hand + ball(b, AD.r),
+      at: { tip: b, wrist: wr, knuckle: wr, elbow: AD.elbow, key: keyPt },
     };
   },
 };
 
 // ───────────────────────────── 2. Xoay cổ tay (wrist-circle) ─────────────────────────────
-// Nhìn ngang, đầu ngón ĐỨNG YÊN trên phím; cổ tay đi vòng tròn: lên → tới trước → xuống → lùi.
-// Dáng tay mỗi khung tính bằng IK nhỏ (Newton 2 ẩn: độ cong ngón u, góc mu bàn tay w) để cổ tay nằm đúng trên vòng tròn.
-const WC = { s: 1.9, kx: 138, ky: 122 } as const;
-const WC_TIP: Pt = [178, WC.ky - 4.5 * WC.s];
-const WC_BASE: PoseAngles = [-95, -122, -152, 162, 168];
-const WC_R = 12;
-
-function wcPose(u: number, w: number): PoseAngles {
-  return [WC_BASE[0] + u * 0.35, WC_BASE[1] + u * 0.7, WC_BASE[2] + u, WC_BASE[3] + w, WC_BASE[4] + w * 0.55];
-}
-function wcWrist(a: PoseAngles): Pt {
-  const lens = SEG_LEN.map((l) => l * WC.s);
-  return chain(WC_TIP, a.slice(0, 4).map((deg, i) => ({ len: lens[i], deg })))[4];
-}
-const WC_CENTER = wcWrist(WC_BASE);
-
-/** IK: góc khớp sao cho cổ tay tới `target` (đầu ngón giữ nguyên). Trả về PoseAngles; không hội tụ → dáng gốc. */
-export function wristIk(target: Pt): PoseAngles {
-  let u = 0;
-  let w = 0;
-  for (let it = 0; it < 30; it++) {
-    const p = wcWrist(wcPose(u, w));
-    const ex = p[0] - target[0];
-    const ey = p[1] - target[1];
-    if (Math.hypot(ex, ey) < 0.01) break;
-    const h = 0.01;
-    const pu = wcWrist(wcPose(u + h, w));
-    const pw = wcWrist(wcPose(u, w + h));
-    const j11 = (pu[0] - p[0]) / h;
-    const j21 = (pu[1] - p[1]) / h;
-    const j12 = (pw[0] - p[0]) / h;
-    const j22 = (pw[1] - p[1]) / h;
-    const det = j11 * j22 - j12 * j21;
-    if (!Number.isFinite(det) || Math.abs(det) < 1e-9) break;
-    u -= (j22 * ex - j12 * ey) / det;
-    w -= (-j21 * ex + j11 * ey) / det;
-    u = Math.max(-40, Math.min(40, u));
-    w = Math.max(-40, Math.min(40, w));
-  }
-  const pose = wcPose(u, w);
-  return pose.every(Number.isFinite) ? pose : WC_BASE;
-}
+// Nhìn ngang: chấm đầu ngón ĐỨNG YÊN trên phím (ghim xanh); cổ tay (đầu khối cẳng tay) đi vòng tròn: lên → tới trước →
+// xuống → lùi; nét bàn tay nối cổ tay với đầu ngón co giãn theo.
+const WC = { kx: 136, ky: 128, elbow: [12, 104] as Pt, r: 14 } as const;
+const WC_TIP: Pt = [176, WC.ky - 11];
+const WC_CENTER: Pt = [112, 90];
 
 /** 16 khung khoá quanh vòng tròn (bắt đầu ở ĐỈNH, theo chiều kim đồng hồ: lên → trước → xuống → sau). */
 const WC_KEYS: Keyframe[] = Array.from({ length: 16 }, (_, k) => {
   const th = (k / 16) * Math.PI * 2;
-  const a = wristIk([WC_CENTER[0] + WC_R * Math.sin(th), WC_CENTER[1] - WC_R * Math.cos(th)]);
-  return { at: k / 4, v: { a0: a[0], a1: a[1], a2: a[2], a3: a[3], a4: a[4] }, ease: 'lin' as const };
+  return { at: k / 4, v: { wx: WC_CENTER[0] + WC.r * Math.sin(th), wy: WC_CENTER[1] - WC.r * Math.cos(th) }, ease: 'lin' as const };
 });
 
 const wristCircle: AnimDef = {
@@ -302,21 +286,23 @@ const wristCircle: AnimDef = {
   keys: WC_KEYS,
   trail: { part: 'wrist', from: 0, to: 4 },
   draw(v) {
-    const hand = sideHand({ tip: WC_TIP, pose: backOf(v), scale: WC.s });
-    const [tip, , , mcp, wr, el] = hand.pts;
-    const pin = `<circle cx="${n(tip[0])}" cy="${WC.ky}" r="4" fill="${GOOD}" stroke="#fff" stroke-width="1.6"/>`;
+    const wr: Pt = [v.wx ?? WC_CENTER[0], v.wy ?? WC_CENTER[1]];
+    const deg = (Math.atan2(wr[1] - WC.elbow[1], wr[0] - WC.elbow[0]) * 180) / Math.PI;
+    const len = Math.hypot(wr[0] - WC.elbow[0], wr[1] - WC.elbow[1]);
+    const hand = stroke(`M${n(wr[0])} ${n(wr[1])} C${n(wr[0] + 30)} ${n(wr[1] - 16)} ${n(WC_TIP[0] - 4)} ${n(WC_TIP[1] - 44)} ${n(WC_TIP[0])} ${n(WC_TIP[1] - 8)}`, ARCH, 9);
+    const pin = `<circle cx="${n(WC_TIP[0])}" cy="${WC.ky}" r="4" fill="${GOOD}" stroke="#fff" stroke-width="1.6"/>`;
     return {
-      svg: sideKeys({ x: WC.kx, y: WC.ky, len: 60 }) + hand.svg + pin + chip(196, 152, 'ngón đứng yên', GOOD, 10),
-      at: { tip, wrist: wr, knuckle: mcp, elbow: el },
+      svg: sideKeys({ x: WC.kx, y: WC.ky, len: 50 }) + forearm(wr, len, 22, deg) + hand + dot(WC_TIP, '', { r: 10 }) + pin + chip(196, 158, 'ngón đứng yên', GOOD, 10),
+      at: { tip: WC_TIP, wrist: wr, knuckle: wr, elbow: WC.elbow },
     };
   },
 };
 
 // ───────────────────────────── 3. Ngón gõ cửa (finger-tap) ─────────────────────────────
-// Nhìn ngang trên nắp đàn gỗ: khớp gốc (cây cầu) giữ cao, MỘT ngón nhấc lên từ khớp gốc rồi gõ xuống; ngón khác nghỉ.
-const FT = { s: 1.9, lidY: 124 } as const;
-const FT_TIP: Pt = [176, FT.lidY - 4.5 * FT.s];
-const FT_ELBOW = elbowFor(FT_TIP, [CURVED_FWD.F, CURVED_FWD.H, CURVED_FWD.p, CURVED_FWD.m, CURVED_FWD.d], FT.s);
+// Nhìn thẳng trên nắp đàn gỗ: cây cầu giữ CAO, MỘT chấm nhấc lên rồi gõ xuống (vạch "cốc cốc"); các chấm khác nằm yên.
+const FT = { lidY: 118, x0: 48, gap: 36, r: 11 } as const;
+const FT_X = (i: number) => FT.x0 + i * FT.gap;
+const FT_REST_Y = FT.lidY - FT.r - 1.5;
 
 function tapKeys(beats: number): Keyframe[] {
   const ks: Keyframe[] = [];
@@ -342,109 +328,33 @@ const fingerTap: AnimDef = {
   still: 0.45,
   draw(v, beat) {
     const k = Math.min(5, Math.floor(wrapBeat(beat, 5)) + 1);
-    const L = clamp01(v.lift) * 34;
-    const fwd: ForwardAngles = [CURVED_FWD.F, CURVED_FWD.H, CURVED_FWD.p - L, CURVED_FWD.m - L * 0.85, CURVED_FWD.d - L * 0.7];
-    // ngón nghỉ phía sau (nhạt), cùng khớp gốc
-    // ngón nghỉ phía sau: chỉ 3 đốt ngón (nhạt), gốc lệch ra sau một chút
-    const bp = armHand({ elbow: [FT_ELBOW[0] + 10, FT_ELBOW[1] - 3], fwd: [CURVED_FWD.F, CURVED_FWD.H, 30, 62, 88], scale: FT.s, sleeve: null }).pts;
-    const backFingers = limbs([
-      seg(bp[3], bp[2], 11.5 * FT.s, SKIN.back),
-      seg(bp[2], bp[1], 10 * FT.s, SKIN.back),
-      seg(bp[1], bp[0], 9 * FT.s, SKIN.back),
-    ]);
-    const hand = armHand({ elbow: FT_ELBOW, fwd, scale: FT.s });
-    const [tip, dip, pip, mcp, wr, el] = hand.pts;
+    const L = clamp01(v.lift) * 30;
+    const tips: Pt[] = [0, 1, 2, 3, 4].map((i) => [FT_X(i), FT_REST_Y - (i === k - 1 ? L : 0)]);
+    const a: Pt = [FT_X(0), 82];
+    const b: Pt = [FT_X(4), 82];
+    const br = bridge(a, b, 44, tips);
     const lid =
-      `<rect x="96" y="${FT.lidY}" width="146" height="14" rx="4" fill="${P.wood}" stroke="${OUTLINE}" stroke-width="1.3"/>` +
-      `<rect x="96" y="${FT.lidY + 14}" width="146" height="30" fill="${P.woodDark}" opacity=".55"/>`;
+      `<rect x="16" y="${FT.lidY}" width="208" height="16" rx="5" fill="${P.wood}" stroke="${INK}" stroke-width="2.4"/>` +
+      `<rect x="16" y="${FT.lidY + 16}" width="208" height="22" rx="4" fill="${P.woodDark}" opacity=".55"/>`;
     const hit = clamp01(v.hit);
-    const knock = hit > 0.05
-      ? `<g stroke="${P.orange}" stroke-width="2.4" stroke-linecap="round" opacity="${n(hit)}">` +
-        `<path d="M${n(FT_TIP[0] + 10)} ${n(FT.lidY - 6)} l8 -6"/><path d="M${n(FT_TIP[0] + 12)} ${n(FT.lidY - 1)} l10 0"/><path d="M${n(FT_TIP[0] - 12)} ${n(FT.lidY - 6)} l-7 -6"/></g>`
-      : '';
-    const bridge = `<path d="M${n(wr[0])} ${n(wr[1] - 24)} Q${n(mcp[0])} ${n(mcp[1] - 44)} ${n(mcp[0] + 34)} ${n(mcp[1] - 18)}" stroke="${GOOD}" stroke-width="3" stroke-dasharray="7 5" fill="none" stroke-linecap="round"/>`;
+    const hx = FT_X(k - 1);
+    const knock =
+      hit > 0.05
+        ? `<g stroke="${P.orange}" stroke-width="2.6" stroke-linecap="round" opacity="${n(hit)}">` +
+          `<path d="M${n(hx + 14)} ${n(FT.lidY - 4)} l8 -6"/><path d="M${n(hx + 15)} ${n(FT.lidY + 2)} l10 0"/><path d="M${n(hx - 14)} ${n(FT.lidY - 4)} l-8 -6"/></g>`
+        : '';
+    const dots = tips.map((p, i) => dot(p, i + 1, i === k - 1 ? {} : { fill: '#5d9be0' })).join('');
     return {
-      svg: lid + backFingers + hand.svg + knock + bridge + chip(mcp[0] - 30, 24, 'cầu cao', GOOD, 11) + fingerBadge([tip[0] + 20, tip[1] - 30], k),
-      at: { tip, finger: [(pip[0] + dip[0]) / 2, (pip[1] + dip[1]) / 2], knuckle: mcp, wrist: wr, elbow: el },
+      svg: lid + br.svg + dots + knock + chip(br.top[0], 22, 'cầu cao', GOOD, 11),
+      at: { tip: tips[k - 1], finger: tips[k - 1], knuckle: br.top },
     };
   },
 };
 
-// ───────────────────────────── cảnh nhìn từ TRÊN (five-finger, thumb-under, legato) ─────────────────────────────
-const TK = { x0: 18, kw: 29.7, y: 20, h: 124 } as const;
-const NOTE_VI = ['Đô', 'Rê', 'Mi', 'Fa', 'Sol', 'La', 'Si', 'Đô'];
-const keyX = (i: number) => TK.x0 + i * TK.kw + TK.kw / 2 - 1;
-/** y đầu ngón 2–5 (nhìn từ trên) */
-const TIPS_Y = [92, 86, 91, 100];
-
-/** Phím trắng (có thể sáng lên theo glow[i] 0..1, ghi tên nốt) + phím đen. */
-function topKeys(count: number, glow: (i: number) => number): string {
-  let s = `<rect x="${TK.x0 - 4}" y="${TK.y - 4}" width="${n(count * TK.kw + 6)}" height="${TK.h + 8}" rx="6" fill="${P.ink}"/>`;
-  for (let i = 0; i < count; i++) {
-    const g = clamp01(glow(i));
-    s += `<rect x="${n(TK.x0 + i * TK.kw)}" y="${TK.y}" width="${n(TK.kw - 2)}" height="${TK.h}" rx="3" fill="#fff"/>`;
-    if (g > 0.02) {
-      s += `<rect x="${n(TK.x0 + i * TK.kw)}" y="${TK.y}" width="${n(TK.kw - 2)}" height="${TK.h}" rx="3" fill="${P.sun}" opacity="${n(0.75 * g)}"/>`;
-      s += `<text x="${n(keyX(i))}" y="${TK.y + TK.h - 6}" font-size="11" font-weight="900" font-family="Baloo 2, Nunito, sans-serif" fill="${P.ink}" text-anchor="middle" opacity="${n(g)}">${NOTE_VI[i % 8]}</text>`;
-    }
-  }
-  for (let i = 0; i < count - 1; i++) {
-    if (![0, 1, 3, 4, 5].includes(i % 7)) continue;
-    s += `<rect x="${n(TK.x0 + (i + 1) * TK.kw - 9)}" y="${TK.y}" width="16" height="64" rx="2.5" fill="${P.night}"/>`;
-  }
-  return s;
-}
-
-interface TopHandOpts {
-  /** x tâm phím của ngón cái khi tay ở chỗ cũ (tay dời → số khác) */
-  hx: number;
-  /** nhấn ngón 1..5 (0..1) — index 0 = ngón cái */
-  press: readonly number[];
-  /** đầu ngón cái (toạ độ tuyệt đối); bỏ trống = chỗ thường */
-  thumb?: Pt;
-  /** 0..1: ngón cái đang chui DƯỚI lòng bàn tay (bàn tay vẽ trong suốt hơn) */
-  under?: number;
-}
-
-/** Bàn tay phải nhìn từ trên (ngón 2–5 trên phím, ngón cái cong nằm nghiêng). Trả về svg + đầu 5 ngón. */
-function topHand(o: TopHandOpts): { svg: string; tips: Pt[] } {
-  const skin = SKIN.base;
-  const cx = (i: number) => o.hx + i * TK.kw;
-  const tips: Pt[] = TIPS_Y.map((y, k) => [cx(k + 1), y + clamp01(o.press[k + 1] ?? 0) * 7]);
-  const fingers = tips.map(([x, y], k) => {
-    const pr = clamp01(o.press[k + 1] ?? 0);
-    const f = seg([x - 1, 120], [x, y], 17 - k * 1.2, skin);
-    return (
-      f.under +
-      f.over +
-      `<ellipse cx="${n(x)}" cy="${n(y - 1)}" rx="4.6" ry="3.4" fill="${pr > 0.5 ? '#ffe9d8' : SKIN.nail}" stroke="${SKIN.dark}" stroke-width=".9"/>`
-    );
-  });
-  const palm = `<path d="M${n(cx(0) + 8)} 150 Q${n(cx(0) + 4)} 112 ${n(cx(1) - 8)} 112 L${n(cx(4) + 6)} 114 Q${n(cx(4) + 14)} 128 ${n(cx(4) + 6)} 150 Z" fill="${skin}" stroke="${OUTLINE}" stroke-width="1.5"/>`;
-  const knuckles = tips.map(([x]) => `<path d="M${n(x - 5)} 118 q5 -3 10 0" stroke="${SKIN.dark}" stroke-width="1.4" fill="none" stroke-linecap="round"/>`).join('');
-  const arm = seg([cx(2) + 6, 182], [cx(2) + 4, 152], 54, P.violet);
-  const base: Pt = [cx(0) + 18, 140];
-  const tp: Pt = o.thumb ?? [cx(0) - 1, 112 + clamp01(o.press[0] ?? 0) * 6];
-  // khớp giữa ngón cái: lệch sang trái-dưới của đoạn gốc→đầu (ngón cong)
-  const mx = (base[0] + tp[0]) / 2;
-  const my = (base[1] + tp[1]) / 2;
-  const L = Math.hypot(tp[0] - base[0], tp[1] - base[1]) || 1;
-  const nx = (tp[1] - base[1]) / L;
-  const ny = -(tp[0] - base[0]) / L;
-  const mid: Pt = [mx + nx * 6, my + ny * 6];
-  const th =
-    limbs([seg(base, mid, 17, skin), seg(mid, tp, 15, skin)]) +
-    `<ellipse cx="${n(tp[0] - 3.4)}" cy="${n(tp[1] + 1)}" rx="2.4" ry="4.4" transform="rotate(-24 ${n(tp[0] - 3.4)} ${n(tp[1] + 1)})" fill="${SKIN.nail}" stroke="${SKIN.dark}" stroke-width=".9"/>`;
-  const uv = clamp01(o.under ?? 0);
-  const under = uv > 0.05;
-  // ngón cái chui dưới: vẽ ngón cái TRƯỚC lòng bàn tay (bị che) + viền nét đứt của nó phía trên (thấy "xuyên" qua tay)
-  const ghost = under
-    ? `<path d="M${n(base[0])} ${n(base[1])} L${n(mid[0])} ${n(mid[1])} L${n(tp[0])} ${n(tp[1])}" stroke="${P.indigo}" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="${n(0.22 * uv)}"/>` +
-      `<path d="M${n(base[0])} ${n(base[1])} L${n(mid[0])} ${n(mid[1])} L${n(tp[0])} ${n(tp[1])}" stroke="${P.indigo}" stroke-width="2" stroke-dasharray="4 4" stroke-linecap="round" fill="none" opacity="${n(0.8 * uv)}"/>`
-    : '';
-  const svg = arm.under + arm.over + (under ? th : '') + fingers.join('') + palm + knuckles + (under ? ghost : th);
-  return { svg, tips: [tp, ...tips] };
-}
+// ───────────────────────────── cảnh nhìn thẳng: 5 chấm trên phím (five-finger, legato) ─────────────────────────────
+const WK = { x0: 21, kw: 28.3, y: 118, h: 40, r: 10 } as const;
+const wkX = (i: number) => frontX(WK.x0, WK.kw, i);
+const WK_Y = WK.y - WK.r - 1.5;
 
 /** Khung khoá "từng ngón nhấn theo dãy" (legato: ngón sau xuống khi ngón trước vừa nhấc). */
 function walkKeys(seq: readonly number[]): Keyframe[] {
@@ -463,21 +373,25 @@ function walkKeys(seq: readonly number[]): Keyframe[] {
 }
 
 const FIVE_SEQ = [1, 2, 3, 4, 5, 4, 3, 2] as const;
-/** Nốt (chỉ số phím trắng) của ngón 1..5 khi tay ở thế Đô */
-const FIVE_KEY = [0, 0, 1, 2, 3, 4];
 
 function walkDraw(seq: readonly number[], keyCount: number) {
   return (v: AnimState, beat: number): Scene => {
     const press = [1, 2, 3, 4, 5].map((k) => clamp01(v[`f${k}`] ?? 0));
-    const hx = keyX(0) + (v.lean ?? 0);
-    const hand = topHand({ hx, press });
+    const lean = v.lean ?? 0;
+    const tips: Pt[] = press.map((p, i) => [wkX(i), WK_Y + p * 5]);
     const active = seq[Math.floor(wrapBeat(beat, seq.length))] ?? 1;
-    const tipA = hand.tips[active - 1];
-    // "sức nặng" dồn vào ngón đang nhấn: chấm tím mờ dưới đầu ngón
-    const weight = `<ellipse cx="${n(tipA[0])}" cy="${n(tipA[1] + 8)}" rx="11" ry="5" fill="${P.violet}" opacity="${n(0.18 + 0.3 * press[active - 1])}"/>`;
+    const a: Pt = [wkX(0) + lean, 80];
+    const b: Pt = [wkX(4) + lean, 80];
+    const br = bridge(a, b, 40, tips);
+    const keys = frontKeys(WK.x0, WK.y, keyCount, WK.kw, WK.h, { press: (i) => (i < 5 ? press[i] : 0), glow: (i) => (i < 5 ? press[i] : 0) });
+    const names = press.map((p, i) => keyName(wkX(i), WK.y + 26 + p * 5, NOTE_VI[i], p)).join('');
+    const tipA = tips[active - 1];
+    // "sức nặng" dồn vào ngón đang nhấn: bóng tím mờ dưới chấm
+    const weight = `<ellipse cx="${n(tipA[0])}" cy="${n(WK.y + 2)}" rx="13" ry="4" fill="${P.violet}" opacity="${n(0.15 + 0.3 * press[active - 1])}"/>`;
+    const dots = tips.map((p, i) => dot(p, i + 1, { r: WK.r, fill: i === active - 1 ? DOT : '#5d9be0' })).join('');
     return {
-      svg: topKeys(keyCount, (i) => press.reduce((m, p, k) => (FIVE_KEY[k + 1] === i ? Math.max(m, p) : m), 0)) + weight + hand.svg + fingerBadge([tipA[0], 34], active),
-      at: { finger: tipA, tip: tipA, thumb: hand.tips[0] },
+      svg: keys + names + weight + br.svg + dots,
+      at: { finger: tipA, tip: tipA, thumb: tips[0], knuckle: br.top },
     };
   };
 }
@@ -495,11 +409,12 @@ const fiveFinger: AnimDef = {
 };
 
 // ───────────────────────────── 5. Ngón cái chui hầm (thumb-under) ─────────────────────────────
-// Nhìn từ trên: ngón 3 giữ Mi → ngón cái trượt DƯỚI lòng bàn tay tới Fa → chạm Fa, cả bàn tay dời theo → về chỗ cũ.
-const TU_HOME = keyX(0);
-const TU_THUMB_HOME: Pt = [TU_HOME - 1, 112];
-const TU_THUMB_F: Pt = [keyX(3) - 2, 106];
-const TU_SHIFT = 3 * TK.kw * 0.62; // tay dời một đoạn (vẫn trong khung) — đủ thấy "cả tay đi theo"
+// Nhìn thẳng: chấm 3 giữ Mi → chấm ngón cái đi DƯỚI cây cầu (vẽ khuất sau cột cầu) tới Fa; chấm 4, 5 nhấc nhẹ nhường chỗ →
+// chạm Fa, cả cây cầu (chấm 2–5) dời theo → về chỗ cũ.
+const TU = { x0: 12, kw: 27, y: 120, h: 38, r: 9.5 } as const;
+const tuX = (i: number) => frontX(TU.x0, TU.kw, i);
+const TU_Y = TU.y - TU.r - 1.5;
+const TU_SHIFT = 3 * TU.kw;
 const thumbUnder: AnimDef = {
   id: 'thumb-under',
   count: ['1', '2', '3', '4'],
@@ -510,39 +425,48 @@ const thumbUnder: AnimDef = {
     { label: 'Nhẹ nhàng về chỗ cũ', say: 'Bốn: nhẹ nhàng về chỗ cũ.', beats: 1, part: 'thumb' },
   ],
   keys: [
-    { at: 0, v: { hx: 0, tx: TU_THUMB_HOME[0], ty: TU_THUMB_HOME[1], under: 0, f3: 0, f1: 0 } },
-    { at: 0.35, v: { hx: 0, tx: TU_THUMB_HOME[0], ty: TU_THUMB_HOME[1], under: 0, f3: 1, f1: 0 } },
-    { at: 1.05, v: { hx: 0, tx: TU_THUMB_HOME[0], ty: TU_THUMB_HOME[1], under: 0, f3: 1, f1: 0 } },
-    { at: 1.9, v: { hx: 0, tx: TU_THUMB_F[0], ty: TU_THUMB_F[1], under: 1, f3: 1, f1: 0 } },
-    { at: 2.25, v: { hx: 0, tx: TU_THUMB_F[0], ty: TU_THUMB_F[1] + 5, under: 1, f3: 0, f1: 1 } },
-    { at: 2.9, v: { hx: TU_SHIFT, tx: TU_THUMB_F[0] + 2, ty: TU_THUMB_F[1] + 6, under: 0.3, f3: 0, f1: 1 } },
-    { at: 3.15, v: { hx: TU_SHIFT, tx: TU_THUMB_F[0] + 2, ty: TU_THUMB_F[1] + 6, under: 0.3, f3: 0, f1: 1 } },
-    { at: 3.9, v: { hx: 0, tx: TU_THUMB_HOME[0], ty: TU_THUMB_HOME[1], under: 0, f3: 0, f1: 0 } },
+    { at: 0, v: { hx: 0, tx: tuX(0), ty: TU_Y, under: 0, f3: 0, f1: 0, up: 0 } },
+    { at: 0.35, v: { hx: 0, tx: tuX(0), ty: TU_Y, under: 0, f3: 1, f1: 0, up: 0 } },
+    { at: 1.05, v: { hx: 0, tx: tuX(0), ty: TU_Y, under: 0, f3: 1, f1: 0, up: 0 } },
+    { at: 1.5, v: { hx: 0, tx: tuX(1.6), ty: TU_Y - 22, under: 1, f3: 1, f1: 0, up: 1 } },
+    { at: 1.9, v: { hx: 0, tx: tuX(3), ty: TU_Y - 4, under: 1, f3: 1, f1: 0, up: 1 } },
+    { at: 2.25, v: { hx: 0, tx: tuX(3), ty: TU_Y, under: 1, f3: 0, f1: 1, up: 1 } },
+    { at: 2.9, v: { hx: TU_SHIFT, tx: tuX(3), ty: TU_Y, under: 0, f3: 0, f1: 1, up: 0 } },
+    { at: 3.15, v: { hx: TU_SHIFT, tx: tuX(3), ty: TU_Y, under: 0, f3: 0, f1: 1, up: 0 } },
+    { at: 3.9, v: { hx: 0, tx: tuX(0), ty: TU_Y, under: 0, f3: 0, f1: 0, up: 0 } },
   ],
   draw(v) {
-    const hx = TU_HOME + (v.hx ?? 0);
+    const hx = v.hx ?? 0;
     const f1 = clamp01(v.f1);
     const f3 = clamp01(v.f3);
-    const hand = topHand({ hx, press: [f1, 0, f3, 0, 0], thumb: [v.tx ?? TU_THUMB_HOME[0], v.ty ?? TU_THUMB_HOME[1]], under: v.under });
-    const glow = (i: number) => (i === 2 ? f3 : i === 3 ? f1 : 0);
-    const tunnel = `<path d="M${n(TU_THUMB_HOME[0] + 4)} 128 Q${n((TU_THUMB_HOME[0] + TU_THUMB_F[0]) / 2)} 138 ${n(TU_THUMB_F[0])} 124" stroke="${P.violet}" stroke-width="2.6" stroke-dasharray="5 5" fill="none" stroke-linecap="round" opacity=".7"/>`;
+    const up = clamp01(v.up);
+    const under = clamp01(v.under);
+    // chấm 2–5 (theo cây cầu), chấm 4–5 nhấc nhẹ khi ngón cái chui qua
+    const tips: Pt[] = [1, 2, 3, 4].map((i) => [tuX(i) + hx, TU_Y + (i === 2 ? f3 * 4 : 0) - (i >= 3 ? up * 16 : 0)]);
+    const th: Pt = [v.tx ?? tuX(0), (v.ty ?? TU_Y) + f1 * 4];
+    const a: Pt = [tuX(1) + hx, 84];
+    const b: Pt = [tuX(4) + hx, 84];
+    const br = bridge(a, b, 34, tips, 8);
+    const thumb = stroke(`M${n(a[0])} ${n(a[1])} Q${n(Math.min(a[0], th[0]) - 6)} ${n(th[1] - 4)} ${n(th[0])} ${n(th[1])}`, ARCH, 4.5) + dot(th, 1, { r: TU.r });
+    const keyIdx = (x: number) => Math.round((x - TU.x0 - TU.kw / 2) / TU.kw);
+    const glowAt = (i: number) => (i === keyIdx(th[0]) ? f1 : 0) + (i === 2 + Math.round(hx / TU.kw) ? f3 : 0);
+    const keys = frontKeys(TU.x0, TU.y, 8, TU.kw, TU.h, { glow: glowAt, press: glowAt });
+    const tunnel = `<path d="M${n(tuX(0))} ${n(TU_Y + 6)} Q${n(tuX(1.5))} ${n(TU_Y - 34)} ${n(tuX(3))} ${n(TU_Y + 6)}" stroke="${P.violet}" stroke-width="2.6" stroke-dasharray="5 5" fill="none" stroke-linecap="round" opacity="${n(0.25 + 0.5 * under)}"/>`;
+    const dots = tips.map((p, i) => `<g opacity="${n(i >= 2 ? 1 - up * 0.45 : 1)}">${dot(p, i + 2, { r: TU.r, fill: i === 1 ? DOT : '#5d9be0' })}</g>`).join('');
+    // ngón cái đang chui: vẽ TRƯỚC cây cầu (nằm khuất dưới); bình thường vẽ sau
+    const svg = keys + tunnel + (under > 0.5 ? thumb + br.svg + dots : br.svg + dots + thumb) + keyName(tuX(3), TU.y + 26, 'Fa', Math.max(0.35 * under, f1));
     return {
-      svg: topKeys(7, glow) + tunnel + hand.svg + fingerBadge([hand.tips[0][0] - 2, 160], 1) + fingerBadge([hand.tips[2][0], 34], 3),
-      at: { thumb: hand.tips[0], finger: hand.tips[2], key: [keyX(3), 60] },
+      svg,
+      at: { thumb: th, finger: tips[1], key: [tuX(3), TU.y + 18], knuckle: br.top },
     };
   },
 };
 
 // ───────────────────────────── 6. Ôm quả bóng (hand-shape) ─────────────────────────────
-// Nhìn ngang: bàn tay xòe trên cao → khum tròn ôm quả bóng (đặt trên phím) → bóng lăn đi, tay giữ dáng → tay tròn trên phím.
-const HS = { s: 1.9, kx: 138, ky: 122 } as const;
-const HS_TIP: Pt = [176, HS.ky - 4.5 * HS.s];
-// mu bàn tay 184° (= −176°) viết liền với 162° của dáng cong → nội suy đi đường ngắn, không lật tay
-const HS_OPEN: PoseAngles = [-176, -178, -179, 184, 174];
-const HS_CURVED: PoseAngles = [-95, -122, -152, 162, 168];
-const hsPose = (a: PoseAngles) => ({ a0: a[0], a1: a[1], a2: a[2], a3: a[3], a4: a[4] });
-const HS_BALL: Pt = [152, HS.ky - 19];
-
+// Nhìn thẳng: năm chấm XÒE rộng trên cao, cây cầu phẳng → khum tròn ôm quả bóng (chấm gom lại) → bóng lăn đi, cầu vẫn tròn →
+// đặt cả dáng tròn xuống phím (chấm ngồi trên phím).
+const HS = { x0: 30, kw: 36, y: 124, h: 34, r: 11 } as const;
+const HS_SIT = HS.y - HS.r - 1.5;
 const handShape: AnimDef = {
   id: 'hand-shape',
   count: ['1', '2', '3', '4'],
@@ -553,37 +477,37 @@ const handShape: AnimDef = {
     { label: 'Tay tròn đặt trên phím', say: 'Bốn: bàn tay tròn đặt trên phím.', beats: 1, part: 'tip' },
   ],
   keys: [
-    { at: 0, v: { ...hsPose(HS_OPEN), tx: 214, ty: 72, ball: 0, bx: 0 } },
-    { at: 0.7, v: { ...hsPose(HS_OPEN), tx: 214, ty: 72, ball: 1, bx: 0 } },
-    { at: 1.75, v: { ...hsPose(HS_CURVED), tx: HS_TIP[0], ty: HS_TIP[1], ball: 1, bx: 0 } },
-    { at: 2.15, v: { ...hsPose(HS_CURVED), tx: HS_TIP[0], ty: HS_TIP[1], ball: 1, bx: 0 } },
-    { at: 2.95, v: { ...hsPose(HS_CURVED), tx: HS_TIP[0], ty: HS_TIP[1], ball: 0, bx: -70 } },
-    { at: 3.6, v: { ...hsPose(HS_CURVED), tx: HS_TIP[0], ty: HS_TIP[1], ball: 0, bx: -70 } },
+    { at: 0, v: { sp: 1.45, lift: 6, yo: 72, ball: 0, bx: 0 } },
+    { at: 0.7, v: { sp: 1.45, lift: 6, yo: 72, ball: 1, bx: 0 } },
+    { at: 1.75, v: { sp: 1, lift: 50, yo: 98, ball: 1, bx: 0 } },
+    { at: 2.15, v: { sp: 1, lift: 50, yo: 98, ball: 1, bx: 0 } },
+    { at: 2.95, v: { sp: 1, lift: 50, yo: 98, ball: 0, bx: -64 } },
+    { at: 3.6, v: { sp: 1, lift: 50, yo: HS_SIT, ball: 0, bx: -64 } },
   ],
   draw(v) {
-    const hand = sideHand({ tip: [v.tx ?? HS_TIP[0], v.ty ?? HS_TIP[1]], pose: backOf(v), scale: HS.s });
-    const [tip, dip, , mcp, wr, el] = hand.pts;
-    const ballOp = clamp01(v.ball);
-    const bc: Pt = [HS_BALL[0] + (v.bx ?? 0), HS_BALL[1]];
-    const rot = ((v.bx ?? 0) / 18) * (180 / Math.PI);
-    const ball =
-      ballOp > 0.02
-        ? `<g opacity="${n(ballOp)}" transform="rotate(${n(rot)} ${n(bc[0])} ${n(bc[1])})"><circle cx="${n(bc[0])}" cy="${n(bc[1])}" r="18" fill="${P.orange}" stroke="${OUTLINE}" stroke-width="1.4"/>` +
-          `<path d="M${n(bc[0] - 17)} ${n(bc[1] - 4)} Q${n(bc[0])} ${n(bc[1] + 8)} ${n(bc[0] + 17)} ${n(bc[1] - 4)} M${n(bc[0])} ${n(bc[1] - 18)} Q${n(bc[0] - 9)} ${n(bc[1])} ${n(bc[0])} ${n(bc[1] + 18)}" stroke="${P.sunLight}" stroke-width="3" fill="none"/></g>`
-        : '';
+    const sp = v.sp ?? 1;
+    const yo = v.yo ?? HS_SIT;
+    const lift = v.lift ?? 50;
+    const tips: Pt[] = [0, 1, 2, 3, 4].map((i) => [120 + (i - 2) * HS.kw * sp, yo]);
+    const a: Pt = [tips[0][0], yo - 18];
+    const b: Pt = [tips[4][0], yo - 18];
+    const br = bridge(a, b, lift, tips);
+    const op = clamp01(v.ball);
+    const bc: Pt = [120 + (v.bx ?? 0), yo - 18 - lift * 0.42];
+    const rot = ((v.bx ?? 0) / 16) * (180 / Math.PI);
+    const theBall = op > 0.02 ? `<g opacity="${n(op)}" transform="rotate(${n(rot)} ${n(bc[0])} ${n(bc[1])})">${ball(bc, 16)}</g>` : '';
     return {
-      svg: sideKeys({ x: HS.kx, y: HS.ky, len: 60 }) + ball + hand.svg,
-      at: { tip, finger: dip, knuckle: mcp, wrist: wr, elbow: el },
+      svg: frontKeys(HS.x0, HS.y, 5, HS.kw, HS.h) + theBall + br.svg + tips.map((p, i) => dot(p, i + 1, { r: HS.r })).join(''),
+      at: { tip: tips[2], finger: tips[4], knuckle: br.top },
     };
   },
 };
 
 // ───────────────────────────── + Nảy staccato ─────────────────────────────
-const SC = { s: 1.5, fore: 62, kx: 150, ky: 128 } as const;
-const SC_TIP: Pt = [190, SC.ky - 6.8];
-const SC_ELBOW = elbowFor(SC_TIP, [CURVED_FWD.F, CURVED_FWD.H, CURVED_FWD.p, CURVED_FWD.m, CURVED_FWD.d], SC.s, SC.fore);
-const SC_HOVER = { F: -15, H: -24, p: 22, m: 52, d: 80, press: 0 };
-const SC_UP = { F: -18, H: -40, p: 8, m: 38, d: 66, press: 0 };
+// Nhìn thẳng: chấm chờ trên phím → chạm phím thật nhanh → BẬT lên cao như quả bóng → lơ lửng.
+const SC = { x0: 60, kw: 40, y: 124, h: 34, r: 12 } as const;
+const SC_X = frontX(SC.x0, SC.kw, 1);
+const SC_SIT = SC.y - SC.r - 1.5;
 const staccato: AnimDef = {
   id: 'staccato',
   count: ['1', '2', '3', '4'],
@@ -594,20 +518,20 @@ const staccato: AnimDef = {
     { label: 'Lơ lửng, nghỉ chút', say: 'Bốn: lơ lửng, nghỉ một chút.', beats: 1, part: 'wrist' },
   ],
   keys: [
-    { at: 0, v: SC_HOVER },
-    { at: 1.0, v: SC_HOVER },
-    { at: 1.22, v: { ...CURVED_FWD, press: 1 }, ease: 'in' },
-    { at: 1.5, v: { ...CURVED_FWD, press: 1 } },
-    { at: 2.3, v: SC_UP, ease: 'out' },
-    { at: 3.3, v: SC_UP },
+    { at: 0, v: { up: 24, press: 0 } },
+    { at: 1.0, v: { up: 24, press: 0 } },
+    { at: 1.22, v: { up: 0, press: 1 }, ease: 'in' },
+    { at: 1.5, v: { up: 0, press: 1 } },
+    { at: 2.3, v: { up: 66, press: 0 }, ease: 'out' },
+    { at: 3.3, v: { up: 66, press: 0 } },
   ],
   draw(v) {
     const press = clamp01(v.press);
-    const hand = armHand({ elbow: SC_ELBOW, fwd: fwdOf(v), scale: SC.s, forearm: SC.fore });
-    const [tip, , , mcp, wr, el] = hand.pts;
+    const p: Pt = [SC_X, SC_SIT - (v.up ?? 0) + press * 5];
+    const trail = `<path d="M${n(SC_X)} ${n(SC_SIT - 6)} V${n(Math.min(p[1] + 16, SC_SIT - 6))}" stroke="${P.violetLight}" stroke-width="3" stroke-dasharray="3 6" stroke-linecap="round"/>`;
     return {
-      svg: sideKeys({ x: SC.kx, y: SC.ky, len: 60, press }) + hand.svg,
-      at: { tip, wrist: wr, knuckle: mcp, elbow: el, key: [SC_TIP[0] + 14, SC.ky + 6] },
+      svg: frontKeys(SC.x0, SC.y, 3, SC.kw, SC.h, { blacks: [0, 1], press: (i) => (i === 1 ? press : 0), glow: (i) => (i === 1 ? press : 0) }) + trail + dot(p, 3, { r: SC.r }),
+      at: { tip: p, wrist: p, key: [SC_X, SC.y + 16] },
     };
   },
 };
@@ -637,6 +561,8 @@ export const TECH_ANIMS: Record<AnimId, AnimDef> = {
   staccato,
   legato,
 };
+
+
 
 const trailCache = new Map<AnimId, string>();
 function trailPath(def: AnimDef): string {

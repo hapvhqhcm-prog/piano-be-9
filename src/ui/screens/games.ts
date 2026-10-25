@@ -25,6 +25,7 @@ const glossaryMod = lazy(() => import('./glossary'));
 const contourMod = lazy(() => import('./games/contour'));
 const beatMod = lazy(() => import('./games/beatCatch'));
 const echoMod = lazy(() => import('./games/echo'));
+const tapeMod = lazy(() => import('./tapeRecorder'));
 
 const SCREENS: Record<GameId, (app: App, onHub: () => void) => Screen> = {
   noteRush: noteRushScreen,
@@ -98,6 +99,19 @@ export function gamesScreen(app: App): Screen {
       );
       return b;
     };
+    /** (+ 2026-10-25, bé xin "Làm một cái máy ghi âm") 🎙️ Máy ghi âm — thẻ thứ 8 trong lưới (không phải trò: không khóa, không kỷ lục). */
+    const tapeCard = (): HTMLElement => {
+      const b = h(
+        'button',
+        { class: 'game-card gc-recorder', type: 'button', 'data-test': 'games-recorder' },
+        h('span', { class: 'gc-emoji', 'aria-hidden': 'true' }, '🎙️'),
+        h('span', { class: 'gc-title' }, 'Máy ghi âm'),
+        h('span', { class: 'gc-hint' }, 'Ghi tiếng đàn của con rồi nghe lại'),
+        h('span', { class: 'gc-best none' }, '⏺ Ghi nào!'),
+      );
+      b.addEventListener('click', () => app.show(lazyScreen(tapeMod, (m) => m.tapeRecorderScreen(app, toHub))));
+      return b;
+    };
     root.append(
       h(
         'div',
@@ -108,7 +122,7 @@ export function gamesScreen(app: App): Screen {
           mascot('wave', 72),
           h('h1', { class: 'title' }, '🎮 Trò chơi'),
         ),
-        h('div', { class: 'stage scrollable' }, h('div', { class: `game-cards n${GAME_IDS.length}` }, ...GAME_IDS.map(card)), dictCard()),
+        h('div', { class: 'stage scrollable' }, h('div', { class: `game-cards n${GAME_IDS.length}` }, ...GAME_IDS.map(card), tapeCard()), dictCard()),
         h('div', { class: 'actions' }, backButton(() => app.show(homeScreen(app)))),
       ),
     );
@@ -116,6 +130,6 @@ export function gamesScreen(app: App): Screen {
     const seen = withSeen(data, newGameIds(data, unlockedGames(data, SONGS)).map(gameKey));
     if (seen) app.store.updateSettings({ seenNew: seen });
     // Nạp ngầm các trò mới (offline đã có trong precache — đây chỉ để chạm là mở ngay)
-    prefetchLater([earMod, contourMod, beatMod, echoMod]);
+    prefetchLater([earMod, contourMod, beatMod, echoMod, tapeMod]);
   };
 }

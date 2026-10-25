@@ -250,8 +250,8 @@ export function pairFromHands(r: { conclusive: boolean; RH?: { verdict: string }
 
 /**
  * Trợ giúp khi bé đàn sai MỘT nốt nhiều lần (micro nghe nốt sai thật, đã qua `judgeWait`):
- * 1 → nói nốt vừa đàn + nốt cần tìm · 2 → app đàn mẫu nốt cần đàn (nghe để tìm) · 3+ → chỉ phím + ngón (bàn tay mờ /
- * phím sáng) · từ MISS_SKIP lần VÀ đã ≥ MISS_SKIP_MS kể từ lần sai đầu → mời bỏ qua (bố mẹ "tiếp" / "Bỏ qua — mai ôn
+ * 1 → nói nốt vừa đàn + nốt cần tìm · 2 → app đàn mẫu nốt cần đàn (nghe để tìm) · 3+ → chỉ phím + ngón (bản đồ ngón /
+ * phím sáng) · từ MISS_SKIP lần VÀ đã ≥ MISS_SKIP_MS kể từ lần sai đầu → mời bỏ qua (bé chạm "Đi tiếp" / "Bỏ qua — mai ôn
  * lại"). Không mời bỏ qua quá sớm (bé bấm loạn 5 phím trong 2 giây vẫn nên thử thêm), không để bé kẹt mãi.
  */
 export type MissHelp = 'say' | 'listen' | 'show' | 'skip';

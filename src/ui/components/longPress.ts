@@ -1,15 +1,16 @@
 import { h } from './dom';
 
 /**
- * Nút "Phụ huynh": phải NHẤN GIỮ 2 giây (§8). Chống vào nhầm, không phải bảo mật.
+ * Nút "⚙️" Cài đặt (trước 2026-10-25: "👪 Phụ huynh"): nhỏ, kín đáo, phải NHẤN GIỮ 2 giây (§8) rồi qua cổng tính nhẩm.
+ * Chống vào nhầm, không phải bảo mật. Giữ lớp .parent-btn (scripts/e2e.mjs, webkit-smoke.mjs) + thêm .settings-btn.
  */
 export function parentButton(onUnlock: () => void, holdMs = 2000): HTMLButtonElement {
   const fill = h('span', { class: 'hold-fill' });
   const btn = h(
     'button',
-    { class: 'parent-btn', type: 'button', 'aria-label': 'Phụ huynh — nhấn giữ 2 giây' },
+    { class: 'parent-btn settings-btn', type: 'button', 'aria-label': 'Cài đặt — nhấn giữ 2 giây', 'data-test': 'settings' },
     fill,
-    h('span', { class: 'parent-btn-label' }, '👪 Phụ huynh'),
+    h('span', { class: 'parent-btn-label', 'aria-hidden': 'true' }, '⚙️'),
   );
   let timer: number | undefined;
   const cancel = () => {

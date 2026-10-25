@@ -19,9 +19,8 @@ import { fingerFor, fingerOnKeyboard } from '../../piano/fingering';
 import { leftHandActive } from '../../lessons/lessonEngine';
 import { StaffView } from '../components/staffView';
 import { HandOverlay, eventsFromTargets, playDemo } from '../components/demo';
-import { MicHonestyWatch, micHonestyBox } from '../components/micHonesty';
-import { SELF_DONE, deferCheck, selfStudy } from '../selfStudy';
-import { isVisualNote } from '../../progress/reviewQueue';
+import { MicHonestyWatch } from '../components/micHonesty';
+import { selfAgainButton, selfOkButton } from '../selfCheck';
 import { CHECK_PRINCIPLE } from '../../lessons/handTechnique';
 import { principleThumb } from '../components/handArtLazy';
 
@@ -78,23 +77,25 @@ const REVIEW_INTROS = [
 ];
 const INTRO_MOODS = ['wave', 'happy', 'cheer', 'love'] as const;
 /**
- * Đúng → tự sang nốt sau sau một cái "khen nháy" ~0,8 giây (khi bố mẹ bật "Tự chuyển" — mặc định bật); sai thì luôn chờ bấm
+ * Đúng → tự sang nốt sau sau một cái "khen nháy" ~0,8 giây (cài đặt "Tự chuyển" — mặc định bật); sai thì luôn chờ bấm
  * "Thử lại". (+ 2026-10-17, OWNER duyệt "Buổi học ≥ 60% đàn thật": 1,5 → 0,8 giây; đang tự chuyển thì không có nút "Tiếp".)
  */
 export const CORRECT_ADVANCE_SEC = 0.8;
 /** (+ 2026-10-17) Màn giới thiệu: xem mẫu xong ngần này ms thì tự vào nốt đầu. */
 const AUTO_START_MS = 900;
 /**
- * Số lần "Thử lại" (bố mẹ) trên cùng một nốt thì mới cho "Bỏ qua — mai ôn lại". Micro nghe sai: ≥ 5 lần VÀ ≥ 8 s
+ * Số lần "Thử lại" / "Làm lại" trên cùng một nốt thì mới cho "Bỏ qua — mai ôn lại". Micro nghe sai: ≥ 5 lần VÀ ≥ 8 s
  * (src/music/waitJudge.ts missHelp — trước 2026-10-15: 5 lần, bé bấm loạn 2 giây đã được mời bỏ qua).
  */
 const SKIP_AFTER_RETRIES = 3;
 /** Micro bật mà gần như im lặng bấy lâu → nhắc "App chưa nghe thấy". */
 const SILENCE_HELP_MS = 8000;
-/** Bố mẹ chấm giúp một nốt (micro nghe chưa rõ) */
-const PARENT_STEP_HINT = '👪 Bố mẹ nhìn con đàn rồi bấm Đúng rồi / Thử lại nhé';
-/** (+ 2026-10-12) 👦 Bé tự học: bé tự chạm "Con đàn xong" — bố mẹ xem lại sau (hàng chờ) */
-const SELF_STEP_HINT = '✋ Đàn xong thì con chạm “Con đàn xong” — bố mẹ xem lại sau nhé';
+/**
+ * (2026-10-25, OWNER "bỏ phần phụ huynh") Micro nghe chưa rõ nốt này → BÉ TỰ KIỂM TRA ("👍 Rồi / 🔁 Làm lại", src/ui/selfCheck.ts)
+ */
+const SELF_STEP_HINT = '👍 Đàn xong, con tự xem: đúng thì chạm “Rồi”, chưa đúng thì “Làm lại”';
+/** Micro nghe chưa rõ — không phải lỗi của bé */
+const MIC_UNSURE_TEXT = 'Micro nghe chưa rõ — không phải lỗi của con 👂';
 const HAND_TAG = { RH: { letter: 'P', name: 'tay phải' }, LH: { letter: 'T', name: 'tay trái' } } as const;
 const pick = <T,>(a: T[]): T => a[Math.floor(Math.random() * a.length)];
 
@@ -121,7 +122,7 @@ import { backButton, button, h } from '../components/dom';
 import { FINGER_NAMES, handDiagram } from '../components/handDiagram';
 import type { Hand } from '../../piano/fingering';
 
-/** Hình bàn tay sáng đúng ngón + số ngón to + tên ngón. */
+/** "Quạt số ngón" sáng đúng ngón + số ngón to + tên ngón. */
 function fingerRow(finger: number, hand: Hand): HTMLElement {
   const d = handDiagram(hand);
   d.set(finger);
@@ -166,11 +167,9 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
     let firstHeard: string | null = null;
     let wrongCount = 0;
     let micForIndex = -1;
-    /** Nốt mà bố mẹ đang "chấm giúp" (micro nghe chưa rõ) — micro không chấm nốt này nữa (-1 = không) */
+    /** Nốt mà BÉ đang tự kiểm tra (micro nghe chưa rõ) — micro không chấm nốt này nữa (-1 = không) */
     let parentStep = -1;
     const micOn = () => app.mic.state === 'on';
-    /** (+ 2026-10-12) 👦 Bé tự học hôm nay: nút "👪 Đúng rồi / Thử lại" → nút của bé; "Đúng rồi" vào hàng chờ bố mẹ xem */
-    const self = selfStudy(app);
     /** Đã đọc gợi ý cho nốt thứ mấy (chỉ đọc khi sang nốt MỚI) */
     let spokenIndex = -1;
     /** Đếm im lặng khi micro đang chờ bé đàn */
@@ -234,7 +233,7 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
       onPress: (p) => void app.audio.playPitch(p),
     });
     const overlay = new HandOverlay(kb);
-    // (+ 2026-10-15) ✋ Bàn tay mờ trên bàn phím (nạp muộn; quy tắc hiện / mờ dần: ui/components/keyboardHand.ts)
+    // (+ 2026-10-15) 🔢 Bản đồ ngón trên bàn phím (nạp muộn; quy tắc hiện / mờ dần: ui/components/keyboardHand.ts)
     let ghost: { destroy(): void } | null = null;
     let ghostGone = false;
     void import('../components/keyboardHand')
@@ -246,7 +245,7 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
       .catch(() => undefined);
     /** Số lần "Thử lại" cho từng nốt — để biết khi nào cần thầy đàn mẫu lại */
     const retries = new Map<number, number>();
-    /** Micro nghe sai 3 lần → bàn tay mờ hiện đúng chỗ (không phát tiếng, để micro vẫn nghe bé) */
+    /** Micro nghe sai 3 lần → số ngón của thầy hiện đúng chỗ (không phát tiếng, để micro vẫn nghe bé) */
     const showHelpHand = (t: Target) => {
       t.keys.forEach((k, i) => {
         const f = fingerOf(t, k, i);
@@ -256,7 +255,7 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
       const first = t.keys[0];
       const f0 = fingerOf(t, first, 0);
       if (f0) overlay.press(t.hand ?? 'RH', f0, 1500);
-      micHint('🎤 Nhìn bàn tay mờ: ngón này đặt ở phím đang sáng nhé', 'wrong');
+      micHint('🎤 Nhìn số ngón: ngón này đặt ở phím đang sáng nhé', 'wrong');
     };
     /** Micro bật mà im lặng lâu: có thể đàn quá nhỏ / micro xa → chỉ cách, không để bé ngồi chờ mãi */
     const showSilenceHelp = () => {
@@ -271,9 +270,9 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
         return;
       }
       honesty.timeout();
-      micHint(self ? '🎤 App chưa nghe thấy — con đàn to hơn, hoặc chạm ✋ Con đàn xong' : '🎤 App chưa nghe thấy — con đàn to hơn, hoặc nhờ bố mẹ bấm 👪 Đúng rồi', 'wrong');
+      micHint('🎤 App chưa nghe thấy — con đàn to hơn, hoặc tự xem rồi chạm 👍 Rồi', 'wrong');
       lastHintSpokenAt = Date.now();
-      void say(self ? 'App chưa nghe thấy. Con đàn to hơn nhé.' : 'App chưa nghe thấy. Con đàn to hơn, hoặc nhờ bố mẹ bấm Đúng rồi nhé.');
+      void say('App chưa nghe thấy. Con đàn to hơn nhé.');
     };
     /** Câu đọc khi sang nốt mới — thật ngắn: "Đô, ngón 1". */
     const noteSpeech = (t: Target): string => {
@@ -435,7 +434,7 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
             h('p', { class: 'lead' }, segIntro, speakChip(app, introText)),
             caption,
           );
-          // "Video minh họa": bàn tay hoạt hình đàn mẫu cả phần bài này, tự phát khi mở
+          // "Video minh họa": số ngón đàn mẫu cả phần bài này, tự phát khi mở
           let introStarted = false;
           const playIntro = () => {
             introStarted = true;
@@ -510,7 +509,7 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
           if (waiting && micOn() && t.keys.length > 0) {
             app.mic.resetTracker();
             honesty.step();
-            if (parentStep === snap.index) micHint(self ? SELF_STEP_HINT : PARENT_STEP_HINT);
+            if (parentStep === snap.index) micHint(SELF_STEP_HINT);
             else micHint(t.keys.length > 1 ? '🎤 Đang nghe… đàn từng phím đang sáng' : '🎤 Đang nghe… con đàn đi!');
             quietSince = Date.now();
             silenceShown = false;
@@ -522,12 +521,15 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
           if (hasSample) {
             bar.append(button({ icon: '🔊', label: 'Nghe lại', disabled: !waiting, onTap: () => send('REPLAY') }));
           }
-          if (self) bar.append(button({ ...SELF_DONE, kind: 'good', disabled: !waiting, onTap: () => send('CORRECT') }));
-          else
-            bar.append(
-              button({ icon: '👪', label: 'Đúng rồi', kind: 'good', disabled: !waiting, onTap: () => send('CORRECT') }),
-              button({ icon: '↻', label: 'Thử lại', kind: 'retry', disabled: !waiting, onTap: () => send('RETRY') }),
-            );
+          // (2026-10-25, OWNER "bỏ phần phụ huynh") BÉ TỰ KIỂM TRA: micro tắt / micro nghe chưa rõ / thẻ không có phím (tư thế,
+          // dáng tay, xem tay Cấp 4…) → "👍 Rồi / 🔁 Làm lại". Micro đang nghe nốt này: hai nút vẫn có (phòng micro lỡ nốt) nhưng nhẹ.
+          const selfNow = !micOn() || t.keys.length === 0 || parentStep === snap.index;
+          if (waiting && selfNow)
+            stage.append(h('p', { class: 'lead self-line' }, t.keys.length ? '🤔 Con đàn đúng chưa?' : '🤔 Con đã làm đúng chưa?'));
+          bar.append(
+            selfAgainButton(() => send('RETRY'), { disabled: !waiting }),
+            selfOkButton(() => send('CORRECT'), { disabled: !waiting, primary: selfNow }),
+          );
           if (snap.state === 'SHOW_NOTE') {
             // Nốt MỚI: đọc "Đô, ngón 1" trước, rồi mới phát âm mẫu
             if (spokenIndex !== snap.index && voiceOn(app)) {
@@ -585,7 +587,6 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
           }
           bar.append(
             back,
-            self ? '' : button({ icon: '👪', label: 'Bố mẹ sửa', onTap: () => send('EDIT') }),
             // (`tries` chưa tính lần "Thử lại" vừa bấm — hiệu ứng ghi chạy sau khi vẽ)
             !ok && tries + 1 >= SKIP_AFTER_RETRIES ? skipButton() : '',
             // (+ 2026-10-17, OWNER duyệt) đúng + đang tự chuyển (mặc định) → chỉ "khen nháy" ~0,8 giây, không nút "Tiếp"
@@ -614,7 +615,7 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
           const t = seg.targets[ef.index];
           const tk = token;
           if (t.sample?.length) {
-            // Âm mẫu kèm bàn tay hoạt hình (mờ) nhấn đúng ngón — như một video ngắn cho từng nốt
+            // Âm mẫu kèm số ngón nhấn đúng phím — như một video ngắn cho từng nốt
             overlay.setGhost(true);
             const d = playDemo(app.audio, kb, overlay, eventsFromTargets([{ ...t, keys: t.sample }]));
             demo = d;
@@ -632,18 +633,8 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
           app.audio.stopAll();
           break;
         case 'record':
-          // (+ 2026-10-12) Bé tự học: "Đúng rồi" do BÉ chạm → hàng chờ bố mẹ xem (tính khi bố mẹ duyệt, đúng ngày hôm nay);
-          // "Thử lại" (bỏ qua — mai ôn lại) vẫn ghi ngay như trước
-          if (self && ef.result === 'correct') {
-            const t = seg.targets[ef.index];
-            deferCheck(app, {
-              group: `notes:${seg.id}`,
-              // Thẻ xem tay (lời nhắc riêng từng thẻ): tên thẻ; còn lại: tên bài
-              label: isVisualNote(t.noteId) ? `${plainTitle(t)} (xem tay)` : seg.title,
-              note: t.noteId,
-              ...(micOn() && t.keys.length ? { mic: 'micro nghe chưa rõ' } : {}),
-            });
-          } else hooks.record(seg.targets[ef.index], ef.result);
+          // (2026-10-25) kết quả bé tự kiểm tra ghi NGAY (ProgressStore đóng dấu by: 'self')
+          hooks.record(seg.targets[ef.index], ef.result);
           if (ef.result === 'retry') {
             retries.set(ef.index, (retries.get(ef.index) ?? 0) + 1);
             firstTryRun = 0;
@@ -711,7 +702,7 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
       if (t.keys.length === 0) return;
       // Micro nghe ra nốt (đúng hay sai) → micro vẫn nghe được, không phải "micro điếc"
       honesty.heard();
-      // Bố mẹ đang chấm giúp nốt này → micro không chấm nữa
+      // Bé đang tự kiểm tra nốt này → micro không chấm nữa
       if (parentStep === sm.snapshot.index) return;
       const heard = midiToPitch(n.midi);
       firstHeard ??= heard;
@@ -786,7 +777,7 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
     let firstWrongAt = -1;
     /**
      * (+ 2026-10-15) Micro nghe nốt SAI thật (một phím / nhại lại): trợ giúp TĂNG DẦN (src/music/waitJudge.ts missHelp) —
-     * 1: nói phím vừa đàn · 2: app đàn mẫu nốt cần tìm · 3: bàn tay mờ chỉ phím + ngón (trước đây lời nhắc này bị câu
+     * 1: nói phím vừa đàn · 2: app đàn mẫu nốt cần tìm · 3: số ngón chỉ phím + ngón (trước đây lời nhắc này bị câu
      * "Con vừa đàn…" ghi đè ngay) · ≥ 5 lần VÀ ≥ 8 s: mời "Bỏ qua — mai ôn lại" (không mời quá sớm khi bé bấm loạn).
      */
     function micWrong(t: Target, say: string): void {
@@ -800,7 +791,7 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
         void app.audio.playPitch(t.sequence ? t.keys[0] : t.keys[0], 0.8);
         return;
       }
-      micHint(help === 'say' ? say : `${say} · 👋 theo bàn tay mờ nhé`, 'wrong', wrongCount <= 3);
+      micHint(help === 'say' ? say : `${say} · 🔢 theo số ngón nhé`, 'wrong', wrongCount <= 3);
     }
     /** (+ 2026-10-15) Bộ chấm "bé thật" cho nốt đơn (src/music/waitJudge.ts) — luyện tìm phím: KHÔNG cho qua lệch quãng 8 */
     let pJudge = waitJudgeInit();
@@ -854,18 +845,23 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
     });
     /**
      * (+ 2026-10-08) MICRO NÓI THẬT: bé có vẻ đang đàn mà micro không nhận ra nốt nào 3 lần liền → nói thật với bé
-     * (không phải lỗi của con) + bố mẹ chấm giúp NỐT NÀY (nút 👪 Đúng rồi / Thử lại luôn có sẵn). Micro nghe ra nốt
+     * (không phải lỗi của con) + BÉ TỰ KIỂM TRA NỐT NÀY (nút 👍 Rồi / 🔁 Làm lại luôn có sẵn). Micro nghe ra nốt
      * SAI thì không hiện (đó là phản hồi bình thường).
      */
     const honesty = new MicHonestyWatch(app.mic, {
       active: () => micOn() && sm.snapshot.state === 'WAIT_PARENT' && target().keys.length > 0 && parentStep !== sm.snapshot.index,
       onTrigger: () => {
         if (stage.querySelector('.mic-honest')) return;
-        const box = micHonestyBox(() => {
-          parentStep = sm.snapshot.index;
-          box.replaceChildren(h('div', { class: 'mic-honest-text' }, self ? SELF_STEP_HINT : PARENT_STEP_HINT));
-          micHint(self ? SELF_STEP_HINT : PARENT_STEP_HINT);
-        }, { self });
+        // (2026-10-25) nốt này chuyển sang bé tự kiểm tra ngay (không cần chạm thêm nút nào)
+        parentStep = sm.snapshot.index;
+        const box = h(
+          'div',
+          { class: 'mic-honest', role: 'status' },
+          h('div', { class: 'mic-honest-text' }, MIC_UNSURE_TEXT),
+          h('div', { class: 'mic-honest-text' }, SELF_STEP_HINT),
+        );
+        micHint(SELF_STEP_HINT);
+        bar.querySelector('[data-test="self-ok"]')?.classList.replace('btn-plain', 'btn-good');
         stage.append(box);
         // (2026-10-09) Hộp nằm cuối vùng cuộn — đưa vào tầm nhìn (trước đây bị bàn phím che, phải cuộn mới thấy nút)
         box.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });

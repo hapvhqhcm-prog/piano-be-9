@@ -3,35 +3,18 @@ import { P, checkBadge, noteGlyph, sparkle, starPath, svgRoot } from '../compone
 import { append, button, h } from '../components/dom';
 import { cue, mascot } from '../components/mascot';
 import { postureArt } from '../components/postureArt';
-import { whenCorrectBox } from '../components/whenCorrect';
+import { MIC_ALLOW_HINT, micAllowButton } from '../components/micAllow';
 import { installCard } from '../components/installCard';
 import '../../styles/parentux.css';
 
-/** THẺ NHẮC NHANH CHO BỐ MẸ (5 ý) — hiện ở Hướng dẫn (thẻ 3) và màn Phụ huynh. [chữ đậm, phần còn lại] */
-export const QUICK_TIPS: ReadonlyArray<[string, string]> = [
-  ['Ngồi cạnh bé 10–15 phút', ', bấm nút ▶ to — app tự chọn bài, không cần soạn gì.'],
-  ['Bấm “Đúng rồi”', ' khi bé đàn đúng phím sáng, đúng số ngón; sai thì “Thử lại” — không chê.'],
-  ['Bé vấp?', ' Nói “Con thử chậm hơn nhé” · “Ngón số mấy nhỉ?” — chậm mà đúng hơn nhanh mà sai.'],
-  ['Khen cụ thể', ' (“ngón con cong đẹp quá”), không so sánh với bạn khác.'],
-  ['Bé mệt hay cáu:', ' “Nghỉ 1 phút rồi làm lại” — hoặc dừng buổi, mai học tiếp.'],
-];
-
-export function quickTipsCard(tag: 'section' | 'div' = 'section'): HTMLElement {
-  return h(
-    tag,
-    { class: 'card quick-tips' },
-    h('h2', {}, '🗒️ Thẻ nhắc nhanh cho bố mẹ'),
-    h('ol', {}, ...QUICK_TIPS.map(([b, t]) => h('li', {}, h('b', {}, b), t))),
-  );
-}
-
 /**
- * HƯỚNG DẪN NHANH CHO BỐ MẸ (lần đầu mở app; mở lại được ở màn Phụ huynh → "📖 Hướng dẫn").
- * 4 thẻ, ít chữ, tranh to, vuốt ngang hoặc bấm "Tiếp". "Bỏ qua" lúc nào cũng được.
+ * HƯỚNG DẪN NHANH (lần đầu mở app; mở lại được ở ⚙️ Cài đặt → "📖 Hướng dẫn").
+ * (2026-10-25, OWNER "bỏ phần phụ huynh") 4 thẻ cho BÉ tự học: chỗ ngồi · nút ▶ + bé tự kiểm tra · cho phép micro (tùy chọn)
+ * · ⚙️ Cài đặt của người lớn (không bắt buộc). Ít chữ, tranh to, vuốt ngang hoặc bấm "Tiếp". "Bỏ qua" lúc nào cũng được.
  * Xem xong hoặc bỏ qua → ghi settings.onboardedAt để không hiện lại.
  */
 
-/** Màn hình nhỏ của "Học tiếp" + nút 👪 — để bố mẹ nhận ra nút thật trong app. */
+/** Màn hình nhỏ của nút ▶ + "👍 Rồi / 🔁 Làm lại" — để bé nhận ra nút thật trong app. */
 function artSession(): HTMLElement {
   return h(
     'div',
@@ -40,8 +23,8 @@ function artSession(): HTMLElement {
     h(
       'div',
       { class: 'onb-mock-row' },
-      h('div', { class: 'onb-mock-btn good' }, '👪 Đúng rồi'),
-      h('div', { class: 'onb-mock-btn plain' }, '↻ Thử lại'),
+      h('div', { class: 'onb-mock-btn good' }, '👍 Rồi'),
+      h('div', { class: 'onb-mock-btn plain' }, '🔁 Làm lại'),
     ),
   );
 }
@@ -73,10 +56,10 @@ function artParent(): SVGSVGElement {
   return svgRoot(
     '0 0 240 210',
     'onb-art',
-    `<!-- nút Phụ huynh đang nhấn giữ (vòng đếm 2 giây) -->
+    `<!-- nút ⚙️ Cài đặt đang nhấn giữ (vòng đếm 2 giây) -->
      <rect x="10" y="34" width="140" height="66" rx="33" fill="#fff" stroke="${P.stone}" stroke-width="2.5"/>
      <rect x="10" y="34" width="96" height="66" rx="33" fill="${P.lavender}"/>
-     <text x="80" y="62" text-anchor="middle" font-size="21" font-weight="800" font-family="'Baloo 2',system-ui,sans-serif" fill="${P.ink}">Phụ huynh</text>
+     <text x="80" y="62" text-anchor="middle" font-size="21" font-weight="800" font-family="'Baloo 2',system-ui,sans-serif" fill="${P.ink}">⚙️ Cài đặt</text>
      <!-- ngón tay nhấn giữ -->
      <g transform="rotate(-12 104 120)">
        <rect x="90" y="76" width="30" height="92" rx="15" fill="${P.skin}" stroke="${P.skinDark}" stroke-width="2.4"/>
@@ -119,42 +102,46 @@ const CARDS: Card[] = [
     title: 'Chuẩn bị chỗ học',
     lines: [
       ['📱', 'Đặt iPad trên giá nhạc của đàn'],
-      ['🪑', 'Bé ngồi thẳng lưng, chân đặt vững'],
-      ['⏱️', '10–15 phút/ngày · 4–5 buổi/tuần'],
+      ['🪑', 'Ngồi thẳng lưng, chân đặt vững'],
+      ['⏱️', '10–15 phút mỗi ngày'],
     ],
   },
   {
     art: artSession,
-    title: 'Mỗi buổi: bấm nút ▶ to',
+    title: 'Mỗi buổi: con bấm nút ▶ to',
     lines: [
-      ['▶', 'App tự chọn bài — không cần soạn gì'],
-      ['👪', 'Bố mẹ ngồi cạnh, bấm nút 👪 khi app hỏi'],
+      ['▶', 'App tự chọn bài cho con'],
+      ['🎤', 'App nghe con đàn và chấm'],
+      ['👍', 'Chỗ app chưa nghe được: con tự kiểm tra — 👍 Rồi hoặc 🔁 Làm lại'],
     ],
-    extra: () => whenCorrectBox('div'),
-  },
-  {
-    art: () => mascot('wave', 150),
-    title: 'Ngồi cạnh bé thế nào?',
-    lines: [],
-    extra: () => quickTipsCard('div'),
   },
   {
     art: artMic,
-    title: 'Micro nghe đàn (tùy chọn)',
-    lines: [['🎤', 'App tự nghe và chấm nốt bé đàn']],
-    chain: ['Phụ huynh', '🎤 Cài micro (3 bước)', 'Kiểm tra 5 nốt', '✅ Dùng micro cho các buổi học'],
+    title: 'Cho app nghe con đàn',
+    lines: [
+      ['🎤', 'Chạm “Bật micro” — iPad hỏi thì chạm “Cho phép”'],
+      ['🙂', 'Chưa muốn? Bỏ qua cũng được, con vẫn học bình thường'],
+    ],
+    extra: () => null, // nút "Bật micro" do onboardingScreen gắn (cần `app`)
   },
   {
     art: artParent,
-    title: 'Khu vực bố mẹ',
+    title: 'Nút ⚙️ (cho người lớn)',
     lines: [
-      ['🔢', 'Nhấn giữ nút “Phụ huynh” 2 giây + tính một phép nhân'],
-      ['💾', 'Sao lưu mỗi tuần: Phụ huynh → Xem báo cáo tuần → “💾 Sao lưu”'],
+      ['⚙️', 'Nút ⚙️ nhỏ góc trên: nhấn giữ 2 giây + một phép nhân — chỉ để cài đặt, không bắt buộc'],
+      ['💾', 'App tự giữ một bản sao trong máy; sao lưu tay khi tiện'],
     ],
     // Mở bằng tab trình duyệt → nhắc thêm vào Màn hình chính (null khi đã cài)
     extra: () => installCard(),
   },
 ];
+
+/** Thẻ micro (thẻ 3): nút "🎤 Bật micro" (bé tự bật — không bắt buộc) + một dòng kết quả */
+function micAllowBlock(app: App): HTMLElement {
+  const note = h('p', { class: 'onb-mic-note', role: 'status' }, app.micIfReady?.state === 'on' ? '✅ Micro đang nghe!' : MIC_ALLOW_HINT);
+  const btn = micAllowButton(app, (on) => (note.textContent = on ? '✅ Micro đang nghe!' : '🙂 Chưa bật được — không sao, con vẫn học được. Lúc khác thử lại nhé.'));
+  return h('div', { class: 'onb-mic-allow' }, btn, note);
+}
 
 export function onboardingScreen(app: App, o: { onDone(): void }): Screen {
   return (root: HTMLElement) => {
@@ -192,7 +179,7 @@ export function onboardingScreen(app: App, o: { onDone(): void }): Screen {
                   ...c.chain.map((t, k) => h('li', {}, h('b', {}, String(k + 1)), t)),
                 )
               : null,
-            c.extra?.() ?? null,
+            c.art === artMic ? micAllowBlock(app) : c.extra?.() ?? null,
           ),
         ),
         dots,
@@ -241,7 +228,7 @@ export function onboardingScreen(app: App, o: { onDone(): void }): Screen {
       h(
         'div',
         { class: 'screen onboarding' },
-        h('header', { class: 'topbar onb-top' }, h('div', { class: 'topbar-title' }, '📖 Hướng dẫn nhanh cho bố mẹ')),
+        h('header', { class: 'topbar onb-top' }, h('div', { class: 'topbar-title' }, '📖 Hướng dẫn nhanh')),
         stage,
         bar,
       ),

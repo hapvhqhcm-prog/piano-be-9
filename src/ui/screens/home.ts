@@ -21,8 +21,6 @@ import { lazy, lazyScreen, prefetchLater, withLazy } from '../lazy';
 import { parentGateScreen } from './parentGate';
 import { earnedStickerIds, islandPassed } from '../../lessons/stickers';
 import { storageStatus } from '../../progress/ProgressStore';
-import { parentPill } from '../components/parentPill';
-import { healthNow } from '../healthEnv';
 import { cancelSpeech, speak } from '../../audio/voice';
 import { speakChip } from '../components/speakChip';
 import { challengeLine } from '../components/challengeSheet';
@@ -43,6 +41,7 @@ import '../../styles/kidhome.css';
 import { playLabel } from '../../lessons/todayLabel';
 import { stepTitle } from '../../lessons/stepTitle';
 import { markSurpriseDay, readSurpriseDay, surpriseFree } from '../../lessons/kidRewards';
+import { placementInvite, skipRows } from '../components/skipEntries';
 
 // Màn chính chỉ nạp phần cần để VẼ màn chính; các màn khác là chunk riêng (src/ui/lazy.ts).
 // Buổi học (đường chính) được nạp ngầm ngay sau khi màn chính vẽ xong.
@@ -245,9 +244,11 @@ export const homePlayLabel = (l: Lesson, data: Readonly<AppData>) => playLabel(l
 
 /**
  * (2026-10-17, OWNER duyệt "Màn chính: 1 nút to + bản đồ") MÀN CHÍNH CỦA BÉ: bản đồ đảo + MỘT nút ▶ to mang tên bài
- * hát / hoạt động hôm nay + hàng nhỏ 🎵 Bài hát · 🎮 Trò chơi · 🌟 Sticker. Mọi thứ khác (danh sách bài, Luyện tập mỗi
- * ngày, 🎹 Đàn tự do, mục tiêu đảo, thử thách tuần, 👤 Khách chơi) nằm sau link nhỏ "Xem các bài". Bé Nốt đứng trên
- * đảo hiện tại của bản đồ (không còn bong bóng chuyện). Bố mẹ: MỘT viên nhắc (parentPill) + nút Phụ huynh.
+ * hát / hoạt động hôm nay + hàng nhỏ 🎵 Bài hát · 🎹 Đàn tự do · 🎮 Trò chơi · 🌟 Sticker ((+ 2026-10-25) bé xin "Bật lại chế
+ * độ đàn tự do" → 🎹 ra lại thanh dưới). Mọi thứ khác (danh sách bài, Luyện tập mỗi ngày, mục tiêu đảo, thử thách tuần,
+ * 👤 Khách chơi) nằm sau link nhỏ "Xem các bài". Bé Nốt đứng trên
+ * đảo hiện tại của bản đồ (không còn bong bóng chuyện). (2026-10-25, OWNER "bỏ phần phụ huynh") không còn viên nhắc / ⚠️ /
+ * chip "Có bố mẹ" — chỉ một nút ⚙️ nhỏ (Cài đặt, nhấn giữ 2 giây + cổng tính nhẩm) ở góc trên.
  * Kiểm thử: nút ▶ có data-test="continue"; link có data-test="lessons-toggle" (scripts/e2e.mjs, webkit-smoke.mjs).
  */
 export function homeScreen(app: App, banner?: string) {
@@ -267,16 +268,11 @@ export function homeScreen(app: App, banner?: string) {
     const overLimit = limit !== 'none' && minutesToday(data, today) >= limit;
     const label = homePlayLabel(next, data);
 
-    /** Hết chỗ lưu / dữ liệu của bản app mới hơn → băng CHẶN nổi bật: tiến độ mới sẽ không được lưu — nhờ bố mẹ */
+    /** Hết chỗ lưu / dữ liệu của bản app mới hơn → băng nổi bật: tiến độ mới sẽ không được lưu (không nút nhờ người lớn) */
     const storageBanner = (): HTMLElement | null => {
       const st = storageStatus();
       if (!st.full && !st.futureVersion) return null;
-      return h(
-        'div',
-        { class: 'banner storage-alert', role: 'alert' },
-        h('div', { class: 'storage-alert-text' }, `⚠️ ${st.text}`),
-        button({ icon: '👪', label: 'Nhờ bố mẹ sao lưu', kind: 'retry', onTap: () => app.show(parentGateScreen(app)) }),
-      );
+      return h('div', { class: 'banner storage-alert', role: 'alert' }, h('div', { class: 'storage-alert-text' }, `⚠️ ${st.text}`));
     };
     const restToast = () => toast('🌙 Hôm nay con học đủ rồi — mai mình học tiếp nhé!');
 
@@ -366,6 +362,8 @@ export function homeScreen(app: App, banner?: string) {
               h('span', { class: 'lesson-title' }, 'Luyện tập mỗi ngày'),
             )
           : null,
+        // (+ 2026-10-25, OWNER duyệt "Bé thấy dễ quá") ⚡ Thi vượt tuần · 🧭 Kiểm tra xếp lớp (components/skipEntries.ts)
+        ...skipRows(app, { blocked: overLimit, onBlocked: restToast }),
       ),
       h(
         'div',
@@ -379,7 +377,6 @@ export function homeScreen(app: App, banner?: string) {
       h(
         'div',
         { class: 'home-extra' },
-        button({ icon: '🎹', label: 'Đàn tự do', kind: 'mint', onTap: () => app.show(freePlayScreen(app)) }),
         // (+ 2026-10-17, OWNER duyệt) 👤 Khách chơi (anh chị em / bạn bè) — dễ tìm nhưng không nổi bật; không lưu gì
         ((b) => (b.classList.add('home-guest-entry'), b))(button({ icon: '👤', label: 'Khách chơi (không lưu)', onTap: () => enterGuest(app) })),
       ),
@@ -440,19 +437,9 @@ export function homeScreen(app: App, banner?: string) {
           h(
             'div',
             { class: 'topbar-side' },
-            // (2026-10-17) MỘT viên cho bố mẹ: 🕑 Chờ bố mẹ xem → ⚠️ sao lưu (quá 30 ngày) → 📊 Báo cáo tuần (parentPill.ts)
-            parentPill(app, () => app.show(parentGateScreen(app))),
             todayStars ? h('div', { class: 'today-stars', 'aria-label': `Hôm nay được ${todayStars} sao` }, `⭐ ${Math.min(todayStars, 99)}`) : null,
-            // (+ 2026-10-17) ⚠️ trên nút Phụ huynh khi có điều cần bố mẹ chú ý (pwa/healthCheck.ts healthFlags)
-            ((b) => {
-              const n = healthNow(data).flags.length;
-              if (n) {
-                b.classList.add('attn');
-                b.append(h('span', { class: 'parent-attn', 'aria-hidden': 'true' }, '⚠️'));
-                b.setAttribute('aria-label', `Phụ huynh — nhấn giữ 2 giây (có ${n} điều cần chú ý)`);
-              }
-              return b;
-            })(parentButton(() => app.show(parentGateScreen(app)))),
+            // (2026-10-25) ⚙️ Cài đặt — nút nhỏ kín đáo (nhấn giữ 2 giây + cổng tính nhẩm), không huy hiệu / nhắc
+            parentButton(() => app.show(parentGateScreen(app))),
           ),
         ),
         islandMap(app),
@@ -469,8 +456,6 @@ export function homeScreen(app: App, banner?: string) {
             h(
               'div',
               { class: 'home-subrow' },
-              // (+ 2026-10-12) 👪 Có bố mẹ / 👦 Con tự học — MỘT chip nhỏ, chạm để đổi (nhớ tới hết ngày)
-              overLimit ? null : studyModeChip(app, () => app.show(homeScreen(app, banner))),
               missed
                 ? ((b) => (b.classList.add('home-short'), b))(
                     button({ icon: '⏱', label: 'Buổi ngắn 5 phút', kind: 'sun', onTap: () => withLazy(shortMod, (m) => m.startShortSession(app)) }),
@@ -478,13 +463,15 @@ export function homeScreen(app: App, banner?: string) {
                 : null,
               toggle,
             ),
+            // (+ 2026-10-25) 🧭 mời kiểm tra xếp lớp MỘT lần khi bé làm gần như hoàn hảo
+            placementInvite(app, { blocked: overLimit }),
             todayCount >= MAX_SESSIONS_PER_DAY && !overLimit
               ? h('p', { class: 'soft-note' }, `Hôm nay con đã học ${todayCount} buổi rồi, giỏi quá! Nghỉ ngơi nhé 😊`)
               : null,
           ),
           panel,
         ),
-        h('nav', { class: 'home-dock kid-dock' }, libraryDockButton(app), gamesBtn, stickerDockButton(app)),
+        h('nav', { class: 'home-dock kid-dock' }, libraryDockButton(app), freePlayDockButton(app), gamesBtn, stickerDockButton(app)),
       ),
     );
     // (+ 2026-10-10) Chấm "mới" trên 🎮: trò đã mở mà con chưa thấy ở màn Trò chơi. Danh mục trò (khóa theo tuần) nằm
@@ -529,28 +516,6 @@ export function homeScreen(app: App, banner?: string) {
   };
 }
 
-/** MỘT chip nhỏ cách học hôm nay: "👪 Có bố mẹ" ⇄ "👦 Con tự học" (chạm để đổi; nhớ tới hết ngày — store.studyMode). */
-function studyModeChip(app: App, onChange: () => void): HTMLElement {
-  const mode = app.store.studyMode();
-  const self = mode === 'self';
-  return h(
-    'button',
-    {
-      type: 'button',
-      class: `study-chip home-study on`,
-      'data-mode': mode,
-      'aria-label': `Hôm nay: ${self ? 'con tự học' : 'có bố mẹ ngồi cùng'}. Chạm để đổi`,
-      onClick: () => {
-        app.store.setStudyMode(self ? 'parent' : 'self');
-        onChange();
-      },
-    },
-    h('span', { 'aria-hidden': 'true' }, self ? '👦' : '👪'),
-    ` ${self ? 'Con tự học' : 'Có bố mẹ'}`,
-    h('span', { class: 'study-swap', 'aria-hidden': 'true' }, ' ⇄'),
-  );
-}
-
 const STORY_KEY = 'piano-be-9:story-told';
 
 /** Hôm nay đã kể chuyện tuần này chưa (lưu trong máy — chỉ là tiện ích, mất cũng không sao). */
@@ -570,6 +535,13 @@ function libraryDockButton(app: App): HTMLButtonElement {
   const b = button({ icon: '🎵', label: 'Bài hát', kind: 'sun', onTap: () => app.show(libraryScreen(app)) });
   const d = app.store.get();
   if (hasUnseen(d, newSongIds(d).map(songKey))) newDotOn(b);
+  return b;
+}
+
+/** (+ 2026-10-25, bé xin "Bật lại chế độ đàn tự do") Nút "🎹 Đàn tự do" ở thanh dưới (họ nút bạc hà). */
+function freePlayDockButton(app: App): HTMLButtonElement {
+  const b = button({ icon: '🎹', label: 'Đàn tự do', kind: 'mint', onTap: () => app.show(freePlayScreen(app)) });
+  b.setAttribute('data-test', 'free-play');
   return b;
 }
 

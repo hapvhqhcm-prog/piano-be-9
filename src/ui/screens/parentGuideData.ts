@@ -1,5 +1,5 @@
 /**
- * (+ 2026-10-10) "📖 HƯỚNG DẪN NHANH CHO BỐ MẸ" — nội dung (thuần dữ liệu, không DOM → test được).
+ * (+ 2026-10-10) "📖 HƯỚNG DẪN NHANH" (cho người lớn, trong ⚙️ Cài đặt) — nội dung (thuần dữ liệu, không DOM → test được).
  * Màn: parentGuide.ts (nạp muộn). Mỗi mục: ≤ 4 dòng ngắn, làm theo việc cần làm + nút "Mở ngay" tới đúng chỗ.
  *
  * Đích "Mở ngay":
@@ -8,7 +8,10 @@
  *   (tự mở mục "Nâng cao" nếu mốc nằm trong đó — PARENT_ANCHORS).
  */
 
-/** Mốc trong màn Phụ huynh (thuộc tính `data-guide`) → có nằm trong mục "⚙️ Nâng cao" (thu gọn) không. */
+/**
+ * Mốc trong màn ⚙️ Cài đặt (thuộc tính `data-guide`) → có nằm trong parentAdvanced.ts (Cài đặt chính / Dữ liệu) không.
+ * (2026-10-25, bỏ phần phụ huynh: đã bỏ mốc 'tips' — thẻ "3 điều cần nhớ")
+ */
 export const PARENT_ANCHORS = {
   /** Nâng cao → Cài đặt → "🎤 Nghe đàn bằng micro" (ngay dưới: chấm nhịp, chấm cả 2 tay) */
   mic: true,
@@ -22,8 +25,6 @@ export const PARENT_ANCHORS = {
   reminder: false,
   /** Thẻ "📝 Bài bố mẹ thêm" (trong "🧩 Thiết lập một lần") */
   songs: false,
-  /** Thẻ "💡 Tuần N: 3 điều cần nhớ" */
-  tips: false,
 } as const satisfies Record<string, boolean>;
 export type GuideAnchor = keyof typeof PARENT_ANCHORS;
 
@@ -58,8 +59,8 @@ export const GUIDE_SECTIONS: readonly GuideSection[] = [
     icon: '▶',
     title: 'Bắt đầu một buổi học',
     lines: [
-      'Về màn của bé, bấm nút ▶ to — app tự chọn bài, không cần soạn gì.',
-      'Ngồi cạnh bé 10–15 phút. Bé đàn đúng thì bấm “👪 Đúng rồi”, chưa đúng thì “Thử lại”.',
+      'Bé tự bấm nút ▶ to — app tự chọn bài, không cần người lớn ngồi cạnh.',
+      'Micro chấm khi nghe được; chỗ micro không chấm được (tư thế, ngón…) bé tự kiểm tra: “👍 Rồi / 🔁 Làm lại”.',
       'Bé vừa nghỉ ≥ 3 ngày: app gợi ý “Buổi ngắn 5 phút” cho nhẹ nhàng.',
     ],
     open: { label: 'Mở màn của bé', go: 'home' },
@@ -69,7 +70,7 @@ export const GUIDE_SECTIONS: readonly GuideSection[] = [
     icon: '🎤',
     title: 'Cài micro + Đo micro & gửi báo cáo',
     lines: [
-      'Micro giúp app tự nghe đàn thật và chấm thay bố mẹ (xử lý ngay trên iPad).',
+      'Micro giúp app tự nghe đàn thật và chấm (xử lý ngay trên iPad). Bật sẵn — bé tự chạm “Cho phép” khi iPad hỏi.',
       'Cài micro: “1. Cho phép micro” → “2. Kiểm tra 5 nốt” (bé đàn Đô Rê Mi Fa Sol).',
       'Chưa ưng? “🔧 Dành cho người hỗ trợ” → “🎙️ Đo micro & tạo báo cáo” (≈ 1 phút) → gửi người hỗ trợ.',
     ],
@@ -80,21 +81,21 @@ export const GUIDE_SECTIONS: readonly GuideSection[] = [
     icon: '👂',
     title: 'Khi micro nghe sai',
     lines: [
-      'Micro nghe chưa rõ 3 lần → bấm “👪 Bố mẹ chấm giúp” (hoặc “Bố mẹ: tiếp”) để bé đi tiếp.',
+      'Micro nghe chưa rõ 3 lần → bé tự kiểm tra (👍 Rồi / 🔁 Làm lại) và đi tiếp.',
       'Hay hụt nốt nhẹ / nghe nhầm: Cài micro → “🔧 Dành cho người hỗ trợ” → Độ nhạy, “Học lại lệch dây”.',
-      'Bài hai tay hay bị chấm sai: Nâng cao → “Micro chấm cả 2 tay” → Tắt.',
+      'Bài hai tay hay bị chấm sai: Cho người hỗ trợ → “Micro chấm cả 2 tay” → Tắt.',
     ],
     open: { label: 'Mở Cài micro', go: 'micSetup' },
-    more: { label: 'Chấm 2 tay (Nâng cao)', go: 'mic' },
+    more: { label: 'Micro (Cài đặt)', go: 'mic' },
   },
   {
     id: 'backup',
     icon: '💾',
     title: 'Sao lưu & khôi phục',
     lines: [
-      'Tiến độ chỉ nằm trên iPad này — XÓA BIỂU TƯỢNG APP = MẤT HẾT DỮ LIỆU (quá 30 ngày chưa sao lưu: app cảnh báo).',
-      'Mỗi tuần: “Hôm nay bố mẹ cần” → Xem báo cáo tuần → “💾 Sao lưu” → Lưu vào Tệp.',
-      'Đổi iPad / lỡ xóa app: Nâng cao → Cho người hỗ trợ → “Nhập từ tệp JSON”.',
+      'Tiến độ nằm trên iPad này (app tự giữ thêm một bản sao trong máy) — XÓA BIỂU TƯỢNG APP = MẤT DỮ LIỆU.',
+      'Khi tiện: ⚙️ Cài đặt → “💾 Sao lưu dữ liệu” → Lưu vào Tệp (app không nhắc).',
+      'Đổi iPad / lỡ xóa app: Cho người hỗ trợ → “Nhập từ tệp JSON”.',
       '📀 Album không vào bản sao lưu — chia sẻ bản thu trước khi đổi máy; máy mới: làm lại “🎤 Cài micro 3 bước”.',
     ],
     open: { label: 'Mở phần Dữ liệu', go: 'data' },
@@ -138,31 +139,20 @@ export const GUIDE_SECTIONS: readonly GuideSection[] = [
     lines: [
       'App tự sang tuần mới khi bé đạt mục tiêu và học xong các bài của tuần.',
       'Bé chưa vững: thẻ “🗓️ Tuần N” → “⏸ Ở lại tuần này thêm” → “Có”. “Vì sao?” giải thích cách app tính.',
-      'Cần nhảy / lùi tuần: Nâng cao → “Tuần hiện tại” → chọn Cấp rồi Tuần (kết quả cũ vẫn giữ).',
+      'Cần nhảy / lùi tuần: Cài đặt → “Tuần hiện tại” → chọn Cấp rồi Tuần (kết quả cũ vẫn giữ).',
     ],
     open: { label: 'Giữ tuần', go: 'hold' },
-    more: { label: 'Đổi tuần (Nâng cao)', go: 'week' },
+    more: { label: 'Đổi tuần', go: 'week' },
   },
   {
     id: 'songs',
     icon: '📝',
     title: 'Thêm bài con thích',
     lines: [
-      '“📝 Bài bố mẹ thêm” → “Thêm bài hát”: gõ Đô Rê Mi hoặc chạm phím, app tự đánh số ngón.',
+      '“📝 Bài thêm” → “Thêm bài hát”: gõ Đô Rê Mi hoặc chạm phím, app tự đánh số ngón.',
       'Bài nằm trong Thư viện của bé, chỉ lưu trên iPad này.',
     ],
-    open: { label: 'Mở Bài bố mẹ thêm', go: 'songs' },
-  },
-  {
-    id: 'tips',
-    icon: '💡',
-    title: 'Mẹo khi bé chán / khó',
-    lines: [
-      'Chán: cho chơi 1 lượt 🎮 Trò chơi hoặc 🎹 Đàn tự do rồi học tiếp; buổi ngắn còn hơn bỏ.',
-      "Khó: “Con thử chậm hơn nhé” — dùng “Làm ngay (5')” ở thẻ “Hôm nay bố mẹ cần”.",
-      'Khen cụ thể, không so sánh. Bé mệt / cáu: nghỉ 1 phút, hoặc mai học tiếp.',
-    ],
-    open: { label: 'Mở 3 điều cần nhớ', go: 'tips' },
+    open: { label: 'Mở Bài thêm', go: 'songs' },
   },
 ];
 
@@ -194,9 +184,9 @@ export const TROUBLE: readonly TroubleItem[] = [
     title: 'Micro không nghe thấy đàn',
     steps: [
       'Mở nắp đàn, đặt iPad trên giá nhạc, tắt quạt / TV.',
-      'Phụ huynh → Cài micro → “2. Kiểm tra 5 nốt” (app tự chỉnh độ nhạy).',
+      '⚙️ Cài đặt → Cài micro → “2. Kiểm tra 5 nốt” (app tự chỉnh độ nhạy).',
       'Vẫn hụt: “🩺 Kiểm tra sức khỏe app” → bước 3 → đổi độ nhạy.',
-      'Tạm thời: bấm “👪 Bố mẹ chấm giúp” để bé đi tiếp.',
+      'Tạm thời: bé tự kiểm tra (👍 Rồi / 🔁 Làm lại) và đi tiếp.',
     ],
   },
   {
@@ -225,7 +215,7 @@ export const TROUBLE: readonly TroubleItem[] = [
     title: 'Mất tiến độ / app như mới cài',
     steps: [
       'ĐỪNG học tiếp ngay (tránh ghi đè). Mở bằng biểu tượng 🎹 trên Màn hình chính (không phải tab Safari).',
-      'Phụ huynh → Nâng cao → Cho người hỗ trợ → “Nhập từ tệp JSON” → chọn bản sao lưu trong Tệp.',
+      '⚙️ Cài đặt → Cho người hỗ trợ → “Nhập từ tệp JSON” → chọn bản sao lưu trong Tệp.',
       'Không có bản sao lưu: gửi “🩺 Kiểm tra iPad” cho người hỗ trợ.',
     ],
   },
@@ -236,7 +226,7 @@ export const TROUBLE: readonly TroubleItem[] = [
     steps: [
       'Bấm “Quay lại” hoặc “Về màn của bé”.',
       'Vuốt tắt hẳn app rồi mở lại — tiến độ đã lưu không mất.',
-      'Lặp lại: Phụ huynh → “🩺 Kiểm tra sức khỏe app” → “📤 Gửi kết quả” (kèm lỗi gần đây).',
+      'Lặp lại: ⚙️ Cài đặt → Cho người hỗ trợ → “🩺 Kiểm tra sức khỏe app” → “📤 Gửi kết quả”.',
     ],
   },
   {
@@ -246,7 +236,7 @@ export const TROUBLE: readonly TroubleItem[] = [
     steps: [
       'iPad CŨ: “💾 Sao lưu” → Lưu vào Tệp (iCloud Drive) hoặc gửi cho chính mình. Album bản thu không nằm trong bản sao lưu.',
       'iPad MỚI: mở app bằng Safari → Chia sẻ → “Thêm vào MH chính” → mở từ biểu tượng 🎹.',
-      'Phụ huynh → Nâng cao → Cho người hỗ trợ → “Nhập từ tệp JSON”.',
+      '⚙️ Cài đặt → Cho người hỗ trợ → “Nhập từ tệp JSON”.',
       'Cài micro lại (3 bước) — micro và loa của máy mới khác máy cũ.',
     ],
   },
@@ -265,13 +255,13 @@ export function troubleText(items: readonly TroubleItem[] = TROUBLE): string {
 
 /** Bản tóm tắt MỘT TRANG (chữ thường) — sao chép / chia sẻ / in. */
 export function guideSummaryText(sections: readonly GuideSection[] = GUIDE_SECTIONS, version = ''): string {
-  const out: string[] = [`📖 PIANO BÉ — HƯỚNG DẪN NHANH CHO BỐ MẸ${version ? ` (bản ${version})` : ''}`, ''];
+  const out: string[] = [`📖 PIANO BÉ — HƯỚNG DẪN NHANH${version ? ` (bản ${version})` : ''}`, ''];
   for (const s of sections) {
     out.push(`${s.icon} ${s.title.toUpperCase()}`);
     for (const l of s.lines) out.push(`• ${l}`);
     out.push('');
   }
-  out.push('Vào màn Phụ huynh: ở màn của bé, nhấn giữ nút “Phụ huynh” 2 giây rồi làm một phép nhân.');
-  out.push('Mọi dữ liệu của bé chỉ nằm trên iPad này — xóa biểu tượng app = mất hết dữ liệu. Nhớ sao lưu mỗi tuần.');
+  out.push('Vào ⚙️ Cài đặt: ở màn của bé, nhấn giữ nút ⚙️ 2 giây rồi làm một phép nhân. App chạy không cần người lớn.');
+  out.push('Dữ liệu của bé nằm trên iPad này — xóa biểu tượng app = mất dữ liệu. Sao lưu tay khi tiện.');
   return out.join('\n');
 }

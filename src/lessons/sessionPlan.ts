@@ -25,7 +25,8 @@ import {
   type WarmupMusic,
 } from './sessionSelectors';
 import { difficulty } from './adaptive';
-import { songEverPlayed } from './songStats';
+import { songEverPlayed, songMastered } from './songStats';
+import { stretchExtras, stretchTrim } from './stretchPlan';
 import { weekPassed } from './weekCriteria';
 import { sessionKind } from './sessionKind';
 
@@ -82,6 +83,19 @@ export type SessionStep =
       /** names = có tên nốt; staff = chỉ khuông (rút dần theo tuần — sightDailyHints) */
       hints: 'names' | 'staff';
       startAnywhere: boolean;
+    }
+  /**
+   * (+ 2026-10-25, OWNER duyệt "Bài khó hơn cho bé giỏi") Bước ⭐ của chế độ 'stretch' (lessons/stretchPlan.ts): 👀 xem trước bài
+   * tuần sau ('preview') hoặc 🚀 bài Thư viện cao hơn một bậc ('library'). Như 'review-song': KHÔNG phải hoạt động của bài;
+   * session.ts chỉ ghi lượt ĐẠT (thử chưa được không kéo chỉ số độ khó). Bị bỏ TRƯỚC mọi bước phụ khác khi quá số màn.
+   */
+  | {
+      kind: 'stretch-song';
+      what: 'preview' | 'library';
+      songId: string;
+      mode: 'wait' | 'tempo';
+      hints: 'full' | 'names';
+      intro: string;
     }
   | {
       kind: 'closing';
@@ -178,6 +192,11 @@ export function buildSessionPlan(
   const gentle =
     !!data && opts.adaptive !== false && !opts.replay && !isStage && !lesson.isWeekTest && sessionKind(lesson.id) !== 'daily' && difficulty(data, now).mode === 'gentle';
   const splittable = gentle && !doneIds.has(lesson.id);
+  // (+ 2026-10-25, OWNER duyệt "Bài khó hơn cho bé giỏi") bé đang làm rất tốt → bỏ bước tập chậm / tách tay của bài đã vững,
+  // thêm bước ⭐ (xem trước bài tuần sau, bài khó hơn một bậc) — lessons/stretchPlan.ts
+  const stretch =
+    !!data && opts.adaptive !== false && !opts.replay && !isStage && !lesson.isWeekTest && sessionKind(lesson.id) !== 'daily' && difficulty(data, now).mode === 'stretch';
+  if (stretch) todo = stretchTrim(todo, data!);
   let split = false;
   if (splittable) {
     const cut = gentleTodo(todo, data!);
@@ -234,7 +253,8 @@ export function buildSessionPlan(
     };
     steps.push(opening);
     // Bài kiểm tra tuần: KHÔNG ôn nhanh (để kết quả ôn không lẫn vào tiêu chí, vd C4 10/10)
-    const review = data && !lesson.isWeekTest ? reviewSegment(lesson, data, opts.rng, now) : null;
+    // (+ 2026-10-25) chế độ 'stretch': bỏ "Ôn nhanh" (bé đang đúng gần hết — ôn thừa)
+    const review = data && !lesson.isWeekTest && !stretch ? reviewSegment(lesson, data, opts.rng, now) : null;
     if (review) steps.push({ kind: 'review', segment: review });
     if (warm && !warmAfter) steps.push(warmStep(warm));
     // v5.2 — Đọc nhạc 1 phút: TRƯỚC bài mới (không bị "hết giờ" cắt mất); không phải hoạt động của bài
@@ -258,8 +278,15 @@ export function buildSessionPlan(
   let reviewSongId: string | null = null;
   if (opts.songReview && data && !opts.replay && !isStage && !lesson.isWeekTest && todo.length < 4 && sessionKind(lesson.id) !== 'daily') {
     const rs = reviewSongStep(lesson, data, now, opts.rng);
-    if (rs) steps.push(rs);
-    reviewSongId = rs?.songId ?? null;
+    // (+ 2026-10-25) chế độ 'stretch': bài đến hạn ôn mà đã THUỘC → bỏ (nhường chỗ cho bước ⭐)
+    if (rs && !(stretch && songMastered(data, rs.songId))) {
+      steps.push(rs);
+      reviewSongId = rs.songId;
+    }
+  }
+  if (stretch) {
+    const inLesson = todo.flatMap((x) => (x.activity.kind === 'song' ? [x.activity.songId] : []));
+    steps.push(...stretchExtras(lesson.week, data!, reviewSongId ? [...inLesson, reviewSongId] : inLesson));
   }
   let teach: { emoji: string; text: string } | null = null;
   if (!opts.replay && !isStage) {
@@ -274,6 +301,9 @@ export function buildSessionPlan(
     const k = steps.findIndex(pred);
     if (k >= 0) steps.splice(k, 1);
   };
+  // (+ 2026-10-25) bước ⭐ là phần THÊM — bỏ trước mọi bước phụ khác (bài khó hơn trước, rồi xem trước)
+  if (steps.length > MAX_SESSION_STEPS) drop((s) => s.kind === 'stretch-song' && s.what === 'library');
+  if (steps.length > MAX_SESSION_STEPS) drop((s) => s.kind === 'stretch-song');
   // (+ 2026-10-16) nhẹ tay → ưu tiên ÔN: bỏ đọc nhạc 1 phút trước
   if (gentle && steps.length > MAX_SESSION_STEPS) drop((s) => s.kind === 'sight-daily');
   // (+ 2026-10-17, rà soát giáo viên) ÔN NGẮT QUÃNG CHẮC CHẮN: "Ôn bài cũ" đã bị bỏ ở REVIEW_SONG_GUARANTEE buổi liền trước
@@ -346,11 +376,11 @@ export function lessonTeach(lesson: Lesson): { emoji: string; text: string } {
 
 // (+ 2026-10-17, OWNER duyệt "Buổi học ≥ 60% đàn thật") chữ của bé NGẮN (≤ ~12 tiếng + tên bài) — giọng đọc đọc to cả thẻ
 const QUIZ_TEACH: Partial<Record<QuizSpec['variant'], string>> = {
-  updown: 'Con đàn 2 nốt, đố bố mẹ: lên hay xuống?',
-  stepskip: 'Con đàn 2 nốt, đố bố mẹ: bước hay nhảy?',
-  identify: 'Con đàn một nốt, đố bố mẹ tên nốt!',
-  read: 'Con chỉ một nốt, đố bố mẹ đọc tên.',
-  majorminor: 'Con đàn hợp âm, đố bố mẹ: vui hay buồn?',
+  updown: 'Con đàn 2 nốt, đố Bé Nốt: lên hay xuống?',
+  stepskip: 'Con đàn 2 nốt, đố Bé Nốt: bước hay nhảy?',
+  identify: 'Con đàn một nốt, đố Bé Nốt tên nốt!',
+  read: 'Con chỉ một nốt, đố Bé Nốt đọc tên.',
+  majorminor: 'Con đàn hợp âm, đố Bé Nốt: vui hay buồn?',
 };
 
 function derivedTeach(lesson: Lesson): { emoji: string; text: string } | null {
@@ -362,15 +392,15 @@ function derivedTeach(lesson: Lesson): { emoji: string; text: string } | null {
     const title = t.titleVi || t.title;
     const tempo = acts.some((a) => a.kind === 'song' && a.songId === song.songId && a.mode === 'tempo');
     return tempo
-      ? { emoji: '🥁', text: `Con đếm 1-2-3-4, đàn “${title}” — bố mẹ vỗ tay theo.` }
-      : { emoji: '🎹', text: `Con đàn câu đầu “${title}” cho bố mẹ nghe.` };
+      ? { emoji: '🥁', text: `Con đếm 1-2-3-4, đàn “${title}” — Bé Nốt vỗ tay theo.` }
+      : { emoji: '🎹', text: `Con đàn câu đầu “${title}” cho Bé Nốt nghe.` };
   }
-  if (last('rhythm')) return { emoji: '👏', text: 'Con vỗ một mẫu nhịp, bố mẹ vỗ lại.' };
+  if (last('rhythm')) return { emoji: '👏', text: 'Con vỗ một mẫu nhịp, Bé Nốt vỗ lại.' };
   const notes = last('notes');
-  if (notes) return { emoji: '🖐️', text: `Con dạy bố mẹ “${notes.segment.title}”.` };
-  if (last('dynamics')) return { emoji: '🦁', text: 'Con đàn TO rồi NHỎ — bố mẹ đoán nhé!' };
+  if (notes) return { emoji: '🖐️', text: `Con dạy Bé Nốt “${notes.segment.title}”.` };
+  if (last('dynamics')) return { emoji: '🦁', text: 'Con đàn TO rồi NHỎ — Bé Nốt đoán nhé!' };
   if (last('sing')) return { emoji: '🎤', text: 'Con hát tên 3 nốt rồi đàn lại.' };
-  if (last('improv')) return { emoji: '🎨', text: 'Con đàn bài tự nghĩ — bố mẹ đặt tên!' };
+  if (last('improv')) return { emoji: '🎨', text: 'Con đàn bài tự nghĩ — Bé Nốt đặt tên!' };
   const quiz = last('quiz');
   const qt = quiz ? QUIZ_TEACH[quiz.quiz.variant] : undefined;
   if (qt) return { emoji: '👂', text: qt };
@@ -380,10 +410,10 @@ function derivedTeach(lesson: Lesson): { emoji: string; text: string } | null {
 
 /** "Con làm thầy" cho buổi luyện tập mỗi ngày — xoay vòng. */
 const DAILY_TEACH: ReadonlyArray<{ emoji: string; text: string }> = [
-  { emoji: '🎹', text: 'Con đàn bài con thích nhất cho bố mẹ nghe.' },
-  { emoji: '🦁', text: 'Con đàn TO rồi NHỎ — bố mẹ đoán nhé!' },
-  { emoji: '🖐️', text: 'Con chỉ bố mẹ ngón 1 đến ngón 5.' },
+  { emoji: '🎹', text: 'Con đàn bài con thích nhất cho Bé Nốt nghe.' },
+  { emoji: '🦁', text: 'Con đàn TO rồi NHỎ — Bé Nốt đoán nhé!' },
+  { emoji: '🖐️', text: 'Con chỉ Bé Nốt ngón 1 đến ngón 5.' },
   { emoji: '🎼', text: 'Con chỉ một nốt trên khuông, nói tên nốt.' },
-  { emoji: '👏', text: 'Con vỗ một nhịp, bố mẹ vỗ lại theo con.' },
+  { emoji: '👏', text: 'Con vỗ một nhịp, Bé Nốt vỗ lại theo con.' },
   { emoji: '🌟', text: 'Con kể: hôm nay chỗ nào khó nhất?' },
 ];

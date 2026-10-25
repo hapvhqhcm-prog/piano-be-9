@@ -29,6 +29,17 @@ export const CHANGELOG_BASELINE = '0.15.0';
 
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
+    version: '0.30.0',
+    date: '2026-10-26',
+    parentAction: true,
+    items: [
+      'Bé tự học hoàn toàn: micro chấm, chỗ micro không chấm được thì bé tự kiểm tra — bố mẹ không cần làm gì.',
+      'Nút Phụ huynh thành ⚙️ Cài đặt (chỉ để cài micro, sao lưu…). Nên tự sao lưu thỉnh thoảng.',
+      'Số ngón trên phím thay cho hình bàn tay; micro phân biệt giọng hát với tiếng đàn.',
+      '🎹 Đàn tự do trở lại màn chính; 🎙️ Máy ghi âm; ⚡ Thi vượt tuần; 🧭 Kiểm tra xếp lớp; bài khó hơn cho bé giỏi.',
+    ],
+  },
+  {
     version: '0.29.0',
     date: '2026-10-17',
     parentAction: true,

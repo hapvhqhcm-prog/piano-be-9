@@ -1,7 +1,7 @@
 /**
  * (+ 2026-10-15) "🎨 Nốt màu" (OWNER duyệt): tô đầu nốt trên khuông theo tên nốt (bảng màu an toàn cho người mù màu —
  * src/music/engrave.ts NOTE_COLORS) và tô nhẹ cùng màu lên phím trắng của bàn phím ảo.
- * Chế độ lưu trên máy (như "✋ Hiện bàn tay"): 'auto' = bật ở tuần 1–8, 'on' luôn bật, 'off' tắt.
+ * Chế độ lưu trên máy (như "🔢 Hiện số ngón"): 'auto' = bật ở tuần 1–8, 'on' luôn bật, 'off' tắt.
  * (2026-10-15, OWNER duyệt — "Bớt màu & tên nốt sớm hơn", rà soát của thầy giáo): 'auto' TẮT màu ở lượt THEO NHỊP của bài
  * QUEN (bé đã đạt trọn bài — songFamiliar) từ tuần NOTE_COLOR_FAMILIAR_TEMPO_OFF_FROM (4) để bé đọc khuông; lần đầu gặp bài
  * (chế độ chờ) vẫn có màu tới hết tuần 8. Cùng ý: từ tuần STAFF_ONLY_FAMILIAR_FROM (6) lượt theo nhịp của bài quen chỉ còn

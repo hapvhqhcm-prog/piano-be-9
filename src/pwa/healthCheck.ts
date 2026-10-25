@@ -1,6 +1,7 @@
 /**
  * (+ 2026-10-17, OWNER duyệt) 🩺 KIỂM TRA SỨC KHỎE APP hằng tháng (~3 phút, bố mẹ làm) — phần THUẦN (không DOM, test được).
- * Màn: src/ui/screens/healthCheck.ts (nạp muộn). Lời "⚠️" trên nút Phụ huynh: healthFlags().
+ * Màn: src/ui/screens/healthCheck.ts (nạp muộn, chỉ chạy tay trong ⚙️ Cài đặt). healthFlags(): không còn hiện trên màn của bé
+ * (2026-10-25, bỏ phần phụ huynh).
  *
  * HỢP ĐỒNG với phần phát hiện đổi iPadOS / vắng lâu (agent "real-world", src/pwa): họ ĐIỀN `HealthEnv` (osChanged,
  * daysAway, wakeLockDenied, voiceLost…) — hai hàm dưới đây chỉ đọc env + dữ liệu, không tự đo gì. Muốn thêm lý do / cờ

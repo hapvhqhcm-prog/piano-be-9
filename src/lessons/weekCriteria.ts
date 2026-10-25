@@ -8,6 +8,7 @@ import type { Lesson } from './types';
 import { hist } from '../progress/history';
 import { LEVELS, WEEKS, sessionsOfWeek, weekPlan } from './curriculum';
 import { passedWhole, together, type Run } from './songStats';
+import { skipOf, withoutSkips } from './weekSkips';
 
 const isPitch = (s: string) => /^[A-G](#|b)?\d$/.test(s);
 /** Tuần 26 (v5.1): năm nốt cao thế Đô cao */
@@ -40,7 +41,9 @@ function earDays(sessions: readonly Session[], accept: (a: AppAssessment) => boo
  * v5 — Lượt chơi được tính làm BẰNG CHỨNG cho tiêu chí tuần (OWNER duyệt 2026-10-05, chuyên gia sư phạm:
  * "tiêu chí cũ qua được mà chưa thật sự có kỹ năng"):
  * - micro (source 'mic'): lượt ĐẠT (≥ 80% nốt đúng lúc);
- * - bố mẹ (source 'parent'): lượt ĐẠT và có PHIẾU 3 Ý (đúng nốt · đều nhịp · đúng ngón) — cả 3 đều đạt.
+ * - không qua micro (source 'parent'): lượt ĐẠT và có PHIẾU 3 Ý (đúng nốt · đều nhịp · đúng ngón) — cả 3 đều đạt.
+ *   (2026-10-25, OWNER "bỏ phần phụ huynh") phiếu này giờ do BÉ TỰ KIỂM TRA ("👍 Rồi" ở songResult.askSelf — `by: 'self'`);
+ *   bản ghi cũ (không có `by`) là bố mẹ chấm — đọc như nhau. Không có bước nào chờ bố mẹ duyệt.
  * Dữ liệu CŨ: lượt "bố mẹ" ghi TRƯỚC LEGACY_RUN_CUTOFF (ngày phát hành v5) không có phiếu → vẫn tính như cũ,
  * để tuần bé đang học dở không bị tụt bằng chứng. (Tuần ĐÃ qua không bị đánh giá lại: bản đồ/sticker coi mọi tuần
  * < currentWeek là đã qua — weekPassed chỉ thật sự quyết định ở tuần hiện tại.) Lượt mới không phiếu → không tính.
@@ -58,8 +61,8 @@ export function runIsEvidence(r: Run): boolean {
 export const CRITERION_DAYS = 2;
 
 /** Số NGÀY khác nhau (theo session.date) có lượt hợp lệ (runIsEvidence) thỏa `ok`. */
-export function runDays(sessions: readonly Session[], ok: (r: Run) => boolean): number {
-  return new Set(sessions.filter((s) => s.songRuns.some((r) => ok(r) && runIsEvidence(r))).map((s) => s.date)).size;
+export function runDays(sessions: readonly Session[], ok: (r: Run) => boolean, ev: (r: Run) => boolean = runIsEvidence): number {
+  return new Set(sessions.filter((s) => s.songRuns.some((r) => ok(r) && ev(r))).map((s) => s.date)).size;
 }
 
 /** Bài có hoạt động bài hát THEO NHỊP (tuần 4: dạy giữ nhịp Mức 2). */
@@ -108,14 +111,26 @@ const sightIn = (r: Run, positions: readonly string[]) => r.songId.startsWith('s
  * null = tiêu chí không theo ngày (tuần 1: một buổi; tuần huy chương; tuần không có tiêu chí).
  * Tuần đạt ⇔ days ≥ CRITERION_DAYS && extra.
  */
-function criterionDays(week: number, all: readonly Session[]): { days: number; extra: boolean } | null {
+/**
+ * (+ 2026-10-25) Cách đọc bằng chứng: `windowed` = chỉ tính buổi từ evidenceFrom (mặc định — tiêu chí tuần thường); false = mọi
+ * buổi được đưa vào (⚡ Thi vượt tuần chấm MỘT buổi thi). `ev` = lượt nào là bằng chứng (mặc định runIsEvidence).
+ */
+interface CriterionRead {
+  windowed: boolean;
+  ev: (r: Run) => boolean;
+}
+const DEFAULT_READ: CriterionRead = { windowed: true, ev: runIsEvidence };
+
+function criterionDays(week: number, all: readonly Session[], read: CriterionRead = DEFAULT_READ): { days: number; extra: boolean } | null {
+  const ev = read.ev;
   /** Buổi (của tuần) tính từ ngày bé học bài của tuần dạy điều tiêu chí đo (evidenceFrom) — mặc định: mọi bài của tuần */
-  const win = (teaches: (l: Lesson) => boolean = () => true) => evidenceSessions(week, all, teaches);
+  const win = (teaches: (l: Lesson) => boolean = () => true) => (read.windowed ? evidenceSessions(week, all, teaches) : [...all]);
   const sessions = win();
+  const evDays = (ss: readonly Session[], ok: (r: Run) => boolean) => runDays(ss, ok, ev);
   /** Bài `songId` trọn bài (không tách tay, không một câu) đạt — số ngày (tempo: theo nhịp; minBpm: tốc độ tối thiểu). */
-  const song = (songId: string, tempo = false, minBpm = 0) => ({ days: runDays(sessions, (r) => passedWhole(r, songId, tempo, minBpm)), extra: true });
+  const song = (songId: string, tempo = false, minBpm = 0) => ({ days: evDays(sessions, (r) => passedWhole(r, songId, tempo, minBpm)), extra: true });
   const ear = (accept: (a: AppAssessment) => boolean, extra = true) => ({ days: earDays(sessions, accept), extra });
-  const sightOk = (positions: readonly string[]) => sessions.some((s) => s.songRuns.some((r) => sightIn(r, positions) && runIsEvidence(r)));
+  const sightOk = (positions: readonly string[]) => sessions.some((s) => s.songRuns.some((r) => sightIn(r, positions) && ev(r)));
   switch (week) {
     case 2:
       // v5: thay "bé tự chọn Đàn được hết" (SELF) bằng bằng chứng: "Bánh nóng" trọn bài (chế độ chờ được tính)
@@ -128,7 +143,7 @@ function criterionDays(week: number, all: readonly Session[]): { days: number; e
       // (+ 2026-10-15, OWNER duyệt) chỉ tính từ ngày bé học bài THEO NHỊP đầu tiên của tuần 4 (Mức 2) — trước đây lượt
       // theo nhịp bài cũ (tuần 2–3, chơi ở Thư viện ngay khi vừa sang tuần 4) đã đủ "đạt" trước khi được dạy giữ nhịp.
       return {
-        days: runDays(win(hasTempoSong), (r) => {
+        days: evDays(win(hasTempoSong), (r) => {
           const t = findTune(r.songId);
           return r.mode === 'tempo' && r.level === 2 && !r.phrase && together(r) && !!t && measureCount(t) >= (beatsPerMeasure(t) < 3 ? 16 : 8);
         }),
@@ -144,7 +159,7 @@ function criterionDays(week: number, all: readonly Session[]): { days: number; e
     case 8:
       // (+ 2026-10-15) bài cũ (tuần 6) → chỉ tính từ ngày học bài "chỉ nhìn khuông" của tuần 8
       // (2026-10-17, OWNER duyệt "Bớt Bài ca niềm vui") "Chuông ngân vang" (cũng bài tuần 6, thế Đô) thay "Bài ca niềm vui"
-      return { days: runDays(win(hasStaffTempo(W8_SONG)), (r) => passedWhole(r, W8_SONG, true) && r.hints === 'staff'), extra: true };
+      return { days: evDays(win(hasStaffTempo(W8_SONG)), (r) => passedWhole(r, W8_SONG, true) && r.hints === 'staff'), extra: true };
     case 9:
       return song('inh_la_oi', true);
     case 11:
@@ -192,8 +207,8 @@ function criterionDays(week: number, all: readonly Session[]): { days: number; e
     case 28: {
       // Đọc nhạc ngẫu nhiên: ≥ 5 đoạn đạt (bằng chứng hợp lệ), trải trên ≥ 2 ngày
       const sight = (r: Run) => r.songId.startsWith('sight');
-      const n = sessions.flatMap((s) => s.songRuns).filter((r) => sight(r) && runIsEvidence(r)).length;
-      return { days: runDays(sessions, sight), extra: n >= 5 };
+      const n = sessions.flatMap((s) => s.songRuns).filter((r) => sight(r) && ev(r)).length;
+      return { days: evDays(sessions, sight), extra: n >= 5 };
     }
     case 29:
       return song('saints_both', true);
@@ -202,14 +217,15 @@ function criterionDays(week: number, all: readonly Session[]): { days: number; e
     case 31:
       return song('fur_elise', true, 50);
     default: {
-      // Cấp 4 (2026-10-08): tiêu chí dạng dữ liệu — mọi bài đạt ở ≥ 2 ngày (tiến độ = bài chậm nhất) + thẻ bố mẹ xác nhận
+      // Cấp 4 (2026-10-08): tiêu chí dạng dữ liệu — mọi bài đạt ở ≥ 2 ngày (tiến độ = bài chậm nhất) + thẻ xác nhận
+      // (2026-10-25) thẻ xác nhận (`parentChecks`: tự xem tay relax:*, pedal sạch, to dần–nhỏ dần) = BÉ TỰ KIỂM TRA ("👍 Rồi")
       const spec = WEEKS[week - 1]?.criterionSpec;
       if (!spec) return null;
       if (spec.spread) {
         // (+ 2026-10-17) tuần ôn: mỗi bài đạt ≥ 1 lần, các lượt đạt trải trên ≥ 2 ngày
         const ok = (x: (typeof spec.songs)[number]) => (r: Run) => passedWhole(r, x.songId, !!x.tempo, x.minBpm ?? 0);
-        const days = runDays(sessions, (r) => spec.songs.some((x) => ok(x)(r)));
-        const each = spec.songs.every((x) => runDays(sessions, ok(x)) >= 1);
+        const days = evDays(sessions, (r) => spec.songs.some((x) => ok(x)(r)));
+        const each = spec.songs.every((x) => evDays(sessions, ok(x)) >= 1);
         return { days, extra: each && (spec.parentChecks ?? []).every((note) => parentCheckOk(sessions, note)) };
       }
       const days = Math.min(...spec.songs.map((x) => song(x.songId, !!x.tempo, x.minBpm ?? 0).days));
@@ -218,7 +234,10 @@ function criterionDays(week: number, all: readonly Session[]): { days: number; e
   }
 }
 
-/** Cấp 4 — thẻ bố mẹ xác nhận (PARENT_ASSESSMENT `note`): lần chấm GẦN NHẤT trong các buổi của tuần là "Đúng rồi". */
+/**
+ * Cấp 4 — thẻ xác nhận (PARENT_ASSESSMENT `note`): lần chấm GẦN NHẤT trong các buổi của tuần là "Đúng rồi".
+ * (2026-10-25) lần chấm là bé tự kiểm tra (`by: 'self'`) hoặc bản ghi cũ của bố mẹ — như nhau; "🔁 Làm lại" gần nhất → chưa đạt.
+ */
 function parentCheckOk(sessions: readonly Session[], note: string): boolean {
   let last: { ts: number; ok: boolean } | null = null;
   for (const s of sessions)
@@ -234,27 +253,49 @@ function parentCheckOk(sessions: readonly Session[], note: string): boolean {
  * tuần dòng kẻ phụ / nốt cao cần thêm một lượt đọc nhạc đạt trong dải đó. Tuần 1 và huy chương giữ như cũ.
  */
 export function weekPassed(week: number, data: Readonly<AppData>): boolean {
+  // (+ 2026-10-25) ⚡ Thi vượt tuần đạt / 🧭 xếp lớp nhảy qua → tuần ĐÃ QUA (bản ghi tường minh progress.skips)
+  if (skipOf(data, week)) return true;
   // (+ 2026-10-06) Tuần đã đạt chỉ với các buổi ĐÃ GỘP (compaction.ts) — tiêu chí chỉ tăng nên vẫn đạt
   if (hist(data).passedWeeks.includes(week)) return true;
   const sessions = sessionsOfWeek(data, week);
-  if (MEDAL_WEEKS.has(week)) {
-    return sessions.some((s) => s.parentAssessments.some((a) => a.note === 'medal' && a.result === 'correct'));
-  }
-  if (week === 1) {
-    // Tìm C4 ≥ 10 lần đúng, trượt TỐI ĐA 1 lần (v5 — chuyên gia UX: 10/10 tuyệt đối làm bé căng thẳng)
-    // — bố mẹ xác nhận (PARENT) hoặc micro (MIC, đúng ngay lần đầu, không bị sửa)
-    return sessions.some((s) => {
-      if (s.lessonId !== 'w1-test') return false;
-      const c4 = s.parentAssessments.filter((a) => a.note === 'C4');
-      const mic = s.micAssessments.filter((a) => a.expected === 'C4');
-      const micOk = (a: (typeof mic)[number]) => (a.parentOverride ? a.parentOverride === 'correct' : a.firstTry);
-      const correct = c4.filter((a) => a.result === 'correct').length + mic.filter(micOk).length;
-      const misses = c4.filter((a) => a.result === 'retry').length + mic.filter((a) => !micOk(a)).length;
-      return correct >= 10 && misses <= 1;
-    });
-  }
+  if (MEDAL_WEEKS.has(week)) return medalIn(sessions);
+  if (week === 1) return sessions.some((s) => s.lessonId === 'w1-test' && week1TestOk(s));
   const c = criterionDays(week, sessions);
   return !!c && c.days >= CRITERION_DAYS && c.extra;
+}
+
+/** Buổi biểu diễn có huy chương ("medal" được chấm Đúng — (2026-10-25) bé tự chạm "🏅 Nhận huy chương" sau buổi diễn). */
+const medalIn = (sessions: readonly Session[]) => sessions.some((s) => s.parentAssessments.some((a) => a.note === 'medal' && a.result === 'correct'));
+
+/**
+ * Tuần 1: tìm C4 ≥ 10 lần đúng, trượt TỐI ĐA 1 lần (v5 — chuyên gia UX: 10/10 tuyệt đối làm bé căng thẳng)
+ * — bé tự kiểm tra (PARENT_ASSESSMENT, (2026-10-25) `by: 'self'`; bản ghi cũ: bố mẹ) hoặc micro (MIC, đúng ngay lần đầu, không bị sửa).
+ */
+function week1TestOk(s: Session): boolean {
+  const c4 = s.parentAssessments.filter((a) => a.note === 'C4');
+  const mic = s.micAssessments.filter((a) => a.expected === 'C4');
+  const micOk = (a: (typeof mic)[number]) => (a.parentOverride ? a.parentOverride === 'correct' : a.firstTry);
+  const correct = c4.filter((a) => a.result === 'correct').length + mic.filter(micOk).length;
+  const misses = c4.filter((a) => a.result === 'retry').length + mic.filter((a) => !micOk(a)).length;
+  return correct >= 10 && misses <= 1;
+}
+
+/** Tuần đạt bằng BẰNG CHỨNG thật (bỏ qua bản ghi cho qua progress.skips) — huy chương cấp, gộp lịch sử. */
+export function weekPassedOwn(week: number, data: Readonly<AppData>): boolean {
+  return weekPassed(week, withoutSkips(data));
+}
+
+/**
+ * (+ 2026-10-25, OWNER duyệt "⚡ Thi vượt tuần") Tiêu chí tuần `week` ĐẠT TRONG CÁC BUỔI `sessions` (thường là MỘT buổi thi):
+ * cùng nội dung tiêu chí (bài, theo nhịp, tốc độ tối thiểu, tai nghe ≥ 5/6, đọc nhạc, thẻ xác nhận…) nhưng BỎ luật "2 ngày
+ * khác nhau" (chỉ cần 1) và không xét cửa sổ ngày bắt đầu. `ev` = lượt nào là bằng chứng. Tuần huy chương: có huy chương;
+ * tuần 1: buổi thi Đô giữa (10 lần, trượt ≤ 1). Hàm thuần.
+ */
+export function criterionMetIn(week: number, sessions: readonly Session[], ev: (r: Run) => boolean = runIsEvidence): boolean {
+  if (MEDAL_WEEKS.has(week)) return medalIn(sessions);
+  if (week === 1) return sessions.some((s) => week1TestOk(s));
+  const c = criterionDays(week, sessions, { windowed: false, ev });
+  return !!c && c.days >= 1 && c.extra;
 }
 
 /**
@@ -264,6 +305,8 @@ export function weekPassed(week: number, data: Readonly<AppData>): boolean {
  */
 export function weekComplete(week: number, data: Readonly<AppData>): boolean {
   if (!weekPassed(week, data)) return false;
+  // (+ 2026-10-25) tuần được cho qua (thi vượt tuần / xếp lớp): không cần học hết bài (bài vẫn mở trong Thư viện)
+  if (skipOf(data, week)) return true;
   const done = new Set(data.progress.lessonsCompleted);
   return weekPlan(week)
     .lessons.filter((l) => !l.isWeekTest)
@@ -284,6 +327,8 @@ export function criterionProgress(week: number, data: Readonly<AppData>): { days
   const c = criterionDays(week, sessionsOfWeek(data, week));
   if (!c) return null;
   const needDays = CRITERION_DAYS;
+  // (+ 2026-10-25) tuần được cho qua → đủ ngày (●● luôn đồng nghĩa với weekPassed)
+  if (skipOf(data, week)) return { days: needDays, needDays };
   // (+ 2026-10-06) Đã đạt chỉ với các buổi đã gộp (history.passedWeeks) → đủ ngày (như trước khi gộp)
   if (hist(data).passedWeeks.includes(week)) return { days: needDays, needDays };
   let days = Math.min(c.days, needDays);

@@ -3,7 +3,7 @@
  *
  * Sau mỗi lượt chơi có dữ liệu từng nốt (micro, hoặc chạm phím ảo):
  * 1. Mỗi nhóm nốt (Onset) có một kết quả: đúng · nhầm (biết nốt bé đàn thì ghi lại) · sót · sớm/muộn ngoài cửa sổ chấm
- *    nhịp · bố mẹ bấm "tiếp" (app không xác nhận). Bài hai tay: có thể có kết quả RIÊNG từng tay.
+ *    nhịp · bé chạm "Đi tiếp" (app không xác nhận). Bài hai tay: có thể có kết quả RIÊNG từng tay.
  * 2. "Thầy giáo" (`teach`) chọn MỘT lời nhắn chính, theo luật (không ngẫu nhiên): lỗi gặp NHIỀU nhất → một câu ngắn,
  *    tích cực, cụ thể (≤ 15 chữ); gần hoàn hảo → khen (cụ thể: đúng mấy nốt, câu nào đã tiến bộ).
  * 3. Kèm chỗ cần luyện (ô nhịp) cho nút "🎯 Luyện ngay chỗ này" và kế hoạch luyện (chậm trước, rồi đúng tốc độ).
@@ -15,7 +15,7 @@ import type { Hand } from '../piano/fingering';
 import { midiToPitch, viName } from '../piano/pitchTable';
 import type { HeardEvent, NoteVerdict, PulseKind } from './timing';
 
-/** ok = đúng · wrong = nhầm nốt · missed = sót (không nghe thấy) · early/late = đúng nốt nhưng ngoài cửa sổ nhịp · helped = bố mẹ bấm "tiếp" */
+/** ok = đúng · wrong = nhầm nốt · missed = sót (không nghe thấy) · early/late = đúng nốt nhưng ngoài cửa sổ nhịp · helped = bé chạm "Đi tiếp" */
 export type NoteKind = 'ok' | 'wrong' | 'missed' | 'early' | 'late' | 'helped';
 
 /** Kết quả của MỘT tay trong nhóm nốt (bài hai tay) */
@@ -74,7 +74,7 @@ export function outcomeOf(r: NoteReview, hand: Hand): HandOutcome {
   return r.hands?.[hand] ?? { kind: r.kind, played: r.played, offset: r.offset };
 }
 
-/** Lượt có dữ liệu từng nốt do APP xác nhận (không phải toàn bố mẹ bấm "tiếp")? */
+/** Lượt có dữ liệu từng nốt do APP xác nhận (không phải toàn bé chạm "Đi tiếp")? */
 export function reviewUsable(r: RunReview | null | undefined): r is RunReview {
   return !!r && r.notes.some((n) => n.kind !== 'helped');
 }
@@ -90,7 +90,7 @@ export interface WaitLog {
   /** Hợp âm / hai tay: tay bị thiếu nốt ở lần đàn đầu (micro kiểm hợp âm) */
   missingHands?: Hand[];
   /**
-   * Ai cho qua nốt: micro / chạm phím ảo / bố mẹ bấm "tiếp" / (+ 2026-10-15) 'skip' = bé đàn vội, micro lỡ nốt này
+   * Ai cho qua nốt: micro / chạm phím ảo / bé chạm "Đi tiếp" / (+ 2026-10-15) 'skip' = bé đàn vội, micro lỡ nốt này
    * và con trỏ bắt kịp (src/music/waitJudge.ts 'ahead') → "sót"
    */
   via?: 'mic' | 'tap' | 'parent' | 'skip';
@@ -316,7 +316,7 @@ export function placeLabel(r: RunReview, focus: [number, number]): string {
 /**
  * Lời nhắn chính sau một lượt. `prev` = lời nhắn của lượt TRƯỚC (cùng bài, cùng màn — chỉ trong bộ nhớ):
  * chỗ lượt trước còn lỗi mà lượt này sạch → khen "con tiến bộ thật".
- * null = lượt không có dữ liệu từng nốt (bố mẹ chấm).
+ * null = lượt không có dữ liệu từng nốt (bé tự kiểm tra).
  */
 export function teach(r: RunReview, prev: TeacherPoint | null = null): TeacherPoint | null {
   if (!reviewUsable(r)) return null;

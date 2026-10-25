@@ -10,17 +10,22 @@
  * Màu tô bằng thuộc tính SVG + <style> riêng (lớp `pz-*`) nên không phụ thuộc CSS chung.
  */
 import { P, checkBadge, noteGlyph, uid } from './art/svgKit';
+import { archD } from './art/diagramKit';
 
 export type PosturePart = 'back' | 'feet' | 'hands' | 'all' | 'sit';
 
 const SVG = 'http://www.w3.org/2000/svg';
-const OL = 'rgba(61,52,102,.38)'; // viền mảnh
+const OL = 'rgba(61,52,102,.38)'; // viền mảnh (đồ vật)
+/** (2026-10-18) Viền NHÂN VẬT (bé): mực tím than ấm */
+const INK = '#4a3268';
+/** Màu da của bé (mặt, cổ, cẳng tay, "găng" bàn tay) */
+const SKIN = { base: '#ffd5b5', dark: '#d98463', light: '#fff3ea' } as const;
 const BAD = '#e8574a';
 export const POSTURE_VIEWBOX = '84 0 280 244';
 
-/** Nét dày có viền: vẽ nét viền rộng hơn bên dưới rồi nét màu lên trên. */
+/** Nét dày có viền (tay chân của bé): vẽ nét viền mực rộng hơn bên dưới rồi nét màu lên trên. */
 const limb = (d: string, color: string, w: number) =>
-  `<path d="${d}" fill="none" stroke="${OL}" stroke-width="${w + 2.6}" stroke-linecap="round" stroke-linejoin="round"/>` +
+  `<path d="${d}" fill="none" stroke="${INK}" stroke-width="${w + 3.4}" stroke-linecap="round" stroke-linejoin="round"/>` +
   `<path d="${d}" fill="none" stroke="${color}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`;
 
 /** Viền phát sáng xanh quanh bộ phận đang nhắc. */
@@ -49,6 +54,10 @@ export function postureMarkup(focus: PosturePart, opts: PostureOpts = {}): strin
   const wood = uid('pz-wood');
   const shirt = uid('pz-shirt');
   const wall = uid('pz-wall');
+  const bubble = uid('pz-bub');
+  // (2026-10-18) khung phóng to: SƠ ĐỒ "cây cầu" (không vẽ bàn tay người) — nét cầu cong cao trên ba chấm đầu ngón đứng
+  // trên phím (cùng chữ hình với thẻ "Tư thế tay", art/diagramKit.ts)
+  const bubbleArt = on('hands') ? bridgeBubble() : '';
   // Ghế 'sit' (đúng): ghế hạ 8 + gối kê; 'bad': ghế lùi xa 16 (bé phải với tay)
   const benchY = sit && !bad ? 8 : 0;
   const shiftX = bad ? -16 : 0;
@@ -92,6 +101,7 @@ export function postureMarkup(focus: PosturePart, opts: PostureOpts = {}): strin
       <linearGradient id="${shirt}" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0" stop-color="${P.violet}"/><stop offset="1" stop-color="${P.indigo}"/>
       </linearGradient>
+      <clipPath id="${bubble}"><circle cx="218" cy="38" r="29.5"/></clipPath>
       <linearGradient id="${wall}" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0" stop-color="${bad ? '#fff1ef' : sit ? '#ecfaf3' : '#f3eeff'}"/><stop offset="1" stop-color="#fff6ea"/>
       </linearGradient>
@@ -161,17 +171,17 @@ export function postureMarkup(focus: PosturePart, opts: PostureOpts = {}): strin
     </g>
 
     <!-- bé: thân (áo) -->
-    <path d="${torso}" fill="url(#${shirt})" stroke="${OL}" stroke-width="1.4"/>
+    <path d="${torso}" fill="url(#${shirt})" stroke="${INK}" stroke-width="1.7" stroke-linejoin="round"/>
     <path d="M147 132 l2.6 5.2 5.8 .8 -4.2 4 1 5.8 -5.2 -2.8 -5.2 2.8 1 -5.8 -4.2 -4 5.8 -.8 Z" fill="${P.sun}" transform="translate(6 -6)"/>
 
     <!-- bé: đầu -->
     <g${head ? ` transform="${head}"` : ''}>
-    <rect x="153" y="84" width="12" height="14" rx="5" fill="${P.skin}" stroke="${OL}" stroke-width="1.2"/>
-    <circle cx="163" cy="64" r="25" fill="${P.skin}" stroke="${OL}" stroke-width="1.4"/>
-    <path d="M187 61 q5 3 1 8" fill="${P.skin}" stroke="${OL}" stroke-width="1.4"/>
+    <rect x="153" y="84" width="12" height="14" rx="5" fill="${SKIN.base}" stroke="${INK}" stroke-width="1.5"/>
+    <circle cx="163" cy="64" r="25" fill="${SKIN.base}" stroke="${INK}" stroke-width="1.7"/>
+    <path d="M187 61 q5 3 1 8" fill="${SKIN.base}" stroke="${INK}" stroke-width="1.5"/>
     <path d="M139 70 Q133 40 160 38 Q184 37 189 56 Q178 50 168 53 Q161 47 152 53 Q147 59 148 72 Z" fill="${P.hair}"/>
     <path d="M160 39 q4 -9 12 -7 q-6 2 -6 7" fill="${P.hair}"/>
-    <circle cx="150" cy="70" r="5" fill="${P.skin}" stroke="${OL}" stroke-width="1.2"/>
+    <circle cx="150" cy="70" r="5" fill="${SKIN.base}" stroke="${INK}" stroke-width="1.4"/>
     <ellipse cx="176" cy="63" rx="3.1" ry="4" fill="${P.night}"/><circle cx="177.2" cy="61.6" r="1.1" fill="#fff"/>
     <path d="M171 54.5 q5 -3 9 0" fill="none" stroke="${P.hair}" stroke-width="2" stroke-linecap="round"/>
     <ellipse cx="174" cy="73" rx="5" ry="3.2" fill="#ff9fb6" opacity=".7"/>
@@ -180,12 +190,11 @@ export function postureMarkup(focus: PosturePart, opts: PostureOpts = {}): strin
     </g>
 
     <!-- bé: tay (vai → khuỷu → cổ tay ngang phím) -->
-    ${limb(arm, P.skin, 11)}
+    ${limb(arm, SKIN.base, 11)}
     ${limb(upper, P.violet, 16)}
-    <g stroke="${OL}" stroke-width="1.2">
-      <path d="M222 138 Q226 129 236 129 Q245 130 247 140 L246 145 Q243 141 240 141 Q236 136 230 138 Z" fill="${P.skin}"/>
-      <path d="M240 134 Q247 136 246.5 144" fill="none" stroke="${P.skinDark}" stroke-width="1.4" stroke-linecap="round"/>
-    </g>
+    <!-- (2026-10-18) bàn tay = "găng" tròn đơn giản trên phím (không vẽ ngón) -->
+    <path d="M219 140 Q219 128.5 232 128.5 Q246 128.5 247.5 139 Q248 145.5 241.5 145.5 H225 Q219 145.5 219 140 Z" fill="${SKIN.base}" stroke="${INK}" stroke-width="1.6" stroke-linejoin="round"/>
+    <ellipse cx="230" cy="133" rx="5" ry="1.8" fill="${SKIN.light}" opacity=".85"/>
 
     ${sit ? (bad ? sitBad() : sitGood()) : ''}
 
@@ -203,18 +212,28 @@ export function postureMarkup(focus: PosturePart, opts: PostureOpts = {}): strin
     ${
       on('hands')
         ? `<g class="pz-pop"><path d="M172 152 H222" stroke="${P.good}" stroke-width="3.4" stroke-dasharray="6 5" stroke-linecap="round"/>${checkBadge(198, 120)}
-        <!-- khung phóng to: bàn tay khum như ôm quả bóng -->
+        <!-- khung phóng to: sơ đồ "cây cầu" trên phím -->
         <circle cx="228" cy="96" r="2.4" fill="#fff" stroke="${P.good}" stroke-width="1.5"/>
         <circle cx="224" cy="83" r="3.4" fill="#fff" stroke="${P.good}" stroke-width="1.5"/>
         <circle cx="218" cy="38" r="31" fill="#fff" stroke="${P.good}" stroke-width="3"/>
-        <circle cx="219" cy="47" r="14" fill="${P.sun}" stroke="${OL}" stroke-width="1.2"/>
-        <path d="M207 41 Q219 35 231 42" fill="none" stroke="#fff" stroke-opacity=".8" stroke-width="2.4" stroke-linecap="round"/>
-        ${limb('M210 37 Q213 42 210.5 47', P.skin, 5.5)}
-        <path d="M190 33 Q203 25 216 23 Q233 21 240 33 Q244 42 240 55 Q237 59 233.5 55.5 Q235 45 230 39 Q224 34 215 36 Q204 39 192 47 Z" fill="${P.skin}" stroke="${OL}" stroke-width="1.3" stroke-linejoin="round"/>
-        <path d="M228 27 Q236 33 236.5 45 M222 25 Q230 30 231.5 40" fill="none" stroke="${P.skinDark}" stroke-width="1.3" stroke-linecap="round"/>
-        <ellipse cx="237" cy="55" rx="2.6" ry="1.8" fill="#fff" opacity=".7"/></g>`
+        <g clip-path="url(#${bubble})">${bubbleArt}</g>
+</g>`
         : ''
     }`;
+}
+
+/** Khung phóng to: phím (nhìn thẳng) + ba chấm đầu ngón + nét "cây cầu" cong cao, cột cầu xuống từng chấm. */
+function bridgeBubble(): string {
+  const y = 52;
+  const xs = [203, 218, 233];
+  let s = `<rect x="186" y="${y}" width="64" height="20" fill="#fff" stroke="${INK}" stroke-width="1.4"/>`;
+  for (const x of [196.5, 210.5, 225.5, 240.5]) s += `<path d="M${x} ${y} V${y + 20}" stroke="${INK}" stroke-width="1.2"/>`;
+  const a: [number, number] = [xs[0], y - 6];
+  const b: [number, number] = [xs[2], y - 6];
+  s += `<path d="M218 ${y - 6} V${y - 26}" stroke="${INK}" stroke-width="6" stroke-linecap="round"/><path d="M218 ${y - 6} V${y - 26}" stroke="${P.violet}" stroke-width="3" stroke-linecap="round"/>`;
+  s += `<path d="${archD(a, b, 24)}" fill="none" stroke="${INK}" stroke-width="8.4" stroke-linecap="round"/><path d="${archD(a, b, 24)}" fill="none" stroke="${P.violet}" stroke-width="5" stroke-linecap="round"/>`;
+  for (const x of xs) s += `<circle cx="${x}" cy="${y - 6}" r="5.4" fill="#2b7bd0" stroke="${INK}" stroke-width="1.6"/>`;
+  return s;
 }
 
 /** Các vạch đo của tư thế đúng: lưng thẳng hơi nghiêng tới · khuỷu trước người · cẳng tay ngang phím · gối · kê chân. */

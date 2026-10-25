@@ -9,21 +9,19 @@ import { HandOverlay, playDemo, type DemoEvent } from '../components/demo';
 import { backButton, button, h } from '../components/dom';
 import { mascot } from '../components/mascot';
 import { speakChip } from '../components/speakChip';
-import { techniqueArt } from '../components/techniqueArt';
 import { DRILL_PRINCIPLE, handPrinciple } from '../../lessons/handTechnique';
 import { principleFigure } from '../components/handCards';
-import { selfStudy } from '../selfStudy';
+import { selfCheck } from '../selfCheck';
 import { lazy } from '../lazy';
 import type { TechniqueAnimHandle } from '../components/techniqueAnim';
-import '../../styles/parentCorner.css';
 
-/** (+ 2026-10-15) Hoạt hình kỹ thuật TỪNG BƯỚC (chunk riêng); chưa nạp xong → tạm hiện tranh cũ (techniqueArt). */
+/** (+ 2026-10-15) Hoạt hình kỹ thuật TỪNG BƯỚC (chunk riêng); chưa nạp xong → tạm hiện emoji của bài (không vẽ bàn tay). */
 const techAnim = lazy(() => import('../components/techniqueAnim'));
 
 export interface TechniqueHooks {
   title: string;
   drills: TechniqueDrill[];
-  /** PARENT_ASSESSMENT — noteId `tech:${drill}`: 'correct' (bố mẹ xác nhận) | 'retry' (làm lại) */
+  /** PARENT_ASSESSMENT — noteId `tech:${drill}`: 'correct' (bé tự kiểm tra 👍 Rồi — by: 'self') | 'retry' (🔁 Làm lại) */
   record(noteId: string, result: ParentResult): void;
   onDone(): void;
   onBack(): void;
@@ -113,7 +111,7 @@ function fiveFingerEvents(): DemoEvent[] {
 
 /**
  * v5 — KHỞI ĐỘNG KỸ THUẬT (~1 phút): mỗi bài một hoạt hình ngắn + một câu hướng dẫn (đọc to),
- * đồng hồ nhẹ nhàng (~10–15 giây, "Làm 3 lần"), rồi bố mẹ xác nhận "Con làm đúng rồi" / "Làm lại".
+ * đồng hồ nhẹ nhàng (~10–15 giây, "Làm 3 lần"), rồi BÉ TỰ KIỂM TRA "👍 Rồi" / "🔁 Làm lại" (2026-10-25, bỏ phần phụ huynh).
  */
 export function techniqueScreen(app: App, hooks: TechniqueHooks) {
   return (root: HTMLElement) => {
@@ -223,11 +221,7 @@ export function techniqueScreen(app: App, hooks: TechniqueHooks) {
       if (ready) mount(ready);
       else {
         if (caption) art.append(caption);
-        else {
-          const a = techniqueArt(d as Exclude<TechniqueDrill, 'five-finger'>);
-          art.append(a.el);
-          stopArt = a.stop;
-        }
+        else art.append(h('div', { class: 'tq-wait', 'aria-hidden': 'true' }, info.emoji));
         techAnim.load().then(
           (m) => art.isConnected && mount(m),
           () => undefined,
@@ -248,7 +242,7 @@ export function techniqueScreen(app: App, hooks: TechniqueHooks) {
       );
       if (hooks.mini) {
         // (+ 2026-10-17, OWNER duyệt "Buổi học ≥ 60% đàn thật") MỘT màn gọn: đọc câu hướng dẫn xong là đồng hồ tự chạy (không nút
-        // "Con làm nào"); "✓ Con xong rồi" có sẵn từ đầu; hết giờ / xong → bố mẹ xác nhận ngay trên màn này.
+        // "Con làm nào"); "✓ Con xong rồi" có sẵn từ đầu; hết giờ / xong → bé tự kiểm tra ngay trên màn này.
         setBar(
           backButton(() => (i > 0 ? ((i -= 1), show()) : (halt(), hooks.onBack()))),
           button({ icon: '⏭', label: 'Để sau', onTap: () => (halt(), hooks.onDone()) }),
@@ -272,7 +266,7 @@ export function techniqueScreen(app: App, hooks: TechniqueHooks) {
         );
     }
 
-    /** Bé làm theo: đồng hồ nhẹ nhàng, chấm sáng dần "Làm 3 lần"; hết giờ (hoặc bấm Xong) → bố mẹ xác nhận. */
+    /** Bé làm theo: đồng hồ nhẹ nhàng, chấm sáng dần "Làm 3 lần"; hết giờ (hoặc bấm Xong) → bé tự kiểm tra. */
     function run(): void {
       // Hủy hẹn giờ "thầy làm mẫu" còn chờ (bấm "Con làm nào" ngay sau khi màn hiện) — tránh mẫu chạy đè đồng hồ
       token++;
@@ -314,46 +308,29 @@ export function techniqueScreen(app: App, hooks: TechniqueHooks) {
     function ask(): void {
       const d = hooks.drills[i];
       const id = `tech:${d}`;
-      // (+ 2026-10-12) 👦 Bé tự học: khởi động tay không cần bố mẹ chấm (không tính tiêu chí) → bé tự đi tiếp, không ghi
-      if (selfStudy(app)) {
-        void app.audio.chime();
-        i++;
-        if (i < hooks.drills.length) show();
-        else if (hooks.mini) (halt(), hooks.onDone());
-        else done();
-        return;
-      }
       stage.querySelector('.tq-timer')?.classList.add('done');
       anim?.setSound(false);
-      const q = h('p', { class: 'lead tq-ask' }, hooks.mini ? '👪 Bé làm đúng chưa?' : '👪 Bố mẹ: bé làm đúng chưa?');
+      // (2026-10-25, OWNER "bỏ phần phụ huynh") MỘT câu bé tự kiểm tra: "Con làm đúng chưa? 👍 Rồi / 🔁 Làm lại"
+      const sc = selfCheck({
+        question: 'Con làm đúng chưa?',
+        onOk: () => {
+          hooks.record(id, 'correct');
+          void app.audio.chime();
+          i++;
+          if (i < hooks.drills.length) show();
+          else if (hooks.mini) (halt(), hooks.onDone());
+          else done();
+        },
+        onAgain: () => {
+          hooks.record(id, 'retry');
+          show();
+        },
+      });
+      sc.ask.classList.add('tq-ask');
       stage.querySelector('.tq-ask')?.remove();
-      stage.append(q);
-      q.scrollIntoView?.({ block: 'nearest' });
-      setBar(
-        backButton(() => show()),
-        button({
-          icon: '↻',
-          label: 'Làm lại',
-          kind: 'retry',
-          onTap: () => {
-            hooks.record(id, 'retry');
-            show();
-          },
-        }),
-        button({
-          icon: '👪',
-          label: 'Con làm đúng rồi',
-          kind: 'good',
-          onTap: () => {
-            hooks.record(id, 'correct');
-            void app.audio.chime();
-            i++;
-            if (i < hooks.drills.length) show();
-            else if (hooks.mini) (halt(), hooks.onDone());
-            else done();
-          },
-        }),
-      );
+      stage.append(sc.ask);
+      sc.ask.scrollIntoView?.({ block: 'nearest' });
+      setBar(backButton(() => show()), sc.again, sc.ok);
     }
 
     function done(): void {

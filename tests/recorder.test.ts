@@ -328,3 +328,44 @@ describe('recorder — Album (+ 2026-10-08)', () => {
     clip.dispose();
   });
 });
+
+describe('recorder — 🎙️ Máy ghi âm (+ 2026-10-25)', () => {
+  it('maxSeconds: ghi tới 3 phút (không bị cắt ở 90 s), quá thì tự dừng', async () => {
+    const { mic, deps, advance } = setup();
+    const rec = takeRecorder(mic, deps, { maxSeconds: 180 })!;
+    rec.start();
+    advance(MAX_TAKE_SECONDS * 1000 + 10);
+    expect(FakeRecorder.instances[0].state).toBe('recording');
+    advance((180 - MAX_TAKE_SECONDS) * 1000);
+    expect(FakeRecorder.instances[0].state).toBe('inactive');
+    const clip = await rec.stop();
+    expect(clip!.seconds).toBe(180);
+  });
+
+  it('phát chậm (0,75×) + phát liên tục qua AudioContext', async () => {
+    const f = fakeCtx(0.1);
+    const { mic } = setup({ ctx: f.ctx });
+    const orig = f.ctx.createBufferSource;
+    f.ctx.createBufferSource = () => Object.assign(orig(), { playbackRate: { value: 1 }, loop: false });
+    const clip = clipFromBlob(new Blob([new Uint8Array([1, 2])], { type: 'audio/mp4' }), 12, mic.engine, { MediaRecorder: undefined });
+    const p = clip.play({ rate: 0.75, loop: true });
+    await vi.waitFor(() => expect(f.sources).toHaveLength(1));
+    const s = f.sources[0] as unknown as { playbackRate: { value: number }; loop: boolean };
+    expect(s.playbackRate.value).toBe(0.75);
+    expect(s.loop).toBe(true);
+    clip.stopPlayback();
+    await p;
+  });
+
+  it('thẻ <audio> (không giải mã được): playbackRate + loop', async () => {
+    const { mic, deps, audios } = setup();
+    const clip = clipFromBlob(new Blob([new Uint8Array([1, 2])], { type: 'audio/mp4' }), 5, mic.engine, deps);
+    const p = clip.play({ rate: 0.75, loop: true });
+    await vi.waitFor(() => expect(audios).toHaveLength(1));
+    const a = audios[0] as unknown as { playbackRate?: number; loop?: boolean };
+    expect(a.playbackRate).toBe(0.75);
+    expect(a.loop).toBe(true);
+    clip.stopPlayback();
+    await p;
+  });
+});

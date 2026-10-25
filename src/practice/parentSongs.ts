@@ -44,7 +44,7 @@ export function buildParentSong(
   );
   const song: ParentSong = {
     id: o.id,
-    title: o.title.trim().slice(0, 60) || 'Bài bố mẹ thêm',
+    title: o.title.trim().slice(0, 60) || 'Bài của nhà mình',
     createdAt: o.createdAt,
     timeSignature: o.timeSignature,
     bpm: o.bpm,
@@ -67,7 +67,7 @@ export function parentSongToTune(c: ParentSong): Tune {
     id: `${PARENT_PREFIX}${c.id}`,
     title: c.title,
     titleVi: c.title,
-    composer: 'Bố mẹ thêm',
+    composer: 'Bài của nhà mình',
     hand,
     bpm: c.bpm,
     timeSignature: c.timeSignature,
@@ -115,7 +115,7 @@ export function addTapNote(notes: readonly SolfegeNote[], note: SolfegeNote, bea
 export function customTuneTitle(id: string, data: Readonly<Pick<AppData, 'parentSongs' | 'compositions'>>): string | undefined {
   if (id.startsWith(PARENT_PREFIX)) {
     const t = data.parentSongs?.find((c) => c.id === id.slice(PARENT_PREFIX.length))?.title;
-    return t ? `📝 ${t}` : '📝 Bài bố mẹ thêm (đã xóa)';
+    return t ? `📝 ${t}` : '📝 Bài của nhà mình (đã xóa)';
   }
   if (id.startsWith('comp-')) return data.compositions?.find((c) => c.id === id.slice(5))?.title;
   return undefined;

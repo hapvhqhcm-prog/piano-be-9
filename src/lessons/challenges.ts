@@ -25,7 +25,7 @@ export type ChallengeId =
   | 'vn'
   | 'ear'
   | 'record'
-  // (+ 2026-10-08) 6 thử thách "ngoài đời" — bố mẹ xác nhận (xem SELF_CHALLENGES)
+  // (+ 2026-10-08) 6 thử thách "ngoài đời" — bé tự báo "Con đã làm" (xem SELF_CHALLENGES)
   | 'audience'
   | 'compose'
   | 'findC'
@@ -42,7 +42,7 @@ export type ChallengeAction =
   | { kind: 'games' }
   /** (+ 2026-10-08) 🎹 Đàn tự do */
   | { kind: 'freeplay' }
-  /** (+ 2026-10-08) Làm trên đàn thật, không cần mở màn nào — chỉ có nút bố mẹ xác nhận */
+  /** (+ 2026-10-08) Làm trên đàn thật, không cần mở màn nào — chỉ có nút bé tự báo "Con đã làm" */
   | { kind: 'none' };
 
 export interface WeeklyChallenge {
@@ -68,7 +68,7 @@ export interface WeeklyChallenge {
   text: string;
   done: boolean;
   action: ChallengeAction;
-  /** (+ 2026-10-08) Thử thách "ngoài đời": hoàn thành khi bố mẹ bấm xác nhận (ProgressStore.confirmChallenge) */
+  /** (+ 2026-10-08) Thử thách "ngoài đời": hoàn thành khi bé tự báo "Con đã làm" (ProgressStore.confirmChallenge) */
   selfReport: boolean;
 }
 
@@ -96,7 +96,7 @@ export const CHALLENGE_ORDER: readonly ChallengeId[] = [
  */
 export const NEW_CHALLENGES_FROM = '2026-10-12';
 
-/** (+ 2026-10-08) Thử thách bé làm trên đàn thật / với gia đình — app không tự chấm được, bố mẹ bấm xác nhận. */
+/** (+ 2026-10-08) Thử thách bé làm trên đàn thật / với gia đình — app không tự chấm được, bé tự báo "Con đã làm" (2026-10-25, bỏ phần phụ huynh). */
 export const SELF_CHALLENGES: ReadonlySet<ChallengeId> = new Set(['audience', 'compose', 'findC', 'softSong', 'singPlay', 'teach']);
 
 export const CHALLENGE_INFO: Readonly<Record<ChallengeId, { icon: string; title: string }>> = {
@@ -112,7 +112,7 @@ export const CHALLENGE_INFO: Readonly<Record<ChallengeId, { icon: string; title:
   findC: { icon: '🙈', title: 'Nhắm mắt tìm Đô' },
   softSong: { icon: '🤫', title: 'Đàn thật nhỏ cả bài' },
   singPlay: { icon: '🎤', title: 'Hát rồi đàn' },
-  teach: { icon: '🧑‍🏫', title: 'Dạy bố mẹ 1 bài' },
+  teach: { icon: '🧑‍🏫', title: 'Làm thầy 1 bài' },
 };
 
 /** Thang tốc độ của màn bài hát (songShared.TEMPOS) — chép lại để module thuần không phụ thuộc UI. */
@@ -329,7 +329,7 @@ const homeland = (songId: string) => {
 
 type Run = SongRun;
 const wholeTogether = (r: Run) => !r.phrase && !r.hand && r.passed;
-/** Lượt trọn bài không sai nốt: micro đúng hết mọi nốt, hoặc phiếu 3 ý của bố mẹ đều ✓. */
+/** Lượt trọn bài không sai nốt: micro đúng hết mọi nốt, hoặc bé tự kiểm tra (3 ý) đều ✓. */
 export const perfectRun = (r: Run): boolean =>
   wholeTogether(r) &&
   (r.source === 'mic' ? r.total > 0 && r.hits >= r.total : !!r.checklist && r.checklist.notes && r.checklist.beat && r.checklist.fingers);
@@ -373,14 +373,14 @@ function measure(data: Readonly<AppData>, monday: string, pick: Pick): { have: n
       return { have: beat ? 1 : 0, need: 1 };
     }
     case 'compose': {
-      // Bé lưu một bài sáng tác trong tuần (trò Sáng tác) → tự xong; không thì bố mẹ xác nhận
+      // Bé lưu một bài sáng tác trong tuần (trò Sáng tác) → tự xong; không thì bé tự báo "Con đã làm"
       const t0 = dayStartMs(monday);
       const t1 = dayStartMs(sunday) + 86_400_000;
       const made = (data.compositions ?? []).some((c) => c.createdAt >= t0 && c.createdAt < t1);
       return { have: made ? 1 : 0, need: 1 };
     }
     default:
-      // Thử thách "ngoài đời": chỉ xong khi bố mẹ xác nhận (progress.challenges — challengeOfWeek đọc bản đã lưu)
+      // Thử thách "ngoài đời": chỉ xong khi bé tự báo "Con đã làm" (progress.challenges — challengeOfWeek đọc bản đã lưu)
       return { have: 0, need: 1 };
   }
 }
@@ -393,13 +393,13 @@ const SELF_TEXT: Record<'audience' | 'compose' | 'findC' | 'softSong' | 'singPla
     action: { kind: 'library' },
   },
   compose: {
-    desc: 'Tự nghĩ một câu nhạc ngắn và đàn cho bố mẹ nghe',
-    howTo: 'Dùng 5 nốt Đô Rê Mi Fa Sol, nghĩ một câu nhạc 4 ô nhịp (kết thúc ở nốt Đô nghe sẽ "xong"). Đặt tên cho câu nhạc rồi đàn cho bố mẹ nghe.',
+    desc: 'Tự nghĩ một câu nhạc ngắn và đàn thật hay',
+    howTo: 'Dùng 5 nốt Đô Rê Mi Fa Sol, nghĩ một câu nhạc 4 ô nhịp (kết thúc ở nốt Đô nghe sẽ "xong"). Đặt tên cho câu nhạc rồi đàn cho cả nhà (hoặc Bé Nốt) nghe nhé.',
     action: { kind: 'freeplay' },
   },
   findC: {
     desc: 'Nhắm mắt, dùng tay tìm nốt Đô trên đàn thật',
-    howTo: 'Nhắm mắt, sờ nhóm 2 phím đen — phím trắng ngay bên trái nhóm đó là Đô! Bố mẹ đố con tìm Đô 3 lần ở 3 chỗ khác nhau.',
+    howTo: 'Nhắm mắt, sờ nhóm 2 phím đen — phím trắng ngay bên trái nhóm đó là Đô! Con tự đố mình tìm Đô 3 lần ở 3 chỗ khác nhau.',
     action: { kind: 'none' },
   },
   softSong: {
@@ -413,8 +413,8 @@ const SELF_TEXT: Record<'audience' | 'compose' | 'findC' | 'softSong' | 'singPla
     action: { kind: 'library' },
   },
   teach: {
-    desc: 'Làm thầy: dạy bố hoặc mẹ đàn một bài',
-    howTo: 'Con chỉ cho bố mẹ ngồi đúng, đặt tay đúng ngón và đàn một bài con đã thuộc (hoặc một câu). Bố mẹ đàn được là con dạy giỏi!',
+    desc: 'Làm thầy: giảng lại cách đàn một bài',
+    howTo: 'Con giả làm thầy: giảng to cho Bé Nốt (hoặc anh chị em, bạn bè) cách ngồi đúng, đặt tay đúng ngón rồi đàn mẫu một bài con đã thuộc (hoặc một câu).',
     action: { kind: 'library' },
   },
 };
@@ -441,7 +441,7 @@ function describe(pick: Pick): { desc: string; howTo: string; action: ChallengeA
     case 'perfect':
       return {
         desc: 'Chơi trọn một bài đã thuộc mà không sai nốt nào',
-        howTo: 'Chọn một bài con đã thuộc. Micro nghe đúng hết các nốt — hoặc bố mẹ tích đủ 3 ý ✓ (đúng nốt, đều nhịp, đúng ngón).',
+        howTo: 'Chọn một bài con đã thuộc. Micro nghe đúng hết các nốt — hoặc con tự kiểm tra đủ 3 ý ✓ (đúng nốt, đều nhịp, đúng ngón).',
         action: { kind: 'library' },
         unit: 'lần',
       };
@@ -524,7 +524,7 @@ function challengeOfWeek(data: Readonly<AppData>, monday: string): WeeklyChallen
 }
 
 /**
- * (+ 2026-10-08) Bố mẹ xác nhận bé đã làm thử thách "ngoài đời" của tuần chứa `today` (SỬA TẠI CHỖ — chỉ thêm).
+ * (+ 2026-10-08) Bé tự báo đã làm thử thách "ngoài đời" của tuần chứa `today` (SỬA TẠI CHỖ — chỉ thêm).
  * Chỉ ghi khi thử thách của tuần đúng là `id` và chưa xong. Trả về true nếu có đổi.
  */
 export function confirmSelfChallenge(data: AppData, today: string, id: string, now: number): boolean {

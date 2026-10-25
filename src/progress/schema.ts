@@ -34,6 +34,11 @@ export interface ParentAssessment {
   note: string; // vd "C4", hoặc "C#4+D#4", "finger-1", "posture-back"
   result: ParentResult;
   ts: number;
+  /**
+   * (+ 2026-10-25, OWNER "bỏ phần phụ huynh") 'self' = BÉ TỰ KIỂM TRA ("👍 Rồi / 🔁 Làm lại") — mọi kết quả mới đều là của
+   * bé (app không còn bước bố mẹ chấm). Không có = bản ghi cũ (bố mẹ chấm). Tiêu chí tuần đọc như nhau.
+   */
+  by?: 'self';
 }
 
 export interface AppAssessment {
@@ -62,7 +67,8 @@ export interface MicAssessment {
 
 /**
  * (+) Một lượt chơi bài hát/bài tập theo nhịp hoặc chế độ chờ.
- * source 'mic' = micro chấm từng nốt; 'parent' = bố mẹ đánh giá cả lượt.
+ * source 'mic' = micro chấm từng nốt; 'parent' = đánh giá cả lượt KHÔNG qua micro — (2026-10-25, bỏ phần phụ huynh) giờ
+ * là bé tự kiểm tra (`by: 'self'`); không có `by` = bản ghi cũ do bố mẹ chấm.
  */
 export interface SongRun {
   songId: string;
@@ -92,6 +98,8 @@ export interface SongRun {
    */
   hands?: { RH: { hits: number; total: number }; LH: { hits: number; total: number } };
   source: 'mic' | 'parent';
+  /** (+ 2026-10-25) 'self' = bé tự kiểm tra (source 'parent' mới) — xem ParentAssessment.by */
+  by?: 'self';
   passed: boolean;
   ts: number;
 }
@@ -135,7 +143,7 @@ export interface Settings {
   autoAdvanceDelaySec: number; // 2–10
   leftHandEnabled: boolean; // Phase 3
   dailyLimit: DailyLimit; // Phase 3 — mặc định "none"
-  micEnabled: boolean; // (+) mặc định TẮT — phụ huynh bật sau khi "Thử micro"
+  micEnabled: boolean; // (+) (2026-10-25) mặc định BẬT cho người dùng mới (bé tự cho phép micro); tắt được trong ⚙️ Cài đặt
   micTuningCents: number; // (+) bù độ lệch dây đàn nhà, -100..100
   micAutoNext: boolean; // (+) micro nghe đúng → tự sang nốt sau ~1 giây
   micSensitivity: 'low' | 'normal' | 'high'; // (+) độ nhạy micro (phòng ồn → thấp; đàn nhỏ/micro xa → cao)
@@ -191,9 +199,11 @@ export interface Settings {
    * (+ 2026-10-12, OWNER duyệt "Bé tự học, bố mẹ đỡ vất") Cách học HÔM NAY bé/bố mẹ chọn ở màn chính: 'self' = 👦 Con tự học
    * (việc cần bố mẹ được HOÃN vào hàng "🕑 Chờ bố mẹ xem"), 'parent' = 👪 Có bố mẹ ngồi cùng. Chỉ có hiệu lực đúng `date`
    * (YYYY-MM-DD) — hôm sau về `studyDefault`. Không có = chưa chọn.
+   * (2026-10-25, OWNER "bỏ phần phụ huynh") KHÔNG CÒN DÙNG — app luôn là bé tự học (micro + bé tự kiểm tra). Giữ kiểu để đọc
+   * được dữ liệu / bản sao lưu cũ; app không đọc / ghi nữa.
    */
   studyMode?: { mode: StudyMode; date: string };
-  /** (+ 2026-10-12) Cách học mặc định khi chưa chọn hôm nay (màn Phụ huynh). Không có = 'parent' (như trước). */
+  /** (+ 2026-10-12) Cách học mặc định — (2026-10-25) KHÔNG CÒN DÙNG (xem studyMode). */
   studyDefault?: StudyMode;
   /**
    * (+ 2026-10-15, OWNER duyệt) Lúc luật "thuộc bài = 2 ngày" bắt đầu có hiệu lực trên iPad này (ms) — lượt trước mốc giữ
@@ -238,6 +248,8 @@ export interface Settings {
    * khỏe app" gần nhất. Đọc MỀM (readOps). Không có = chưa ghi gì.
    */
   ops?: import('../pwa/opsState').OpsState;
+  /** (+ 2026-10-25) Bé bấm "Để sau" ở lời mời 🧭 kiểm tra xếp lớp (ngày) — không mời lại (vẫn làm được trong 📋 Xem các bài). */
+  placementDismissed?: string;
 }
 
 /** (+ 2026-10-12) 👦 Con tự học / 👪 Có bố mẹ ngồi cùng */
@@ -263,6 +275,36 @@ export interface Progress {
   challenges?: Record<string, ChallengeRecord>;
   /** (+ 2026-10-07) Mốc kỷ lục trò chơi đầu tuần lịch (thử thách "Phá kỷ lục") — chụp một lần mỗi tuần. */
   gameBase?: GameBase;
+  /**
+   * (+ 2026-10-25, OWNER duyệt "Bé thấy dễ quá") Tuần ĐƯỢC CHO QUA bằng bản ghi tường minh (lessons/weekSkips.ts): tuần (chuỗi
+   * số) → bản ghi. 'testedOut' = ⚡ Thi vượt tuần đạt (lessons/testOut.ts); 'placedOut' = 🧭 Kiểm tra xếp lớp nhảy qua
+   * (lessons/placement.ts). Tuần có bản ghi = ĐÃ QUA cho tiến độ (weekPassed / weekComplete). Chỉ THÊM, không bao giờ xóa;
+   * gộp lịch sử không đụng tới. Không có = chưa tuần nào. Không đổi schemaVersion (trường tùy chọn).
+   */
+  skips?: Record<string, WeekSkip>;
+  /** (+ 2026-10-25) ⚡ Thi vượt tuần CHƯA đạt gần nhất: tuần → ngày (YYYY-MM-DD) — chờ 1 ngày mới thi lại tuần đó. */
+  skipTries?: Record<string, string>;
+  /** (+ 2026-10-25) 🧭 Lần kiểm tra xếp lớp gần nhất (có nhảy tuần hay không). Không có = chưa làm. */
+  placement?: PlacementRecord;
+}
+
+/** (+ 2026-10-25) Một tuần được cho qua (progress.skips). */
+export interface WeekSkip {
+  kind: 'testedOut' | 'placedOut';
+  /** Lúc ghi (ms) */
+  at: number;
+  /** Ngày ghi (YYYY-MM-DD) */
+  date: string;
+}
+
+/** (+ 2026-10-25) Kết quả kiểm tra xếp lớp (progress.placement). */
+export interface PlacementRecord {
+  date: string;
+  at: number;
+  /** Tuần lúc bắt đầu kiểm tra */
+  from: number;
+  /** Tuần sau kiểm tra (= from khi không nhảy) */
+  to: number;
 }
 
 /** (+ 2026-10-07) Một tuần đã hoàn thành thử thách (progress.challenges). */
@@ -554,7 +596,9 @@ export function defaultSettings(): Settings {
     autoAdvanceDelaySec: 4,
     leftHandEnabled: false,
     dailyLimit: 'none',
-    micEnabled: false,
+    // (2026-10-25, OWNER "bỏ phần phụ huynh") người dùng MỚI: micro BẬT sẵn — micro chấm thay bố mẹ (iPad hỏi quyền micro
+    // một lần, bé tự chạm "Cho phép"). Dữ liệu cũ giữ nguyên lựa chọn đã lưu; tắt được trong ⚙️ Cài đặt.
+    micEnabled: true,
     micTuningCents: 0,
     micAutoNext: true,
     micSensitivity: 'normal',
@@ -647,6 +691,10 @@ export function validateAppData(x: unknown): string[] {
     // (+ 2026-10-07) Thử thách tuần — chỉ cần đúng kiểu object; bản ghi hỏng bên trong bị bỏ qua khi đọc (challenges.ts)
     if (p.challenges !== undefined && !isObj(p.challenges)) errs.push('progress.challenges');
     if (p.gameBase !== undefined && !isObj(p.gameBase)) errs.push('progress.gameBase');
+    // (+ 2026-10-25) tuần được cho qua / thi vượt tuần / xếp lớp — chỉ chặn kiểu sai hẳn; bản ghi hỏng bên trong bị bỏ qua khi đọc
+    if (p.skips !== undefined && !isObj(p.skips)) errs.push('progress.skips');
+    if (p.skipTries !== undefined && !isObj(p.skipTries)) errs.push('progress.skipTries');
+    if (p.placement !== undefined && !isObj(p.placement)) errs.push('progress.placement');
   }
   if (!Array.isArray(x.sessions)) errs.push('Thiếu sessions');
   else {

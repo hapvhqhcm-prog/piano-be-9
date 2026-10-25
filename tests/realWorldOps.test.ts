@@ -274,11 +274,18 @@ describe('Nhập JSON (iPad mới): đặt lại số đo micro, mời Cài micr
     expect(clearMicSetupNeeded(d.settings)).toEqual({ os: 'iPadOS 18.0' });
   });
 
-  it('dữ liệu mặc định (micro tắt) → không đổi gì', () => {
+  it('dữ liệu mặc định nhưng micro tắt → không đổi gì', () => {
     const d = defaultData();
+    d.settings.micEnabled = false;
     const before = JSON.stringify(d);
     expect(resetDeviceSpecific(d, 1)).toEqual({ micReset: false, needsMicSetup: false });
     expect(JSON.stringify(d)).toBe(before);
+  });
+
+  it('(2026-10-25) dữ liệu mặc định MỚI (micro bật sẵn) → không có số đo nào để đặt lại, chỉ nhắc cài lại micro', () => {
+    const d = defaultData();
+    expect(resetDeviceSpecific(d, 1)).toEqual({ micReset: false, needsMicSetup: true });
+    expect(d.settings.ops).toEqual({ micSetupNeededAt: 1 });
   });
 
   it('importJSON: đặt lại + lastImportNeedsMicSetup; báo lại cho giao diện', () => {
@@ -331,7 +338,8 @@ describe('👤 Khách chơi: không lưu gì, thoát trả lại nguyên vẹn',
     expect(st.recordGame('ear', 99)).toEqual({ best: 5, prevBest: 5, record: false });
     st.markLessonCompleted('w1-l2');
     st.addComposition({ id: 'c1', title: 'x', notes: [], createdAt: 1 } as never);
-    expect(st.deferReview({ kind: 'song', group: 'g', label: 'x' } as never)).toBe('');
+    // (2026-10-25) không còn hàng chờ bố mẹ xem
+    expect((st as unknown as { deferReview?: unknown }).deferReview).toBeUndefined();
     expect(st.takeDroppedReviews()).toEqual([]);
     st.updateSettings({ micSensitivity: 'high' });
     st.recordChallenges();

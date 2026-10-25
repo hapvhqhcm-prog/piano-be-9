@@ -158,7 +158,7 @@ describe('📖 Hướng dẫn nhanh cho bố mẹ', () => {
     .map((f) => read(`ui/screens/${f}`))
     .join('\n');
 
-  it('đủ 10 mục theo yêu cầu, mỗi mục ≤ 4 dòng ngắn + nút Mở ngay', () => {
+  it('đủ 9 mục (2026-10-25: bỏ "Mẹo khi bé chán" — app không cần bố mẹ ngồi cùng), mỗi mục ≤ 4 dòng ngắn + nút Mở ngay', () => {
     expect(GUIDE_SECTIONS.map((s) => s.title)).toEqual([
       'Bắt đầu một buổi học',
       'Cài micro + Đo micro & gửi báo cáo',
@@ -169,7 +169,6 @@ describe('📖 Hướng dẫn nhanh cho bố mẹ', () => {
       'Đặt giờ tập',
       'Đổi tuần / giữ tuần',
       'Thêm bài con thích',
-      'Mẹo khi bé chán / khó',
     ]);
     const ids = new Set<string>();
     for (const s of GUIDE_SECTIONS) {
@@ -202,7 +201,8 @@ describe('📖 Hướng dẫn nhanh cho bố mẹ', () => {
 
   it('nút 📖 Hướng dẫn mở màn Hướng dẫn mới (nạp muộn), không còn mở thẳng 4 thẻ lần đầu', () => {
     const parent = read('ui/screens/parent.ts');
-    expect(parent).toMatch(/guideButton\(openGuide, guideHint\)/);
+    // (2026-10-25, bỏ phần phụ huynh) không còn làm nổi nút Hướng dẫn ("Mới") — chỉ mở khi người lớn muốn
+    expect(parent).toMatch(/guideButton\(openGuide, false\)/);
     expect(parent).not.toMatch(/onboardingScreen\(/);
     expect(read('ui/screens/parentHelp.ts')).toMatch(/lazy\(\(\) => import\('\.\/parentGuide'\)\)/);
   });

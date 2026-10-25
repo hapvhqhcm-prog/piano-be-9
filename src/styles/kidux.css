@@ -676,43 +676,6 @@ button.bonus-card {
   line-height: 1.3;
 }
 
-/* ---------- (+ 2026-10-09) Nhắc sao lưu: viên nhỏ trên thanh trên cùng (src/ui/components/parentPill.ts) ---------- */
-.backup-nudge {
-  display: flex;
-  align-items: center;
-  min-height: 48px;
-  border-radius: var(--r-pill);
-  background: var(--sun-50);
-  box-shadow: inset 0 0 0 2px var(--sun-300);
-  color: var(--sun-800);
-  font-family: var(--font-display);
-  font-size: 18px;
-  font-weight: 800;
-  line-height: 1.1;
-}
-.backup-nudge button {
-  appearance: none;
-  background: none;
-  border: 0;
-  font: inherit;
-  color: inherit;
-  cursor: pointer;
-  min-height: 48px;
-  touch-action: manipulation;
-}
-.backup-nudge-open {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0 4px 0 14px;
-  white-space: nowrap;
-}
-.backup-nudge-hide {
-  min-width: 44px;
-  padding: 0 12px 0 6px;
-  opacity: 0.7;
-}
-
 /* (+ 2026-10-09) "Học tiếp: 🥁 Mức 2: Mỗi phách một nốt" xuống dòng cân đối (không để một chữ mồ côi ở dòng 2) */
 .quest-card .btn-big .btn-label {
   text-wrap: balance;
@@ -726,18 +689,37 @@ button.bonus-card {
   margin: 4px 0 8px;
 }
 
-/* (+ 2026-10-17) ⚠️ trên nút Phụ huynh khi có điều cần bố mẹ chú ý (healthFlags) */
-.parent-btn.attn {
-  padding-right: 44px;
-  border-color: var(--sun-300);
+/* ---------- (+ 2026-10-25) Đàn tự do: thanh trên có nút đỏ "⏺ Ghi âm" → 🎙️ Máy ghi âm ---------- */
+.fp-top {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 20px 0;
 }
-.parent-attn {
-  position: absolute;
-  top: 50%;
-  right: 12px;
-  transform: translateY(-50%);
-  font-size: 20px;
-  line-height: 1;
-  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.25));
-  pointer-events: none;
+.fp-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 28px;
+  line-height: 1.1;
+  color: var(--ink);
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+.fp-rec.btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  --btn-bg: #e53935;
+  --btn-edge: #a31f1c;
+  --btn-ink: #fff;
+  --btn-glow: rgba(229, 57, 53, 0.35);
+  min-height: 60px;
+  padding: 6px 22px;
+  font-size: 22px;
+  border-radius: var(--r-pill);
+}
+.fp-top .timbre-row {
+  flex: 1 1 auto;
+  min-width: 0;
 }

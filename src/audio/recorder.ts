@@ -25,11 +25,18 @@ import type { AudioEngine } from './AudioEngine';
 export interface TakeClip {
   /** Thời lượng (giây) */
   seconds: number;
-  play(): Promise<void>;
+  /** (+ 2026-10-25 Máy ghi âm) opts: rate = tốc độ phát (0.75 = "phát chậm"), loop = phát lại liên tục (tới khi stopPlayback). */
+  play(opts?: PlayOpts): Promise<void>;
   stopPlayback(): void;
   dispose(): void;
   /** (+ Album) Dữ liệu đã ghi (đúng định dạng MediaRecorder — iPad: audio/mp4). null sau dispose(). */
   blob?(): Blob | null;
+}
+
+/** (+ 2026-10-25) Tùy chọn phát lại cho 🎙️ Máy ghi âm. */
+export interface PlayOpts {
+  rate?: number;
+  loop?: boolean;
 }
 
 export interface TakeRecorder {
@@ -68,6 +75,8 @@ export interface RecorderCtor {
 /** Phần thẻ <audio> dùng khi không giải mã được. */
 export interface AudioElementLike {
   onended: (() => void) | null;
+  playbackRate?: number;
+  loop?: boolean;
   play(): Promise<void> | void;
   pause(): void;
 }
@@ -159,7 +168,7 @@ class Clip implements TakeClip {
     private readonly deps: Required<RecorderDeps>,
   ) {}
 
-  async play(): Promise<void> {
+  async play(opts: PlayOpts = {}): Promise<void> {
     this.stopPlayback();
     if (this.disposed || !this.data) return;
     const ctx = this.engine?.context ?? null;
@@ -172,15 +181,17 @@ class Clip implements TakeClip {
         }
       }
       if (this.disposed) return;
-      if (this.buffer) return this.playBuffer(ctx, this.buffer);
+      if (this.buffer) return this.playBuffer(ctx, this.buffer, opts);
     }
-    return this.playElement();
+    return this.playElement(opts);
   }
 
-  private playBuffer(ctx: AudioContext, buf: AudioBuffer): Promise<void> {
+  private playBuffer(ctx: AudioContext, buf: AudioBuffer, opts: PlayOpts = {}): Promise<void> {
     if (ctx.state !== 'running') void ctx.resume?.().catch(() => undefined);
     const src = ctx.createBufferSource();
     src.buffer = buf;
+    if (opts.rate && opts.rate > 0 && opts.rate !== 1 && src.playbackRate) src.playbackRate.value = opts.rate;
+    if (opts.loop) src.loop = true;
     const gain = ctx.createGain();
     gain.gain.value = playbackGain(peakOf(buf));
     src.connect(gain);
@@ -218,10 +229,12 @@ class Clip implements TakeClip {
     });
   }
 
-  private playElement(): Promise<void> {
+  private playElement(opts: PlayOpts = {}): Promise<void> {
     if (!this.data) return Promise.resolve();
     if (!this.url) this.url = this.deps.createObjectURL(this.data);
     const el = this.deps.createAudio(this.url);
+    if (opts.rate && opts.rate > 0 && opts.rate !== 1) el.playbackRate = opts.rate;
+    if (opts.loop) el.loop = true;
     return new Promise<void>((resolve) => {
       let release: () => void = () => undefined;
       const finish = () => {
@@ -282,6 +295,7 @@ class Recorder implements TakeRecorder {
     private readonly mic: RecorderMic,
     private readonly deps: Required<RecorderDeps>,
     private readonly mime: string | undefined,
+    private readonly maxSeconds: number = MAX_TAKE_SECONDS,
   ) {}
 
   start(): void {
@@ -318,13 +332,13 @@ class Recorder implements TakeRecorder {
     this.stoppedAt = 0;
     this.result = done.then(() => {
       if (this.discard) return null;
-      const seconds = Math.min(MAX_TAKE_SECONDS, ((this.stoppedAt || this.deps.now()) - this.startedAt) / 1000);
+      const seconds = Math.min(this.maxSeconds, ((this.stoppedAt || this.deps.now()) - this.startedAt) / 1000);
       if (!chunks.length || seconds < MIN_TAKE_SECONDS) return null;
       const type = rec.mimeType || this.mime || chunks[0].type || 'audio/mp4';
       return new Clip(new Blob(chunks, { type }), Math.round(seconds * 10) / 10, this.mic.engine ?? null, this.deps);
     });
     // Quá giới hạn → tự dừng; stop() sau đó vẫn lấy được bản ghi
-    this.capTimer = this.deps.setTimeout(() => this.halt(), MAX_TAKE_SECONDS * 1000);
+    this.capTimer = this.deps.setTimeout(() => this.halt(), this.maxSeconds * 1000);
   }
 
   /** Dừng MediaRecorder (nếu đang ghi). */
@@ -379,11 +393,17 @@ class Recorder implements TakeRecorder {
  * Tạo bộ ghi "Nghe lại con đàn" cho micro đang bật. null = không ghi được (trình duyệt không có MediaRecorder,
  * hoặc micro chưa bật) → giao diện ẩn nút Nghe lại.
  */
-export function takeRecorder(mic: RecorderMic | null | undefined, deps: RecorderDeps = {}): TakeRecorder | null {
+export function takeRecorder(
+  mic: RecorderMic | null | undefined,
+  deps: RecorderDeps = {},
+  /** (+ 2026-10-25) 🎙️ Máy ghi âm ghi tối đa 3 phút (mặc định MAX_TAKE_SECONDS cho "Nghe lại con đàn") */
+  opts: { maxSeconds?: number } = {},
+): TakeRecorder | null {
   if (!mic?.mediaStream) return null;
   const d = defaults(deps);
   if (!d) return null;
-  return new Recorder(mic, d, pickMimeType(d.MediaRecorder));
+  const max = opts.maxSeconds && opts.maxSeconds > 0 ? opts.maxSeconds : MAX_TAKE_SECONDS;
+  return new Recorder(mic, d, pickMimeType(d.MediaRecorder), max);
 }
 
 /**

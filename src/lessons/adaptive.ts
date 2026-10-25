@@ -31,9 +31,14 @@ export const GENTLE_BELOW = 0.65;
 export const GENTLE_KIND_STOPS = 2;
 /** Còn bài tập về nhà chưa xong + chỉ số dưới ngưỡng này (hoặc có 1 lần dừng nhẹ nhàng) → nhẹ tay. */
 export const GENTLE_HOMEWORK_BELOW = 0.75;
-/** Trên ngưỡng này ở STRETCH_SESSIONS buổi gần nhất, không lượt nào chưa đạt → thêm thử thách nhỏ. */
+/**
+ * Trên ngưỡng này ở STRETCH_SESSIONS buổi gần nhất, không lượt nào chưa đạt → thêm thử thách nhỏ.
+ * (+ 2026-10-25, OWNER duyệt — bé: "Dạy piano quá dễ") 3 → 2 buổi; bật được ngay khi mới có 2 buổi có dữ liệu (chế độ nhẹ tay
+ * vẫn cần DIFFICULTY_MIN_SESSIONS buổi). Thử thách nay nằm TRONG buổi (sessionPlan: bài quen mở đúng tốc độ bài, xem trước bài
+ * hai tay tuần sau, một bài Thư viện cao hơn một bậc, bỏ bước ôn thừa) — không đổi tiêu chí tuần.
+ */
 export const STRETCH_ABOVE = 0.92;
-export const STRETCH_SESSIONS = 3;
+export const STRETCH_SESSIONS = 2;
 /** Nhẹ tay: tốc độ mở sẵn tối đa cho lượt theo nhịp. */
 export const GENTLE_START_BPM = 40;
 
@@ -173,16 +178,19 @@ function compute(data: Readonly<AppData>, today: string, homework: boolean): Dif
     .filter(graded);
   const win = done.slice(-DIFFICULTY_WINDOW);
   const base = { sessions: win.length, homework, kindStops: win.filter((s) => s.kindStop).length };
-  if (win.length < DIFFICULTY_MIN_SESSIONS) return { ...base, mode: 'normal', index: successIndex(win), why: 'little-data' };
+  const last = win.slice(-STRETCH_SESSIONS);
+  const cruising = () =>
+    last.length >= STRETCH_SESSIONS && !homework && base.kindStops === 0 && (successIndex(last) ?? 0) > STRETCH_ABOVE && !last.some((s) => s.failedRun);
+  if (win.length < DIFFICULTY_MIN_SESSIONS) {
+    // (+ 2026-10-25) bé giỏi được thử thách sớm: 2 buổi rất tốt là đủ (nhẹ tay vẫn chờ đủ dữ liệu)
+    if (cruising()) return { ...base, mode: 'stretch', index: successIndex(win), why: 'cruising' };
+    return { ...base, mode: 'normal', index: successIndex(win), why: 'little-data' };
+  }
   const index = successIndex(win)!;
   if (base.kindStops >= GENTLE_KIND_STOPS) return { ...base, mode: 'gentle', index, why: 'kind-stops' };
   if (index < GENTLE_BELOW) return { ...base, mode: 'gentle', index, why: 'low' };
   if (homework && (index < GENTLE_HOMEWORK_BELOW || base.kindStops >= 1)) return { ...base, mode: 'gentle', index, why: 'homework' };
-  const last = win.slice(-STRETCH_SESSIONS);
-  const lastIndex = successIndex(last) ?? 0;
-  if (!homework && base.kindStops === 0 && lastIndex > STRETCH_ABOVE && !last.some((s) => s.failedRun)) {
-    return { ...base, mode: 'stretch', index, why: 'cruising' };
-  }
+  if (cruising()) return { ...base, mode: 'stretch', index, why: 'cruising' };
   return { ...base, mode: 'normal', index, why: 'ok' };
 }
 
@@ -192,11 +200,22 @@ export function difficultyText(d: Pick<Difficulty, 'mode'>): string {
     case 'gentle':
       return 'Đang nhẹ tay vì con vấp nhiều — 2 buổi tới ôn kỹ';
     case 'stretch':
-      return 'Con đang làm tốt — thêm thử thách nhỏ';
+      return 'Con đang làm tốt — buổi học thêm thử thách (nhanh hơn, bài khó hơn)';
     default:
       return 'Độ khó đang vừa sức con';
   }
 }
+
+/**
+ * (+ 2026-10-25, OWNER duyệt "Bài khó hơn cho bé giỏi") Bài QUEN (đã đạt trọn bài) mở theo nhịp: chế độ 'stretch' → đúng TỐC ĐỘ
+ * CỦA BÀI (`written`); chế độ khác → `familiar` (luật cũ, ≥ 56).
+ */
+export function stretchFamiliarBpm(written: number, familiar: number, data: Readonly<AppData>, now: number | Date = Date.now()): number {
+  return difficulty(data, now).mode === 'stretch' ? Math.max(familiar, written) : familiar;
+}
+
+/** Chế độ 'stretch' đang bật (bé đang làm rất tốt). */
+export const stretchOn = (data: Readonly<AppData>, now: number | Date = Date.now()): boolean => difficulty(data, now).mode === 'stretch';
 
 /** Nhẹ tay: tốc độ mở sẵn của lượt theo nhịp (≤ 40; bài vốn chậm hơn giữ tốc độ bài). */
 export function adaptiveStartBpm(bpm: number, data: Readonly<AppData>, now: number | Date = Date.now()): number {

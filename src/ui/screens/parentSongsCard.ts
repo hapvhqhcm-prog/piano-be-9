@@ -16,7 +16,7 @@ export function parentSongsCard(c: ParentCtx, back: () => void): HTMLElement {
   return h(
     'section',
     { class: 'card' },
-    h('h2', {}, '📝 Bài bố mẹ thêm'),
+    h('h2', {}, '📝 Bài thêm'),
     h(
       'p',
       { class: 'muted' },

@@ -5,7 +5,7 @@ import { starsFor } from '../music/timing';
 import { SONGS, noteUnit, type Tune } from '../music/tune';
 import { localDateStr, type AppData, type Session, type SongAgg } from '../progress/schema';
 import { hist, memo } from '../progress/history';
-import { adaptiveStartBpm } from './adaptive';
+import { adaptiveStartBpm, stretchFamiliarBpm } from './adaptive';
 import { REWARD_LESSON_PREFIX, countsForMastery, sessionKind } from './sessionKind';
 
 export type Run = Session['songRuns'][number];
@@ -90,7 +90,7 @@ export function masteryRuleFrom(data: Readonly<AppData>): number | undefined {
 }
 
 /**
- * Bé đã THUỘC bài: chơi trọn theo nhịp ≥ tốc độ 60 (+ 2026-10-17: bài viết chậm hơn → tốc độ của bài — masteryBpm) và đạt (micro ≥ 80% hoặc bố mẹ xác nhận) — (+ 2026-10-15) ở 2 NGÀY
+ * Bé đã THUỘC bài: chơi trọn theo nhịp ≥ tốc độ 60 (+ 2026-10-17: bài viết chậm hơn → tốc độ của bài — masteryBpm) và đạt (micro ≥ 80% hoặc bé tự kiểm tra đạt — trước 2026-10-25: bố mẹ xác nhận) — (+ 2026-10-15) ở 2 NGÀY
  * khác nhau (lượt trước masteryRuleFrom: một lượt là đủ). "Đã từng thuộc" — giữ cho sticker.
  */
 export function songMastered(data: Readonly<AppData>, songId: string): boolean {
@@ -137,7 +137,8 @@ export function startTempoBpm(t: Tune, data: Readonly<AppData>): number {
   const hard = hasEighths(t) || !!t.lh?.some((n) => !n.rest);
   const slow = Math.min(t.bpm, hard ? START_SLOW_HARD_BPM : START_SLOW_BPM);
   // (+ 2026-10-17, OWNER duyệt "bài vui hơn") bài QUEN (đã đạt cả bài) không bao giờ mở dưới FAMILIAR_MIN_BPM — chậm 40–50 chỉ cho bài MỚI
-  return st?.h === 1 ? Math.max(slow, familiarMinBpm(t)) : adaptiveStartBpm(slow, data);
+  // (+ 2026-10-25) bé đang làm rất tốt (adaptive 'stretch') → bài quen mở đúng tốc độ của bài
+  return st?.h === 1 ? stretchFamiliarBpm(t.bpm, Math.max(slow, familiarMinBpm(t)), data) : adaptiveStartBpm(slow, data);
 }
 
 /**
@@ -189,8 +190,7 @@ export function notchBelow(bpm: number, ladder: readonly number[] = TEMPO_LADDER
 }
 
 /**
- * Lượt THEO NHỊP của bài trong HÔM NAY (theo thứ tự): cùng câu đang mở (`phrase`, null = cả bài), đủ tay; bỏ lượt bố mẹ
- * chấm của bé tự học (chưa chấm). Chỉ đọc dữ liệu buổi còn giữ (lượt mới ghi ngay khi chơi — ProgressStore.addSongRun).
+ * Lượt THEO NHỊP của bài trong HÔM NAY (theo thứ tự): cùng câu đang mở (`phrase`, null = cả bài), đủ tay. Chỉ đọc dữ liệu buổi còn giữ (lượt mới ghi ngay khi chơi — ProgressStore.addSongRun).
  */
 export function todayTempoOutcomes(
   data: Readonly<AppData>,

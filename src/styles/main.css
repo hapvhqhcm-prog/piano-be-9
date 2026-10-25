@@ -530,7 +530,7 @@ p {
   }
 }
 
-/* ---------- Hình bàn tay ---------- */
+/* ---------- Số ngón (quạt số ngón + tên ngón) ---------- */
 .finger-row {
   display: flex;
   align-items: center;
@@ -551,46 +551,6 @@ p {
   font-size: 26px;
   color: var(--muted);
 }
-.hand {
-  width: 220px;
-  height: 183px;
-  flex: 0 0 auto;
-}
-.hand .finger rect,
-.hand .palm {
-  fill: #ffe7d1;
-  stroke: #c99a74;
-  stroke-width: 2.5;
-}
-.hand .palm {
-  stroke: none;
-}
-.hand .finger circle {
-  fill: #fff;
-  stroke: #c99a74;
-  stroke-width: 2;
-}
-.hand .finger text {
-  font-size: 21px;
-  font-weight: 800;
-  fill: #8a6a50;
-  font-family: inherit;
-}
-.hand.hand-rh .finger.on rect {
-  fill: var(--rh);
-  stroke: #1f7a44;
-}
-.hand.hand-lh .finger.on rect {
-  fill: var(--lh);
-  stroke: #b8621a;
-}
-.hand .finger.on circle {
-  stroke: none;
-}
-.hand .finger.on text {
-  fill: var(--ink);
-}
-
 /* ---------- Micro nghe đàn ---------- */
 .mic-row {
   display: flex;
@@ -832,10 +792,6 @@ p {
   }
   .finger-big {
     font-size: 52px;
-  }
-  .hand {
-    width: 156px;
-    height: 130px;
   }
   .hero-emoji {
     font-size: 56px;

@@ -22,6 +22,7 @@ import { sessionAnswers } from './answers';
 import { dayKey, firstDateOfWeek, firstSessionDate, hist, mondayKey, weekdayIndex } from './history';
 import type { AppData, Session, SongRun } from './schema';
 import { addDays } from './weeklyReportDue';
+import { skippedWeeks, skipOf } from '../lessons/weekSkips';
 
 /** Số tuần ĐÃ HẾT trong lịch sử báo cáo tuần. */
 export const HISTORY_WEEKS = 8;
@@ -109,6 +110,11 @@ export interface WeeklySummary {
    * vừa hết (báo cáo cũ hơn không ghi trạng thái hôm nay); null = không hiện.
    */
   pace: { mode: 'gentle' | 'normal' | 'stretch'; text: string } | null;
+  /**
+   * (+ 2026-10-25, OWNER duyệt "Bé thấy dễ quá") Trong tuần lịch này: ⚡ các tuần giáo trình bé THI VƯỢT đạt; 🧭 kiểm tra xếp lớp
+   * (nhảy từ tuần → tới tuần; from = to khi không nhảy). Không có → bỏ (dữ liệu cũ / báo cáo dựng tay).
+   */
+  skips?: { testedOut: number[]; placement: { from: number; to: number } | null };
 }
 
 /* ---------------- Ngày ---------------- */
@@ -275,7 +281,7 @@ export function micNoteOf(week: readonly Session[]): MicNote | null {
     overrides += s.micAssessments.filter((a) => a.parentOverride).length;
   }
   if (!activity) return null;
-  if (!mic) return { kind: 'off', text: 'Tuần này micro không chấm lần nào — kết quả là do bố mẹ đánh giá.' };
+  if (!mic) return { kind: 'off', text: 'Tuần này micro không chấm lần nào — kết quả là do bé tự kiểm tra.' };
   if (micNotes >= 5 && overrides / micNotes >= MIC_OVERRIDE_RATIO) {
     return { kind: 'unreliable', text: `Micro nghe chưa chắc (bố mẹ sửa ${overrides}/${micNotes} nốt) — số liệu micro chỉ để tham khảo.` };
   }
@@ -328,10 +334,10 @@ export function praiseFor(s: AdviceInput): string[] {
 export function helpFor(s: AdviceInput): string {
   if (!s.days) {
     return s.inProgress
-      ? 'Tuần này con chưa tập — chọn cùng con một giờ cố định (vd sau bữa tối), chỉ 10 phút, và đặt ⏰ nhắc giờ ở màn Phụ huynh.'
-      : 'Tuần qua con chưa tập — chọn cùng con một giờ cố định (vd sau bữa tối), chỉ 10 phút, và đặt ⏰ nhắc giờ ở màn Phụ huynh.';
+      ? 'Tuần này con chưa tập — chọn cùng con một giờ cố định (vd sau bữa tối), chỉ 10 phút, và đặt ⏰ nhắc giờ ở ⚙️ Cài đặt.'
+      : 'Tuần qua con chưa tập — chọn cùng con một giờ cố định (vd sau bữa tối), chỉ 10 phút, và đặt ⏰ nhắc giờ ở ⚙️ Cài đặt.';
   }
-  if (s.mic?.kind === 'unreliable') return 'Micro hay nghe nhầm — vào “Cài micro” chạy lại bước kiểm tra 5 nốt, hoặc bố mẹ ngồi cạnh và chấm bằng tay.';
+  if (s.mic?.kind === 'unreliable') return 'Micro hay nghe nhầm — vào “Cài micro” chạy lại bước kiểm tra 5 nốt, hoặc tắt micro (bé tự kiểm tra).';
   if (s.handsPct !== null && s.handsPct < HANDS_LOW_PCT) {
     return `Hai tay cùng lúc mới đúng ${s.handsPct}% — giúp con tập tách từng tay một câu, rồi ghép hai tay thật chậm (tốc độ 40–50).`;
   }
@@ -343,7 +349,7 @@ export function helpFor(s: AdviceInput): string {
   if (s.days < WEEK_TARGET_DAYS) {
     return `Con tập ${s.days} ngày — thêm 1–2 buổi ngắn 5–10 phút để đủ ${WEEK_TARGET_DAYS} ngày/tuần (đều quan trọng hơn lâu).`;
   }
-  if (s.struggle) return `Chỗ con hay vấp: ${s.struggle} — tập riêng chỗ đó thật chậm 5 phút (nút “Làm ngay” ở màn Phụ huynh).`;
+  if (s.struggle) return `Chỗ con hay vấp: ${s.struggle} — tập riêng chỗ đó thật chậm 5 phút (Thư viện → bài đó → chế độ Từng nốt).`;
   return 'Nhờ con đàn bài con thích nhất cho cả nhà nghe — được lắng nghe là động lực lớn nhất của con.';
 }
 
@@ -491,6 +497,7 @@ export function buildWeeklySummary(d: Readonly<AppData>, monday: string, now: Da
     help: helpFor(base),
     homework: ((hw) => (hw && hw.date >= mon && hw.date < end ? hw.text : null))(readHomework(d.settings)),
     pace: end > addDays(today, -7) ? ((m) => ({ mode: m, text: difficultyText({ mode: m }) }))(difficulty(d, now).mode) : null,
+    skips: skipsIn(d, mon, end),
   };
 }
 
@@ -510,6 +517,14 @@ function fallbackDays(d: Readonly<AppData>): Record<string, { minutes: number; s
     if (s.selfRating) e.stars += 3;
   }
   return out;
+}
+
+/** (+ 2026-10-25) ⚡ thi vượt tuần đạt / 🧭 kiểm tra xếp lớp trong tuần lịch [mon, end). */
+function skipsIn(d: Readonly<AppData>, mon: string, end: string): NonNullable<WeeklySummary['skips']> {
+  const testedOut = skippedWeeks(d, 'testedOut').filter((w) => inWeek(skipOf(d, w)!.date, mon, end));
+  const p = d.progress.placement;
+  const placement = p && typeof p.date === 'string' && inWeek(p.date, mon, end) ? { from: p.from, to: p.to } : null;
+  return { testedOut, placement };
 }
 
 /* ---------------- Bản chữ (sao chép / gửi Zalo) ---------------- */
@@ -577,6 +592,13 @@ export function weeklyText(s: WeeklySummary): string {
   L.push(`🤝 Bố mẹ giúp: ${s.help}`);
   if (s.homework) L.push(`📝 Bài tập về nhà: ${s.homework}`);
   if (s.pace) L.push(`🎚️ Độ khó: ${s.pace.text}`);
+  if (s.skips?.testedOut.length) L.push(`⚡ Thi vượt tuần đạt: tuần ${s.skips.testedOut.join(', ')}`);
+  if (s.skips?.placement)
+    L.push(
+      s.skips.placement.to > s.skips.placement.from
+        ? `🧭 Kiểm tra xếp lớp: con lên thẳng tuần ${s.skips.placement.to} (từ tuần ${s.skips.placement.from}) — bài các tuần bỏ qua vẫn có trong Thư viện`
+        : `🧭 Kiểm tra xếp lớp: con đang học đúng tuần ${s.skips.placement.from}`,
+    );
   if (s.mic) L.push(`🎙️ ${s.mic.text}`);
   if (s.detail !== 'full') L.push('(Tuần cũ: app đã gộp bớt chi tiết để tiết kiệm bộ nhớ — chỉ còn ngày tập, bài thuộc, biểu diễn, thử thách.)');
   return L.join('\n');

@@ -1,6 +1,8 @@
 import { SONGS } from '../music/tune';
 import type { AppData } from '../progress/schema';
-import { completedDates, dayKey, hist, memo, mondayKey, weekdayIndex } from '../progress/history';import { LEVELS, WEEKS, masteredSongs, weekComplete, weekPassed } from './lessonEngine';
+import { completedDates, dayKey, hist, memo, mondayKey, weekdayIndex } from '../progress/history';import { LEVELS, WEEKS, masteredSongs, weekComplete } from './lessonEngine';
+import { weekPassedOwn } from './weekCriteria';
+import { placedOut } from './weekSkips';
 import { completedChallengeWeeks } from './challenges';
 import { concertStickers } from './concert';
 
@@ -167,9 +169,19 @@ export function islandPassed(week: number, data: Readonly<AppData>): boolean {
   return week < data.progress.currentWeek || hist(data).stickers.includes(`island-${week}`) || weekComplete(week, data);
 }
 
-/** Huy chương cấp (tuần biểu diễn `week`) — đã nhận thì giữ (history.stickers). */
+/**
+ * Huy chương cấp (tuần biểu diễn `week`) — đã nhận thì giữ (history.stickers). (+ 2026-10-25) chỉ khi ĐÃ LÊN SÂN KHẤU thật
+ * (weekPassedOwn — bỏ qua bản ghi thi vượt tuần / xếp lớp: huy chương cần buổi biểu diễn).
+ */
 const medalEarned = (level: number, week: number, data: Readonly<AppData>) =>
-  hist(data).stickers.includes(`medal-${level}`) || weekPassed(week, data);
+  hist(data).stickers.includes(`medal-${level}`) || weekPassedOwn(week, data);
+
+/**
+ * (+ 2026-10-25) Sticker đảo: như islandPassed, NHƯNG tuần nhảy qua bằng 🧭 kiểm tra xếp lớp (placedOut) không cho sticker đảo
+ * (bản đồ vẫn sáng — islandPassed). Đã nhận trước đó (history.stickers) thì giữ.
+ */
+const islandEarned = (week: number, data: Readonly<AppData>) =>
+  hist(data).stickers.includes(`island-${week}`) || (islandPassed(week, data) && !placedOut(data, week));
 
 /** Sticker đảo / huy chương đang nhận được — ProgressStore lưu lại (history.stickers) trước khi lùi tuần. */
 export function monotonicStickerIds(data: Readonly<AppData>): string[] {
@@ -191,7 +203,7 @@ function computeStickers(data: Readonly<AppData>): Sticker[] {
       kind: 'island',
       title: w.island,
       hint: `Qua ${w.island}`,
-      earned: islandPassed(w.week, data),
+      earned: islandEarned(w.week, data),
       week: w.week,
     });
   }

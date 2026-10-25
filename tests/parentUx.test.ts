@@ -11,7 +11,7 @@ import {
   weekHeld,
 } from '../src/ui/screens/tonight';
 import { gateQuestion } from '../src/ui/screens/parentGate';
-import { SONG_CHECKS, RHYTHM_CHECKS } from '../src/ui/components/parentCheck';
+import { SONG_SELF_POINTS, SONG_SELF_POINTS_WAIT, SELF_ASK, SELF_OK, SELF_AGAIN } from '../src/ui/selfCheck';
 import { PARENT_PHRASES } from '../src/ui/screens/posture';
 import { defaultData, localDateStr, type AppData, type Session } from '../src/progress/schema';
 
@@ -126,11 +126,15 @@ describe('Cổng phụ huynh, phiếu chấm, câu nói cho bố mẹ', () => {
       expect(q.answer).toBe(a * Number(m[2]) + Number(m[3] ?? 0));
     }
   });
-  it('mỗi ý chấm có một dòng hướng dẫn bằng lời thường', () => {
-    for (const c of [...SONG_CHECKS, ...RHYTHM_CHECKS]) expect(c.hint?.length).toBeGreaterThan(5);
-    expect(SONG_CHECKS.find((c) => c.key === 'beat')!.hint).toContain('1 tiếng tích');
+  // (2026-10-25, bỏ phần phụ huynh) phiếu chấm của bố mẹ → BÉ TỰ KIỂM TRA (ui/selfCheck.ts): mỗi ý là lời thường cho bé
+  it('mỗi ý bé tự kiểm tra là một dòng lời thường; câu hỏi + hai nút "👍 Rồi / 🔁 Làm lại"', () => {
+    for (const c of [...SONG_SELF_POINTS, ...SONG_SELF_POINTS_WAIT]) expect(c.length).toBeGreaterThan(5);
+    expect(SONG_SELF_POINTS.some((c) => /nhịp/.test(c))).toBe(true);
+    expect(SELF_ASK).toMatch(/đúng chưa/);
+    expect([SELF_OK.icon, SELF_OK.label, SELF_AGAIN.icon, SELF_AGAIN.label]).toEqual(['👍', 'Rồi', '🔁', 'Làm lại']);
+    for (const c of [SELF_ASK, ...SONG_SELF_POINTS]) expect(c).not.toMatch(/bố mẹ/i);
   });
-  it('3 câu ngắn cho bố mẹ', () => {
+  it('3 câu ngắn bé tự nhủ khi vấp', () => {
     expect(PARENT_PHRASES).toHaveLength(3);
   });
 });

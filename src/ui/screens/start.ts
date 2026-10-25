@@ -5,8 +5,9 @@ import { lazy, lazyScreen, prefetchLater } from '../lazy';
 import { markSafePoint } from '../../pwa/updater';
 import { sessionCount } from '../../progress/history';
 
-// Hướng dẫn nhanh chỉ dùng lần đầu → chunk riêng (nạp ngầm trên màn Bắt đầu nếu sắp cần)
-const onboardingMod = lazy(() => import('./onboarding'));
+// Hướng dẫn nhanh chỉ dùng lần đầu → chunk riêng (nạp ngầm trên màn Bắt đầu nếu sắp cần). Kèm chunk micro: thẻ 3 có nút
+// "🎤 Bật micro" (bé tự bật — app.ensureMic cần app.mic)
+const onboardingMod = lazy(() => Promise.all([import('./onboarding'), micModule.load()]).then(([m]) => m));
 // (+ 2026-10-09) Màn chính (+ tranh đảo, thử thách, mở khóa…) → chunk riêng, nạp NGAY khi màn Bắt đầu hiện: chunk chính
 // nhẹ hơn (khởi động nhanh hơn trên iPad cũ); tới lúc bé chạm "Bắt đầu" thì đã nạp xong → mở đồng bộ như cũ.
 // Chờ cả chunk micro (app.mic) — màn chính và mọi màn sau nó dùng micro đồng bộ.
@@ -28,7 +29,7 @@ export function startScreen(app: App) {
         'div',
         { class: 'screen center' },
         h('div', { class: 'hero-art-wrap' }, art),
-        h('h1', { class: 'hero-title' }, 'Học Piano cùng bố mẹ'),
+        h('h1', { class: 'hero-title' }, 'Con học Piano'),
         h('p', { class: 'hero-sub' }, name ? `Chào ${name}! Đặt iPad lên giá nhạc, ngồi ngay ngắn nhé` : 'Đặt iPad lên giá nhạc, ngồi ngay ngắn nhé'),
         button({
           icon: '▶',
@@ -44,7 +45,7 @@ export function startScreen(app: App) {
               toast('Chưa bật được âm thanh — app vẫn dùng được, thử mở lại sau nhé.');
             }
             app.started = true;
-            // Lần đầu dùng app (chưa có buổi học nào, chưa xem hướng dẫn) → hướng dẫn nhanh cho bố mẹ
+            // Lần đầu dùng app (chưa có buổi học nào, chưa xem hướng dẫn) → hướng dẫn nhanh (4 thẻ cho bé)
             const d = app.store.get();
             if (!d.settings.onboardedAt && sessionCount(d) === 0) {
               app.show(lazyScreen(onboardingMod, (m) => m.onboardingScreen(app, { onDone: () => app.show(home(app)) })));

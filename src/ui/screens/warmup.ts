@@ -5,7 +5,6 @@ import type { Segment } from '../../lessons/types';
 import { findTune } from '../../music/exercises';
 import type { App, Screen } from '../App';
 import { h } from '../components/dom';
-import { parentCorner } from '../components/parentCorner';
 import { handFocus, handPrinciple, readHandLook, type HandPrincipleId } from '../../lessons/handTechnique';
 import { HAND_ICON_TEXT, handIcon } from '../components/handIcon';
 import { principleFigure } from '../components/handCards';
@@ -18,7 +17,7 @@ import '../../styles/warmup.css';
 /**
  * v5.2 (OWNER duyệt 2026-10-08) — KHỞI ĐỘNG BẰNG NHẠC 20–30 giây mở đầu buổi, kèm câu nhắc tư thế MỘT dòng
  * (hiện chữ + đọc to qua lời dẫn của màn):
- * - 'song': câu đầu một bài bé đã thuộc, theo nhịp Mức 2 (nhạc đệm nếu bố mẹ bật) — dùng lại màn bài hát (song.ts);
+ * - 'song': câu đầu một bài bé đã thuộc, theo nhịp Mức 2 (nhạc đệm nếu cài đặt bật) — dùng lại màn bài hát (song.ts);
  * - 'riff': "thầy đàn — con đàn lại" 2 câu ngắn — dùng lại màn Từng nốt (practice.ts), trò Nhại lại.
  * Luôn có nút "Bỏ qua ⏭". KHÔNG ghi gì vào buổi (onRun / record là no-op) → không đổi tiến độ, tiêu chí, "đã thuộc".
  */
@@ -37,7 +36,6 @@ export function warmupScreen(app: App, w: WarmupMusic, hooks: { onDone(): void; 
     root.classList.add('is-warmup');
     const bar = h('div', { class: 'warmup-bar' }, h('span', { class: 'warmup-tag' }, '🎵 Khởi động'), handChip(app), skip);
     root.append(bar);
-    parentFocusChip(root, hooks.focus);
     return () => {
       root.classList.remove('is-warmup');
       window.clearTimeout(bubbleTimer);
@@ -66,7 +64,7 @@ export function homeworkScreen(
       mode: hw.mode,
       level: 2,
       hints: 'full',
-      // (+ 2026-10-17) chữ của bé ngắn: câu nhắc tư thế + tên bài; chỗ dặn đầy đủ trong góc 👪
+      // (+ 2026-10-17) chữ của bé ngắn: câu nhắc tư thế + tên bài; (2026-10-25: không còn góc 👪 cho bố mẹ)
       intro: `🧘 ${POSTURE_CUE} · 📝 ${tune.titleVi || tune.title}`,
       bpm: hw.bpm,
       ...(hw.phrase ? { phrase: hw.phrase } : {}),
@@ -88,9 +86,6 @@ export function homeworkScreen(
     // (+ 2026-10-17) bài tập về nhà THAY khởi động bằng nhạc → câu nhắc tư thế một dòng nằm trên chính bài này (biểu tượng tay)
     root.classList.add('is-warmup');
     root.append(h('div', { class: 'warmup-bar' }, h('span', { class: 'warmup-tag' }, '📝 Bài tập về nhà'), handChip(app), skip));
-    parentFocusChip(root, hooks.focus);
-    // chỗ thầy dặn (đầy đủ) cho bố mẹ
-    parentCorner(root, `📝 Bài tập về nhà: ${hw.text}`);
     return () => {
       root.classList.remove('is-warmup');
       window.clearTimeout(bubbleTimer);
@@ -102,27 +97,8 @@ export function homeworkScreen(
 let bubbleTimer = 0;
 
 /**
- * (+ 2026-10-16, OWNER duyệt) "👪 Bố mẹ 30 giây — hôm nay để ý: …" (luật chọn: lessons/parentFocus.ts).
- * (+ 2026-10-17, OWNER duyệt "Buổi học ≥ 60% đàn thật") không còn là dải chữ giữa màn của bé — nằm trong GÓC 👪 thu gọn
- * (ui/components/parentCorner.ts) ở màn đầu buổi (khởi động / bài tập về nhà). Không đọc to, không ghi gì.
- */
-export function parentFocusChip(root: HTMLElement, focus: ParentFocus | null | undefined): HTMLElement | null {
-  if (!focus) return null;
-  return parentCorner(
-    root,
-    h(
-      'div',
-      { class: 'pfocus-line', 'data-focus': focus.id },
-      h('b', {}, '👪 Bố mẹ 30 giây — '),
-      `${focus.icon} hôm nay để ý: `,
-      h('b', {}, focus.text),
-    ),
-  );
-}
-
-/**
  * (+ 2026-10-15) Biểu tượng tí hon cạnh câu nhắc tư thế một dòng: chạm → bong bóng tranh "Đúng ✓" của nguyên tắc.
- * Bố mẹ vừa nhắc một lỗi tay (handFocus: thẻ chấm "Làm lại" / phiếu bài hát / phiếu xem tay) → biểu tượng vàng của lỗi đó
+ * Bé vừa tự chấm "Làm lại" một lỗi tay (handFocus: thẻ chấm "Làm lại" / phiếu bài hát / thẻ xem tay) → biểu tượng vàng của lỗi đó
  * và bong bóng tự hiện ~6 giây đầu. Không ghi gì.
  */
 function handChip(app: App): HTMLElement {

@@ -23,7 +23,7 @@ export interface KeyTarget {
   label?: string;
 }
 
-/** (+ 2026-10-15) Sự kiện cho lớp phủ (bàn tay mờ — ui/components/keyboardHand.ts): phím đích / kết quả / đổi dải / hủy. */
+/** (+ 2026-10-15) Sự kiện cho lớp phủ (bản đồ ngón — ui/components/keyboardHand.ts): phím đích / kết quả / đổi dải / hủy. */
 export type KeyboardEventInfo =
   | { type: 'targets'; targets: KeyTarget[] }
   | { type: 'result'; pitch: Pitch | null; kind: 'good' | 'show' | 'heard' | null }
@@ -43,7 +43,7 @@ export class PianoKeyboard {
   private hideTimers = new Map<number, number>();
   private low: Pitch;
   private high: Pitch;
-  /** Vị trí phím (% bề ngang) — để lớp "thầy đàn mẫu" đặt bàn tay đúng chỗ */
+  /** Vị trí phím (% bề ngang) — để lớp "thầy đàn mẫu" đặt số ngón đúng chỗ */
   private geom = new Map<number, { center: number; black: boolean }>();
   private whiteW = 100 / 15;
   /** Đánh dấu "cần đánh" đang hiện trên từng phím (khóa so sánh) — để setTargets chỉ sửa phím thay đổi */

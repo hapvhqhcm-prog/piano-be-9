@@ -273,14 +273,14 @@ export const CHECK_PRINCIPLE: Readonly<Record<string, HandPrincipleId>> = {
   'tech:thumb-under': 'thumb',
 };
 
-/** "👀 Bố mẹ xem tay con" — 3 ý nhìn nhanh (phiếu nhỏ, KHÔNG ghi vào tiêu chí). */
+/** "🪞 Con tự xem tay mình" (trước: "Bố mẹ xem tay con") — 3 ý nhìn nhanh (phiếu nhỏ, KHÔNG ghi vào tiêu chí). */
 export const HAND_LOOK: ReadonlyArray<{ key: 'tip' | 'shape' | 'wrist'; label: string; hint: string }> = [
   { key: 'tip', label: 'Đầu ngón đứng', hint: 'Khớp đầu ngón không bẹp vào trong' },
   { key: 'shape', label: 'Khớp gốc cao', hint: 'Mu bàn tay tròn như cây cầu' },
   { key: 'wrist', label: 'Cổ tay ngang', hint: 'Không võng xuống, không nhô lên' },
 ];
 
-/** Kết quả phiếu "Bố mẹ xem tay con" gần nhất (lưu riêng, chỉ để nhắc tranh). */
+/** Kết quả phiếu "Con tự xem tay mình" gần nhất (lưu riêng, chỉ để nhắc tranh). */
 export interface HandLookResult {
   ts: number;
   missing: HandPrincipleId[];

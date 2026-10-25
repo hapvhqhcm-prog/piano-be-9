@@ -1,5 +1,5 @@
 /**
- * 🎬 "BÀN TAY MẪU ĐÀN CẢ BÀI" (+ 2026-10-15): khi bé bấm "Xem mẫu" (và thầy đàn mẫu ở màn Từng nốt…), chính BÀN TAY MỜ
+ * 🎬 "ĐÀN MẪU CẢ BÀI BẰNG SỐ NGÓN" (+ 2026-10-15): khi bé bấm "Xem mẫu" (và thầy đàn mẫu ở màn Từng nốt…), chính BẢN ĐỒ NGÓN
  * trên bàn phím (keyboardHand.ts) đàn bài như một video thầy dạy — đúng NGÓN nhấn đúng PHÍM ngay lúc nốt kêu.
  *
  * ── LỊCH HÌNH (hàm thuần — có test) ──────────────────────────────────────────────────────────────────────────────────
@@ -15,7 +15,7 @@
  * DemoHands.tick(t) được vòng requestAnimationFrame DUY NHẤT của playDemo gọi với t = giờ AudioContext − độ trễ ra loa
  * (+ một khung hình) → chạy mọi "cue" đã tới giờ (chậm thì đuổi kịp). Chỉ đổi class / transform (GPU).
  * Giảm chuyển động (prefers-reduced-motion): CSS bỏ dìm ngón / trượt — chỉ còn ngón + phím sáng.
- * stop(): nhả mọi phím, tắt chân pedal, trả bàn tay mờ về chế độ thường.
+ * stop(): nhả mọi phím, tắt chân pedal, trả bản đồ ngón về chế độ thường.
  */
 import { framesForSequence, type Crossing, type FingerNote, type HandFrame } from './keyboardHand';
 import { KeyboardHand } from './keyboardHand';
@@ -128,7 +128,7 @@ export function demoSchedule(
       if (clash && p.off > clash.on - REPEAT_LIFT_S) p.off = Math.max(p.on + 0.05, clash.on - REPEAT_LIFT_S);
     }
   }
-  // Thế tay từng tay (dùng chung cách chia thế của bàn tay mờ)
+  // Thế tay từng tay (dùng chung cách chia thế của bản đồ ngón)
   const moves: MoveCue[] = [];
   const start: DemoSchedule['start'] = {};
   for (const hand of ['RH', 'LH'] as const) {
@@ -167,7 +167,7 @@ export function demoSchedule(
 // Chạy lịch hình
 // ======================================================================================================================
 
-/** Phần bàn tay mờ mà DemoHands điều khiển (KeyboardHand — tách ra để test không cần DOM). */
+/** Phần bản đồ ngón mà DemoHands điều khiển (KeyboardHand — tách ra để test không cần DOM). */
 export interface DemoHandTarget {
   demoBegin(start: Partial<Record<Hand, HandFrame>>, pedal: boolean): void;
   demoMove(hand: Hand, frame: HandFrame, cross: Crossing, durS: number, finger: number): void;
@@ -246,7 +246,7 @@ export class DemoHands {
     this.hand?.demoPedal(down);
   }
 
-  /** Dừng: nhả mọi phím, nhấc chân pedal, bàn tay mờ về chế độ thường. Gọi nhiều lần không sao. */
+  /** Dừng: nhả mọi phím, nhấc chân pedal, bản đồ ngón về chế độ thường. Gọi nhiều lần không sao. */
   stop(): void {
     if (this.stopped) return;
     for (const p of [...this.held]) this.press(p, false);
@@ -256,7 +256,7 @@ export class DemoHands {
   }
 }
 
-/** Bắt đầu bàn tay mẫu trên bàn phím `kb` (dùng bàn tay mờ của màn, không có thì tạo một bàn tay chỉ dùng cho mẫu). */
+/** Bắt đầu bàn tay mẫu trên bàn phím `kb` (dùng bản đồ ngón của màn, không có thì tạo một bàn tay chỉ dùng cho mẫu). */
 export function startDemoHands(
   kb: PianoKeyboard,
   events: DemoEvent[],

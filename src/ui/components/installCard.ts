@@ -36,7 +36,7 @@ export function installCard(): HTMLElement | null {
     steps,
     h('p', { class: 'muted' }, 'Lợi ích: dữ liệu được giữ lâu dài, app mở toàn màn hình, chạy được khi không có mạng.'),
     // (+ 2026-10-17, OWNER duyệt) cảnh báo rõ ràng: dữ liệu gắn với biểu tượng app
-    h('p', { class: 'banner warn' }, '⚠️ ', h('b', {}, 'Xóa biểu tượng app = mất hết dữ liệu.'), ' Sao lưu mỗi tuần (màn Phụ huynh → “Hôm nay bố mẹ cần”).'),
+    h('p', { class: 'banner warn' }, '⚠️ ', h('b', {}, 'Xóa biểu tượng app = mất hết dữ liệu.'), ' Sao lưu tay khi tiện (⚙️ Cài đặt → 💾 Sao lưu dữ liệu).'),
     ios
       ? h(
           'p',

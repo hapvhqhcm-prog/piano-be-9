@@ -100,8 +100,8 @@ export function detailsCard(c: ParentCtx, d: Readonly<AppData>, stats: Pick<Pare
     h(
       'section',
       { class: 'card' },
-      h('h2', {}, '👪 Bố mẹ chấm — bé đàn trên đàn thật'),
-      h('p', { class: 'muted' }, 'Các lần bố mẹ bấm “Đúng rồi” / “Thử lại” (khi micro tắt, app không nghe đàn).'),
+      h('h2', {}, '👦 Bé tự kiểm tra — đàn trên đàn thật'),
+      h('p', { class: 'muted' }, 'Các lần bé chạm “👍 Rồi” / “🔁 Làm lại” ở chỗ micro không chấm được (tư thế, ngón, micro tắt…). Dữ liệu trước 25/10/2026: bố mẹ chấm.'),
       table(
         ['Nốt / việc', '✓ Đúng rồi', '↻ Thử lại'],
         [...pAgg.entries()].map(([k, v]) => [parentLabel(k), v.c, v.r]),
@@ -140,7 +140,7 @@ export function detailsCard(c: ParentCtx, d: Readonly<AppData>, stats: Pick<Pare
       'section',
       { class: 'card' },
       h('h2', {}, 'Bài hát & nhịp — các lượt chơi'),
-      h('p', { class: 'muted' }, '"Ai chấm": 🎤 micro tự chấm từng nốt, 👪 bố mẹ đánh giá cả lượt.'),
+      h('p', { class: 'muted' }, '"Ai chấm": 🎤 micro tự chấm từng nốt, 👦 bé tự kiểm tra cả lượt, 👪 bố mẹ chấm (dữ liệu cũ).'),
       table(
         ['Ngày', 'Bài', 'Chế độ', 'Gợi ý', 'Nhịp', 'Kết quả', 'Ai chấm'],
         d.sessions
@@ -154,7 +154,7 @@ export function detailsCard(c: ParentCtx, d: Readonly<AppData>, stats: Pick<Pare
             HINT_LABEL[r.hints],
             r.mode === 'tempo' ? r.bpm : '—',
             `${r.passed ? '✅' : '⏳'} ${r.source === 'mic' ? `${r.hits}/${r.total}` : ''}`,
-            r.source === 'mic' ? '🎤' : '👪',
+            r.source === 'mic' ? '🎤' : r.by === 'self' ? '👦' : '👪',
           ]),
       ),
     ),
@@ -229,7 +229,7 @@ export function latestSessionCards(c: ParentCtx, d: Readonly<AppData>, latest: S
               ),
             ),
           )
-        : h('p', { class: 'muted' }, 'Buổi này bố mẹ chưa chấm kết quả nào.'),
+        : h('p', { class: 'muted' }, 'Buổi này chưa có kết quả bé tự kiểm tra.'),
     ),
   ];
 }

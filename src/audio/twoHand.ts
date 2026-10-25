@@ -1,7 +1,7 @@
 /**
  * (+ 2026-10-09) KIỂM TRA HAI TAY quanh một lần gõ phím — app BIẾT tay phải / tay trái phải đàn nốt nào.
  *
- * Micro chỉ nghe ra MỘT cao độ mỗi lúc (YIN), nên trước đây bài hai tay do bố mẹ chấm. Ở đây không "nghe ra" nốt tự
+ * Micro chỉ nghe ra MỘT cao độ mỗi lúc (YIN), nên trước đây bài hai tay không chấm được bằng micro. Ở đây không "nghe ra" nốt tự
  * do mà hỏi: "trong tiếng vừa đàn có ĐỦ nốt của tay phải / tay trái không, và chúng có VỪA được đàn không?"
  *
  * Trên tín hiệu micro THÔ (không qua lọc 1,6 kHz của đường YIN — cần họa âm 2–6 của nốt trầm Đô3–Sol3, vì âm cơ
@@ -14,7 +14,7 @@
  * 3. Tay "đúng" khi mọi nốt của tay đó có mặt VÀ mới. Thiếu một tay ở khung sau → xem thêm khung MUỘN
  *    [gõ + 160 ms, + 280 ms] (bé đàn tay trái trễ ~0,1 s — vẫn tính là cùng lúc).
  * 4. Tay chưa đúng: thử các phím lệch ±1, ±2 của nốt bị thiếu — có phím nào vừa được đàn → 'wrong' (đàn nhầm phím).
- * Tiếng quá nhỏ / phòng ồn → `conclusive = false` → app dùng cách cũ (bố mẹ / một nốt).
+ * Tiếng quá nhỏ / phòng ồn → `conclusive = false` → app dùng cách cũ (bé tự kiểm tra / một nốt).
  *
  * Hàm thuần (không Web Audio) → đo trên giả lập đàn cơ (tests/twoHandBench.test.ts).
  */
@@ -75,7 +75,7 @@ export const HANDS_SPAN_BEFORE = -HANDS_FRAME.pre2[0];
 
 /**
  * Mặc định của Cài đặt "Micro chấm cả 2 tay (thử nghiệm)" (Settings.micTwoHand chưa đặt). BẬT: trên giả lập đàn cơ
- * đạt mục tiêu (tests/twoHandBench.test.ts, TEST_REPORT §35). Bố mẹ tắt được ở màn Phụ huynh → về cách cũ (một cao độ).
+ * đạt mục tiêu (tests/twoHandBench.test.ts, TEST_REPORT §35). Tắt được trong ⚙️ Cài đặt → về cách cũ (một cao độ).
  */
 export const TWO_HAND_DEFAULT = true;
 

@@ -1,3 +1,4 @@
+import { VOICE_HINT } from '../../audio/voiceGuard';
 import { TIMING_WINDOWS } from '../../music/timing';
 import { phraseRanges, slice, tuneRange, type Tune } from '../../music/tune';
 import { PianoKeyboard } from '../../piano/PianoKeyboard';
@@ -12,7 +13,6 @@ import { SongHead, type SongChoices } from './songHead';
 import { LOOP_TARGET, fingerMap, idxOf, midisOf, shortIntro, type HandSel, type SongOptions } from './songShared';
 import { TakeReplay } from './songTake';
 import { MicHonestyWatch, micHonestyBox } from '../components/micHonesty';
-import { selfStudy } from '../selfStudy';
 import { songEverPlayed, songMastered, startTempoBpm } from '../../lessons/lessonEngine';
 import { familiarMinBpm, songPassedBefore, tempoAdvice, todayTempoOutcomes } from '../../lessons/songStats';
 import { buildStaff, groupAt, groups, halt, handsOn, lightOnset, micOn, pulseWindow, scheduleAccomp, setBar, solo, together, type SongCtx, type SongHooks } from './songState';
@@ -123,7 +123,7 @@ function songMount(app: App, full: Tune, opts: SongOptions, hooks: SongHooks) {
     root.append(screenEl);
     head.closeOnOutsideTap(screenEl);
 
-    // (+ 2026-10-15) ✋ Bàn tay mờ trên bàn phím (nạp muộn; quy tắc hiện / mờ dần: ui/components/keyboardHand.ts)
+    // (+ 2026-10-15) 🔢 Bản đồ ngón trên bàn phím (nạp muộn; quy tắc hiện / mờ dần: ui/components/keyboardHand.ts)
     let ghost: { refresh(): void; destroy(): void } | null = null;
     if (!opts.stage) {
       void import('../components/keyboardHand')
@@ -146,7 +146,7 @@ function songMount(app: App, full: Tune, opts: SongOptions, hooks: SongHooks) {
           };
           head.refresh();
         })
-        .catch(() => undefined); // không nạp được → không có bàn tay mờ (màn vẫn chạy)
+        .catch(() => undefined); // không nạp được → không có bản đồ ngón (màn vẫn chạy)
     }
 
     // 🎧 Nghe lại con đàn (chỉ khi micro bật; chỉ trong bộ nhớ)
@@ -160,20 +160,17 @@ function songMount(app: App, full: Tune, opts: SongOptions, hooks: SongHooks) {
     });
     /**
      * (+ 2026-10-08) MICRO NÓI THẬT (chế độ chờ): bé có vẻ đang đàn mà micro không nhận ra nốt nào 3 lần liền →
-     * "Micro nghe chưa rõ — không phải lỗi của con" + "👪 Bố mẹ chấm giúp" (cả lượt này chuyển sang bố mẹ chấm).
+     * "Micro nghe chưa rõ — không phải lỗi của con" + "👍 Con tự kiểm tra" (cả lượt này chuyển sang bé tự kiểm tra).
      */
     const honesty = new MicHonestyWatch(app.mic, {
-      active: () => c.state === 'playing' && c.mode === 'wait' && micOn(c) && !c.parentRun && !c.loop3,
+      active: () => c.state === 'playing' && c.mode === 'wait' && micOn(c) && !c.selfRun && !c.loop3,
       onTrigger: () => {
         if (status.querySelector('.mic-honest')) return;
         status.append(
-          micHonestyBox(
-            () => {
-              c.parentRun = true;
-              showWaitNote(c);
-            },
-            { self: selfStudy(app) },
-          ),
+          micHonestyBox(() => {
+            c.selfRun = true;
+            showWaitNote(c);
+          }),
         );
       },
     });
@@ -234,7 +231,7 @@ function songMount(app: App, full: Tune, opts: SongOptions, hooks: SongHooks) {
       staff: null as unknown as StaffView, // buildStaff() dựng trong reset() trước khi dùng
       unTempo: () => undefined,
       tempoExpect: null,
-      parentRun: false,
+      selfRun: false,
       demoRun: null,
       gMemo: null,
       litOnset: null,
@@ -401,8 +398,8 @@ function songMount(app: App, full: Tune, opts: SongOptions, hooks: SongHooks) {
       }
     }
 
-    // ---------------- Xem mẫu: "video" bàn tay thầy đàn ----------------
-    // (+ 2026-10-15) bàn tay mờ trên bàn phím đàn cả bài (demo.ts → demoHands.ts); 🐢 Xem chậm = 0.6× nhịp
+    // ---------------- Xem mẫu: "video" thầy đàn (số ngón trên phím) ----------------
+    // (+ 2026-10-15) bản đồ ngón trên bàn phím đàn cả bài (demo.ts → demoHands.ts); 🐢 Xem chậm = 0.6× nhịp
     // (+ 2026-10-16) range = chỉ đàn một câu (ô [đầu, cuối) của lượt đang mở — "🎧 Nghe mẫu câu này"), Dừng → `after`
     async function demo(after: () => void = reset, speed = 1, range: [number, number] | null = null): Promise<void> {
       const tk = ++c.token;
@@ -489,7 +486,7 @@ function songMount(app: App, full: Tune, opts: SongOptions, hooks: SongHooks) {
     const unWaitNote = app.mic.onNote((n) => {
       if (c.state !== 'playing' || c.mode !== 'wait') return;
       honesty.heard(); // micro nghe ra nốt (đúng hay sai) → micro vẫn nghe được
-      if (c.parentRun) return; // bố mẹ đang chấm giúp lượt này
+      if (c.selfRun) return; // lượt này bé tự kiểm tra (micro nghe chưa rõ)
       const g = groups(c)[c.wIdx];
       if (g && together(g) && handsOn(c)) {
         // Chấm hai tay: kiểm tra từ lần gõ (onOnset bên dưới); nốt nghe được chỉ để dự phòng khi không kết luận được
@@ -501,7 +498,7 @@ function songMount(app: App, full: Tune, opts: SongOptions, hooks: SongHooks) {
     });
     // (+ 2026-10-09) Micro tự học lệch dây đàn nhà (autoTune.ts): chỉ từ nốt đơn app đang chờ
     app.mic.expected = (n) => {
-      if (c.state !== 'playing' || c.parentRun) return null;
+      if (c.state !== 'playing' || c.selfRun) return null;
       if (c.mode === 'wait') {
         const g = groups(c)[c.wIdx];
         const ms = g ? midisOf(g) : [];
@@ -511,12 +508,21 @@ function songMount(app: App, full: Tune, opts: SongOptions, hooks: SongHooks) {
     };
     // (+ 2026-10-09) Chấm hai tay (chế độ chờ): mỗi lần gõ phím ở nhóm hai tay → kiểm tra từng tay
     const unWaitOnset = app.mic.onOnset((at) => {
-      if (c.state !== 'playing' || c.mode !== 'wait' || c.parentRun || !handsOn(c)) return;
+      if (c.state !== 'playing' || c.mode !== 'wait' || c.selfRun || !handsOn(c)) return;
       const g = groups(c)[c.wIdx];
       if (g && together(g)) onWaitHands(c, at);
     });
 
-    // opts.loop + opts.phrase ("▶ Làm ngay" của bố mẹ): mở thẳng chế độ "🔁 Lặp 3 lần đúng" của câu đó
+    // (+ 2026-10-25) Micro nghe thấy GIỌNG bé (hát / ngân nga / nói / huýt sáo — audio/voiceGuard.ts), không phải tiếng
+    // đàn → không chấm; nhắc nhẹ MỘT lần mỗi màn (bé hay hát theo — không làm phiền mãi)
+    let voiceHinted = false;
+    const unWaitVoice = app.mic.onVoice(() => {
+      if (voiceHinted || c.state !== 'playing' || c.mode !== 'wait' || c.selfRun) return;
+      voiceHinted = true;
+      c.status.textContent = VOICE_HINT;
+    });
+
+    // opts.loop + opts.phrase (vd "🔁 Lặp câu khó"): mở thẳng chế độ "🔁 Lặp 3 lần đúng" của câu đó
     // (giống "Lặp câu khó": nút chính = Lặp, nút phụ = "↩ Cả bài"; bé chạm Lặp = thao tác bật micro)
     if (opts.loop && opts.phrase && !opts.stage) {
       c.mode = 'wait';
@@ -544,6 +550,7 @@ function songMount(app: App, full: Tune, opts: SongOptions, hooks: SongHooks) {
       halt(c);
       unWaitNote();
       unWaitOnset();
+      unWaitVoice();
       app.mic.expected = null;
       honesty.dispose();
       ghost?.destroy();

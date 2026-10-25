@@ -12,7 +12,7 @@ import type { Hand } from '../piano/fingering';
  * - 'miss'    không nghe thấy (bé quên tay này / đàn quá nhẹ / quá trễ)
  * - 'wrong'   nghe thấy một phím KHÁC ở gần (lệch 1–2 phím) thay cho nốt cần đàn
  * - 'unknown' micro không kết luận được (tiếng nhỏ / phòng ồn / app đang phát) — không tính đúng, không tính sai
- * - 'parent'  bố mẹ bấm "👪 tiếp" (chế độ chờ) — trung tính
+ * - 'parent'  bé chạm "▶ Đi tiếp" (chế độ chờ) — trung tính
  */
 export type HandVerdict = 'hit' | 'miss' | 'wrong' | 'unknown' | 'parent';
 

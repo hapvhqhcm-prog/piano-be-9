@@ -86,12 +86,12 @@ export interface StaffOptions {
   colors?: boolean;
 }
 
-/** hit = app NGHE/thấy đúng (xanh) · miss = trượt · parent = bố mẹ bấm "tiếp" (đã qua nhưng app không xác nhận — không tô xanh) */
+/** hit = app NGHE/thấy đúng (xanh) · miss = trượt · parent = bé chạm "Đi tiếp" (đã qua nhưng app không xác nhận — không tô xanh) */
 export type NoteMark = 'now' | 'hit' | 'miss' | 'parent' | null;
 
 /**
  * (+ 2026-10-09) "Nhận xét kiểu thầy giáo" — màu từng nốt sau lượt chơi: ok xanh · wrong đỏ (+ tên nốt bé đàn nhầm) ·
- * missed xám rỗng · early/late cam (+ mũi tên ←/→) · helped = bố mẹ bấm "tiếp" (trung tính).
+ * missed xám rỗng · early/late cam (+ mũi tên ←/→) · helped = bé chạm "Đi tiếp" (trung tính).
  */
 export interface ReviewMark {
   kind: 'ok' | 'wrong' | 'missed' | 'early' | 'late' | 'helped';

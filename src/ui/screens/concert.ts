@@ -195,7 +195,7 @@ export function concertScreen(app: App, hooks: ConcertHooks) {
               return b;
             }),
           ),
-          h('p', { class: 'lead' }, '👪 Ai đã nghe con đàn hôm nay?'),
+          h('p', { class: 'lead' }, '🎧 Ai đã nghe con đàn hôm nay? (chạm nếu muốn — không bắt buộc)'),
           h(
             'div',
             { class: 'concert-chips' },

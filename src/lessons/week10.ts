@@ -10,7 +10,7 @@ const si = (subtitle: string, staff = false): Target => ({
 /**
  * TUẦN 10 (tuần 8 cũ — v5: cuối Cấp 1 sau 10 tuần) — Lâu đài Âm nhạc: thêm 3 bài mới, rồi bé TỰ CHỌN chương trình 2–3 bài và biểu diễn.
  * (2026-10-08, OWNER duyệt) bài 2 cũ có 3 bài mới → tách: "Gà gáy" sang bài 3 mới (w10-l3), mở đầu bằng thẻ dạy nốt Si.
- * Tiêu chí: phụ huynh tặng huy chương. "Xòe hoa" đã dời sang tuần 9 (sau bài nhịp 2/4) — vẫn chọn được khi biểu diễn.
+ * Tiêu chí: biểu diễn trọn vẹn → huy chương (bé tự nhận, không cần bố mẹ). "Xòe hoa" đã dời sang tuần 9 (sau bài nhịp 2/4) — vẫn chọn được khi biểu diễn.
  * (2026-10-08, OWNER duyệt sau rà soát chuyên gia) bài mới "w10-g": XEM TRƯỚC THẾ SOL bằng bài quen "Bánh nóng"
  * (Sol La Si = ngón 1 2 3 — ngay sau thẻ nốt Si), 4 tuần trước tuần 14 "Thế Sol"; kèm ứng tấu 1 phút trên phím đen.
  */
@@ -24,7 +24,7 @@ export const WEEK10: WeekPlan = {
   warmup: { variant: 'theory', pool: [], rounds: 6, theoryUpTo: 9 },
   teach: { emoji: '🎤', text: 'Con giới thiệu với khán giả: "Bài tiếp theo tên là…, của nhạc sĩ…".' },
   drills: ['five-finger', 'hand-shape'],
-  criterion: { text: 'Biểu diễn trọn vẹn — bố mẹ tặng huy chương', who: 'PARENT' },
+  criterion: { text: 'Biểu diễn trọn vẹn — nhận huy chương', who: 'PARENT' },
   kidGoal: 'Biểu diễn cho cả nhà nghe — nhận huy chương Cấp 1! 🏅',
   lessons: [
     {

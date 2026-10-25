@@ -24,7 +24,7 @@ export function gateQuestion(rand: () => number = Math.random): { text: string; 
   return { text: `${a} × ${b} = ?`, answer: a * b };
 }
 
-/** Cổng phụ huynh: một phép nhân (chống bé vào nhầm, không phải bảo mật). Nút "Phụ huynh" vẫn phải nhấn giữ 2 giây. */
+/** Cổng ⚙️ Cài đặt: một phép nhân (chống bé vào nhầm, không phải bảo mật). Nút ⚙️ vẫn phải nhấn giữ 2 giây. */
 export function parentGateScreen(app: App) {
   return (root: HTMLElement) => {
     parentMod.prefetch();
@@ -60,7 +60,7 @@ export function parentGateScreen(app: App) {
           h(
             'div',
             { class: 'gate-card' },
-            h('p', { class: 'lead' }, '👪 Dành cho bố mẹ — tính nhẩm rồi bấm OK'),
+            h('p', { class: 'lead' }, '⚙️ Cài đặt (người lớn) — tính nhẩm rồi bấm OK'),
             q,
             display,
             h(

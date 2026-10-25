@@ -1,4 +1,5 @@
 import { DEFAULT_DETECT, NoteTracker, detectPitch, freqToMidi, type DetectOptions, type HeardNote, type PitchResult } from './pitchDetect';
+import { VOICE, VoiceGuard, partialFit, scoreVoice, verdictOf, type VoiceFeatures, type VoiceVerdict } from './voiceGuard';
 
 /**
  * Bộ phân tích micro THUẦN (không phụ thuộc Web Audio) — MicListener gọi mỗi khung;
@@ -55,7 +56,31 @@ export interface FrameResult {
    * (đàn khẽ quá với độ nhạy này). Mỗi lần đàn báo tối đa 1 lần — cho bộ tự tăng độ nhạy (micAutoSens).
    */
   nearMiss: boolean;
+  /**
+   * (+ 2026-10-25) Nốt micro nghe ra nhưng BỎ vì là GIỌNG bé (hát / ngân nga / nói / huýt sáo — voiceGuard.ts), không
+   * phải tiếng đàn; null = không có. `note` của khung này không bao giờ là nốt bị bỏ.
+   */
+  voice: HeardNote | null;
 }
+
+/** Nốt đang được bộ phân biệt giọng/đàn xem thêm (chưa báo). */
+interface PendingNote {
+  note: HeardNote;
+  /** MIDI số thực của tần số nghe (chưa bù lệch dây) */
+  raw: number;
+  /** mốc lần gõ dùng để đo bật lên */
+  t0: number;
+  pure: number;
+  inharm: number;
+  spec: boolean;
+  /** false = cùng lần gõ với một nốt đã chấm trước (cao độ đổi mà không gõ lại) → không có tiếng búa của riêng nó */
+  own: boolean;
+}
+
+/** Lần gõ cách lúc định báo nốt tối đa ngần này giây mới coi là lần gõ CỦA nốt đó (để đo tiếng búa). */
+const GUARD_ONSET_MAX = 0.2;
+/** Lần gõ mới sau nốt đang xem được coi là phím mới (cắt đoạn xem) khi bao biên bật ≥ ngần này lần trong ~16 ms. */
+const NEXT_STRIKE_STEP = 2.2;
 
 /** Độ nhạy: hệ số nhân với mức ồn nền (thấp = cần tiếng to hơn mới nhận). */
 export const SENSITIVITY = { low: 5, normal: 2.2, high: 1.6 } as const;
@@ -186,6 +211,23 @@ export class MicAnalyzer {
    */
   tuningAt: ((midi: number) => number) | null = null;
   sensitivity: Sensitivity = 'normal';
+  /**
+   * (+ 2026-10-25) Mặc định cho MicAnalyzer mới: có phân biệt giọng / đàn không (test đo "trước" đặt false —
+   * tests/pianoSim.ts, VOICE_GUARD=off).
+   */
+  static voiceGuardDefault = true;
+  /**
+   * (+ 2026-10-25) Phân biệt GIỌNG bé vs TIẾNG ĐÀN (voiceGuard.ts): nốt chắc chắn là giọng (hát / ngân nga / nói /
+   * huýt sáo) không được báo (`FrameResult.voice`). Nốt có tiếng búa rõ: báo ngay như cũ; nốt mờ: xem thêm ≤ 0,22 s.
+   */
+  voiceGuard = MicAnalyzer.voiceGuardDefault;
+  readonly guard = new VoiceGuard();
+  private pending: PendingNote | null = null;
+  /** Nốt vừa bị bỏ vì là giọng và từ đó chưa có tiếng búa / im lặng → nốt mờ kế tiếp là giọng hát tiếp */
+  private voiceRun = false;
+  private quietFrames = 0;
+  /** Mốc lần gõ của nốt chấm gần nhất */
+  private guardT0 = -1;
 
   constructor(public detect: DetectOptions = DEFAULT_DETECT) {}
 
@@ -203,7 +245,7 @@ export class MicAnalyzer {
     onset: boolean,
     onsetAt: number,
   ): FrameResult {
-    return { pitch, level, rms, floor: this.floor, gate, note, onset, onsetAt, nearMiss: false };
+    return { pitch, level, rms, floor: this.floor, gate, note, onset, onsetAt, nearMiss: false, voice: null };
   }
 
   /**
@@ -286,6 +328,9 @@ export class MicAnalyzer {
     if (this.recentN < this.recent.length) this.recentN++;
 
     if (app !== 'quiet') {
+      this.guard.feed(x, sampleRate, t, null, r);
+      // Tiếng app: nốt đang xem dở không còn tin được (đang chờ thì app không phát — hiếm)
+      this.pending = null;
       this.holding = false;
       this.updateFloor(r, false);
       this.tracker.reset(true);
@@ -299,6 +344,7 @@ export class MicAnalyzer {
       this.pendingOnset = false;
     }
     if (!needPitch) {
+      this.pending = null;
       this.holding = false;
       // Chỉ chấm vỗ nhịp: không biết khung có cao độ không → chỉ cho ồn nền tăng khi đã lâu không có tiếng gõ
       this.updateFloor(r, !onset && t - this.lastOnsetFrame > 1);
@@ -321,13 +367,93 @@ export class MicAnalyzer {
     // "Im" khi dưới 0,8 × ngưỡng (trễ): nốt khẽ dao động quanh ngưỡng không bị coi là im rồi báo lại lần nữa
     // Bù lệch dây: tự học theo âm khu (autoTune.ts) nếu có, không thì số bù tay (Cài đặt)
     const tc = pitch && this.tuningAt ? this.tuningAt(freqToMidi(pitch.freq)) : this.tuningCents;
-    const note = this.tracker.push(pitch, tc, onset, r, gate * SILENCE_HYST);
+    let note = this.tracker.push(pitch, tc, onset, r, gate * SILENCE_HYST);
     if (note) this.warm = false; // bé đã đàn → thôi "làm quen phòng"
     if (note) note.at = this.lastOnsetAt >= 0 && t - this.lastOnsetAt < 0.5 ? this.lastOnsetAt : t - 0.07;
+    this.guard.feed(x, sampleRate, t, pitch, r);
+    let voice: HeardNote | null = null;
+    if (this.voiceGuard) {
+      const g = this.guardStep(note, buf, sampleRate, t, pitch, !pitch && r < gate * SILENCE_HYST);
+      note = g.note;
+      voice = g.voice;
+      if (voice) this.tracker.voiceRejected(voice.midi);
+    } else this.pending = null;
     const res = this.result(pitch, level, r, gate, note, onset, onsetAt);
     res.nearMiss = nearMiss;
+    res.voice = voice;
     return res;
   }
+
+  /**
+   * Phân biệt giọng / đàn cho nốt bộ nhận nốt vừa định báo (`fresh`) và nốt đang xem dở. Trả về nốt được báo ở khung này
+   * (tối đa một) và nốt bị bỏ vì là giọng.
+   */
+  private guardStep(
+    fresh: HeardNote | null,
+    raw: Float32Array,
+    sr: number,
+    t: number,
+    pitch: PitchResult | null,
+    silent: boolean,
+  ): { note: HeardNote | null; voice: HeardNote | null } {
+    this.quietFrames = silent ? this.quietFrames + 1 : 0;
+    if (this.quietFrames >= 3) this.voiceRun = false;
+    let out: HeardNote | null = null;
+    let voice: HeardNote | null = null;
+    const p = this.pending;
+    if (p) {
+      const v = this.judgeNote(p, raw, sr, t, pitch, fresh !== null || silent);
+      if (v === 'piano') out = p.note;
+      else if (v === 'voice') voice = p.note;
+      if (v !== 'unsure') this.pending = null;
+    }
+    if (fresh) {
+      const fromOnset = this.lastOnsetAt >= 0 && t - this.lastOnsetAt <= GUARD_ONSET_MAX;
+      const t0 = fromOnset ? this.lastOnsetAt : t - 0.07;
+      const own = !fromOnset || t0 !== this.guardT0;
+      this.guardT0 = t0;
+      const q: PendingNote = { note: fresh, raw: freqToMidi(fresh.freq), t0, pure: NaN, inharm: NaN, spec: false, own };
+      const v = this.judgeNote(q, raw, sr, t, pitch, false, true);
+      if (v === 'voice' && !voice) voice = fresh;
+      else if (v === 'piano' && !out) out = fresh;
+      else if (v !== 'voice') this.pending = q; // khung này đã có nốt khác → báo ở khung sau
+    }
+    return { note: out, voice };
+  }
+
+  private judgeNote(p: PendingNote, raw: Float32Array, sr: number, t: number, pitch: PitchResult | null, end: boolean, first = false): VoiceVerdict {
+    // Phổ họa âm (sin thuần? lệch họa âm?) — đo một lần, khi tiếng búa đã qua và khung này đúng nốt đó
+    if (!p.spec && pitch && t >= p.t0 + 0.06 && Math.abs(freqToMidi(pitch.freq) - p.raw) < 0.5) {
+      p.spec = true;
+      const s = partialFit(raw, sr, pitch.freq);
+      p.pure = s.pure;
+      p.inharm = s.inharm;
+    }
+    // Đã có lần gõ MỚI sau nốt này (đàn nhanh): chỉ xem tới trước lần gõ đó (tiếng nốt sau không phải "phồng" của nốt này)
+    // (lần gõ phải "bật" thật — ≥ ×2,2 trong ~16 ms; giọng rung / vang phòng cũng tạo "lần gõ" nhỏ, không tính)
+    const cut =
+      this.lastOnsetAt > p.t0 + 0.04 && this.lastOnsetAt <= t && this.guard.stepAt(this.lastOnsetAt) >= NEXT_STRIKE_STEP ? this.lastOnsetAt - 0.005 : t;
+    const f: VoiceFeatures = this.guard.features(p.raw, p.t0, cut);
+    // Nốt thứ hai của cùng một lần gõ (giọng trượt qua nốt khác / hai phím): tiếng búa không phải của nó
+    if (!p.own && (f.attack === 'abrupt' || f.attack === 'sharp')) f.attack = 'none';
+    f.pure = p.pure;
+    f.inharm = p.inharm;
+    const sc = scoreVoice(f);
+    this.lastVoiceScore = { f, score: sc.score };
+    const struck = f.attack === 'abrupt' || f.attack === 'sharp';
+    const final = end || cut < t || t - p.t0 >= (struck ? VOICE.DEADLINE : VOICE.DEADLINE_SOFT);
+    let v = verdictOf(f, sc, final);
+    // Có tiếng búa nhưng cao độ hai khung đầu chênh nhiều (lời nói trượt giọng?) → chưa báo ngay, xem thêm
+    if (v === 'piano' && first && !final && f.stepC >= VOICE.STEP_UNSURE) v = 'unsure';
+    // Giọng hát tiếp (chưa có tiếng búa / im lặng từ nốt giọng trước): nốt mờ, không rõ là đàn → giọng
+    if (v !== 'voice' && this.voiceRun && !struck && sc.score < 3) v = 'voice';
+    if (v === 'voice') this.voiceRun = true;
+    else if (v === 'piano' && (f.attack === 'abrupt' || f.attack === 'sharp')) this.voiceRun = false;
+    return v;
+  }
+
+  /** Điểm giọng/đàn của nốt chấm gần nhất (gỡ rối / test) */
+  lastVoiceScore: { f: VoiceFeatures; score: number } | null = null;
 
   /** YIN trên tín hiệu đã lọc: sau lọc bậc 4 hầu như không còn gì trên ~4 kHz → giảm mẫu ×2 (nhanh ~4 lần). */
   private pitchOf(x: Float32Array, sampleRate: number, r: number): PitchResult | null {
@@ -398,6 +524,9 @@ export class MicAnalyzer {
       this.floor = -1;
       this.warmFrom = NaN;
       this.warm = false;
+      this.guard.reset();
+      this.pending = null;
+      this.voiceRun = false;
     }
     this.pendingOnset = false;
     this.nearLeft = 0;

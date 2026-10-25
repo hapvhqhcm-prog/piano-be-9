@@ -123,7 +123,7 @@ export function readHomeworkNote(settings: Readonly<Settings> | undefined): Home
 }
 
 export const homeworkNoteText = (title: string): string =>
-  `Bài tập “${title}” tạm dừng — con đã cố gắng nhiều lần rồi. Bố mẹ đừng ép thêm; thầy sẽ ôn chỗ này nhẹ nhàng ở các buổi sau.`;
+  `Bài tập “${title}” tạm dừng — con đã cố gắng nhiều lần rồi. Thầy sẽ ôn chỗ này nhẹ nhàng ở các buổi sau nhé!`;
 
 /**
  * (+ 2026-10-17, rà soát kỹ sư trưởng) GIAO / GIAO LẠI bài tập sau một lượt của buổi học (songResult). Hàm thuần.

@@ -153,6 +153,8 @@ export interface WaitScene {
   extras?: Float32Array[];
   /** dừng khi con trỏ tới cuối + chừng này giây */
   tailAfterEnd?: number;
+  /** gỡ rối: gọi mỗi khung */
+  debug?: (an: MicAnalyzer, fr: ReturnType<MicAnalyzer['process']>, now: number) => void;
 }
 
 export interface WaitResult {
@@ -164,6 +166,8 @@ export interface WaitResult {
   wrongs: number;
   /** số lần app nghe mà không phải nốt bé bấm (nốt ma: ngân nga, gõ nắp, nói chuyện…) */
   heardTotal: number;
+  /** (+ 2026-10-25) số nốt micro bỏ vì là GIỌNG (src/audio/voiceGuard.ts) */
+  voiceRejected: number;
 }
 
 /** Chế độ chờ, vòng kín (giống tests/weekSim.ts simulateWait) — bé là hàm `child`, app là `judge`. */
@@ -173,7 +177,7 @@ export async function runWait(sc: WaitScene): Promise<WaitResult> {
   for (const x of sc.extras ?? []) sig.addRaw(x, 0);
   const an = new MicAnalyzer();
   if (c.sens) an.sensitivity = c.sens;
-  const res: WaitResult = { events: [], strikes: [], creditAt: [], cur: 0, wrongs: 0, heardTotal: 0 };
+  const res: WaitResult = { events: [], strikes: [], creditAt: [], cur: 0, wrongs: 0, heardTotal: 0, voiceRejected: 0 };
   let movedAt = -1;
   let lastStrikeAt = -1;
   const view: ChildView = {
@@ -227,6 +231,8 @@ export async function runWait(sc: WaitScene): Promise<WaitResult> {
     if (res.cur < sc.groups.length) sc.child(view);
     const app: AppSound = 'quiet';
     const fr = an.process(sig.frame(i), SIM_RATE, now, app);
+    if (fr.voice) res.voiceRejected++;
+    sc.debug?.(an, fr, now);
     // Kiểm tra hai phím đã đủ tín hiệu (gõ + 0,3 s đã xử lý)
     while (waiting.length && waiting[0].ready <= now) {
       const w = waiting.shift()!;
@@ -348,7 +354,12 @@ export interface TempoRun {
  * Như songTempo.ts: đếm vào (một ô; 2/4: hai ô) + tiếng tích lọt vào micro → MicAnalyzer → mốc gõ (HeardNote.at) →
  * gradeTiming (cửa sổ "dễ") + analyzeTempo + analyzePulse + lời thầy (teach). `play(t0, spb)` trả về các lần bấm của bé.
  */
-export async function runTempo(t: Tune, play: (t0: number, spb: number, groups: Array<{ start: number; midi: number[] }>) => Strike[], o: { seed?: number; extraSeconds?: number } = {}): Promise<TempoRun> {
+export async function runTempo(
+  t: Tune,
+  play: (t0: number, spb: number, groups: Array<{ start: number; midi: number[] }>) => Strike[],
+  /** extras: (+ 2026-10-25) tiếng khác cộng vào micro (vd giọng bé hát theo — tính từ t0, spb) */
+  o: { seed?: number; extraSeconds?: number; extras?: (t0: number, spb: number, seconds: number, groups: Array<{ start: number; midi: number[] }>) => Float32Array[] } = {},
+): Promise<TempoRun & { voiceRejected: number }> {
   const os = handOnsets(t, null);
   const groups = os.map((g) => ({ start: g.start, midi: g.pitches.map(pitchToMidi) }));
   const bpm = t.bpm;
@@ -362,13 +373,17 @@ export async function runTempo(t: Tune, play: (t0: number, spb: number, groups: 
   const clicks = Array.from({ length: Math.ceil(total) + lead }, (_, k) => ({ t: 0.4 + k * spb, accent: (k - lead) % bpmM === 0 }));
   await tick();
   const sig = renderPiano(strikes, seconds, { ...RAW, seed: o.seed ?? 3, clicks, clickLevel: 0.02 });
+  for (const x of o.extras?.(t0, spb, seconds, groups) ?? []) for (let i = 0; i < Math.min(x.length, sig.length); i++) sig[i] += x[i];
   const an = new MicAnalyzer();
+  let voiceRejected = 0;
   const heard: HeardEvent[] = [];
   const hop = Math.round(HOP * SIM_RATE);
   for (let i = FRAME, k = 0; i < sig.length; i += hop, k++) {
     if (k % 100 === 99) await tick();
     const tt = i / SIM_RATE;
-    const n = an.process(sig.subarray(i - FRAME, i), SIM_RATE, tt).note;
+    const fr = an.process(sig.subarray(i - FRAME, i), SIM_RATE, tt);
+    if (fr.voice) voiceRejected++;
+    const n = fr.note;
     if (n) heard.push({ beat: ((n.at ?? tt - 0.07) - t0) / spb, midi: n.midi });
   }
   const win = TIMING_WINDOWS.easy;
@@ -390,5 +405,5 @@ export async function runTempo(t: Tune, play: (t0: number, spb: number, groups: 
     })),
     pulse: pulseNote(pulse, bpm),
   };
-  return { heard, verdicts, score: score(verdicts), pulse, point: teach(review), review };
+  return { heard, verdicts, score: score(verdicts), pulse, point: teach(review), review, voiceRejected };
 }

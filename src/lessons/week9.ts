@@ -17,7 +17,7 @@ export const WEEK9: WeekPlan = {
   title: 'Nhịp 2/4',
   story: 'Ở Bến Đò, bác lái đò khua mái chèo "MỘT-hai, MỘT-hai". Mỗi ô nhịp chỉ có HAI phách — phách MỘT mạnh, phách hai nhẹ.',
   warmup: { variant: 'interval', pool: ['C4', 'D4', 'E4', 'F4', 'G4', 'A4'], rounds: 6, maxInterval: 3 },
-  teach: { emoji: '👨‍🏫', text: 'Con vỗ tay cho bố mẹ nhịp 2: MẠNH-nhẹ, MẠNH-nhẹ — rồi bắt bố mẹ vỗ lại.' },
+  teach: { emoji: '👨‍🏫', text: 'Con vỗ tay cho Bé Nốt nhịp 2: MẠNH-nhẹ, MẠNH-nhẹ — rồi bắt Bé Nốt vỗ lại.' },
   drills: ['arm-drop', 'five-finger'],
   criterion: { text: 'Chơi trọn "Inh lả ơi" theo nhịp — đạt ở 2 ngày khác nhau', who: 'PARENT/MIC' },
   kidGoal: 'Inh lả ơi "MỘT-hai" thật đều — 2 hôm nhé! 💃',
@@ -104,7 +104,7 @@ export const WEEK9: WeekPlan = {
         // (+ 2026-10-17, OWNER duyệt) 👂 ĐÀN THEO TAI — mỗi tháng một lần từ tuần 9
         byEar('hot_cross_buns', 6),
       ],
-      teach: { emoji: '🎎', text: 'Con mời bố mẹ nghe bài song tấu và kể: thầy đàn bè cao hay bè thấp?' },
+      teach: { emoji: '🎎', text: 'Con mời Bé Nốt nghe bài song tấu và kể: thầy đàn bè cao hay bè thấp?' },
     },
   ],
 };

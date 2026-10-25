@@ -1,44 +1,44 @@
 /**
- * ✋ "BÀN TAY MỜ" (ghost hand) phủ trên bàn phím ảo — chỉ cho bé THẾ TAY đúng: năm ngón cong tròn đặt sẵn trên năm phím,
- * ngón cần đàn sáng lên và "nhấn" nhẹ (sức nặng cánh tay), các ngón khác nằm nhẹ trên phím.
+ * 🔢 "BẢN ĐỒ NGÓN" phủ trên bàn phím ảo (trước đây: "bàn tay mờ" — bé và bố mẹ chê hình bàn tay vẽ xấu, 2026-10-18 OWNER
+ * quyết định BỎ HẲN hình bàn tay người): chỉ cho bé THẾ TAY bằng các HUY HIỆU SỐ NGÓN 1–5 nằm trên đúng năm phím của thế tay.
  *
- * ── HÌNH VẼ ──────────────────────────────────────────────────────────────────────────────────────────────────────────
- * Nhìn từ trên xuống (bé ngồi trước đàn): đầu ngón chạm phím (chấm bóng tiếp xúc), đốt giữa cong lên (vệt sáng),
- * khớp ngón tạo "cầu" (knuckle bridge), ngón cái nằm NGHIÊNG (thấy móng bên cạnh). Số ngón 1–5 trên đầu ngón.
- * Mu bàn tay MỜ DẦN ngay dưới hàng khớp → phần dưới phím (tên nốt, huy hiệu số ngón của phím đích) KHÔNG BAO GIỜ bị
- * che (đầu ngón ở ~30% chiều cao phím, khớp ~62%, hết hẳn ở ~70%; huy hiệu nằm ở ~71–93%).
- * Tay phải xanh dương, tay trái cam (như màu phím đích). Bài hai tay: hai bàn tay, mỗi tay một màu.
+ * ── HÌNH ─────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ * Năm huy hiệu tròn nhỏ (nền trắng, viền màu tay, số màu tay) trên năm phím của thế tay — nhẹ nhàng, không che tên nốt.
+ * Phím CẦN ĐÀN: huy hiệu của ngón đó PHÓNG TO, tô đặc màu tay (tay phải xanh dương, tay trái cam), có vòng "thở" nhẹ và
+ * chữ P / T nhỏ (không chỉ dựa vào màu) — thay chỗ số ngón to sẵn có của phím (PianoKey) để không hiện hai số trùng nhau.
+ * Đổi thế = các huy hiệu TRƯỢT sang phím mới; luồn ngón cái (thumb-under) / vắt ngón (3-over) = huy hiệu ngón luồn / vắt
+ * đi TRƯỚC kèm MŨI TÊN CONG nhỏ (luồn: vòng phía dưới; vắt: vòng phía trên), các huy hiệu khác theo sau.
+ * Góc trái bàn phím: chip "✋ 1–5" (emoji gốc của máy) — chạm để xem "1 = ngón cái … 5 = ngón út".
  *
  * ── THẾ TAY ──────────────────────────────────────────────────────────────────────────────────────────────────────────
  * Bài hát: planFromTune() chia mỗi bè thành các đoạn "một thế tay" (năm ngón không đổi phím) bằng số ngón GHI SẴN trong
  * bài; nốt mâu thuẫn với thế đang có (ngón đã ở phím khác / thứ tự ngón đảo) → thế mới. Ngón chưa có nốt trong đoạn được
- * điền theo các nốt của bài (giữ dấu thăng/giáng: thế Rê có Fa♯, gam Fa có Si♭). Đổi thế = bàn tay trượt sang;
- * luồn ngón cái (thumb-under) / vắt ngón 3 qua (3-over) trong gam Cấp 4 = hoạt hình HAI NHỊP: ngón luồn / vắt đi trước,
- * cả bàn tay theo sau.
+ * điền theo các nốt của bài (giữ dấu thăng/giáng: thế Rê có Fa♯, gam Fa có Si♭).
  * Màn khác (bài học từng nốt, hát rồi đàn, khởi động): frameFromTargets() — giữ thế cũ nếu vẫn đúng, không thì tìm
  * trong bảng thế tay (POSITIONS: Đô, Sol, Rê, Đô thứ, La thứ, Đô giữa, Đô cao, "Đô nhích lên" Sol–La), cuối cùng tự điền.
  *
- * ── KHI NÀO HIỆN / MỜ DẦN (quy tắc đơn giản) ───────────────────────────────────────────────────────────────────────────
- * Công tắc "✋ Hiện bàn tay" (Tùy chọn của màn bài hát; lưu trên máy này): Tự động (mặc định) · Luôn hiện · Ẩn.
+ * ── KHI NÀO HIỆN / MỜ DẦN (quy tắc đơn giản — giữ nguyên như bàn tay mờ cũ) ────────────────────────────────────────────
+ * Công tắc "🔢 Hiện số ngón" (Tùy chọn của màn bài hát; lưu trên máy này): Tự động (mặc định) · Luôn hiện · Ẩn.
  * Tự động (ghostAuto): HIỆN nếu tuần ≤ 8, hoặc bài/bước dùng THẾ TAY KHÁC thế Đô (Sol, Rê, Đô thứ, La thứ, Đô giữa,
- * Đô cao, đổi thế / luồn ngón) mà bé CHƯA THUỘC bài đó; còn lại ẨN.
- * Mờ dần trong lúc chơi (ghostLevel): đúng 3 nốt liền → mờ hơn; đúng 8 nốt liền → gần như trong suốt;
- * đàn sai một nốt (micro nghe nốt khác) → rõ lại ngay; mỗi lần ĐỔI THẾ / luồn ngón → rõ lại cho nốt đó.
- * Chỉ hiện khi app đang làm sáng phím cần đàn (gợi ý "Đầy đủ"); ẩn khi thầy đàn mẫu (bàn tay hoạt hình) đang hiện.
- * (+ 2026-10-15) "Xem mẫu": chính bàn tay này ĐÀN CẢ BÀI theo tiếng (demoHands.ts → demoBegin/demoKey/demoMove…;
- * luôn rõ, không theo công tắc / mờ dần); hết mẫu → demoEnd() trả về như cũ.
+ * Đô cao, đổi thế / luồn ngón) mà bé CHƯA THUỘC bài đó; còn lại ẨN (phím đích vẫn có số ngón to của chính nó).
+ * Mờ dần trong lúc chơi (ghostLevel): đúng 3 nốt liền → các huy hiệu PHỤ mờ hơn; đúng 8 nốt liền → gần như trong suốt
+ * (huy hiệu của phím cần đàn luôn rõ); đàn sai một nốt → rõ lại ngay; mỗi lần ĐỔI THẾ / luồn ngón → rõ lại cho nốt đó.
+ * "Xem mẫu": chính bản đồ ngón này ĐÀN CẢ BÀI theo tiếng (demoHands.ts → demoBegin/demoKey/demoMove…; luôn rõ, không theo
+ * công tắc / mờ dần): phím kêu sáng lên (demoHands) và huy hiệu ngón của nó NẢY TO đúng lúc; hết mẫu → demoEnd().
  *
- * TRUNG THỰC: micro chỉ nghe được CAO ĐỘ — không biết bé dùng ngón nào → bàn tay chỉ là HƯỚNG DẪN, không bao giờ báo
+ * TRUNG THỰC: micro chỉ nghe được CAO ĐỘ — không biết bé dùng ngón nào → bản đồ ngón chỉ là HƯỚNG DẪN, không bao giờ báo
  * "sai ngón". Không đụng tới chấm điểm / micro.
  *
  * HIỆU NĂNG: SVG + CSS transform/transition (không tính bố cục mỗi khung hình), cập nhật gộp trong MỘT
- * requestAnimationFrame khi phím đích đổi (không có vòng lặp rAF). prefers-reduced-motion → không nhấn, không trượt;
- * ngón sáng tĩnh. Mô-đun nạp muộn (import động) để không làm nặng gói chính.
+ * requestAnimationFrame khi phím đích đổi (không có vòng lặp rAF). prefers-reduced-motion → không trượt, không thở, không
+ * nảy; huy hiệu đổi chỗ / phóng to tức thì. Mô-đun nạp muộn (import động) để không làm nặng gói chính.
+ * (Tên lớp KeyboardHand / ghost* giữ nguyên để không đổi các màn đang dùng.)
  */
 import { POSITIONS, RH_SOL_LA, fingerFor, type Hand, type PositionId } from '../../piano/fingering';
 import type { KeyTarget, PianoKeyboard } from '../../piano/PianoKeyboard';
 import { midiToPitch, pitchToMidi, type Pitch } from '../../piano/pitchTable';
 import { onsets, pitchesOf, type Tune } from '../../music/tune';
+import { badgeY } from './fingerMapGeo';
 
 // ======================================================================================================================
 // Thế tay (hàm thuần — có test)
@@ -343,7 +343,7 @@ export function ghostLevel(streak: number, moved: boolean): 0 | 1 | 2 {
 }
 
 // ======================================================================================================================
-// Hình học (hàm thuần — có test): đặt từng ngón lên phím
+// Hình học (hàm thuần — có test): chỗ đặt huy hiệu số ngón trên phím
 // ======================================================================================================================
 
 export interface TipIn {
@@ -352,46 +352,26 @@ export interface TipIn {
   black: boolean;
 }
 
-export interface Part {
+export interface BadgeSpot {
   x: number;
   y: number;
-  /** Góc xoay (độ) trong hệ đã soi gương (tay trái) — 0 = ngón chỉ thẳng lên */
-  rot: number;
-  sx: number;
-  sy: number;
+  black: boolean;
+  /** Ngón "lơ lửng" (không có phím riêng trong thế) — vẽ mờ, viền đứt */
+  float: boolean;
 }
 
-export interface HandPose {
-  /** Đầu ngón (px) 1..5 */
-  tips: Array<{ x: number; y: number }>;
-  /** Khớp ngón (gốc ngón) 1..5 — ngón cái: gốc ở mép lòng bàn tay */
-  roots: Array<{ x: number; y: number }>;
-  /** Biến hình từng ngón (ngón 1 = ngón cái) và mu bàn tay */
-  fingers: Part[];
-  palm: Part;
-  /** Chỗ đặt số ngón */
-  nums: Array<{ x: number; y: number }>;
-}
+export { MAP_GEO } from './fingerMapGeo';
 
-/** Tỉ lệ theo chiều cao bàn phím */
-export const GEO = {
-  tipWhite: 0.2,
-  tipBlack: 0.1,
-  thumbWhite: 0.3,
-  thumbBlack: 0.19,
-  /** độ dài ngón (đầu ngón → khớp) tối đa, theo chiều cao bàn phím / bề ngang phím trắng */
-  lenH: 0.4,
-  lenU: 1.45,
-};
-/** Hình gốc: ngón dài 100, rộng 56; mu bàn tay rộng 240 (khớp 2 → khớp 5) */
-const ART = { len: 100, fw: 56, palm: 240 };
-const FINGER_W = [1.08, 1, 1.04, 0.96, 0.84];
-const KNUCKLE_DY = [0, -0.03, 0, 0.02, 0.1];
-
+const clampN = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 const r1 = (v: number) => Math.round(v * 10) / 10;
 
-/** Đặt bàn tay: `tips[i]` = phím của ngón i+1 (null = lơ lửng: nội suy giữa hai ngón kề / kéo dài một phím). */
-export function handPose(tipsIn: Array<TipIn | null>, hand: Hand, u: number, H: number): HandPose {
+/** Bán kính huy hiệu nhỏ (11–16) / huy hiệu phím cần đàn (18–28) (px) theo bề ngang phím trắng `u`. */
+export function badgeRadius(u: number, big = false): number {
+  return big ? r1(clampN(0.37 * u, 18, 28)) : r1(clampN(0.22 * u, 11, 16));
+}
+
+/** Chỗ đặt 5 huy hiệu: `tips[i]` = phím của ngón i+1 (null = lơ lửng: nội suy giữa hai ngón kề / kéo dài một phím). */
+export function badgeSpots(tipsIn: Array<TipIn | null>, hand: Hand, u: number, H: number): BadgeSpot[] {
   const dir = dirOf(hand);
   const xs = tipsIn.map((t) => (t ? t.x : null));
   for (let i = 0; i < 5; i++) {
@@ -403,48 +383,39 @@ export function handPose(tipsIn: Array<TipIn | null>, hand: Hand, u: number, H: 
     if (lo >= 0 && hi >= 0) xs[i] = tipsIn[lo]!.x + ((tipsIn[hi]!.x - tipsIn[lo]!.x) * (i - lo)) / (hi - lo);
     else if (lo >= 0) xs[i] = tipsIn[lo]!.x + dir * u * (i - lo);
     else if (hi >= 0) xs[i] = tipsIn[hi]!.x - dir * u * (hi - i);
-    else xs[i] = (dir * u * (i - 2)) as number;
+    else xs[i] = dir * u * (i - 2);
   }
-  const X = xs as number[];
-  const black = tipsIn.map((t) => !!t?.black);
-  const tips = X.map((x, i) => ({
-    x,
-    y: H * (i === 0 ? (black[0] ? GEO.thumbBlack : GEO.thumbWhite) : black[i] ? GEO.tipBlack : GEO.tipWhite),
-  }));
-  const L = Math.min(GEO.lenH * H, GEO.lenU * u);
-  const K = GEO.tipWhite * H + L;
-  const cx = (X[1] + X[2] + X[3] + X[4]) / 4;
-  const spread = Math.abs(X[4] - X[1]) / 3;
-  const s = Math.max(0.62 * u, Math.min(1.02 * u, spread * 0.86));
-  const roots = X.map((_, i) => ({ x: cx + dir * (i + 1 - 3.5) * s, y: K + KNUCKLE_DY[i] * L }));
-  // Ngón cái: gốc ở mép lòng bàn tay phía ngón trỏ, thấp hơn hàng khớp
-  roots[0] = { x: roots[1].x - dir * 0.3 * u, y: K + 0.3 * L };
-  const part = (from: { x: number; y: number }, to: { x: number; y: number }, w: number): Part => {
-    const dx = (to.x - from.x) * dir;
-    const dy = from.y - to.y;
-    return { x: r1(from.x), y: r1(from.y), rot: r1((Math.atan2(dx, dy) * 180) / Math.PI), sx: +(w / ART.fw).toFixed(3), sy: +(Math.hypot(dx, dy) / ART.len).toFixed(3) };
-  };
-  const fw = 0.52 * u;
-  const fingers = tips.map((t, i) => part(roots[i], t, fw * FINGER_W[i]));
-  const k2 = roots[1];
-  const k5 = roots[4];
-  const pdx = (k5.x - k2.x) * dir;
-  const palm: Part = {
-    x: r1((k2.x + k5.x) / 2),
-    y: r1((k2.y + k5.y) / 2),
-    rot: r1((Math.atan2(k5.y - k2.y, pdx) * 180) / Math.PI),
-    sx: +(Math.max(pdx, 0.5 * u) / ART.palm).toFixed(3),
-    sy: +(L / ART.len).toFixed(3),
-  };
-  const nums = tips.map((t, i) => {
-    const k = i === 0 ? 0.24 : 0.26;
-    return { x: r1(t.x + (roots[i].x - t.x) * k), y: r1(t.y + (roots[i].y - t.y) * k) };
+  const whiteY = badgeY(H, false);
+  const blackY = badgeY(H, true);
+  return xs.map((x, i) => {
+    const black = !!tipsIn[i]?.black;
+    return { x: r1(x as number), y: r1(black ? blackY : whiteY), black, float: !tipsIn[i] };
   });
-  return { tips, roots, fingers, palm, nums };
+}
+
+/**
+ * Mũi tên cong cho ngón LUỒN (đi vòng phía dưới) / VẮT (đi vòng phía trên) từ `a` tới `b`; trả về {đường, đầu mũi tên}.
+ * Đầu mũi tên lùi lại một bán kính huy hiệu để không đè lên số.
+ */
+export function crossArc(a: { x: number; y: number }, b: { x: number; y: number }, cross: Exclude<Crossing, null>, H: number, rBig: number): { line: string; head: string } {
+  const bend = 0.17 * H * (cross === 'under' ? 1 : -1);
+  const mid = { x: (a.x + b.x) / 2, y: (cross === 'under' ? Math.max(a.y, b.y) : Math.min(a.y, b.y)) + bend };
+  // điểm cuối lùi ra khỏi huy hiệu đích theo hướng tiếp tuyến
+  const tx = b.x - mid.x;
+  const ty = b.y - mid.y;
+  const L = Math.hypot(tx, ty) || 1;
+  const end = { x: b.x - (tx / L) * (rBig + 4), y: b.y - (ty / L) * (rBig + 4) };
+  const start = { x: a.x + ((mid.x - a.x) / (Math.hypot(mid.x - a.x, mid.y - a.y) || 1)) * 8, y: a.y + ((mid.y - a.y) / (Math.hypot(mid.x - a.x, mid.y - a.y) || 1)) * 8 };
+  const ang = Math.atan2(ty, tx);
+  const hd = 11;
+  const l = { x: end.x - hd * Math.cos(ang - 0.55), y: end.y - hd * Math.sin(ang - 0.55) };
+  const r = { x: end.x - hd * Math.cos(ang + 0.55), y: end.y - hd * Math.sin(ang + 0.55) };
+  const f = (p: { x: number; y: number }) => `${r1(p.x)} ${r1(p.y)}`;
+  return { line: `M${f(start)} Q${f(mid)} ${f(end)}`, head: `M${f(l)} L${f(end)} L${f(r)}` };
 }
 
 // ======================================================================================================================
-// Hình vẽ + lớp phủ
+// Lớp phủ
 // ======================================================================================================================
 
 const SVGNS = 'http://www.w3.org/2000/svg';
@@ -455,75 +426,72 @@ function el<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string, 
   return e;
 }
 
-const COLORS: Record<Hand, { line: string; dark: string; glow: string; tint: string }> = {
-  RH: { line: '#2b7bd0', dark: '#155a9e', glow: '#5fb0ff', tint: '#e6f1ff' },
-  LH: { line: '#e8890c', dark: '#a55d00', glow: '#ffb24d', tint: '#fff0dd' },
+/** Màu tay (cùng màu phím đích trong theme.css: --rh / --lh) */
+const COLORS: Record<Hand, { line: string; dark: string; soft: string }> = {
+  RH: { line: '#2b7bd0', dark: '#155a9e', soft: '#e6f1ff' },
+  LH: { line: '#e8890c', dark: '#a55d00', soft: '#fff0dd' },
 };
 
-// Đường viền MỞ ở gốc (tô vẫn khép kín): không có vạch ngang ở khớp → ngón liền vào mu bàn tay
-const FINGER_D = 'M-27,4 C-29,-24 -27,-52 -24,-74 C-22,-92 -13,-103 0,-103 C13,-103 22,-92 24,-74 C27,-52 29,-24 27,4';
-// Bóng cạnh phía ngón út (ánh sáng từ phía trên bên trái) → ngón tròn, có khối
-const FINGER_SHADE_D = 'M14,-96 C22,-88 24,-72 25,-56 C27,-36 28,-14 27,4 L18,4 C20,-18 20,-40 18,-60 C16,-76 16,-88 14,-96 Z';
-const NAIL_D = 'M-12,-86 C-12,-96 -6,-100.5 0,-100.5 C6,-100.5 12,-96 12,-86 C12,-82 7,-79.5 0,-79.5 C-7,-79.5 -12,-82 -12,-86 Z';
-// Ngón cái nằm nghiêng: thân hơi cong, móng ở cạnh ngoài
-const THUMB_D = 'M-26,10 C-31,-18 -27,-48 -19,-72 C-13,-92 -5,-103 4,-103 C15,-102 22,-93 22,-78 C22,-58 25,-28 30,10';
-const THUMB_NAIL_D = 'M-4,-98 C-12,-98 -17,-91 -17,-82 C-17,-76 -14,-72 -10,-72 C-6,-72 -4,-78 -3,-86 C-2,-92 -1,-98 -4,-98 Z';
-// Mu bàn tay: mép trên là "cầu" khớp ngón; mờ dần xuống dưới (gradient) — không che phần dưới phím
-const PALM_D = 'M-150,10 C-152,-12 -128,-24 -100,-22 C-40,-30 40,-28 104,-18 C128,-14 146,-4 148,14 L150,120 L-158,120 Z';
-
-const STYLE_ID = 'kb-hand-style';
+const STYLE_ID = 'kb-fmap-style';
 const CSS = `
 .kb-hand{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:5;overflow:visible}
-.kb-hand .kh-hand{opacity:0;transition:opacity .45s ease}
-.kb-hand .kh-hand.show{opacity:.9}
-.kb-hand .kh-hand.show.lv1{opacity:.46}
-.kb-hand .kh-hand.show.lv2{opacity:.17}
-.keyboard.demo-hand-on .kb-hand{display:none}
-.kb-hand .kh-p{transition:transform .34s cubic-bezier(.3,.7,.25,1)}
-.kb-hand .kh-hand.shift .kh-p{transition-duration:.55s}
-.kb-hand.demo .kh-p{transition-duration:var(--kh-mv,.2s);transition-timing-function:cubic-bezier(.35,.1,.25,1)}
-.kb-hand .kh-hand.instant .kh-p{transition:none}
-.kb-hand .kh-skin{stroke-width:2.2px;vector-effect:non-scaling-stroke}
-.kb-hand .kh-line{fill:none;stroke-linecap:round;vector-effect:non-scaling-stroke}
-.kb-hand .kh-glow{display:none;fill:none;stroke-width:12px;vector-effect:non-scaling-stroke;opacity:.6}
-.kb-hand .kh-f.on .kh-glow{display:inline}
-.kb-hand .kh-tint{opacity:0}
-.kb-hand .kh-f.on .kh-tint{opacity:.34}
-.kb-hand .kh-contact{opacity:.2}
-.kb-hand .kh-f.on .kh-contact{opacity:.45}
-.kb-hand .kh-num circle{fill:#fff;stroke-width:2px}
-.kb-hand .kh-num text{font-family:var(--font-display,inherit);font-weight:800;text-anchor:middle;dominant-baseline:central}
-.kb-hand .kh-num.on circle{stroke:#fff;stroke-width:3px}
-.kb-hand .kh-num.on text{fill:#fff}
-.kb-hand .kh-keydown{opacity:0}
-.kb-hand .kh-x-under>.kh-art{transform:translate(0,-100px) scale(.86,.92) translate(0,100px);opacity:.75;transition:transform .3s,opacity .3s}
-.kb-hand .kh-x-over>.kh-art{transform:translate(0,-100px) scale(1.14) translate(0,100px);transition:transform .3s}
+.kb-hand .kh-hand{opacity:0;transition:opacity .35s ease}
+.kb-hand .kh-hand.show{opacity:1}
+.keyboard.demo-hand-on .kb-hand,.keyboard.demo-hand-on .kh-legend{display:none}
+.kb-hand .kh-b{transition:transform .34s cubic-bezier(.3,.7,.25,1),opacity .3s}
+.kb-hand .kh-hand.shift .kh-b{transition-duration:.55s,.3s}
+.kb-hand.demo .kh-b{transition-duration:var(--kh-mv,.2s),.3s;transition-timing-function:cubic-bezier(.35,.1,.25,1),ease}
+.kb-hand .kh-hand.instant .kh-b{transition:none}
+.kb-hand .kh-b.arcing{transition-duration:var(--kh-step,.16s),.3s;transition-timing-function:linear,ease}
+.kb-hand .kh-bi{transition:transform .26s cubic-bezier(.3,1.6,.5,1)}
+.kb-hand .kh-b.on .kh-bi{transform:scale(var(--kh-big,1.9))}
+.kb-hand .kh-hand.lv1 .kh-b:not(.on){opacity:.5}
+.kb-hand .kh-hand.lv2 .kh-b:not(.on){opacity:.2}
+.kb-hand .kh-disc{fill:#fff;stroke-width:2.5px;vector-effect:non-scaling-stroke}
+.kb-hand .kh-shadow{fill:#1b1640;opacity:.18}
+.kb-hand .kh-b.float .kh-disc{fill:rgba(255,255,255,.7);stroke-dasharray:4 3}
+.kb-hand .kh-b.float{opacity:.55}
+.kb-hand .kh-num{font-family:var(--font-display,inherit);font-weight:800;text-anchor:middle;dominant-baseline:central}
+.kb-hand .kh-b.on .kh-disc{stroke:#fff;stroke-width:3px}
+.kb-hand .kh-rh .kh-b.on .kh-disc{fill:#2b7bd0}
+.kb-hand .kh-lh .kh-b.on .kh-disc{fill:#e8890c}
+.kb-hand .kh-b.on .kh-shadow{opacity:.3}
+.kb-hand .kh-b.on .kh-num{fill:#fff}
+.kb-hand .kh-tag,.kb-hand .kh-pulse{display:none}
+.kb-hand .kh-b.on .kh-tag,.kb-hand .kh-b.on .kh-pulse{display:inline}
+.kb-hand .kh-tag text{font-family:var(--font-display,inherit);font-weight:800;text-anchor:middle;dominant-baseline:central;fill:#fff}
+.kb-hand .kh-pulse{fill:none;stroke-width:3px;vector-effect:non-scaling-stroke;opacity:.5}
+.kb-hand .kh-arc{opacity:0;transition:opacity .25s}
+.kb-hand .kh-arc.show{opacity:.95}
+.kb-hand .kh-arc path{fill:none;stroke-width:3.5px;stroke-linecap:round;stroke-linejoin:round}
+.kb-hand .kh-arc .kh-arc-l{stroke-dasharray:7 7}
 @media (prefers-reduced-motion:no-preference){
-.kb-hand .kh-hand.press .kh-f.on>.kh-art{animation:kh-press 1.8s ease-in-out infinite}
-.kb-hand .kh-hand.press .kh-palm>.kh-art{animation:kh-weight 1.8s ease-in-out infinite}
-.kb-hand .kh-hand.press .kh-keydown{animation:kh-keydown 1.8s ease-in-out infinite}
+.kb-hand .kh-b.on .kh-pulse{animation:kh-pulse 1.6s ease-out infinite}
+.kb-hand .kh-arc.show .kh-arc-l{animation:kh-march .6s linear infinite}
+.kb-hand.demo .kh-b.bA .kh-bi{animation:kh-bA .3s ease-out}
+.kb-hand.demo .kh-b.bB .kh-bi{animation:kh-bB .3s ease-out}
+.kh-pedal .kh-pd{transition:transform .08s ease-out}
 }
-@media (prefers-reduced-motion:no-preference){
-.kb-hand.demo .kh-f>.kh-art{transition:transform .12s ease-out}
-.kb-hand.demo .kh-f.down>.kh-art{transform:translate(0,-100px) scale(.95,.86) translate(0,100px);transition-duration:.05s}
-.kb-hand.demo .kh-f.bA>.kh-art{animation:kh-bA .26s ease-out}
-.kb-hand.demo .kh-f.bB>.kh-art{animation:kh-bB .26s ease-out}
-.kb-hand.demo .kh-palm>.kh-art{transition:transform .22s ease-out}
-.kb-hand.demo .kh-hand.weight .kh-palm>.kh-art{transform:translate(0,-5px);transition-duration:.07s}
-.kh-pedal.down .kh-foot{transform:translate(0,5px) rotate(8deg)}
-.kh-pedal .kh-foot{transition:transform .08s ease-out}
-}
-@keyframes kh-bA{0%{transform:translate(0,-100px) scale(.95,.86) translate(0,100px)}40%{transform:translate(0,-100px) scale(1.03,1.1) translate(0,100px)}100%{transform:none}}
-@keyframes kh-bB{0%{transform:translate(0,-100px) scale(.95,.86) translate(0,100px)}40%{transform:translate(0,-100px) scale(1.03,1.1) translate(0,100px)}100%{transform:none}}
-.kh-pedal{position:absolute;right:6px;top:6px;z-index:6;pointer-events:none;display:flex;align-items:center;gap:4px;padding:3px 8px 3px 5px;border-radius:999px;background:rgba(255,255,255,.92);box-shadow:0 1px 4px rgba(27,22,64,.25);font:800 13px/1 var(--font-display,inherit);color:#5b5480}
-.kh-pedal svg{width:30px;height:30px;overflow:visible}
-.kh-pedal .kh-bar{fill:#c9c3dd}
+@keyframes kh-pulse{0%{transform:scale(1);opacity:.55}70%,100%{transform:scale(1.65);opacity:0}}
+@keyframes kh-march{to{stroke-dashoffset:-14}}
+@keyframes kh-bA{0%{transform:scale(1.9)}45%{transform:scale(1.25) translate(0,-6px)}100%{transform:scale(1)}}
+@keyframes kh-bB{0%{transform:scale(1.9)}45%{transform:scale(1.25) translate(0,-6px)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.kb-hand .kh-b,.kb-hand .kh-bi,.kb-hand .kh-hand,.kb-hand .kh-arc{transition:none!important;animation:none!important}}
+.keyboard .key.fm-own .key-badge{visibility:hidden}
+.kh-legend{position:absolute;left:6px;top:6px;z-index:7;display:none;align-items:center;gap:4px;height:34px;padding:0 11px 0 7px;border:2px solid rgba(255,255,255,.9);border-radius:999px;background:rgba(255,255,255,.94);box-shadow:0 2px 6px rgba(27,22,64,.25);font:800 15px/1 var(--font-display,inherit);color:#4a3d8f;cursor:pointer;touch-action:manipulation}
+.kh-legend.show{display:flex}
+.kh-legend .kh-emo{font-size:20px;line-height:1}
+.kh-legend-pop{position:absolute;left:6px;top:46px;z-index:8;display:none;flex-direction:column;gap:5px;padding:10px 14px 10px 10px;border-radius:16px;background:#fff;box-shadow:0 6px 18px rgba(27,22,64,.28);font:700 16px/1.15 var(--font-body,inherit);color:#2c2752}
+.kh-legend-pop.show{display:flex}
+.kh-legend-pop .kh-row{display:flex;align-items:center;gap:8px;white-space:nowrap}
+.kh-legend-pop .kh-n{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;border:2.5px solid #2b7bd0;color:#155a9e;font:800 15px/1 var(--font-display,inherit)}
+.kh-pedal{position:absolute;right:6px;top:6px;z-index:6;pointer-events:none;display:flex;align-items:center;gap:4px;padding:3px 9px 3px 5px;border-radius:999px;background:rgba(255,255,255,.94);box-shadow:0 1px 4px rgba(27,22,64,.25);font:800 14px/1 var(--font-display,inherit);color:#5b5480}
+.kh-pedal svg{width:28px;height:28px;overflow:visible}
+.kh-pedal .kh-pd{fill:#c9c3dd}
+.kh-pedal .kh-ar{fill:none;stroke:#e8a400;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:0}
 .kh-pedal.down{background:#fff4c2;color:#7a4b00}
-.kh-pedal.down .kh-bar{fill:#e8a400}
-@keyframes kh-press{0%,18%,100%{transform:translate(0,-100px) scale(1,1) translate(0,100px)}45%,66%{transform:translate(0,-100px) scale(.95,.88) translate(0,100px)}}
-@keyframes kh-weight{0%,18%,100%{transform:translate(0,0)}45%,66%{transform:translate(0,-5px)}}
-@keyframes kh-keydown{0%,18%,100%{opacity:0}45%,66%{opacity:.32}}
-@media (prefers-reduced-motion:reduce){.kb-hand .kh-p,.kb-hand .kh-hand,.kb-hand .kh-art{transition:none!important;animation:none!important}}
+.kh-pedal.down .kh-pd{fill:#e8a400;transform:translate(0,3px)}
+.kh-pedal.down .kh-ar{opacity:1}
 `;
 
 function ensureStyle(): void {
@@ -534,103 +502,42 @@ function ensureStyle(): void {
   document.head.append(s);
 }
 
-let uid = 0;
-
 interface HandEls {
   g: SVGGElement;
-  parts: SVGGElement[]; // 0 = ngón cái … 4 = ngón út
-  palm: SVGGElement;
-  nums: SVGGElement[];
-  keyDown: SVGRectElement;
+  /** 0 = ngón cái … 4 = ngón út */
+  badges: SVGGElement[];
+  arc: SVGGElement;
   frame: HandFrame | null;
+  spots: BadgeSpot[] | null;
   /** Nốt đơn gần nhất của tay này (để nhận ra luồn / vắt ngón) */
   lastNote: FingerNote | null;
   shown: boolean;
   timers: number[];
 }
 
-/** Một bàn tay (SVG): ngón cái → mu bàn tay → ngón 2–5 → số ngón. */
-function buildHand(svg: SVGSVGElement, defs: SVGDefsElement, hand: Hand): HandEls {
-  const id = `kh${++uid}`;
+/** Một tay (SVG): mũi tên cong luồn / vắt (dưới cùng) + 5 huy hiệu số ngón. */
+function buildHand(svg: SVGSVGElement, hand: Hand): HandEls {
   const c = COLORS[hand];
-  defs.insertAdjacentHTML(
-    'beforeend',
-    `<linearGradient id="${id}-skin" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#d99d79"/><stop offset=".14" stop-color="#efc09d"/><stop offset=".38" stop-color="#ffeadb"/>
-      <stop offset=".58" stop-color="#f9d7bd"/><stop offset=".84" stop-color="#f2c6a5"/><stop offset="1" stop-color="#f7d3b7"/></linearGradient>
-    <linearGradient id="${id}-fedge" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="${c.line}"/><stop offset=".7" stop-color="${c.line}"/><stop offset="1" stop-color="${c.line}" stop-opacity=".1"/></linearGradient>
-    <linearGradient id="${id}-tedge" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="${c.line}"/><stop offset=".45" stop-color="${c.line}" stop-opacity=".8"/><stop offset=".85" stop-color="${c.line}" stop-opacity="0"/></linearGradient>
-    <linearGradient id="${id}-on" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="${c.line}"/><stop offset=".5" stop-color="${c.tint}"/><stop offset="1" stop-color="${c.glow}"/></linearGradient>
-    <linearGradient id="${id}-palm" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#f7d3b6"/><stop offset=".22" stop-color="#f4c9a8" stop-opacity=".95"/>
-      <stop offset=".4" stop-color="#f1c4a2" stop-opacity="0"/></linearGradient>
-    <linearGradient id="${id}-thumb" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#eab18d"/><stop offset=".25" stop-color="#fbdcc4"/><stop offset=".6" stop-color="#f6cdae" stop-opacity=".9"/>
-      <stop offset="1" stop-color="#f3c6a4" stop-opacity="0"/></linearGradient>
-    <linearGradient id="${id}-tint" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="${c.glow}"/><stop offset="1" stop-color="${c.line}"/></linearGradient>
-    <linearGradient id="${id}-tthumb" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="${c.glow}"/><stop offset=".6" stop-color="${c.line}" stop-opacity=".6"/><stop offset="1" stop-color="${c.line}" stop-opacity="0"/></linearGradient>
-    <linearGradient id="${id}-edge" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="${c.line}" stop-opacity=".7"/><stop offset="1" stop-color="${c.line}" stop-opacity="0"/></linearGradient>
-    <linearGradient id="${id}-kd" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#1b1640" stop-opacity=".9"/><stop offset="1" stop-color="#1b1640" stop-opacity="0"/></linearGradient>`,
-  );
   const g = el('g', { class: `kh-hand kh-${hand.toLowerCase()}` }, svg);
-  const keyDown = el('rect', { class: 'kh-keydown', x: 0, y: 0, width: 0, height: 0, fill: `url(#${id}-kd)` }, g);
-  const mkFinger = (n: number) => {
-    const p = el('g', { class: `kh-p kh-f kh-f${n}`, 'data-f': n });
-    const art = el('g', { class: 'kh-art' }, p);
-    el('ellipse', { class: 'kh-contact', cx: n === 1 ? -4 : 0, cy: -99, rx: 24, ry: 9, fill: '#1b1530' }, art);
-    el('path', { class: 'kh-glow', d: n === 1 ? THUMB_D : FINGER_D, stroke: c.glow }, art);
-    el('path', { class: 'kh-skin', d: n === 1 ? THUMB_D : FINGER_D, fill: `url(#${id}-${n === 1 ? 'thumb' : 'skin'})`, stroke: `url(#${id}-${n === 1 ? 'tedge' : 'fedge'})` }, art);
-    if (n > 1) el('path', { d: FINGER_SHADE_D, fill: '#b9805f', opacity: 0.22 }, art);
-    el('path', { class: 'kh-tint', d: n === 1 ? THUMB_D : FINGER_D, fill: `url(#${id}-${n === 1 ? 'tthumb' : 'tint'})` }, art);
-    if (n === 1) {
-      el('path', { class: 'kh-line', d: 'M-14,-58 Q2,-52 20,-60', stroke: '#d79a78', 'stroke-width': 1.6 }, art);
-      el('path', { d: THUMB_NAIL_D, fill: '#fff5ef', stroke: '#e3a98b', 'stroke-width': 1.4, 'vector-effect': 'non-scaling-stroke' }, art);
-      el('ellipse', { cx: 6, cy: -64, rx: 9, ry: 14, fill: '#fff', opacity: 0.32 }, art);
-    } else {
-      // vệt sáng ở đốt giữa (chỗ ngón cong lên cao nhất) + nếp đốt + móng ở đầu ngón (ngón cong → thấy móng gần đầu)
-      el('ellipse', { cx: 0, cy: -55, rx: 14, ry: 8, fill: '#fff', opacity: 0.5 }, art);
-      el('path', { class: 'kh-line', d: 'M-17,-44 Q0,-38 17,-44', stroke: '#d9a080', 'stroke-width': 1.6 }, art);
-      el('path', { class: 'kh-line', d: 'M-14,-74 Q0,-69 14,-74', stroke: '#d9a080', 'stroke-width': 1.4 }, art);
-      el('path', { d: NAIL_D, fill: '#fff5ef', stroke: '#e3a98b', 'stroke-width': 1.4, 'vector-effect': 'non-scaling-stroke' }, art);
-      // khớp ngón (một "mố" của cây cầu khớp)
-      el('ellipse', { cx: 0, cy: -2, rx: 20, ry: 11, fill: '#fff', opacity: 0.38 }, art);
-    }
-    return p;
-  };
-  const thumb = mkFinger(1);
-  g.append(thumb);
-  const palm = el('g', { class: 'kh-p kh-palm' }, g);
-  const palmArt = el('g', { class: 'kh-art' }, palm);
-  el('path', { d: PALM_D, fill: `url(#${id}-palm)` }, palmArt);
-  // dáng mu bàn tay (hai cạnh mảnh, mờ dần — không che phần dưới phím)
-  el('path', { class: 'kh-line', d: 'M-136,-10 C-152,14 -156,50 -146,96 M140,-4 C152,16 156,52 150,96', stroke: `url(#${id}-edge)`, 'stroke-width': 2 }, palmArt);
-  // cầu khớp ngón: vệt sáng vòm qua bốn khớp
-  el('path', { class: 'kh-line', d: 'M-126,-8 C-60,-26 60,-24 128,-4', stroke: '#fff', 'stroke-width': 4, opacity: 0.6 }, palmArt);
-  el('path', { class: 'kh-line', d: 'M-140,2 C-120,-18 120,-16 144,6', stroke: c.line, 'stroke-width': 2, opacity: 0.55 }, palmArt);
-  const parts = [thumb];
-  for (let n = 2; n <= 5; n++) {
-    const f = mkFinger(n);
-    g.append(f);
-    parts.push(f);
-  }
-  const nums = [1, 2, 3, 4, 5].map((n) => {
-    const ng = el('g', { class: 'kh-p kh-num', 'data-n': n }, g);
-    el('circle', { cx: 0, cy: 0, r: 12, stroke: c.line }, ng);
-    const t = el('text', { x: 0, y: 1, fill: c.dark }, ng);
+  const arc = el('g', { class: 'kh-arc' }, g);
+  el('path', { class: 'kh-arc-l', stroke: c.line }, arc);
+  el('path', { class: 'kh-arc-h', stroke: c.line }, arc);
+  const badges = [1, 2, 3, 4, 5].map((n) => {
+    const b = el('g', { class: `kh-b kh-b${n}`, 'data-f': n }, g);
+    const bi = el('g', { class: 'kh-bi' }, b);
+    el('circle', { class: 'kh-pulse', r: 12, stroke: c.line }, bi);
+    el('circle', { class: 'kh-shadow', cy: 1.6, r: 12 }, bi);
+    el('circle', { class: 'kh-disc', r: 12, stroke: c.line }, bi);
+    const t = el('text', { class: 'kh-num', y: 0.5, fill: c.dark }, bi);
     t.textContent = String(n);
-    return ng;
+    // chữ P / T nhỏ ở góc huy hiệu (không chỉ dựa vào màu)
+    const tag = el('g', { class: 'kh-tag' }, bi);
+    el('rect', { rx: 2.6, fill: c.dark, stroke: '#fff', 'stroke-width': 1.2 }, tag);
+    el('text', {}, tag).textContent = hand === 'RH' ? 'P' : 'T';
+    return b;
   });
-  return { g, parts, palm, nums, keyDown, frame: null, lastNote: null, shown: false, timers: [] };
+  return { g, badges, arc, frame: null, spots: null, lastNote: null, shown: false, timers: [] };
 }
-
-const tf = (p: Part, dir: number) => `translate(${p.x}px,${p.y}px) scale(${dir},1) rotate(${p.rot}deg) scale(${p.sx},${p.sy})`;
 
 export interface KeyboardHandOptions {
   /** Kế hoạch thế tay của bài (planFromTune) — không có: tự suy từ phím đích */
@@ -639,14 +546,16 @@ export interface KeyboardHandOptions {
   auto: (positions: PositionId[]) => boolean;
   /** Công tắc (mặc định đọc ghostMode()) */
   mode?: () => GhostMode;
-  /** (+ 2026-10-15) Chỉ dùng cho "Xem mẫu" (màn không có bàn tay mờ): bàn tay mờ của màn tạo sau sẽ thay nó */
+  /** (+ 2026-10-15) Chỉ dùng cho "Xem mẫu" (màn không có bản đồ ngón): bản đồ ngón của màn tạo sau sẽ thay nó */
   demoOnly?: boolean;
 }
 
-/** Bàn tay mờ đang gắn với từng bàn phím (để "Xem mẫu" dùng lại đúng bàn tay của màn) */
+/** Bản đồ ngón đang gắn với từng bàn phím (để "Xem mẫu" dùng lại đúng lớp của màn) */
 const live = new WeakMap<PianoKeyboard, KeyboardHand>();
 
-/** Lớp bàn tay mờ gắn vào một PianoKeyboard: tự theo phím đích (setTargets) và kết quả đàn (setResult). */
+const LEGEND_NAMES = ['ngón cái', 'ngón trỏ', 'ngón giữa', 'ngón áp út', 'ngón út'];
+
+/** Lớp "bản đồ ngón" gắn vào một PianoKeyboard: tự theo phím đích (setTargets) và kết quả đàn (setResult). */
 export class KeyboardHand {
   readonly svg: SVGSVGElement;
   private hands: Record<Hand, HandEls>;
@@ -659,6 +568,11 @@ export class KeyboardHand {
   private streak = 0;
   private cursor: Record<Hand, number> = { RH: 0, LH: 0 };
   private dead = false;
+  private legend: HTMLButtonElement;
+  private legendPop: HTMLDivElement;
+  private legendTimer = 0;
+  /** Phím (midi) đang được bản đồ ngón "nhận" số ngón to — số to của chính phím (PianoKey) tạm ẩn */
+  private owned = new Set<number>();
 
   constructor(
     private readonly kb: PianoKeyboard,
@@ -669,9 +583,23 @@ export class KeyboardHand {
     if (old?.o.demoOnly && !old.demo) old.destroy();
     live.set(kb, this);
     this.svg = el('svg', { class: 'kb-hand', 'aria-hidden': 'true', focusable: 'false' });
-    const defs = el('defs', {}, this.svg);
-    this.hands = { LH: buildHand(this.svg, defs, 'LH'), RH: buildHand(this.svg, defs, 'RH') };
+    this.hands = { LH: buildHand(this.svg, 'LH'), RH: buildHand(this.svg, 'RH') };
     kb.el.append(this.svg);
+    // Chú giải: ✋ (emoji gốc của máy) — chạm để xem tên 5 ngón
+    this.legend = document.createElement('button');
+    this.legend.type = 'button';
+    this.legend.className = 'kh-legend';
+    this.legend.setAttribute('aria-label', 'Số ngón là gì?');
+    this.legend.innerHTML = '<span class="kh-emo" aria-hidden="true">✋</span><span>1–5</span>';
+    this.legendPop = document.createElement('div');
+    this.legendPop.className = 'kh-legend-pop';
+    this.legendPop.setAttribute('role', 'note');
+    this.legendPop.innerHTML = LEGEND_NAMES.map((nm, i) => `<span class="kh-row"><span class="kh-n">${i + 1}</span>= ${nm}</span>`).join('');
+    // không để chạm vào chú giải thành chạm phím đàn
+    for (const e of [this.legend, this.legendPop]) e.addEventListener('pointerdown', (ev) => ev.stopPropagation());
+    this.legend.addEventListener('click', () => this.toggleLegend());
+    this.legendPop.addEventListener('click', () => this.toggleLegend(false));
+    kb.el.append(this.legend, this.legendPop);
     this.unwatch = kb.watch((e) => {
       if (e.type === 'targets') {
         this.targets = e.targets;
@@ -681,7 +609,8 @@ export class KeyboardHand {
         else if (e.kind === 'heard') this.streak = 0;
         this.schedule();
       } else if (e.type === 'range') {
-        kb.el.append(this.svg);
+        kb.el.append(this.svg, this.legend, this.legendPop);
+        this.owned.clear();
         this.measure();
         this.schedule();
       } else if (e.type === 'destroy') this.destroy();
@@ -699,9 +628,28 @@ export class KeyboardHand {
     }
   }
 
-  /** Đọc lại công tắc (sau khi bé / bố mẹ đổi "✋ Hiện bàn tay"). */
+  /** Đọc lại công tắc (sau khi bé / bố mẹ đổi "🔢 Hiện số ngón"). */
   refresh(): void {
     this.schedule();
+  }
+
+  private toggleLegend(open = !this.legendPop.classList.contains('show')): void {
+    window.clearTimeout(this.legendTimer);
+    this.legendPop.classList.toggle('show', open);
+    if (open) this.legendTimer = window.setTimeout(() => this.legendPop.classList.remove('show'), 6000);
+  }
+
+  private syncLegend(): void {
+    const on = this.hands.RH.shown || this.hands.LH.shown;
+    this.legend.classList.toggle('show', on);
+    if (!on) this.toggleLegend(false);
+    // màu số trong chú giải theo tay đang hiện (chỉ tay trái → cam)
+    const lhOnly = this.hands.LH.shown && !this.hands.RH.shown;
+    this.legendPop.classList.toggle('lh', lhOnly);
+    for (const n of this.legendPop.querySelectorAll<HTMLElement>('.kh-n')) {
+      n.style.borderColor = lhOnly ? COLORS.LH.line : '';
+      n.style.color = lhOnly ? COLORS.LH.dark : '';
+    }
   }
 
   private measure(): void {
@@ -724,12 +672,30 @@ export class KeyboardHand {
   }
 
   private hideHand(h: HandEls): void {
-    h.g.classList.remove('show', 'press');
+    h.g.classList.remove('show');
     h.shown = false;
     h.frame = null;
+    h.spots = null;
     h.lastNote = null;
     h.timers.forEach((t) => window.clearTimeout(t));
     h.timers = [];
+    h.arc.classList.remove('show');
+  }
+
+  /** Phím nào đang do bản đồ ngón hiện số to (ẩn số to của chính phím để không trùng hai số). */
+  private setOwned(midis: Set<number>): void {
+    const same = midis.size === this.owned.size && [...midis].every((m) => this.owned.has(m));
+    if (same) return;
+    this.owned = midis;
+    for (const k of this.kb.el.querySelectorAll<HTMLElement>('.key[data-pitch]')) {
+      let m = -1;
+      try {
+        m = pitchToMidi(k.dataset.pitch!);
+      } catch {
+        /* bỏ qua */
+      }
+      k.classList.toggle('fm-own', midis.has(m));
+    }
   }
 
   private update(resized: boolean): void {
@@ -739,6 +705,8 @@ export class KeyboardHand {
     if (!ts.length || !this.W) {
       this.hideHand(this.hands.RH);
       this.hideHand(this.hands.LH);
+      this.setOwned(new Set());
+      this.syncLegend();
       return;
     }
     const per: Record<Hand, FingerNote[]> = { RH: [], LH: [] };
@@ -773,6 +741,7 @@ export class KeyboardHand {
     });
     const visible = ghostVisible((this.o.mode ?? ghostMode)(), this.o.auto(positions));
     const u = (this.kb.whiteKeyWidth * this.W) / 100;
+    const owned = new Set<number>();
     for (const hand of ['RH', 'LH'] as const) {
       const h = this.hands[hand];
       const nx = next[hand];
@@ -784,7 +753,10 @@ export class KeyboardHand {
       const active = new Set(per[hand].map((n) => n.finger));
       const moved = !!h.frame && !sameFrame(h.frame, frame);
       this.place(h, hand, frame, u, !h.shown || resized, moved ? nx?.cross ?? null : null, moved, active, per[hand]);
+      if (h.shown) for (const n of per[hand]) if (frame[n.finger - 1] === n.midi) owned.add(n.midi);
     }
+    this.setOwned(owned);
+    this.syncLegend();
   }
 
   private lookup(hand: Hand, ns: FingerNote[]): PlanEntry | null {
@@ -810,6 +782,64 @@ export class KeyboardHand {
     });
   }
 
+  /** Cỡ huy hiệu theo phím (bán kính nhỏ + tỉ lệ phóng to cho phím cần đàn). */
+  private sizeBadges(h: HandEls, u: number): void {
+    const r = badgeRadius(u);
+    const big = badgeRadius(u, true) / r;
+    h.g.style.setProperty('--kh-big', big.toFixed(3));
+    const first = h.badges[0].querySelector('.kh-disc')!;
+    if (first.getAttribute('r') === String(r)) return;
+    for (const b of h.badges) {
+      for (const c of b.querySelectorAll('circle')) c.setAttribute('r', String(r));
+      const num = b.querySelector('.kh-num')!;
+      num.setAttribute('font-size', String(Math.round(r * 1.32)));
+      const tag = b.querySelector('.kh-tag')!;
+      const s = r * 0.62;
+      tag.setAttribute('transform', `translate(${r1(r * 0.78)} ${r1(r * 0.62)})`);
+      const rect = tag.querySelector('rect')!;
+      rect.setAttribute('x', String(r1(-s / 2)));
+      rect.setAttribute('y', String(r1(-s / 2)));
+      rect.setAttribute('width', String(r1(s)));
+      rect.setAttribute('height', String(r1(s)));
+      tag.querySelector('text')!.setAttribute('font-size', String(r1(s * 0.78)));
+    }
+  }
+
+  private moveBadge(h: HandEls, i: number, spots: BadgeSpot[]): void {
+    const s = spots[i];
+    h.badges[i].classList.remove('arcing');
+    h.badges[i].style.transform = `translate(${s.x}px,${s.y}px)`;
+    h.badges[i].classList.toggle('float', s.float);
+  }
+
+  /**
+   * Huy hiệu ngón luồn / vắt đi theo ĐƯỜNG CONG trong `durS` giây (hai chặng: qua điểm giữa thấp hơn = luồn DƯỚI,
+   * cao hơn = vắt QUA).
+   */
+  private arcMove(h: HandEls, i: number, from: BadgeSpot, to: BadgeSpot, cross: Exclude<Crossing, null>, durS: number): void {
+    const b = h.badges[i];
+    // vẽ trên cùng (luôn nhìn thấy); "luồn dưới" thể hiện bằng đường vòng THẤP hơn hàng số
+    h.g.append(b);
+    const bend = (cross === 'under' ? 0.17 : 0.13) * this.H;
+    const mx = r1((from.x + to.x) / 2);
+    const my = r1(cross === 'under' ? Math.max(from.y, to.y) + bend : Math.min(from.y, to.y) - bend);
+    b.style.setProperty('--kh-step', `${(durS / 2).toFixed(3)}s`);
+    b.classList.add('arcing');
+    b.classList.toggle('float', to.float);
+    b.style.transform = `translate(${mx}px,${my}px)`;
+    h.timers.push(window.setTimeout(() => (b.style.transform = `translate(${to.x}px,${to.y}px)`), durS * 500));
+  }
+
+  /** Mũi tên cong của ngón luồn / vắt (từ chỗ cũ tới chỗ mới); tự tắt sau `ms`. */
+  private showArc(h: HandEls, from: BadgeSpot, to: BadgeSpot, cross: Exclude<Crossing, null>, u: number, ms: number): void {
+    const a = crossArc(from, to, cross, this.H, badgeRadius(u, true));
+    const [line, head] = h.arc.querySelectorAll('path');
+    line.setAttribute('d', a.line);
+    head.setAttribute('d', a.head);
+    h.arc.classList.add('show');
+    h.timers.push(window.setTimeout(() => h.arc.classList.remove('show'), ms));
+  }
+
   private place(
     h: HandEls,
     hand: Hand,
@@ -821,62 +851,36 @@ export class KeyboardHand {
     active: Set<number>,
     notes: FingerNote[],
   ): void {
-    const dir = dirOf(hand);
     const tips = this.tipsOf(frame);
     if (tips.every((t) => !t)) return this.hideHand(h);
-    const pose = handPose(tips, hand, u, this.H);
+    const spots = badgeSpots(tips, hand, u, this.H);
+    const prevSpots = h.spots;
     h.timers.forEach((t) => window.clearTimeout(t));
     h.timers = [];
+    h.arc.classList.remove('show');
     h.g.classList.toggle('instant', instant);
     h.g.classList.toggle('shift', moved && !cross);
-    // Số ngón: cỡ theo phím
-    this.sizeNums(h, u);
-    const applyPart = (i: number) => {
-      h.parts[i].style.transform = tf(pose.fingers[i], dir);
-      h.nums[i].style.transform = `translate(${pose.nums[i].x}px,${pose.nums[i].y}px)`;
-    };
+    this.sizeBadges(h, u);
     const applyAll = () => {
-      for (let i = 0; i < 5; i++) applyPart(i);
-      h.palm.style.transform = tf(pose.palm, dir);
+      for (let i = 0; i < 5; i++) this.moveBadge(h, i, spots);
     };
-    // Ngón luồn / vắt đi TRƯỚC, cả bàn tay theo sau
+    // Ngón luồn / vắt đi TRƯỚC (kèm mũi tên cong), các huy hiệu khác theo sau
     const crossers = cross === 'under' ? [0] : cross === 'over' ? [1, 2, 3].filter((i) => frame[i] !== null && notes.some((n) => n.finger === i + 1)) : [];
-    if (!instant && crossers.length) {
-      const cls = cross === 'under' ? 'kh-x-under' : 'kh-x-over';
+    if (!instant && crossers.length && prevSpots) {
       for (const i of crossers) {
-        h.parts[i].classList.add(cls);
-        if (cross === 'over') h.g.insertBefore(h.parts[i], h.nums[0]); // vắt QUA: vẽ trên các ngón khác
-        applyPart(i);
+        this.arcMove(h, i, prevSpots[i], spots[i], cross!, 0.32);
+        this.showArc(h, prevSpots[i], spots[i], cross!, u, 1400);
       }
-      h.timers.push(
-        window.setTimeout(() => applyAll(), 320),
-        window.setTimeout(() => {
-          for (const i of crossers) {
-            h.parts[i].classList.remove(cls);
-            if (cross === 'over') h.g.insertBefore(h.parts[i], h.parts[i + 1] ?? h.nums[0]);
-          }
-        }, 760),
-      );
+      h.timers.push(window.setTimeout(() => applyAll(), 320));
     } else applyAll();
-    // Ngón đang cần đàn: sáng; một ngón mỗi tay → "nhấn" nhẹ + phím lún
-    for (let i = 0; i < 5; i++) this.light(h, hand, i, active.has(i + 1));
-    const single = active.size === 1 ? notes.find((n) => active.has(n.finger)) : undefined;
-    h.g.classList.toggle('press', !!single);
-    if (single) {
-      const g = this.kb.keyCenter(midiToPitch(single.midi));
-      if (g) {
-        const w = g.black ? u * 0.62 : u;
-        h.keyDown.setAttribute('x', ((g.center * this.W) / 100 - w / 2).toFixed(1));
-        h.keyDown.setAttribute('width', w.toFixed(1));
-        h.keyDown.setAttribute('height', (this.H * (g.black ? 0.35 : 0.22)).toFixed(1));
-      }
-    }
+    for (let i = 0; i < 5; i++) h.badges[i].classList.toggle('on', active.has(i + 1));
     const lv = ghostLevel(this.streak, moved);
     h.g.classList.toggle('lv1', lv === 1);
     h.g.classList.toggle('lv2', lv === 2);
     h.g.classList.add('show');
     h.shown = true;
     h.frame = frame;
+    h.spots = spots;
     if (instant) {
       // bật lại chuyển động sau khi trình duyệt đã vẽ vị trí mới
       h.timers.push(window.setTimeout(() => h.g.classList.remove('instant'), 60));
@@ -884,81 +888,61 @@ export class KeyboardHand {
   }
 
   // ====================================================================================================================
-  // (+ 2026-10-15) "Bàn tay mẫu đàn cả bài" — demoHands.ts điều khiển theo đồng hồ âm thanh (không tự hẹn giờ)
+  // (+ 2026-10-15) "Đàn mẫu cả bài" — demoHands.ts điều khiển theo đồng hồ âm thanh (không tự hẹn giờ)
   // ====================================================================================================================
 
-  /** Bàn tay mờ của bàn phím này; chưa có (màn không bật bàn tay mờ) → tạo một bàn tay chỉ dùng cho "Xem mẫu". */
+  /** Bản đồ ngón của bàn phím này; chưa có (màn không bật) → tạo một lớp chỉ dùng cho "Xem mẫu". */
   static of(kb: PianoKeyboard): KeyboardHand {
     const cur = live.get(kb);
     return cur && !cur.dead ? cur : new KeyboardHand(kb, { auto: () => false, mode: () => 'off', demoOnly: true });
   }
 
   private demo = false;
-  private pend: Partial<Record<Hand, { pose: HandPose; cls: string; idx: number }>> = {};
+  private pend: Partial<Record<Hand, { spots: BadgeSpot[] }>> = {};
   private pedalEl: HTMLDivElement | null = null;
 
-  /** Bắt đầu mẫu: hiện (các) bàn tay ở thế đầu bài — rõ, không mờ dần, không theo phím đích. */
+  /** Bắt đầu mẫu: hiện (các) bản đồ ngón ở thế đầu bài — rõ, không mờ dần, không theo phím đích. */
   demoBegin(start: Partial<Record<Hand, HandFrame>>, pedal: boolean): void {
     if (this.dead) return;
     this.demo = true;
     cancelAnimationFrame(this.raf);
     this.raf = 0;
     this.svg.classList.add('demo');
-    this.kb.el.append(this.svg);
+    this.kb.el.append(this.svg, this.legend, this.legendPop);
+    this.setOwned(new Set());
     this.measure();
     for (const hand of ['RH', 'LH'] as const) {
       const h = this.hands[hand];
-      this.demoReset(h, hand);
+      this.demoReset(h);
       const fr = start[hand];
       if (fr) this.demoPose(hand, fr, null, 0, 0, true);
     }
+    this.syncLegend();
     this.pedalEl?.remove();
     this.pedalEl = null;
     if (pedal) {
       const p = document.createElement('div');
       p.className = 'kh-pedal';
       p.setAttribute('aria-hidden', 'true');
-      // bàn chân (nhìn nghiêng) trên bàn đạp
+      // bàn đạp (thanh tròn) + mũi tên xuống khi đạp
       p.innerHTML =
-        '<svg viewBox="0 0 30 30"><rect class="kh-bar" x="2" y="22" width="26" height="6" rx="3"/>' +
-        '<g class="kh-foot"><path d="M7 4c3-2 7-1 8 3l1 9c4 0 9 1 11 3c1 1 0 3-2 3H8c-2 0-3-1-3-3l1-12c0-1 0-2 1-3z" fill="#f2c6a5" stroke="#b9805f" stroke-width="1.2"/></g></svg>' +
+        '<svg viewBox="0 0 28 28"><path class="kh-ar" d="M14 2 V11 M9.5 7 L14 11.5 L18.5 7"/><rect class="kh-pd" x="3" y="16" width="22" height="8" rx="4"/></svg>' +
         '<span>Pedal</span>';
       this.kb.el.append(p);
       this.pedalEl = p;
     }
   }
 
-  private demoReset(h: HandEls, hand: Hand): void {
+  private demoReset(h: HandEls): void {
     this.hideHand(h);
-    h.g.classList.remove('lv1', 'lv2', 'shift', 'weight');
-    for (let i = 0; i < 5; i++) {
-      h.parts[i].classList.remove('down', 'bA', 'bB', 'kh-x-under', 'kh-x-over');
-      this.light(h, hand, i, false);
-    }
-    // ngón vắt có thể còn nằm sai thứ tự vẽ
-    for (let i = 1; i < 5; i++) h.g.insertBefore(h.parts[i], h.nums[0]);
-    delete this.pend[hand];
-  }
-
-  private light(h: HandEls, hand: Hand, i: number, on: boolean): void {
-    h.parts[i].classList.toggle('on', on);
-    h.nums[i].classList.toggle('on', on);
-    (h.nums[i].firstChild as SVGCircleElement).style.fill = on ? COLORS[hand].line : '';
-  }
-
-  private applyPose(h: HandEls, hand: Hand, pose: HandPose, only?: number[]): void {
-    const dir = dirOf(hand);
-    for (let i = 0; i < 5; i++) {
-      if (only && !only.includes(i)) continue;
-      h.parts[i].style.transform = tf(pose.fingers[i], dir);
-      h.nums[i].style.transform = `translate(${pose.nums[i].x}px,${pose.nums[i].y}px)`;
-    }
-    if (!only) h.palm.style.transform = tf(pose.palm, dir);
+    h.g.classList.remove('lv1', 'lv2', 'shift');
+    for (const b of h.badges) b.classList.remove('on', 'bA', 'bB');
+    for (const hand of ['RH', 'LH'] as const) if (this.hands[hand] === h) delete this.pend[hand];
   }
 
   /**
-   * Đưa tay tới thế `frame` trong `durS` giây. Luồn / vắt (`cross`): chỉ ngón `finger` đi trước — cả bàn tay theo sau
-   * khi demoFollow().
+   * Đưa bản đồ ngón tới thế `frame` trong `durS` giây. Luồn / vắt (`cross`): chỉ huy hiệu ngón `finger` đi trước (kèm
+   * mũi tên cong) — các huy hiệu khác theo sau khi demoFollow().
    */
   demoPose(hand: Hand, frame: HandFrame, cross: Crossing, durS: number, finger: number, instant = false): void {
     if (this.dead || !this.demo) return;
@@ -967,22 +951,23 @@ export class KeyboardHand {
     const tips = this.tipsOf(frame);
     if (!this.W || tips.every((t) => !t)) return;
     const u = (this.kb.whiteKeyWidth * this.W) / 100;
-    const pose = handPose(tips, hand, u, this.H);
-    this.sizeNums(h, u);
+    const spots = badgeSpots(tips, hand, u, this.H);
+    this.sizeBadges(h, u);
     this.demoFollow(hand); // lần đi trước chưa theo xong → theo ngay
+    const prevSpots = h.spots;
     h.timers.forEach((t) => window.clearTimeout(t));
     h.timers = [];
+    h.arc.classList.remove('show');
     h.g.style.setProperty('--kh-mv', `${Math.max(0.06, durS).toFixed(3)}s`);
     h.g.classList.toggle('instant', instant);
     const idx = finger - 1;
-    if (!instant && cross && idx >= 0 && idx <= 3 && (cross === 'under' ? idx === 0 : idx >= 1)) {
-      const cls = cross === 'under' ? 'kh-x-under' : 'kh-x-over';
-      h.parts[idx].classList.add(cls);
-      if (cross === 'over') h.g.insertBefore(h.parts[idx], h.nums[0]); // vắt QUA: vẽ trên các ngón khác
-      this.applyPose(h, hand, pose, [idx]);
-      this.pend[hand] = { pose, cls, idx };
-    } else this.applyPose(h, hand, pose);
+    if (!instant && cross && prevSpots && idx >= 0 && idx <= 3 && (cross === 'under' ? idx === 0 : idx >= 1)) {
+      this.arcMove(h, idx, prevSpots[idx], spots[idx], cross, Math.max(0.12, durS));
+      this.showArc(h, prevSpots[idx], spots[idx], cross, u, 900);
+      this.pend[hand] = { spots };
+    } else for (let i = 0; i < 5; i++) this.moveBadge(h, i, spots);
     h.frame = frame;
+    h.spots = spots;
     h.shown = true;
     h.g.classList.add('show');
     if (instant) h.timers.push(window.setTimeout(() => h.g.classList.remove('instant'), 60));
@@ -992,35 +977,31 @@ export class KeyboardHand {
     this.demoPose(hand, frame, cross, durS, finger);
   }
 
-  /** Cả bàn tay theo sau ngón luồn / vắt. */
+  /** Các huy hiệu còn lại theo sau ngón luồn / vắt. */
   demoFollow(hand: Hand): void {
     const p = this.pend[hand];
     if (!p) return;
     delete this.pend[hand];
     const h = this.hands[hand];
     h.g.style.setProperty('--kh-mv', '.28s');
-    this.applyPose(h, hand, p.pose);
-    h.parts[p.idx].classList.remove(p.cls);
-    if (p.cls === 'kh-x-over') h.g.insertBefore(h.parts[p.idx], h.parts[p.idx + 1] ?? h.nums[0]);
+    for (let i = 0; i < 5; i++) this.moveBadge(h, i, p.spots);
   }
 
-  /** Ngón `finger` nhấn (down) / nhả; nhả ngắt tiếng → nảy nhẹ. Mu bàn tay dồn sức khi có ngón đang giữ. */
+  /** Ngón `finger` nhấn (huy hiệu phóng to, sáng) / nhả; nhả ngắt tiếng → nảy nhẹ. */
   demoKey(hand: Hand, finger: number, down: boolean, stac: boolean): void {
     if (this.dead || !this.demo) return;
     const h = this.hands[hand];
     const i = finger - 1;
     if (i < 0 || i > 4) return;
-    const p = h.parts[i];
-    p.classList.remove('bA', 'bB');
-    p.classList.toggle('down', down);
-    this.light(h, hand, i, down);
+    const b = h.badges[i];
+    b.classList.remove('bA', 'bB');
+    b.classList.toggle('on', down);
     if (!down && stac) {
       // hai tên hoạt hình luân phiên → chạy lại mà không cần đọc bố cục
       const alt = h.g.dataset.b === 'A' ? 'B' : 'A';
       h.g.dataset.b = alt;
-      p.classList.add(`b${alt}`);
+      b.classList.add(`b${alt}`);
     }
-    h.g.classList.toggle('weight', h.parts.some((x) => x.classList.contains('down')));
   }
 
   demoPedal(down: boolean): void {
@@ -1029,33 +1010,23 @@ export class KeyboardHand {
     this.pedalEl.lastElementChild!.textContent = down ? 'Pedal ⬇' : 'Pedal';
   }
 
-  /** Hết mẫu / dừng: bàn tay về chế độ thường (theo phím đích + công tắc). */
+  /** Hết mẫu / dừng: bản đồ ngón về chế độ thường (theo phím đích + công tắc). */
   demoEnd(): void {
     if (!this.demo) return;
     this.demo = false;
     this.svg.classList.remove('demo');
     this.pedalEl?.remove();
     this.pedalEl = null;
-    for (const hand of ['RH', 'LH'] as const) this.demoReset(this.hands[hand], hand);
+    for (const hand of ['RH', 'LH'] as const) this.demoReset(this.hands[hand]);
+    this.syncLegend();
     this.schedule();
   }
 
-  /** Xoay màn hình giữa lúc mẫu: đặt lại tay đang hiện theo kích thước mới. */
+  /** Xoay màn hình giữa lúc mẫu: đặt lại bản đồ ngón đang hiện theo kích thước mới. */
   private demoRelayout(): void {
     for (const hand of ['RH', 'LH'] as const) {
       const h = this.hands[hand];
       if (h.shown && h.frame) this.demoPose(hand, h.frame, null, 0, 0, true);
-    }
-  }
-
-  private sizeNums(h: HandEls, u: number): void {
-    const r = Math.max(10, Math.min(15, 0.2 * u));
-    for (const ng of h.nums) {
-      const c = ng.firstChild as SVGCircleElement;
-      if (c.getAttribute('r') !== String(r)) {
-        c.setAttribute('r', String(r));
-        (ng.lastChild as SVGTextElement).setAttribute('font-size', String(Math.round(r * 1.3)));
-      }
     }
   }
 
@@ -1065,10 +1036,14 @@ export class KeyboardHand {
     if (live.get(this.kb) === this) live.delete(this.kb);
     this.pedalEl?.remove();
     cancelAnimationFrame(this.raf);
+    window.clearTimeout(this.legendTimer);
     this.ro?.disconnect();
     this.unwatch();
     for (const h of Object.values(this.hands)) h.timers.forEach((t) => window.clearTimeout(t));
+    this.setOwned(new Set());
     this.svg.remove();
+    this.legend.remove();
+    this.legendPop.remove();
   }
 }
 

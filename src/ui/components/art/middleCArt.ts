@@ -1,9 +1,9 @@
 /**
  * (+ 2026-10-16) Tranh "📍 Tìm Đô giữa trên đàn thật" (thuần chuỗi SVG — test được trong node; cùng bảng màu / nét với
- * handKit): đàn piano cơ 88 phím nhìn từ trên (nắp phím, TÊN HÃNG + ổ khóa ở giữa), Đô giữa (C4 — phím trắng thứ 24 từ
+ * diagramKit): đàn piano cơ 88 phím nhìn từ trên (nắp phím, TÊN HÃNG + ổ khóa ở giữa), Đô giữa (C4 — phím trắng thứ 24 từ
  * trái) tô vàng + mũi tên từ tên hãng xuống; ô phóng to La3–Sol4: nhóm 2 phím đen khoanh tròn, Đô giữa ngay bên trái nhóm.
  */
-import { BAD, OUTLINE, arrow, n, tag } from './handKit';
+import { BAD, OUTLINE, arrow, n, tag } from './diagramKit';
 import { P, sparkle, svgRoot } from './svgKit';
 
 export const ART_W = 640;

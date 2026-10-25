@@ -1,5 +1,6 @@
 /**
- * Màn Phụ huynh — mục "⚙️ Nâng cao" (thu gọn). (2026-10-17, OWNER duyệt — gọn lại ~5 cài đặt chính):
+ * ⚙️ Cài đặt — cài đặt chính + dữ liệu (mở sẵn) + "Cho người hỗ trợ" (thu gọn). (2026-10-25, bỏ phần phụ huynh: không còn
+ * mục "Nâng cao" thu gọn — màn ⚙️ chỉ còn cài đặt). Lịch sử (2026-10-17, OWNER duyệt — gọn lại ~5 cài đặt chính):
  *   Cài đặt chính (tên bé · độ dài buổi · giọng đọc · micro · tuần — chọn Cấp rồi Tuần) → 💾 Dữ liệu (sao lưu) → 🆕 Bản mới
  *   → 🧑‍🔧 "Cho người hỗ trợ" (thu gọn, mọi thứ còn lại: tự chuyển nốt, micro tự sang nốt / chấm nhịp / 2 tay, nhạc đệm, tay
  *   trái sớm, tư thế đầy đủ, giới hạn ngày, kiểm tra bản mới, 🩺 Kiểm tra iPad, nhập dữ liệu, đặt lại, chỉnh micro, Album).
@@ -145,7 +146,7 @@ function mainSettingsCard(c: ParentCtx, d: Readonly<AppData>): HTMLElement {
     h(
       'p',
       { class: 'muted' },
-      'App nghe đàn cơ và tự chấm từng nốt — xử lý ngay trên iPad, không gửi đi đâu. Bản thu hay nhất của mỗi bài vào “🎧 Album của con”. Nút “Đúng rồi” của bố mẹ vẫn dùng được.',
+      'App nghe đàn cơ và tự chấm từng nốt — xử lý ngay trên iPad, không gửi đi đâu. Bản thu hay nhất của mỗi bài vào “🎧 Album của con”. Micro tắt hoặc nghe chưa rõ → bé tự kiểm tra (👍 Rồi / 🔁 Làm lại). Bé tự bật được micro (iPad hỏi quyền); chỉ ở đây mới tắt được.',
     ),
     h(
       'div',
@@ -187,7 +188,7 @@ function supportSettingsCard(c: ParentCtx, d: Readonly<AppData>): HTMLElement {
     'section',
     { class: 'card' },
     h('h2', {}, 'Cài đặt khác'),
-    h('h3', {}, 'Tự chuyển nốt sau khi bấm "Đúng rồi"'),
+    h('h3', {}, 'Tự chuyển nốt sau khi bé chạm "👍 Rồi"'),
     onOff(s.autoAdvance, (on) => set({ autoAdvance: on })),
     s.autoAdvance
       ? segmented(
@@ -210,9 +211,9 @@ function supportSettingsCard(c: ParentCtx, d: Readonly<AppData>): HTMLElement {
       (v) => set({ timing: v }),
     ),
     h('h3', {}, 'Micro chấm cả 2 tay (thử nghiệm)'),
-    h('p', { class: 'muted' }, 'Bài hai tay: micro nghe riêng tay phải và tay trái. Tắt = micro chỉ nghe một nốt mỗi lúc. Nút "👪 Bố mẹ: tiếp" luôn còn.'),
+    h('p', { class: 'muted' }, 'Bài hai tay: micro nghe riêng tay phải và tay trái. Tắt = micro chỉ nghe một nốt mỗi lúc. Bé luôn có nút tự đi tiếp.'),
     onOff(s.micTwoHand ?? TWO_HAND_DEFAULT, (on) => set({ micTwoHand: on }), true),
-    h('h3', {}, 'Nhạc nền khi đàn theo nhịp ("bố mẹ đàn cùng")'),
+    h('h3', {}, 'Nhạc nền khi đàn theo nhịp'),
     h(
       'p',
       { class: 'muted' },
@@ -266,10 +267,8 @@ function dataCard(c: ParentCtx, d: Readonly<AppData>): HTMLElement {
     ),
     h(
       'p',
-      { class: 'banner warn' },
-      '⚠️ Tiến độ của bé chỉ nằm trên iPad này. ',
-      h('b', {}, 'Xóa biểu tượng app = mất hết dữ liệu.'),
-      ' Sao lưu mỗi tuần (thẻ “Hôm nay”: xem báo cáo tuần → Sao lưu).',
+      { class: 'muted' },
+      'Tiến độ nằm trên iPad này (app tự giữ thêm một bản sao trong máy). Xóa biểu tượng app = mất dữ liệu — sao lưu tay khi tiện (lưu tệp vào Tệp / iCloud).',
     ),
     button({ icon: '💾', label: 'Sao lưu dữ liệu', kind: 'primary', onTap: () => void exportBackup(store).then((r) => say(BACKUP_MESSAGE[r])) }),
     h('p', { class: 'muted' }, `📀 ${ALBUM_NOT_IN_BACKUP}`),
@@ -396,7 +395,7 @@ function importResetCard(c: ParentCtx, d: Readonly<AppData>): HTMLElement {
   );
 }
 
-/** Mục "Nâng cao" (thu gọn): cài đặt chính, dữ liệu, bản mới, "Cho người hỗ trợ" (thu gọn) */
+/** Cài đặt chính + dữ liệu (mở sẵn) + "Cho người hỗ trợ" (thu gọn: cài đặt khác, công cụ, Album, nhập / đặt lại, bản mới) */
 export function advancedSection(c: ParentCtx, d: Readonly<AppData>): HTMLElement {
   const support = h(
     'details',
@@ -407,20 +406,16 @@ export function advancedSection(c: ParentCtx, d: Readonly<AppData>): HTMLElement
     // (+ 2026-10-08) 🎧 Album của con: bật/tắt lưu, xoá (KHÔNG nằm trong bản sao lưu)
     albumParentCard(),
     importResetCard(c, d),
+    versionsCard(d),
   );
   support.open = c.ui.supportOpen;
   support.addEventListener('toggle', () => (c.ui.supportOpen = support.open));
-  const details = h(
-    'details',
-    { class: 'adv' },
-    h('summary', {}, '⚙️ Nâng cao: cài đặt · dữ liệu · bản mới'),
+  return h(
+    'div',
+    { class: 'adv settings-main' },
     mainSettingsCard(c, d),
     dataCard(c, d),
-    versionsCard(d),
     support,
     h('p', { class: 'muted foot' }, `Piano bé ${APP_VERSION} · không mạng, không quảng cáo, không thu thập dữ liệu.`),
   );
-  details.open = c.ui.advOpen;
-  details.addEventListener('toggle', () => (c.ui.advOpen = details.open));
-  return details;
 }

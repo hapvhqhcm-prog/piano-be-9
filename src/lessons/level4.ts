@@ -13,7 +13,7 @@ import { accompany, byEar, concertTake, polish, recitalLesson, transpose } from 
  * 39 nhịp 6/8 ("MỘT-hai-ba BỐN-năm-sáu") · 40 to dần / nhỏ dần (hairpin), Andante – Allegro – rit. · 41 gam La thứ (tự nhiên,
  * hòa âm) · 42 CỦNG CỐ & chuẩn bị hòa nhạc · 43 Đại hòa nhạc Cấp 4.
  * Cùng kiểu Cấp 3: buổi ≤ 7 màn / ≤ ~12 phút; bài hai tay chính của tuần TÁCH TAY sẵn ở câu khó; ứng tấu 1 phút mỗi tuần.
- * Tiêu chí dạng dữ liệu (`criterionSpec`, lessonEngine.criterionDays): bài đạt ở 2 NGÀY + PHIẾU BỐ MẸ XEM TAY (vai thả lỏng ·
+ * Tiêu chí dạng dữ liệu (`criterionSpec`, lessonEngine.criterionDays): bài đạt ở 2 NGÀY + PHIẾU TỰ XEM TAY (vai thả lỏng ·
  * khớp đầu ngón không gãy · cổ tay mềm) — app không thấy được bàn tay; tuần pedal thêm thẻ "pedal sạch" (micro không nghe được pedal).
  * (2026-10-08) thêm ở CUỐI giáo trình — rev 5 (2026-10-17) đánh số lại bằng progress/migrations.ts (rev5Week).
  */
@@ -76,7 +76,7 @@ const fingerEcho = (pitches: Pitch[], fingers: number[], hand: Hand = 'RH', subt
 });
 
 /**
- * PHIẾU BỐ MẸ XEM TAY (Cấp 4 — thẻ của tiêu chí tuần): bé đàn bài của tuần, bố mẹ nhìn tay rồi chạm "Đúng rồi" từng ý.
+ * PHIẾU TỰ XEM TAY (Cấp 4 — thẻ của tiêu chí tuần; trước 2026-10-25 là bố mẹ xem): bé đàn bài của tuần, tự nhìn tay rồi chạm "👍 Rồi" từng ý.
  * Mã thẻ (PARENT_ASSESSMENT note) cố định — lessonEngine đọc lần chấm GẦN NHẤT trong tuần.
  */
 export const RELAX_CHECKS = ['relax:shoulder', 'relax:joint', 'relax:wrist'] as const;
@@ -85,17 +85,17 @@ const RELAX_TARGETS: Target[] = [
   cardTarget('relax:joint', 'Khớp ngón không gãy', '🖐️', 'Đầu ngón đứng, khớp đầu ngón không bẹp vào trong'),
   cardTarget('relax:wrist', 'Cổ tay mềm', '🌊', 'Cổ tay ngang phím, không cứng, không gồng'),
 ];
-/** Thẻ "pedal sạch" (tuần 41): micro không nghe được pedal → bố mẹ xác nhận. */
+/** Thẻ "pedal sạch" (tuần 41): micro không nghe được pedal → bé tự kiểm tra. */
 export const PEDAL_CHECK = 'ped:clean';
-/** Thẻ "to dần – nhỏ dần nghe rõ" (tuần 43): micro chưa chấm sắc thái trong bài → bố mẹ xác nhận. */
+/** Thẻ "to dần – nhỏ dần nghe rõ" (tuần 43): micro chưa chấm sắc thái trong bài → bé tự kiểm tra. */
 export const HAIRPIN_CHECK = 'dyn:hairpin';
 
 const handCheck = (week: number, extra: Target[] = []): Activity =>
   notes({
     id: `w${week}-handcheck`,
-    step: 'Bố mẹ xem tay',
-    title: 'Bố mẹ xem tay 👀',
-    intro: 'Con đàn lại câu đầu. Bố mẹ nhìn tay nhé!',
+    step: 'Con tự xem tay',
+    title: 'Tự xem tay 👀',
+    intro: 'Con đàn lại câu đầu rồi tự xem tay mình nhé!',
     targets: [...extra, ...RELAX_TARGETS],
   });
 
@@ -107,10 +107,10 @@ export const WEEK34: WeekPlan = {
   story: 'Chào mừng con tới CẤP 4! Trên Đồi Gam Sol, gam leo 8 bậc từ Sol tới Sol — có một bậc là phím đen Fa thăng.',
   leftHand: true,
   warmup: { variant: 'read', pool: ['G4', 'B4', 'C5', 'D5', 'E5', 'G5'], rounds: 6 },
-  teach: { emoji: '👨‍🏫', text: 'Con chỉ bố mẹ: lên gam Sol, ngón cái luồn dưới ở nốt nào? Xuống gam, ngón 3 vắt qua ở đâu?' },
+  teach: { emoji: '👨‍🏫', text: 'Con chỉ Bé Nốt: lên gam Sol, ngón cái luồn dưới ở nốt nào? Xuống gam, ngón 3 vắt qua ở đâu?' },
   drills: ['thumb-under', 'wrist-circle'],
   criterion: {
-    text: 'Chơi gam Sol trưởng tay phải và tay trái (lần lượt) theo nhịp — đạt ở 2 ngày khác nhau + bố mẹ xem tay đạt (vai, khớp ngón, cổ tay)',
+    text: 'Chơi gam Sol trưởng tay phải và tay trái (lần lượt) theo nhịp — đạt ở 2 ngày khác nhau + tự xem tay đạt (vai, khớp ngón, cổ tay)',
     who: 'PARENT/MIC',
   },
   criterionSpec: {
@@ -159,10 +159,10 @@ export const WEEK35: WeekPlan = {
   story: 'Trong Hang Si Giáng, gam Fa trưởng có một phím đen bí mật: Si GIÁNG. Ngón 4 tay phải canh giữ nó!',
   leftHand: true,
   warmup: { variant: 'read', pool: ['F4', 'A4', 'C5', 'D5', 'E5', 'F5'], rounds: 6 },
-  teach: { emoji: '👨‍🏫', text: 'Con chỉ bố mẹ phím Si giáng, và ngón nào đàn nó trong gam Fa tay phải.' },
+  teach: { emoji: '👨‍🏫', text: 'Con chỉ Bé Nốt phím Si giáng, và ngón nào đàn nó trong gam Fa tay phải.' },
   drills: ['thumb-under', 'finger-tap'],
   criterion: {
-    text: 'Chơi gam Fa trưởng tay phải và tay trái (lần lượt) theo nhịp — đạt ở 2 ngày khác nhau + bố mẹ xem tay đạt',
+    text: 'Chơi gam Fa trưởng tay phải và tay trái (lần lượt) theo nhịp — đạt ở 2 ngày khác nhau + tự xem tay đạt',
     who: 'PARENT/MIC',
   },
   criterionSpec: {
@@ -215,10 +215,10 @@ export const WEEK36: WeekPlan = {
   story: 'Ở Thung lũng Rê, hai bàn tay cùng leo gam một lúc — mỗi tay luồn ngón ở một chỗ khác nhau. Khó mà vui!',
   leftHand: true,
   warmup: { variant: 'read', pool: ['D4', 'F4', 'A4', 'B4', 'C5', 'D5'], rounds: 6 },
-  teach: { emoji: '👨‍🏫', text: 'Con chỉ bố mẹ hai phím đen của gam Rê trưởng: Fa thăng và Đô thăng.' },
+  teach: { emoji: '👨‍🏫', text: 'Con chỉ Bé Nốt hai phím đen của gam Rê trưởng: Fa thăng và Đô thăng.' },
   drills: ['thumb-under', 'hand-shape'],
   criterion: {
-    text: 'Chơi gam Sol trưởng HAI TAY CÙNG LÚC theo nhịp — đạt ở 2 ngày khác nhau + bố mẹ xem tay đạt',
+    text: 'Chơi gam Sol trưởng HAI TAY CÙNG LÚC theo nhịp — đạt ở 2 ngày khác nhau + tự xem tay đạt',
     who: 'PARENT/MIC',
   },
   criterionSpec: { songs: [{ songId: 'scale_g_both', tempo: true }], parentChecks: [...RELAX_CHECKS] },
@@ -250,10 +250,10 @@ export const WEEK37: WeekPlan = {
   story: 'Hợp âm không chỉ bấm cùng lúc — rải từng nốt một như cầu vồng: lên, rồi xuống!',
   leftHand: true,
   warmup: { variant: 'majorminor', pool: ['C4', 'F4', 'G4'], rounds: 6 },
-  teach: { emoji: '👨‍🏫', text: 'Con rải hợp âm Đô trưởng cho bố mẹ nghe: Đô – Mi – Sol – Mi – Đô, ngón 1 – 3 – 5 – 3 – 1.' },
+  teach: { emoji: '👨‍🏫', text: 'Con rải hợp âm Đô trưởng cho Bé Nốt nghe: Đô – Mi – Sol – Mi – Đô, ngón 1 – 3 – 5 – 3 – 1.' },
   drills: ['hand-shape', 'wrist-circle'],
   criterion: {
-    text: 'Chơi "Hợp âm rải Sol trưởng" và "Hợp âm rải Fa trưởng" theo nhịp — mỗi bài đạt ở 2 ngày khác nhau + bố mẹ xem tay đạt',
+    text: 'Chơi "Hợp âm rải Sol trưởng" và "Hợp âm rải Fa trưởng" theo nhịp — mỗi bài đạt ở 2 ngày khác nhau + tự xem tay đạt',
     who: 'PARENT/MIC',
   },
   criterionSpec: {
@@ -294,14 +294,14 @@ export const WEEK37: WeekPlan = {
       activities: [
         accompany('ode_to_joy_easy', 'Bài ca niềm vui', ['I', 'V7', 'I', 'V7', 'I', 'V7', 'I', 'I'], 'broken'),
       ],
-      teach: { emoji: '🌈', text: 'Con đệm "Bài ca niềm vui" bằng hợp âm rải cho bố mẹ hát!' },
+      teach: { emoji: '🌈', text: 'Con đệm "Bài ca niềm vui" bằng hợp âm rải cho Bé Nốt hát!' },
     },
   ],
 };
 
 /**
  * (+ 2026-10-17, OWNER duyệt "Thêm tuần ôn & biểu diễn") TUẦN 38 — Trạm Nghỉ Gió: KHÔNG học gì mới — sau 4 tuần gam / hợp âm rải
- * (34–37), TRƯỚC bass Alberti & Sonatina (39): đánh bóng 3 bài hai tay Cấp 4 + phiếu bố mẹ xem tay; cuối tuần "🎤 Buổi diễn nhỏ".
+ * (34–37), TRƯỚC bass Alberti & Sonatina (39): đánh bóng 3 bài hai tay Cấp 4 + phiếu tự xem tay; cuối tuần "🎤 Buổi diễn nhỏ".
  */
 const ON3 = [
   { songId: 'etude_g', titleVi: 'Bài luyện ngón Sol' },
@@ -315,7 +315,7 @@ const polishLesson = (id: string, week: number, emoji: string, songId: string, t
   title: `Đánh bóng: ${titleVi}`,
   emoji,
   activities: [polish(songId, titleVi, [50, 60]), concertTake(songId), ...extra],
-  teach: { emoji: '✨', text: `Con kể cho bố mẹ: bài "${titleVi}" tay trái đệm kiểu gì?` },
+  teach: { emoji: '✨', text: `Con kể cho Bé Nốt: bài "${titleVi}" tay trái đệm kiểu gì?` },
 });
 
 export const WEEK38: WeekPlan = {
@@ -326,10 +326,10 @@ export const WEEK38: WeekPlan = {
   story: 'Gió mát ở Trạm Nghỉ Gió! Không có gì mới — con đánh bóng 3 bài hai tay cho thật đều, rồi biểu diễn cho cả nhà.',
   leftHand: true,
   warmup: { variant: 'theory', pool: [], rounds: 6, theoryUpTo: 37 },
-  teach: { emoji: '👨‍🏫', text: 'Con chọn bài thích nhất trong 3 bài, đàn cho bố mẹ và kể: tay trái đệm kiểu gì?' },
+  teach: { emoji: '👨‍🏫', text: 'Con chọn bài thích nhất trong 3 bài, đàn cho Bé Nốt và kể: tay trái đệm kiểu gì?' },
   drills: ['arm-drop', 'wrist-circle'],
   criterion: {
-    text: 'Chơi trọn "Bài luyện ngón Sol", "Lá vàng rơi" và "Hành khúc Rê trưởng" hai tay THEO NHỊP từ tốc độ 60 — mỗi bài đạt ít nhất một lần, trong ít nhất 2 ngày + bố mẹ xem tay đạt',
+    text: 'Chơi trọn "Bài luyện ngón Sol", "Lá vàng rơi" và "Hành khúc Rê trưởng" hai tay THEO NHỊP từ tốc độ 60 — mỗi bài đạt ít nhất một lần, trong ít nhất 2 ngày + tự xem tay đạt',
     who: 'PARENT/MIC',
   },
   criterionSpec: { songs: ON3.map((x) => ({ songId: x.songId, tempo: true, minBpm: 60 })), parentChecks: [...RELAX_CHECKS], spread: true },
@@ -350,10 +350,10 @@ export const WEEK39: WeekPlan = {
   story: 'Trong Lâu đài Alberti, tay trái rải hợp âm "thấp – cao – giữa – cao" như tiếng vó ngựa nhỏ. Các nhạc sĩ cổ điển rất thích kiểu đệm này!',
   leftHand: true,
   warmup: { variant: 'read', pool: ['C3', 'D3', 'E3', 'F3', 'G3', 'A3'], rounds: 6, clef: 'bass' },
-  teach: { emoji: '👨‍🏫', text: 'Con đàn cho bố mẹ nghe bass Alberti: Đô – Sol – Mi – Sol bằng ngón 5 – 1 – 3 – 1.' },
+  teach: { emoji: '👨‍🏫', text: 'Con đàn cho Bé Nốt nghe bass Alberti: Đô – Sol – Mi – Sol bằng ngón 5 – 1 – 3 – 1.' },
   drills: ['wrist-circle', 'finger-tap'],
   criterion: {
-    text: 'Chơi trọn "Sonatina nhỏ" hai tay THEO NHỊP (tốc độ từ 50 trở lên) — đạt ở 2 ngày khác nhau + bố mẹ xem tay đạt',
+    text: 'Chơi trọn "Sonatina nhỏ" hai tay THEO NHỊP (tốc độ từ 50 trở lên) — đạt ở 2 ngày khác nhau + tự xem tay đạt',
     who: 'PARENT/MIC',
   },
   criterionSpec: { songs: [{ songId: 'sonatina_c', tempo: true, minBpm: 50 }], parentChecks: [...RELAX_CHECKS] },
@@ -405,10 +405,10 @@ export const WEEK40: WeekPlan = {
   leftHand: true,
   // (2026-10-12, OWNER duyệt) khởi động THỈNH THOẢNG bằng "📘 Đố vui nhạc lý" — chỉ hỏi khái niệm đã có thẻ ở tuần trước
   warmup: { variant: 'theory', pool: [], rounds: 6, theoryUpTo: 39 },
-  teach: { emoji: '👨‍🏫', text: 'Con chọn một bài tuần trước, đàn cho bố mẹ và kể: tay trái đệm kiểu gì?' },
+  teach: { emoji: '👨‍🏫', text: 'Con chọn một bài tuần trước, đàn cho Bé Nốt và kể: tay trái đệm kiểu gì?' },
   drills: ['five-finger', 'thumb-under'],
   criterion: {
-    text: 'Chơi gam Fa trưởng hai tay cùng lúc và "Minuet nhỏ Fa trưởng" theo nhịp — mỗi bài đạt ở 2 ngày khác nhau + bố mẹ xem tay đạt',
+    text: 'Chơi gam Fa trưởng hai tay cùng lúc và "Minuet nhỏ Fa trưởng" theo nhịp — mỗi bài đạt ở 2 ngày khác nhau + tự xem tay đạt',
     who: 'PARENT/MIC',
   },
   criterionSpec: {
@@ -446,10 +446,10 @@ export const WEEK41: WeekPlan = {
   story: 'Bên Hồ Ngân Vang, tiếng đàn ngân dài như tiếng vọng. Bí mật nằm dưới chân: bàn đạp PEDAL bên phải!',
   leftHand: true,
   warmup: { variant: 'majorminor', pool: ['C4', 'F4', 'G4', 'A4'], rounds: 6 },
-  teach: { emoji: '👨‍🏫', text: 'Con chỉ bố mẹ: đổi pedal là "nhả trước — nhấn sau" — nhả khi hợp âm mới vang, nhấn lại ngay sau đó.' },
+  teach: { emoji: '👨‍🏫', text: 'Con chỉ Bé Nốt: đổi pedal là "nhả trước — nhấn sau" — nhả khi hợp âm mới vang, nhấn lại ngay sau đó.' },
   drills: ['arm-drop', 'hand-shape'],
   criterion: {
-    text: 'Chơi trọn "Đêm thánh vô cùng — hai tay, pedal" THEO NHỊP (tốc độ từ 50 trở lên) — đạt ở 2 ngày khác nhau + bố mẹ xác nhận pedal sạch và tay thả lỏng',
+    text: 'Chơi trọn "Đêm thánh vô cùng — hai tay, pedal" THEO NHỊP (tốc độ từ 50 trở lên) — đạt ở 2 ngày khác nhau + tự kiểm tra pedal sạch và tay thả lỏng',
     who: 'PARENT/MIC',
   },
   criterionSpec: {
@@ -506,10 +506,10 @@ export const WEEK42: WeekPlan = {
   story: 'Ở Vịnh Thuyền Đưa, sóng đưa thuyền "MỘT-hai-ba BỐN-năm-sáu" — mỗi ô 6 móc đơn, chia làm hai nhóm ba.',
   leftHand: true,
   warmup: { variant: 'interval', pool: ['C4', 'D4', 'E4', 'F4', 'G4'], rounds: 6, maxInterval: 5 },
-  teach: { emoji: '👨‍🏫', text: 'Con vừa đung đưa người vừa đếm cho bố mẹ: MỘT-hai-ba BỐN-năm-sáu.' },
+  teach: { emoji: '👨‍🏫', text: 'Con vừa đung đưa người vừa đếm cho Bé Nốt: MỘT-hai-ba BỐN-năm-sáu.' },
   drills: ['arm-drop', 'wrist-circle'],
   criterion: {
-    text: 'Chơi trọn "Thuyền đưa — nhịp 6/8" hai tay theo nhịp — đạt ở 2 ngày khác nhau + bố mẹ xem tay đạt',
+    text: 'Chơi trọn "Thuyền đưa — nhịp 6/8" hai tay theo nhịp — đạt ở 2 ngày khác nhau + tự xem tay đạt',
     who: 'PARENT/MIC',
   },
   criterionSpec: { songs: [{ songId: 'boat_song_68', tempo: true }], parentChecks: [...RELAX_CHECKS] },
@@ -553,10 +553,10 @@ export const WEEK43: WeekPlan = {
   story: 'Mặt trời lên TO DẦN, rồi lặn NHỎ DẦN. Trên khuông, hai cái "mỏ" < và > dạy con đàn như thế!',
   leftHand: true,
   warmup: { variant: 'majorminor', pool: ['C4', 'D4', 'F4', 'G4'], rounds: 6 },
-  teach: { emoji: '👨‍🏫', text: 'Con giải thích cho bố mẹ: Andante là đi thong thả, Allegro là nhanh vui, rit. là chậm dần.' },
+  teach: { emoji: '👨‍🏫', text: 'Con giải thích cho Bé Nốt: Andante là đi thong thả, Allegro là nhanh vui, rit. là chậm dần.' },
   drills: ['five-finger', 'arm-drop'],
   criterion: {
-    text: 'Chơi trọn "Sóng biển" (Andante) hai tay theo nhịp — đạt ở 2 ngày khác nhau + bố mẹ nghe rõ to dần / nhỏ dần + xem tay đạt',
+    text: 'Chơi trọn "Sóng biển" (Andante) hai tay theo nhịp — đạt ở 2 ngày khác nhau + to dần / nhỏ dần nghe rõ + tự xem tay đạt',
     who: 'PARENT/MIC',
   },
   criterionSpec: {
@@ -610,10 +610,10 @@ export const WEEK44: WeekPlan = {
   story: 'Dưới trăng, vũ hội La Thứ bắt đầu. Gam La thứ không có phím đen — nhưng bản "hòa âm" mượn một phím đen: Sol THĂNG.',
   leftHand: true,
   warmup: { variant: 'majorminor', pool: ['C4', 'D4', 'F4', 'G4', 'A4'], rounds: 6 },
-  teach: { emoji: '👨‍🏫', text: 'Con đàn cho bố mẹ nghe gam La thứ hai lần: lần đầu toàn phím trắng, lần sau có Sol thăng.' },
+  teach: { emoji: '👨‍🏫', text: 'Con đàn cho Bé Nốt nghe gam La thứ hai lần: lần đầu toàn phím trắng, lần sau có Sol thăng.' },
   drills: ['thumb-under', 'five-finger'],
   criterion: {
-    text: 'Chơi gam La thứ tay phải và "Korobeiniki" hai tay theo nhịp — mỗi bài đạt ở 2 ngày khác nhau + bố mẹ xem tay đạt',
+    text: 'Chơi gam La thứ tay phải và "Korobeiniki" hai tay theo nhịp — mỗi bài đạt ở 2 ngày khác nhau + tự xem tay đạt',
     who: 'PARENT/MIC',
   },
   criterionSpec: {
@@ -655,7 +655,7 @@ export const WEEK44: WeekPlan = {
       activities: [
         byEar('london_bridge', 7),
       ],
-      teach: { emoji: '👂', text: 'Con đàn cho bố mẹ câu con tìm được bằng tai — bố mẹ đoán tên bài nhé!' },
+      teach: { emoji: '👂', text: 'Con đàn cho Bé Nốt câu con tìm được bằng tai — Bé Nốt đoán tên bài nhé!' },
     },
   ],
 };
@@ -669,10 +669,10 @@ export const WEEK45: WeekPlan = {
   leftHand: true,
   // (2026-10-12, OWNER duyệt) khởi động THỈNH THOẢNG bằng "📘 Đố vui nhạc lý" — chỉ hỏi khái niệm đã có thẻ ở tuần trước
   warmup: { variant: 'theory', pool: [], rounds: 6, theoryUpTo: 44 },
-  teach: { emoji: '👨‍🏫', text: 'Con chọn bài sẽ biểu diễn ở Nhà hát và tập giới thiệu bài cho bố mẹ nghe.' },
+  teach: { emoji: '👨‍🏫', text: 'Con chọn bài sẽ biểu diễn ở Nhà hát và tập giới thiệu bài cho Bé Nốt nghe.' },
   drills: ['arm-drop', 'wrist-circle'],
   criterion: {
-    text: 'Chơi trọn "Greensleeves" hai tay theo nhịp — đạt ở 2 ngày khác nhau + bố mẹ xem tay đạt',
+    text: 'Chơi trọn "Greensleeves" hai tay theo nhịp — đạt ở 2 ngày khác nhau + tự xem tay đạt',
     who: 'PARENT/MIC',
   },
   criterionSpec: { songs: [{ songId: 'greensleeves', tempo: true }], parentChecks: [...RELAX_CHECKS] },
@@ -714,7 +714,7 @@ export const WEEK46: WeekPlan = {
   leftHand: true,
   warmup: null,
   teach: { emoji: '🎤', text: 'Con giới thiệu từng bài với khán giả: tên bài, giọng gì, nhịp mấy, có pedal không.' },
-  criterion: { text: 'Đại hòa nhạc Cấp 4 — bố mẹ trao huy chương', who: 'PARENT' },
+  criterion: { text: 'Đại hòa nhạc Cấp 4 — nhận huy chương', who: 'PARENT' },
   kidGoal: 'Nhà hát Lớn — nhận huy chương Cấp 4! 🎇',
   lessons: [{ id: 'w46-stage', week: 46, title: 'Đại hòa nhạc Cấp 4', emoji: '🏆', isWeekTest: true, activities: [{ kind: 'stage', level: 4 }] }],
 };

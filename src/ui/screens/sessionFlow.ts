@@ -9,7 +9,7 @@
  *   Đồng hồ vẫn tính từ đầu buổi (mở đầu dài — Đô giữa, bài tập về nhà… — không làm buổi mất bài học: bước trước bài
  *   (ôn nhanh, khởi động tai, đọc nhạc 1 phút) không bao giờ nhảy thẳng tới màn kết). Đây là luật đơn giản & chắc nhất: buổi
  *   nào cũng có ≥ 1 hoạt động của bài; phần còn lại học tiếp buổi sau (dấu "<bài>#<i>").
- * - MỞ ĐẦU chạy MỘT LẦN mỗi buổi: Đô giữa / dải "👪 Hôm nay để ý" chỉ hiện lần đầu (cờ của BUỔI, không của mỗi lần vào
+ * - MỞ ĐẦU chạy MỘT LẦN mỗi buổi: Đô giữa chỉ hiện lần đầu (cờ của BUỔI, không của mỗi lần vào
  *   bước); quay lại từ bước 2 → về thẳng bước con CUỐI của mở đầu.
  * - (+ 2026-10-17, OWNER duyệt "Buổi học ≥ 60% đàn thật") MỞ ĐẦU ≤ 60 giây (openingPlan): bài tập về nhà THAY khởi động bằng
  *   nhạc; thẻ tư thế đầy đủ ≤ 1 lần / tuần (ghi settings.postureFullAt); Đô giữa chỉ khi bé thật sự lệch quãng 8; không mời bài
@@ -25,9 +25,7 @@ import { MAX_WEEK, activityDoneId, buildSessionPlan, levelOf, weekComplete, week
 import { nextReviewSkips, readReviewSkips } from '../../lessons/sessionPlan';
 import { earnedStickerIds } from '../../lessons/stickers';
 import { pendingHomework, type Homework } from '../../lessons/homework';
-import { octaveTrouble, readOctaveLog, type MiddleCReason } from '../../lessons/middleC';
-import { parentFocus, type ParentFocus } from '../../lessons/parentFocus';
-import { handFocus, readHandLook } from '../../lessons/handTechnique';
+import { readOctaveLog, type MiddleCReason } from '../../lessons/middleC';
 import { rewardEligible } from '../../lessons/rewardSongs';
 import { songMastered } from '../../lessons/songStats';
 import { pushWarmupRecent, readWarmupRecent, stretchOffer, type StretchOffer } from '../../lessons/sessionSelectors';
@@ -45,8 +43,8 @@ interface Nav {
 /** Một màn cần dựng (session.ts quyết định màn thật cho từng loại). */
 export type FlowView =
   | ({ kind: 'middleC'; reason: MiddleCReason } & Nav)
-  | ({ kind: 'homework'; homework: Homework; focus: ParentFocus | null } & Nav)
-  | ({ kind: 'music'; step: PostureStep; focus: ParentFocus | null } & Nav)
+  | ({ kind: 'homework'; homework: Homework } & Nav)
+  | ({ kind: 'music'; step: PostureStep } & Nav)
   | ({ kind: 'posture'; step: PostureStep } & Nav)
   | ({ kind: 'drill'; step: PostureStep } & Nav)
   | ({ kind: 'step'; step: PlainStep } & Nav);
@@ -157,20 +155,7 @@ export function startSessionFlow(env: FlowEnv, lesson: Lesson, opts: FlowOpts = 
       /* chỉ là tiện ích — không chặn buổi học */
     }
   }
-  // (+ 2026-10-16, OWNER duyệt) "👪 Bố mẹ 30 giây — hôm nay để ý: …" (một dòng chữ nhỏ đầu buổi; không ghi gì)
-  let focus: ParentFocus | null = null;
-  if (!replay) {
-    try {
-      const d = store.get();
-      focus = parentFocus(lesson, {
-        hand: handFocus(d, env.now(), readHandLook()),
-        octave: octaveTrouble(octaveLog, env.now()),
-        lessonDone: d.progress.lessonsCompleted.includes(lesson.id),
-      });
-    } catch {
-      focus = null;
-    }
-  }
+  // (2026-10-25, OWNER "bỏ phần phụ huynh") bỏ dải "👪 Bố mẹ 30 giây — hôm nay để ý" đầu buổi
   // (+ 2026-10-15) 📝 Bài tập về nhà của buổi trước (ngày trước) → mời tập TRƯỚC khởi động (bỏ qua được)
   // (+ 2026-10-17, OWNER duyệt) không mời bài tập về nhà cho bài bé ĐÃ THUỘC (bài tập cũ còn đó từ trước khi thuộc)
   const hw0 = replay ? null : pendingHomework(store.settings, store.today(), env.now());
@@ -189,9 +174,7 @@ export function startSessionFlow(env: FlowEnv, lesson: Lesson, opts: FlowOpts = 
   let lessonFinished = false;
   let lessonPassed = 0;
   const played: number[] = [];
-  let focusTaken = false;
   let middleCShown = false;
-  const takeFocus = (): ParentFocus | null => (focusTaken ? null : ((focusTaken = true), focus));
 
   const finish = (): void => {
     env.stopMic();
@@ -277,9 +260,9 @@ export function startSessionFlow(env: FlowEnv, lesson: Lesson, opts: FlowOpts = 
           show({ kind: 'posture', step, onDone: o.drill ? drill : next, onBack: first });
         };
         const drill = (): void => show({ kind: 'drill', step, onDone: next, onBack: o.posture ? posture : first });
-        const music = (): void => show({ kind: 'music', step, focus: takeFocus(), onDone: afterFirst, onBack: back });
+        const music = (): void => show({ kind: 'music', step, onDone: afterFirst, onBack: back });
         const homework = (): void => {
-          show({ kind: 'homework', homework: hw!, focus: takeFocus(), onDone: afterFirst, onBack: back });
+          show({ kind: 'homework', homework: hw!, onDone: afterFirst, onBack: back });
         };
         // (+ 2026-10-17) quay lại từ bước sau → về bước con CUỐI của mở đầu (không chạy lại Đô giữa / bài tập về nhà / nhạc)
         if (fromBack) return o.drill ? drill() : o.posture ? posture() : first();
@@ -325,6 +308,7 @@ export function startSessionFlow(env: FlowEnv, lesson: Lesson, opts: FlowOpts = 
           onBack: back,
         });
       case 'review-song':
+      case 'stretch-song':
         if (env.now() >= deadline) return next();
         return show({ kind: 'step', step, onDone: nextOrWrap, onBack: back });
       case 'closing':

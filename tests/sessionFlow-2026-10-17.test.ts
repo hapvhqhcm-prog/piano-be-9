@@ -143,20 +143,21 @@ describe('sessionFlow — mở đầu buổi', () => {
     expect(h.log).not.toContain('homework');
   });
 
-  it('dải "👪 Hôm nay để ý" chỉ ở màn ĐẦU TIÊN của mở đầu (một lần mỗi buổi)', () => {
+  // (2026-10-25, OWNER "bỏ phần phụ huynh") dải "👪 Hôm nay để ý" đã bỏ: màn mở đầu không còn chữ cho bố mẹ
+  it('mở đầu không còn dải "👪 Hôm nay để ý" (không có trường focus); quay lại vẫn về màn nhạc', () => {
     const d = child('cruising');
     const h = harness(d);
     h.start(lesson('w6-l1'));
     if (h.cur().kind === 'middleC') h.cur().onDone();
     const music = h.cur();
     expect(music.kind).toBe('music');
-    const f1 = music.kind === 'music' ? music.focus : null;
+    expect('focus' in music).toBe(false);
     music.onDone();
     expect(['posture', 'drill']).toContain(h.cur().kind);
     h.cur().onBack();
     const again = h.cur();
     expect(again.kind).toBe('music');
-    if (f1) expect(again.kind === 'music' && again.focus).toBeNull();
+    expect('focus' in again).toBe(false);
   });
 
   it('QUAY LẠI từ bước 2 → về bước con CUỐI của mở đầu; KHÔNG chạy lại Đô giữa / bài tập về nhà', () => {

@@ -15,14 +15,17 @@ import { handArtMod } from '../components/handArtLazy';
 import { speakChip } from '../components/speakChip';
 import '../../styles/parentux.css';
 
-/** 👪 Ba câu ngắn bố mẹ nói khi bé vấp — thay cho chê / giục (rà soát hành trình phụ huynh 2026-10-06). */
-export const PARENT_PHRASES = ['“Con thử chậm hơn nhé”', '“Ngón số mấy nhỉ?”', '“Nghỉ 1 phút rồi làm lại”'];
+/**
+ * Ba câu ngắn khi bé vấp — thay cho chê / giục (rà soát 2026-10-06). (2026-10-25, OWNER "bỏ phần phụ huynh") giờ là câu
+ * BÉ TỰ NHỦ (không còn hộp "bố mẹ nói").
+ */
+export const PARENT_PHRASES = ['“Mình thử chậm hơn”', '“Ngón số mấy nhỉ?”', '“Nghỉ 1 phút rồi làm lại”'];
 
 function coachBox(): HTMLElement {
   return h(
     'aside',
-    { class: 'coach-box', 'aria-label': 'Câu nói cho bố mẹ' },
-    h('b', {}, '👪 Khi bé vấp, bố mẹ nói:'),
+    { class: 'coach-box', 'aria-label': 'Khi vấp, con tự nhủ' },
+    h('b', {}, '💬 Khi vấp, con tự nhủ:'),
     h('ul', {}, ...PARENT_PHRASES.map((t) => h('li', {}, t))),
   );
 }
@@ -33,8 +36,8 @@ const TICK_MS = 250;
  * Tư thế ĐẦY ĐỦ — (+ 2026-10-15, OWNER: "ngón tay phải đúng tư thế để đủ lực") dãy 4 THẺ CÓ TRANH ĐÚNG ✓ / CHƯA ĐÚNG ✗:
  * ngồi (đo ghế, kê chân) · dáng tay ôm bóng · đầu ngón đứng vững · cổ tay ngang & thả sức nặng cánh tay.
  * Mỗi thẻ tự sang thẻ sau sau ~9 giây (vuốt trái/phải hoặc "Tiếp" để nhanh hơn); thẻ cuối chờ "Xong rồi" → cả dãy ≤ 40 giây.
- * Luôn có "Bỏ qua ⏭". Bố mẹ vừa nhắc một lỗi tay (handFocus) → thẻ đó lên đầu, có nhãn "👪 Bố mẹ vừa nhắc".
- * v5.2 (OWNER duyệt 2026-10-08): chỉ hiện ở bài tuần 1, buổi đầu mỗi tuần, hoặc khi bố mẹ bật "nhắc tư thế đầy đủ"
+ * Luôn có "Bỏ qua ⏭". Bé vừa tự chấm "Làm lại" một lỗi tay (handFocus) → thẻ đó lên đầu, có nhãn "🎯 Hôm trước con nhắc mình điều này".
+ * v5.2 (OWNER duyệt 2026-10-08): chỉ hiện ở bài tuần 1, buổi đầu mỗi tuần, hoặc khi cài đặt bật "nhắc tư thế đầy đủ"
  * (lessonEngine.postureFull); các buổi khác chỉ có câu nhắc một dòng (POSTURE_CUE) trên màn khởi động bằng nhạc.
  */
 export function postureScreen(app: App, hooks: { onDone(): void; onBack(): void }) {
@@ -76,7 +79,7 @@ export function postureScreen(app: App, hooks: { onDone(): void; onBack(): void 
         h('div', { class: 'step-tag' }, `Tư thế · ${i + 1}/${cards.length}`),
         h('div', { class: 'pz-dots', 'aria-hidden': 'true' }, ...cards.map((_, k) => h('i', { class: k === i ? 'on' : undefined }))),
         last ? null : h('div', { class: 'pz-timebar', 'aria-hidden': 'true' }, fill),
-        flag && c.principle === flag && i === 0 ? h('div', { class: 'pz-flagnote' }, '👪 Bố mẹ vừa nhắc điều này') : null,
+        flag && c.principle === flag && i === 0 ? h('div', { class: 'pz-flagnote' }, '🎯 Con nhớ điều này nhé!') : null,
         h(
           'div',
           { class: 'pz-pair' },
@@ -85,7 +88,7 @@ export function postureScreen(app: App, hooks: { onDone(): void; onBack(): void 
         ),
         h('h1', { class: 'title' }, `${c.emoji} ${c.text}`),
         h('p', { class: 'lead' }, c.sub, speakChip(app, said)),
-        // Thẻ đầu (bé đang ngồi vào đàn): bố mẹ đọc nhanh 3 câu động viên
+        // Thẻ đầu (bé đang ngồi vào đàn): 3 câu bé tự nhủ khi vấp
         i === 0 ? coachBox() : null,
       ];
       stage.replaceChildren(...parts.filter((x): x is HTMLElement => !!x));

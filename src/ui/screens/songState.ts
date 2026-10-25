@@ -165,7 +165,7 @@ export interface SongCtx {
   tune: Tune;
   state: State;
   token: number;
-  /** Lượt theo nhịp vừa chơi có thử thách "máy im" không (cho lời khen khi bố mẹ chấm) */
+  /** Lượt theo nhịp vừa chơi có thử thách "máy im" không (cho lời khen khi bé tự kiểm tra) */
   lastDrop: [number, number] | null;
   raf: number;
   disposed: boolean;
@@ -176,9 +176,9 @@ export interface SongCtx {
   tempoExpect: ((at: number) => number[]) | null;
   /**
    * (+ 2026-10-08) MICRO NÓI THẬT (chế độ chờ): bé có vẻ đang đàn mà micro không nhận ra nốt nào 3 lần liền →
-   * "Micro nghe chưa rõ — không phải lỗi của con" + "👪 Bố mẹ chấm giúp" (cả lượt này chuyển sang bố mẹ chấm).
+   * "Micro nghe chưa rõ — không phải lỗi của con" + "👍 Con tự kiểm tra" (cả lượt này chuyển sang bé tự kiểm tra).
    */
-  parentRun: boolean;
+  selfRun: boolean;
   demoRun: { cancel: () => void; done: Promise<void> } | null;
   /** Ghi nhớ nhóm nốt theo (bài, tay): follow() gọi mỗi khung hình — không dựng lại cả dòng thời gian mỗi lần */
   gMemo: { tune: Tune; hand: Hand | null; gs: Onset[] } | null;
@@ -191,7 +191,7 @@ export interface SongCtx {
   wWrongThis: number;
   /** Số lần đàn sai trong cả lượt (micro nghe sai / chạm sai phím ảo) — cho "Lặp 3 lần đúng" */
   wWrongPass: number;
-  /** (+ 2026-10-09) Số lần liền micro chưa nghe đủ hai tay ở nhóm đang chờ (≥ 3 → nút "👪 Bố mẹ: tiếp" nổi bật) */
+  /** (+ 2026-10-09) Số lần liền micro chưa nghe đủ hai tay ở nhóm đang chờ (≥ 3 → nút "▶ Đi tiếp" nổi bật) */
   wHandFails: number;
   /** Nốt micro nghe được gần nhất ở nhóm hai tay (dự phòng: kiểm tra hai tay không kết luận được → cách cũ) */
   lastHeard: { midi: number; at: number } | null;
@@ -222,7 +222,7 @@ export const handParts = (g: Onset) =>
   (['RH', 'LH'] as const)
     .map((hand) => ({ hand, midis: handMidis(g, hand), indices: g.notes.filter((n) => n.hand === hand).map((n) => n.index) }))
     .filter((p) => p.midis.length);
-/** Kết quả một nhóm, mọi tay cùng một kết luận (nhóm một tay / bố mẹ bấm "tiếp") */
+/** Kết quả một nhóm, mọi tay cùng một kết luận (nhóm một tay / bé chạm "Đi tiếp") */
 export const sameVerdict = (g: Onset, verdict: HandNoteResult['verdict'], offset?: number): HandNoteResult[] =>
   handParts(g).map((p) => ({ ...p, beat: g.start, measure: g.notes[0].measure, together: together(g), verdict, ...(offset !== undefined ? { offset } : {}) }));
 export const handsRun = (m: 'wait' | 'tempo', notes: HandNoteResult[]): TwoHandRun => ({ mode: m, notes, ...tallyHands(notes) });
@@ -354,7 +354,7 @@ export function scheduleAccomp(c: SongCtx, t0: number, spb: number, mute: [numbe
   // (+ 2026-10-17, OWNER duyệt) SONG TẤU: bè thầy (Tune.duet) luôn đàn — kể cả micro bật (bè thấp, không trùng tên nốt bé:
   // tune.validateDuet) — micro vẫn chỉ chấm nốt của bé
   const duet = !!c.tune.duet;
-  // (+ 2026-10-17) bè đệm piano: bố mẹ bật nhạc đệm, bé không chọn "🔔 Chỉ tiếng tích", micro TẮT (micro bật: bè piano che mất
+  // (+ 2026-10-17) bè đệm piano: nhạc đệm bật (⚙️ Cài đặt), bé không chọn "🔔 Chỉ tiếng tích", micro TẮT (micro bật: bè piano che mất
   // tiếng đàn của bé — đo ở tests/backingMic.test.ts; khi đó chỉ trống nhịp vui, scheduleGroove)
   if (!duet && !backingNow(c).pitched) return;
   for (const a of accompaniment(c.tune)) {

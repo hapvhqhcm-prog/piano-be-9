@@ -116,7 +116,7 @@ export function openSongRecorder(app: App, host: HTMLElement, o: RecorderOptions
     if (dev?.micOk) return null;
     const supported = micModule.loaded?.MicListener.supported ?? (typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getUserMedia && isSecureContext);
     if (!supported) return 'Trình duyệt này không cho dùng micro (cần mở app từ biểu tượng trên màn hình chính, địa chỉ https). Bố mẹ vẫn gõ chữ hoặc chạm phím để thêm bài được.';
-    if (!app.store.settings.micEnabled) return 'Micro đang TẮT. Vào Phụ huynh › Nâng cao › 🎤 Cài micro (3 bước) để bật, rồi quay lại đây. Trong lúc chờ, bố mẹ gõ chữ hoặc chạm phím để thêm bài.';
+    if (!app.store.settings.micEnabled) return 'Micro đang TẮT. Vào ⚙️ Cài đặt › 🎤 Cài micro (3 bước) để bật, rồi quay lại đây. Trong lúc chờ, bố mẹ gõ chữ hoặc chạm phím để thêm bài.';
     return micError || null;
   }
 
@@ -213,7 +213,7 @@ export function openSongRecorder(app: App, host: HTMLElement, o: RecorderOptions
         micError =
           st === 'denied'
             ? 'iPad chưa cho app dùng micro: vào Cài đặt › Safari (hoặc app) › Micro → Cho phép, rồi thử lại.'
-            : 'Chưa mở được micro — thử lại, hoặc vào Phụ huynh › 🩺 Kiểm tra iPad.';
+            : 'Chưa mở được micro — thử lại, hoặc vào ⚙️ Cài đặt › 🩺 Kiểm tra iPad.';
         render();
         return;
       }

@@ -2,7 +2,7 @@
  * (+ 2026-10-17, OWNER duyệt — rà soát giáo viên dài hạn) "🎹 NHẠC CÔNG NHỎ" — màn của hoạt động `musician`
  * (session.ts chỉ gọi musicianScreen; chunk riêng). Phần thuần + dữ liệu: lessons/musician.ts.
  *  · 🔀 Dịch giọng / 👂 Đàn theo tai: màn "tìm nốt" chung (bên dưới) — micro nghe từng nốt THEO THỨ TỰ, không chấm nhịp,
- *    gợi ý tăng dần (cao hơn / thấp hơn → nghe lại nốt → chỉ phím). Không micro: bé đàn, bố mẹ chạm "Con làm đúng rồi".
+ *    gợi ý tăng dần (cao hơn / thấp hơn → nghe lại nốt → chỉ phím). Không micro: bé đàn rồi TỰ KIỂM TRA, chạm "👍 Con làm đúng rồi".
  *  · 🎹 Đệm hợp âm: musicianChords.ts · ✨ Đánh bóng & 🎤 Buổi diễn nhỏ: musicianStage.ts.
  */
 import { cancelSpeech, speak } from '../../audio/voice';
@@ -25,7 +25,7 @@ import { backButton, button, h } from '../components/dom';
 import { mascot } from '../components/mascot';
 import { speakChip } from '../components/speakChip';
 import { StaffView } from '../components/staffView';
-import { selfStudy } from '../selfStudy';
+import { selfOkButton } from '../selfCheck';
 import { accompanyScreen } from './musicianChords';
 import { polishScreen, recitalScreen } from './musicianStage';
 import '../../styles/musician.css';
@@ -136,7 +136,6 @@ function findScreen(app: App, o: FindOpts): Screen {
     root.append(h('div', { class: 'screen' }, stage, h('div', { class: 'keyboard-wrap short' }, kb.el), bar));
     const setBar = (...b: Array<HTMLElement | null | false>) => bar.replaceChildren(...b.filter((x): x is HTMLElement => !!x));
     const micOn = () => app.mic.state === 'on';
-    const parentIcon = () => (selfStudy(app) ? '✋' : '👪');
 
     const halt = (): number => {
       token++;
@@ -209,7 +208,7 @@ function findScreen(app: App, o: FindOpts): Screen {
       // Đàn theo tai: nốt đầu sáng sẵn (điểm xuất phát)
       if (ear) kb.setTargets([{ pitch: o.notes[0].pitch, finger: o.notes[0].finger, hand: 'RH' }]);
       renderDots();
-      say(micOn() ? '🎤 App đang nghe — đàn từng nốt, không cần đúng nhịp' : `Con đàn trên đàn thật — ${selfStudy(app) ? 'xong thì chạm "Con làm đúng rồi"' : 'bố mẹ nghe giúp nhé'}`);
+      say(micOn() ? '🎤 App đang nghe — đàn từng nốt, không cần đúng nhịp' : 'Con đàn trên đàn thật — đúng thì chạm 👍 "Con làm đúng rồi"');
       fill(
         stage,
         h('div', { class: 'step-tag' }, o.tag),
@@ -222,7 +221,7 @@ function findScreen(app: App, o: FindOpts): Screen {
         backButton(intro),
         ear ? button({ icon: '🔊', label: 'Nghe lại', onTap: () => playPhrase(listen) }) : null,
         button({ icon: '💡', label: 'Gợi ý', onTap: showNext }),
-        button({ icon: parentIcon(), label: 'Con làm đúng rồi', kind: micOn() ? 'plain' : 'good', onTap: () => success(true) }),
+        selfOkButton(() => success(true), { label: 'Con làm đúng rồi', primary: !micOn() }),
       );
       if (micOn()) {
         app.mic.resetTracker();

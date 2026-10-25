@@ -78,6 +78,8 @@ export interface MicStats {
   appFrames: number;
   /** Số lần "suýt nghe" (tiếng có cao độ rõ nhưng dưới ngưỡng — đàn khẽ quá với độ nhạy đang dùng) */
   nearMisses: number;
+  /** (+ 2026-10-25) Số nốt bỏ vì là GIỌNG bé (hát / ngân nga / nói / huýt sáo — voiceGuard.ts), không phải tiếng đàn */
+  voiceNotes: number;
 }
 
 /** Tùy chọn xin micro: tắt mọi xử lý giọng nói (giữ nguyên tiếng đàn). voiceIsolation: Safari/Chrome mới. */
@@ -158,6 +160,7 @@ export class MicListener {
   private lastTickAt = -1;
   private _stats: MicStats = MicListener.emptyStats();
   private noteListeners = new Set<(n: HeardNote) => void>();
+  private voiceListeners = new Set<(n: HeardNote) => void>();
   private onsetListeners = new Set<(atCtxTime: number) => void>();
   private frameListeners = new Set<(f: MicFrame) => void>();
   private stateListeners = new Set<(s: MicState) => void>();
@@ -254,7 +257,7 @@ export class MicListener {
   }
 
   private static emptyStats(): MicStats {
-    return { frames: 0, maxGapMs: 0, slowGaps: 0, onsets: 0, notes: 0, appFrames: 0, nearMisses: 0 };
+    return { frames: 0, maxGapMs: 0, slowGaps: 0, onsets: 0, notes: 0, appFrames: 0, nearMisses: 0, voiceNotes: 0 };
   }
 
   /** Luồng micro đang mở (null khi tắt) — recorder.ts ghi "Nghe lại con đàn" từ đây (cùng luồng, không ảnh hưởng nhận nốt). */
@@ -342,6 +345,23 @@ export class MicListener {
   onNote(fn: (n: HeardNote) => void): () => void {
     this.noteListeners.add(fn);
     return () => this.noteListeners.delete(fn);
+  }
+
+  /**
+   * (+ 2026-10-25) Micro nghe ra một "nốt" nhưng là GIỌNG bé (hát / ngân nga / nói / huýt sáo — voiceGuard.ts) → KHÔNG
+   * báo qua onNote; màn hình có thể nhắc nhẹ một lần ("đàn trên phím nhé"). Màn "Hát" (bước hát) nghe giọng qua onFrame.
+   */
+  onVoice(fn: (n: HeardNote) => void): () => void {
+    this.voiceListeners.add(fn);
+    return () => this.voiceListeners.delete(fn);
+  }
+
+  /** (+ 2026-10-25) Phân biệt giọng / tiếng đàn (mặc định bật) — tắt = như trước (mọi nốt có cao độ đều được báo). */
+  get voiceGuard(): boolean {
+    return this.analyzer.voiceGuard;
+  }
+  set voiceGuard(on: boolean) {
+    this.analyzer.voiceGuard = on;
   }
 
   /**
@@ -661,6 +681,11 @@ export class MicListener {
       const n = f.note;
       st.notes++;
       this.noteListeners.forEach((fn) => fn(n));
+    }
+    if (f.voice && app === 'quiet') {
+      const v = f.voice;
+      st.voiceNotes++;
+      this.voiceListeners.forEach((fn) => fn(v));
     }
     // Chỉ lúc có màn đang chờ nghe nốt, app im, không đọc to
     if (this.noteListeners.size && app === 'quiet' && (f.note || f.nearMiss) && !this.externalBusy()) {

@@ -149,6 +149,11 @@ function renumberAll(
   if (isObj(data.progress)) {
     const prog = { ...data.progress };
     if (typeof prog.currentWeek === 'number') prog.currentWeek = week(prog.currentWeek);
+    // (+ 2026-10-25) tuần được cho qua / lần thi vượt tuần: khóa là số tuần → đổi số theo bảng như currentWeek
+    for (const k of ['skips', 'skipTries'] as const) {
+      const m = prog[k];
+      if (isObj(m)) prog[k] = Object.fromEntries(Object.entries(m).map(([w, v]) => [/^\d+$/.test(w) ? String(week(Number(w))) : w, v]));
+    }
     if (Array.isArray(prog.lessonsCompleted)) {
       prog.lessonsCompleted = prog.lessonsCompleted
         .filter((x) => typeof x !== 'string' || keepDone(x))

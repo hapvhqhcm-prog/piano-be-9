@@ -7,7 +7,7 @@ import { h } from '../components/dom';
 import { TEMPOS, expressionLegend, setTempoSound, tempoChoices, tempoSound, type HandSel, type SongOptions, type TempoSound } from './songShared';
 import { noteColorMode, setNoteColorMode, type NoteColorMode } from '../components/noteColors';
 
-/** Các lựa chọn bé/bố mẹ đổi được trên đầu trang. */
+/** Các lựa chọn bé đổi được trên đầu trang. */
 export interface SongChoices {
   handSel: HandSel;
   mode: SongOptions['mode'];
@@ -24,18 +24,18 @@ export interface SongHeadDeps {
   canEdit(): boolean;
   /** Áp dụng lựa chọn mới (rồi song.ts dựng lại màn) */
   pick(patch: Partial<SongChoices>): void;
-  /** (+ 2026-10-17) Bố mẹ bật "nhạc đệm" (settings.accompaniment) — tắt thì không hiện lựa chọn 🥁 Nhạc nền */
+  /** (+ 2026-10-17) "Nhạc đệm" bật trong ⚙️ Cài đặt (settings.accompaniment) — tắt thì không hiện lựa chọn 🥁 Nhạc nền */
   backingAllowed?: () => boolean;
 }
 
-/** (+ 2026-10-15) Công tắc "✋ Hiện bàn tay" (bàn tay mờ trên bàn phím — ui/components/keyboardHand.ts) */
+/** (+ 2026-10-15) Công tắc "🔢 Hiện số ngón" (bản đồ ngón trên bàn phím — ui/components/keyboardHand.ts) */
 export type HandGuideMode = 'auto' | 'on' | 'off';
 
 export class SongHead {
   readonly el = h('div', { class: 'song-head' });
   /** Bảng "⚙️ Tuỳ chọn" đang mở hay không; giữ nguyên khi vẽ lại đầu trang. */
   private optsOpen = false;
-  /** (+ 2026-10-15) Có khi lớp bàn tay mờ đã nạp (song.ts gán) — đổi được cả lúc đang chơi */
+  /** (+ 2026-10-15) Có khi lớp bản đồ ngón đã nạp (song.ts gán) — đổi được cả lúc đang chơi */
   handGuide: { get(): HandGuideMode; set(m: HandGuideMode): void } | null = null;
   private last: SongChoices | null = null;
 
@@ -59,7 +59,7 @@ export class SongHead {
     return b;
   }
 
-  /** Vẽ lại với lựa chọn gần nhất (vd sau khi lớp bàn tay mờ nạp xong). */
+  /** Vẽ lại với lựa chọn gần nhất (vd sau khi lớp bản đồ ngón nạp xong). */
   refresh(): void {
     if (this.last) this.render(this.last);
   }
@@ -77,7 +77,7 @@ export class SongHead {
         'div',
         { class: 'song-title' },
         h('b', {}, full.titleVi),
-        // Tên gốc/nhạc sĩ chỉ dành cho bố mẹ (thư viện) — màn của bé gọn chữ
+        // Tên gốc/nhạc sĩ chỉ ở thư viện — màn của bé gọn chữ
         full.lh && opts.stage ? h('span', { class: 'hand-tag' }, '🙌 hai tay') : null,
         opts.review ? h('span', { class: 'hand-tag review-tag' }, '🔁 ôn bài cũ') : null,
       ),
@@ -167,7 +167,7 @@ export class SongHead {
         });
         return b;
       };
-      section('✋ Hiện bàn tay', hgChip('Tự động', 'auto'), hgChip('Luôn hiện', 'on'), hgChip('Ẩn', 'off'));
+      section('🔢 Hiện số ngón', hgChip('Tự động', 'auto'), hgChip('Luôn hiện', 'on'), hgChip('Ẩn', 'off'));
     }
     if (!opts.stage) {
       // (+ 2026-10-15) 🎨 Nốt màu: đổi ngay cả lúc đang chơi (chỉ đổi lớp CSS) — songState.buildStaff nghe sự kiện 'notecolors'

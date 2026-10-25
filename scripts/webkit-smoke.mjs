@@ -11,7 +11,7 @@
  *
  * Cách chạy: `vite build` vào <ra>/build (hoặc --skip-build: chép dist/ có sẵn) → `vite preview` (base /piano-be-9/) ở cổng trống →
  * WebKit chạy ngầm với ngữ cảnh giống iPad (1080×810, deviceScaleFactor 2, isMobile, hasTouch, UA Safari iPad) →
- * lái UI THẬT theo chữ trên nút (micro tắt → đường "👪 bố mẹ"), chạm bằng touchscreen.tap (sự kiện chạm thật).
+ * lái UI THẬT theo chữ trên nút (micro tắt qua ⚙️ → bé tự kiểm tra "👍 Rồi / 🔁 Làm lại"), chạm bằng touchscreen.tap (sự kiện chạm thật).
  * Thư viện "lái tự động" trong trang (screenKind/decide/…) lấy NGUYÊN VĂN từ scripts/e2e.mjs để hai bộ kiểm luôn khớp.
  *
  * Kịch bản:
@@ -19,7 +19,7 @@
  *   A  Bắt đầu → Hướng dẫn → màn chính → Học tiếp (một buổi trọn vẹn tuần 1) → tổng kết → màn chính.
  *   C  Thư viện (lọc 🇻🇳) → bài hát → Xem mẫu; Sổ sticker; cổng phụ huynh (giữ 2 giây + phép tính) → Nâng cao,
  *      💾 Sao lưu, 📊 Báo cáo, 🎤 Cài micro (3 bước); Soạn bài (gõ chữ → khuông); Đàn tự do → 🎵 Đàn theo thầy.
- *   B  Phụ huynh đổi tuần 12 / 19 / 29 (hộp xác nhận) → mỗi tuần một buổi "Học tiếp".
+ *   B  ⚙️ Cài đặt đổi tuần 12 / 19 / 29 (hộp xác nhận) → mỗi tuần một buổi "Học tiếp".
  *   H  (+ 2026-10-16) Bài tập về nhà (như kịch bản F của e2e.mjs): w3-l3 lượt chưa đạt → bài tập + 🎁 bài thưởng; đồng hồ app
  *      +1 ngày: 📍 Tìm Đô giữa → 📝 Bài tập về nhà → Bỏ qua → khởi động → … → màn kết; +2 ngày: đàn bài tập → … → màn kết.
  *   (+ 2026-10-10, cần bản build có móc kiểm thử PIANO_TEST_HOOKS=1 — script tự build như vậy; dữ liệu "bé thật tuần 4" =
@@ -521,7 +521,7 @@ const tapTextStarts = (t, ms) => tapBy(`btnStarts(${JSON.stringify(t)})`, t, ms)
 const tapSel = (s, ms) => tapBy(`document.querySelector(${JSON.stringify(s)})`, s, ms);
 
 /**
- * (2026-10-17) Màn chính "1 nút to": danh sách bài / 🎹 Đàn tự do / 👤 Khách chơi nằm sau link "Xem các bài"
+ * (2026-10-17) Màn chính "1 nút to": danh sách bài / 👤 Khách chơi nằm sau link "Xem các bài"
  * ([data-test="lessons-toggle"]) — mở ra trước khi chạm các nút đó (không có link / đã mở thì thôi).
  */
 const openLessons = async () => {
@@ -571,15 +571,15 @@ async function toHome() {
 // ---------------- buổi học tự lái ----------------
 const STUCK_MS = 90_000;
 /**
- * (+ 2026-10-10) Bài hát chế độ "Từng nốt" (chờ): chạm PHÍM ẢO đang sáng thay vì "👪 Bố mẹ: tiếp" — app có dữ liệu từng
+ * (+ 2026-10-10) Bài hát chế độ "Từng nốt" (chờ): chạm PHÍM ẢO đang sáng thay vì "▶ Đi tiếp" (data-test wait-next) — app có dữ liệu từng
  * nốt → màn kết quả có nhận xét kiểu thầy giáo (khuông tô màu + lời nhắn). Nhóm nốt đầu mỗi bài: chạm nhầm một phím
- * trắng khác trước (để thầy có lỗi "nhầm" mà nhận xét). Không có phím sáng (gợi ý "nhìn khuông") → đường bố mẹ như cũ.
- * Cờ window.__e2eFailSongs (kịch bản H) → đường bố mẹ (phiếu chấm thiếu ý = lượt chưa đạt).
+ * trắng khác trước (để thầy có lỗi "nhầm" mà nhận xét). Không có phím sáng (gợi ý "nhìn khuông") → "▶ Đi tiếp" như decide().
+ * Cờ window.__e2eFailSongs (kịch bản H) → bé tự kiểm tra "🔁 Làm lại" (lượt chưa đạt) — decide() của e2e.mjs.
  */
 const SONG_TAP = `
   const q = (s) => document.querySelector(s);
   if (window.__e2eFailSongs > 0) return null;
-  if (!q('.song-head') || !btn('Bố mẹ: tiếp') || !q('.song-progress')) return null;
+  if (!q('.song-head') || !q('[data-test="wait-next"]') || !q('.song-progress')) return null;
   const keys = [...document.querySelectorAll('.key.is-target')].filter(vis);
   if (!keys.length) return null;
   const title = txt(q('.song-title'));
@@ -599,6 +599,8 @@ const REVIEW_SEEN = `
     teacher: q('.song-result-next.teacher') ? txt(q('.song-result-next')) : '', next: txt(q('.song-result-next')) };
 `;
 async function runSession(label, start, o = {}) {
+  // micro bật → tắt qua ⚙️ trước (xem ensureMicOff)
+  if ((await kindNow()) === 'home') await ensureMicOff();
   const tStart = Date.now();
   // (2026-10-17) nút ▶ to của màn chính mang tên bài hát hôm nay → chạm theo data-test (không theo chữ "Học tiếp:")
   if (start === 'next') await tapSel('[data-test="continue"]');
@@ -671,7 +673,7 @@ async function runSession(label, start, o = {}) {
     // (2026-10-17) MỘT màn kết, MỘT lời mời: buổi suôn sẻ → "🎁 Chọn 1 bài con thích" thay lời mời biểu diễn
     if (d.kind === 'session-end' && concert === null) {
       concert = await evaluate(inPage(`return !!btn('Biểu diễn cho cả nhà');`)).catch(() => false);
-      offerSeen = await evaluate(inPage(`return btn('Biểu diễn cho cả nhà') ? 'concert' : btn('Chọn 1 bài con thích') ? 'reward' : btnStarts('⭐') ? 'stretch' : null;`)).catch(() => null);
+      offerSeen = await evaluate(inPage(`return btn('Biểu diễn cho cả nhà') ? 'concert' : btn('Chọn 1 bài con thích') ? 'reward' : buttons().some((b) => txt(b.querySelector('.btn-icon')) === '⭐' || /^Thử (nhanh hơn|bài khó hơn)/.test(label(b))) ? 'stretch' : null;`)).catch(() => null);
       if (concert && o.concert) {
         await shot(`${label}-concert-offer`);
         await exploreConcert(label);
@@ -749,6 +751,8 @@ async function openParent() {
   await waitFor(`screenKind() === 'parent'`, 'màn Phụ huynh');
 }
 async function openAdvanced() {
+  // (2026-10-25) ⚙️ Cài đặt: "Cài đặt chính" + "Dữ liệu" mở sẵn (div.adv.settings-main); bản cũ: <details class="adv"> thu gọn
+  if (await evaluate(`!!document.querySelector('div.adv')`)) return;
   const open = await evaluate(`!!document.querySelector('details.adv')?.open`);
   if (!open) await tapSel('details.adv > summary');
   await waitFor(`document.querySelector('details.adv')?.open`, 'mở Nâng cao');
@@ -778,11 +782,29 @@ async function backToKid() {
   await tapText('Về màn của bé');
   await waitFor(`screenKind() === 'home'`, 'về màn chính');
 }
+/**
+ * (2026-10-25, bỏ phần phụ huynh) Người dùng mới (và dữ liệu bé thật) có micro BẬT → WebKit ngầm không có micro thật: để buổi học
+ * tất định, tắt micro qua ⚙️ Cài đặt (công tắc "Tắt" dưới "🎤 Nghe đàn bằng micro") — như ensureMicOff của e2e.mjs.
+ */
+async function ensureMicOff() {
+  const d = await appData();
+  if (!d || d.settings?.micEnabled !== true) return false;
+  await openParent();
+  const ok = await evaluate(
+    inPage(`const hd = document.querySelector('.settings-main [data-guide="mic"]'); let el = hd && hd.nextElementSibling; while (el && !el.querySelector('.seg')) el = el.nextElementSibling; const b = el && [...el.querySelectorAll('.seg-btn')].find((x) => txt(x) === 'Tắt' && vis(x)); return b ? target(b, 'Micro: Tắt') : null;`),
+  );
+  assert(ok, 'Không thấy công tắc micro "Tắt" trong ⚙️ Cài đặt');
+  await doAction(ok);
+  await waitFor(`JSON.parse(localStorage.getItem('piano-be-9') || '{}').settings?.micEnabled === false`, 'tắt micro trong ⚙️ Cài đặt');
+  await backToKid();
+  log('  (đã tắt micro qua ⚙️ Cài đặt — buổi học đi đường bé tự kiểm tra)');
+  return true;
+}
 async function setWeek(week) {
   await openParent();
   await openAdvanced();
   // (2026-10-17) Ô chọn tuần = chọn Cấp (.week-pick-level) rồi Tuần trong cấp (.week-pick-week)
-  const lv = await page.$('details.adv .week-pick-level');
+  const lv = await page.$('.adv .week-pick-level');
   assert(lv, 'Không thấy ô chọn tuần');
   await lv.evaluate((s) => s.scrollIntoView({ block: 'center' }));
   const lvVal = await lv.evaluate((s, w) => [...s.options].find((o) => Number(o.dataset.from) <= w && w <= Number(o.dataset.to))?.value ?? null, week);
@@ -790,7 +812,7 @@ async function setWeek(week) {
   // selectOption = chọn như người dùng (bắn input + change)
   await lv.selectOption(String(lvVal));
   await sleep(200);
-  const wk = await page.$('details.adv .week-pick-week');
+  const wk = await page.$('.adv .week-pick-week');
   assert(wk, 'Không thấy ô chọn tuần trong cấp');
   await wk.selectOption(String(week));
   await sleep(300);
@@ -1116,9 +1138,8 @@ async function main() {
     await waitFor(`screenKind() === 'parent'`, 'về Phụ huynh từ soạn bài');
     await backToKid();
 
-    // Đàn tự do + trò Đàn theo thầy
-    await openLessons();
-    await tapText('Đàn tự do');
+    // Đàn tự do (+ 2026-10-25: nút 🎹 ở thanh dưới màn chính) + trò Đàn theo thầy
+    await tapSel('[data-test="free-play"]');
     await waitFor(`!!document.querySelector('.echo-box')`, 'màn Đàn tự do');
     await tapBy(`keyFor('E4')`, 'phím E4');
     await sleep(300);
@@ -1139,6 +1160,13 @@ async function main() {
       finding('Trò Đàn theo thầy không chuyển sang lượt bé (playSequence/đồng hồ âm thanh?)');
     }
     await tapText('Dừng trò').catch(() => undefined);
+    // (+ 2026-10-25) 🎙️ Máy ghi âm: nút đỏ trên thanh trên của Đàn tự do → màn máy ghi âm → Quay lại về Đàn tự do
+    await tapSel('[data-test="fp-rec"]');
+    await waitFor(`!!document.querySelector('.tape-screen [data-test="tape-rec"]')`, 'màn Máy ghi âm');
+    await shot('tape-recorder');
+    notes.push(`🎙️ Máy ghi âm: "${await evaluate(inPage(`return txt(document.querySelector('.tape-status'))`))}"`);
+    await tapText('Quay lại');
+    await waitFor(`!!document.querySelector('.echo-box')`, 'về Đàn tự do từ Máy ghi âm');
     await tapText('Quay lại');
     await waitFor(`screenKind() === 'home'`, 'về màn chính từ Đàn tự do');
   });
@@ -1173,7 +1201,7 @@ async function main() {
     };
     try {
       const d0 = await setClockDays(0);
-      // Ngày 0 — w3-l3: lượt "Chú cừu nhỏ" (phiếu bố mẹ thiếu ý) chưa đạt → bài tập; "Ốc sên" đạt → xong bài → 🎁 chọn bài → mở → quay ra
+      // Ngày 0 — w3-l3: lượt "Chú cừu nhỏ" (bé tự chấm "🔁 Làm lại") chưa đạt → bài tập; "Ốc sên" đạt → xong bài → 🎁 chọn bài → mở → quay ra
       await setWeek(3);
       await flags({ __e2eFailSongs: 1, __e2eSkipWarmup: true, __e2eReward: true });
       const picked = {};
@@ -1230,8 +1258,9 @@ async function main() {
     );
     notes.push(`Lời mời ở màn kết: ${s.concert ? 'biểu diễn → đã mở chọn bài / mời khán giả / sân khấu' : s.offer ?? 'KHÔNG'}`);
     // (2026-10-17) MỘT lời mời mỗi màn kết: bài thưởng (buổi suôn sẻ) đứng trước lời mời biểu diễn
-    assert(s.concert || s.offer === 'reward', 'Màn kết buổi không có lời mời (biểu diễn / bài thưởng) — dữ liệu bé tuần 4 đã qua tuần 3');
-    // Thư viện → bài hát "🐢 Từng nốt": chạm phím ảo (một lần nhầm) → bố mẹ chấm → kết quả có nhận xét thầy → Album
+    // (2026-10-25) MỘT lời mời mỗi màn kết (thử thách nhỏ ⭐ > bài thưởng > biểu diễn): bé tự kiểm tra đạt hết → thường là ⭐ "Thử nhanh hơn?"
+    assert(s.concert || s.offer === 'reward' || s.offer === 'stretch', 'Màn kết buổi không có lời mời (⭐ thử thách nhỏ / bài thưởng / biểu diễn) — dữ liệu bé tuần 4 đã qua tuần 3');
+    // Thư viện → bài hát "🐢 Từng nốt": chạm phím ảo (một lần nhầm) → bé tự kiểm tra → kết quả có nhận xét thầy → Album
     await tapText('Bài hát');
     await waitFor(`screenKind() === 'library'`, 'Thư viện');
     await tapSel('.song-card:not(.locked)');
@@ -1284,7 +1313,7 @@ async function main() {
     await waitFor(`!!document.querySelector('.games-hub')`, 'màn Trò chơi');
     await shot('hub');
     const cards = await evaluate(
-      `[...document.querySelectorAll('.game-card')].map((c) => ({ id: c.dataset.game, locked: c.classList.contains('locked'), title: c.querySelector('.gc-title')?.textContent }))`,
+      `[...document.querySelectorAll('.game-card[data-game]')].map((c) => ({ id: c.dataset.game, locked: c.classList.contains('locked'), title: c.querySelector('.gc-title')?.textContent }))`,
     );
     notes.push(`Màn chọn trò: ${cards.map((c) => `${c.title}${c.locked ? ' 🔒' : ''}`).join(', ')}`);
     assert(cards.length === 7, `Cần 7 trò, có ${cards.length}`);
@@ -1490,7 +1519,7 @@ async function main() {
       await waitFor(`screenKind() === 'home'`, 'màn chính');
       await tapText('Trò chơi');
       await waitFor(`!!document.querySelector('.games-hub')`, 'Trò chơi');
-      await tapSel('.game-card:not(.locked)');
+      await tapSel('.game-card[data-game]:not(.locked)');
       await tapText('Bắt đầu', 10_000);
       await sleep(1200);
       await tapBy(`[...document.querySelectorAll('.game-screen .key[data-pitch], .game-stage button')].filter(vis)[0]`, 'chạm trong trò', 3000).catch(() => undefined);
@@ -1503,8 +1532,7 @@ async function main() {
       await waitFor(`!!document.querySelector('.games-hub')`, 'về Trò chơi');
       await tapText('Quay lại');
       await waitFor(`screenKind() === 'home'`, 'màn chính');
-      await openLessons();
-      await tapText('Đàn tự do');
+      await tapSel('[data-test="free-play"]');
       await waitFor(`!!document.querySelector('.echo-box')`, 'Đàn tự do');
       await tapBy(`keyFor('E4')`, 'E4');
       await tapText('Quay lại');
@@ -1592,7 +1620,7 @@ async function main() {
       await tapText('Trò chơi');
       await waitFor(`!!document.querySelector('.games-hub')`, 'Trò chơi');
       await shot('games');
-      const ids = await evaluate(`[...document.querySelectorAll('.game-card:not(.locked)')].map((c) => c.dataset.game)`);
+      const ids = await evaluate(`[...document.querySelectorAll('.game-card[data-game]:not(.locked)')].map((c) => c.dataset.game)`);
       for (const id of ids) {
         await tapSel(`.game-card[data-game="${id}"]`);
         await waitFor(`!!document.querySelector('.game-intro')`, `giới thiệu ${id}`, 10_000);

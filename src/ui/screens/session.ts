@@ -15,7 +15,6 @@ import { songScreen } from './song';
 import { sightDailyScreen } from './sightDaily';
 import { techniqueScreen } from './technique';
 import { homeworkScreen, warmupScreen } from './warmup';
-import { readHomework, readHomeworkNote } from '../../lessons/homework';
 import { lazy, lazyScreen } from '../lazy';
 import { setOctaveObserver } from '../../music/waitJudge';
 import { noteOctaveEvent, type MiddleCReason } from '../../lessons/middleC';
@@ -249,9 +248,9 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean;
       case 'middleC':
         return middleCScreen(app, v.reason, { onDone: v.onDone, onBack: v.onBack });
       case 'homework':
-        return homeworkScreen(app, v.homework, { onRun: (run) => flow.otherRun(run), onDone: v.onDone, onBack: v.onBack, focus: v.focus });
+        return homeworkScreen(app, v.homework, { onRun: (run) => flow.otherRun(run), onDone: v.onDone, onBack: v.onBack });
       case 'music':
-        return warmupScreen(app, v.step.warmup, { onDone: v.onDone, onBack: v.onBack, focus: v.focus });
+        return warmupScreen(app, v.step.warmup, { onDone: v.onDone, onBack: v.onBack });
       case 'posture':
         return postureScreen(app, { onDone: v.onDone, onBack: v.onBack });
       case 'drill':
@@ -292,16 +291,22 @@ export function startSession(app: App, lesson: Lesson, opts: { replay?: boolean;
               { onRun: (run) => flow.otherRun(run), onDone: v.onDone, onBack: v.onBack },
             );
           }
+          case 'stretch-song': {
+            // (+ 2026-10-25) ⭐ bước thử thách của bé giỏi (lessons/stretchPlan.ts): chỉ ghi lượt ĐẠT — thử chưa được không kéo
+            // chỉ số độ khó / không thành "bài tập về nhà" (free); bỏ qua được bằng "Tiếp"
+            const tune = findTune(step.songId);
+            if (!tune) return () => void window.setTimeout(v.onDone, 0);
+            return songScreen(
+              app,
+              tune,
+              { mode: step.mode, level: 2, hints: step.hints, intro: step.intro, free: true },
+              { onRun: (run) => (run.passed ? flow.otherRun(run) : undefined), onDone: v.onDone, onBack: v.onBack },
+            );
+          }
           case 'closing': {
-            const today = store.today();
-            const hw = readHomework(store.settings);
-            const note = readHomeworkNote(store.settings);
+            // (2026-10-25, OWNER "bỏ phần phụ huynh") không còn dòng "Bài tập về nhà" / lời nhắn cho bố mẹ ở màn kết
             return closingScreen(app, {
               teach: step.teach,
-              // (+ 2026-10-15) 📝 dòng "Bài tập về nhà" cho bố mẹ: chỗ thầy dặn trong buổi HÔM NAY
-              homework: hw && hw.date === today ? hw.text : null,
-              // (+ 2026-10-17) bài tập vừa tạm dừng hôm nay → lời nhắn cho bố mẹ
-              homeworkNote: !(hw && hw.date === today) && note && note.date === today ? note.text : null,
               // (+ 2026-10-17, OWNER duyệt "Buổi học ≥ 60% đàn thật") thẻ "📘 Biết thêm" của bài → chip KHÔNG bắt buộc; mở xong quay
               // về màn kết (không đổi tiến độ — thẻ đã được đánh dấu "đã làm" khi buổi chạy hoạt động đầu tiên)
               theory: theoryChip(step.theory, () => flow.go(flow.steps.indexOf(step))),

@@ -1,6 +1,6 @@
 /**
  * (+ 2026-10-15) THẺ NGUYÊN TẮC "Đúng ✓ / Chưa đúng ✗": tên + 🔊, các tranh (nạp muộn) kèm nhãn, một câu cho bé (≤ 12 chữ),
- * tùy chọn một dòng "vì sao" cho bố mẹ. Dùng ở trang "✋ Tư thế tay", dãy thẻ tư thế và khởi động tay.
+ * tùy chọn một dòng "vì sao". Dùng ở trang "✋ Tư thế tay", dãy thẻ tư thế và khởi động tay.
  */
 import { handPrinciple, principleSpeech, type HandPrincipleId, type HandVariant } from '../../lessons/handTechnique';
 import type { VoiceHost } from '../../audio/voice';
@@ -27,9 +27,9 @@ export function principleFigure(id: HandPrincipleId, variant: HandVariant, text?
 }
 
 export interface CardOpts {
-  /** Hiện dòng "vì sao" (cho bố mẹ) */
+  /** Hiện dòng "vì sao" */
   why?: boolean;
-  /** Bố mẹ vừa nhắc lỗi này → viền vàng + nhãn */
+  /** Bé vừa tự chấm "Làm lại" lỗi này (handFocus) → viền vàng + nhãn */
   flagged?: boolean;
 }
 
@@ -40,10 +40,10 @@ export function principleCard(host: VoiceHost, id: HandPrincipleId, opts: CardOp
   return h(
     'article',
     { class: `hp-card${opts.flagged ? ' flagged' : ''}`, 'data-principle': id },
-    opts.flagged ? h('div', { class: 'hp-flag' }, '👪 Bố mẹ vừa nhắc điều này') : null,
+    opts.flagged ? h('div', { class: 'hp-flag' }, '🎯 Con nhớ điều này nhé!') : null,
     h('div', { class: 'hp-head' }, h('span', { class: 'hp-emoji', 'aria-hidden': 'true' }, p.emoji), h('h2', { class: 'hp-title' }, p.title), speakChip(host, principleSpeech(p))),
     panels,
     h('p', { class: 'hp-caption' }, p.caption),
-    opts.why ? h('p', { class: 'hp-why' }, `👪 ${p.why}`) : null,
+    opts.why ? h('p', { class: 'hp-why' }, `💡 ${p.why}`) : null,
   );
 }
