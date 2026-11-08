@@ -29,6 +29,14 @@ export const CHANGELOG_BASELINE = '0.15.0';
 
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
+    version: '0.30.1',
+    date: '2026-11-08',
+    items: [
+      'Hết cảnh "Chạm để bật lại âm thanh" hiện liên tục: app tự bật lại tiếng, không che bài của bé.',
+      'Chỉ khi mất tiếng lâu mới có nút nhỏ ở góc trên; chạm bất kỳ đâu (cả phím đàn) là có tiếng lại.',
+    ],
+  },
+  {
     version: '0.30.0',
     date: '2026-10-26',
     parentAction: true,

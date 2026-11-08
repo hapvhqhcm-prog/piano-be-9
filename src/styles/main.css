@@ -598,16 +598,23 @@ p {
 }
 
 /* ---------- Âm thanh bị tạm dừng ---------- */
-.audio-overlay {
+/* (2026-11-08) Nút nhỏ "có tiếng lại" — không che bài (thay màn che toàn màn hình) */
+.audio-chip {
   position: fixed;
-  inset: 0;
+  top: calc(env(safe-area-inset-top, 0px) + 10px);
+  right: 12px;
   z-index: 100;
-  background: rgba(255, 248, 236, 0.92);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 999px;
+  background: #ff8a3d;
+  color: #fff;
+  font: inherit;
+  font-size: 18px;
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
 }
-.audio-overlay[hidden] {
+.audio-chip[hidden] {
   display: none;
 }
 

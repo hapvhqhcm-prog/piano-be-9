@@ -1,33 +1,50 @@
 import type { AudioEngine } from '../../audio/AudioEngine';
+import { AudioResumeWatch } from '../audioResume';
 import { h } from './dom';
 
 /**
- * Khi AudioContext bị suspended/interrupted (iPad khóa màn hình, chuyển app…)
- * → hiện nút to "Bật lại âm thanh". Chạm = user gesture → resume.
+ * Âm thanh bị iPad ngắt (giọng đọc, micro, cuộc gọi, khóa màn hình, chuyển app…) → TỰ bật lại, không làm phiền bé.
  *
- * (2026-10-12) Thêm: BẤT KỲ lần chạm nào (pha capture, trước mọi nút/phím) cũng thử bật lại âm thanh — bé chạm thẳng
- * vào phím đàn sau cuộc gọi / Siri / chuyển app thì tiếng về ngay, không phải chạm thêm một lần vào nút riêng.
- * Chỉ sau khi app đã "Bắt đầu" (AudioContext có rồi). iOS chỉ coi lúc NHẤC ngón (pointerup/touchend/click) là thao tác
- * người dùng → unlock() đầy đủ ở đó; pointerdown chỉ thử resume() nhẹ (đủ cho trình duyệt khác, vô hại trên iOS).
+ * (2026-11-08, OWNER: "cứ nói chạm lại để bật âm thanh hoài, học cứ bị gián đoạn") Bỏ màn che toàn màn hình.
+ * Tự thử bật lại vài lần (ui/audioResume.ts); chỉ khi dừng lâu mà không bật được mới hiện nút NHỎ ở góc trên.
+ *
+ * (2026-10-12) BẤT KỲ lần chạm nào (pha capture, trước mọi nút/phím) cũng thử bật lại âm thanh — bé chạm thẳng
+ * vào phím đàn thì tiếng về ngay. iOS chỉ coi lúc NHẤC ngón (pointerup/touchend/click) là thao tác người dùng →
+ * unlock() đầy đủ ở đó; pointerdown chỉ thử resume() nhẹ.
  */
-export function installAudioOverlay(audio: AudioEngine, isStarted: () => boolean): void {
+export function installAudioOverlay(audio: AudioEngine, isStarted: () => boolean): AudioResumeWatch {
   const btn = h(
     'button',
-    { class: 'btn btn-primary btn-big', type: 'button' },
-    h('span', { class: 'btn-icon' }, '🔊'),
-    h('span', { class: 'btn-label' }, 'Chạm để bật lại âm thanh'),
+    { class: 'audio-chip', type: 'button', 'data-test': 'audio-chip', 'aria-label': 'Bật lại âm thanh' },
+    '🔇 Chạm để có tiếng',
   );
-  const overlay = h('div', { class: 'audio-overlay', hidden: true }, btn);
-  document.body.append(overlay);
+  btn.hidden = true;
+  document.body.append(btn);
 
-  const refresh = () => {
-    overlay.hidden = !isStarted() || audio.isRunning;
-  };
   /** Cần bật lại: đã bắt đầu, có AudioContext, nhưng đang suspended/interrupted (không phải 'closed'). */
   const needsResume = () => {
     const s = audio.state;
     return isStarted() && (s === 'suspended' || s === 'interrupted');
   };
+  const watch = new AudioResumeWatch({
+    needsResume,
+    tryResume: () => void audio.context?.resume().catch(() => undefined),
+    speaking: () => {
+      try {
+        return globalThis.speechSynthesis?.speaking === true;
+      } catch {
+        return false;
+      }
+    },
+    visible: () => document.visibilityState !== 'hidden',
+    now: () => Date.now(),
+    setTimer: (fn, ms) => window.setTimeout(fn, ms),
+    clearTimer: (id) => window.clearTimeout(id as number),
+    setChip: (show) => {
+      btn.hidden = !show;
+    },
+  });
+
   let pending = false;
   const resumeOnGesture = () => {
     if (pending || !needsResume()) return;
@@ -37,7 +54,7 @@ export function installAudioOverlay(audio: AudioEngine, isStarted: () => boolean
       .catch(() => false)
       .finally(() => {
         pending = false;
-        refresh();
+        watch.check();
       });
   };
   const opts = { capture: true, passive: true } as const;
@@ -50,17 +67,13 @@ export function installAudioOverlay(audio: AudioEngine, isStarted: () => boolean
     opts,
   );
 
-  btn.addEventListener('click', async () => {
-    await audio.unlock();
-    refresh();
-  });
-  audio.onStateChange(refresh);
+  audio.onStateChange(() => watch.check());
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState !== 'visible') return;
-    // Quay lại app: thử resume() ngay (iOS thường cho phép sau 'interrupted') — không được thì nút / lần chạm kế tiếp lo.
     if (needsResume()) audio.context?.resume().catch(() => undefined);
-    window.setTimeout(refresh, 300);
+    window.setTimeout(() => watch.check(), 300);
   });
-  window.addEventListener('pageshow', refresh);
-  window.setInterval(refresh, 2000);
+  window.addEventListener('pageshow', () => watch.check());
+  window.setInterval(() => watch.check(), 2000);
+  return watch;
 }
