@@ -630,7 +630,7 @@ export class ProgressStore {
     return {
       ...c,
       notes: c.notes.map((n) => ({ ...n })),
-      ...(c.lh ? { lh: c.lh.map((n) => ({ ...n })) } : {}),
+      ...(c.lh ? { lh: c.lh.map((n) => ({ ...n, ...(n.also ? { also: n.also.map((a) => ({ ...a })) } : {}) })) } : {}),
       ...(c.phrases ? { phrases: [...c.phrases] } : {}),
     };
   }

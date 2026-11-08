@@ -29,6 +29,15 @@ export const CHANGELOG_BASELINE = '0.15.0';
 
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
+    version: '0.31.0',
+    date: '2026-11-08',
+    items: [
+      'Giọng đọc mới tự nhiên hơn (giọng nữ HoaiMy) — câu nào chưa có thì vẫn dùng giọng của iPad.',
+      'Thêm bài hát trở lại ngay ở màn 🎵 Bài hát của bé: nút "➕ Thêm bài hát", "✏️ Sửa bài".',
+      'Bài thêm chơi được hai tay: tab "🎹🎹 Hai tay" — tay trái đệm hợp âm, app tự chọn hợp âm được.',
+    ],
+  },
+  {
     version: '0.30.2',
     date: '2026-11-08',
     items: [

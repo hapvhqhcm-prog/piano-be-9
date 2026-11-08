@@ -42,6 +42,8 @@ function serviceWorkerPlugin(): Plugin {
       if (publicDir) {
         for (const full of listFiles(publicDir)) {
           const rel = relative(publicDir, full).split(sep).join('/');
+          // (+ 2026-11-08) giọng đọc thu sẵn: kho riêng của SW, không precache (xem sw-template.js)
+          if (rel.startsWith('voice/')) continue;
           files.add(rel);
           hash.update(rel);
           hash.update(readFileSync(full));

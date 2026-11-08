@@ -1,4 +1,5 @@
 import { autoFinger, guessHand } from '../music/autoFinger';
+import { buildChordLh, parseChordText, type ChordStyle } from '../music/chords';
 import { drawable, largestDrawable, padToBars, type SolfegeNote } from '../music/solfege';
 import { addNote } from './compose';
 import { measureCount, type Tune, type TuneNote } from '../music/tune';
@@ -11,7 +12,7 @@ import type { AppData, ParentSong, ParentSongNote } from '../progress/schema';
 
 /** Tiền tố id bài hát (Tune) của bài bố mẹ thêm — lượt chơi ghi songId = "parent-<id>". */
 export const PARENT_PREFIX = 'parent-';
-export const PRIVACY_NOTE = 'Bài bố mẹ tự nhập chỉ lưu trên iPad này, dùng riêng trong gia đình.';
+export const PRIVACY_NOTE = 'Bài tự thêm chỉ lưu trên iPad này, dùng riêng trong gia đình.';
 export const PARENT_TEMPOS = [40, 50, 60, 72, 84, 96] as const;
 
 export type TimeSig = ParentSong['timeSignature'];
@@ -33,11 +34,17 @@ export function buildParentSong(
     pickupRest?: number;
     text?: string;
     updatedAt?: number;
+    /** (+ 2026-11-08) Hợp âm tay trái ("C | G | Am | F") — có → bài hai tay, giai điệu tay phải */
+    chords?: string;
+    chordStyle?: ChordStyle;
   },
 ): ParentSong {
   const bpb = beatsOf(o.timeSignature);
   const padded = padToBars(notes, bpb, o.pickupRest ?? 0);
-  const hand = guessHand(padded);
+  const chordText = o.chords?.trim() ?? '';
+  const chordBars = chordText ? parseChordText(chordText).bars : [];
+  const withChords = chordBars.some((b) => b.some((c) => c && c !== 'hold'));
+  const hand = withChords ? 'RH' : guessHand(padded);
   const fingers = autoFinger(padded, hand);
   const out: ParentSongNote[] = padded.map((n, i) =>
     n.rest || !n.pitch ? { rest: true, beats: n.beats } : { pitch: n.pitch, beats: n.beats, finger: fingers[i] },
@@ -54,13 +61,24 @@ export function buildParentSong(
   if (o.updatedAt) song.updatedAt = o.updatedAt;
   if (o.phrases && o.phrases.length > 1) song.phrases = [...o.phrases];
   if (o.text !== undefined && o.text.trim()) song.text = o.text;
+  if (withChords) {
+    const style = o.chordStyle ?? 'block';
+    const total = Math.round(padded.reduce((s, n) => s + n.beats, 0) / bpb);
+    song.lh = buildChordLh(chordBars, bpb, total, style);
+    song.chords = chordText;
+    song.chordStyle = style;
+  }
   return song;
 }
 
 /** Bài bố mẹ thêm → Tune (chơi ở màn bài hát với đủ chế độ: chờ/nhịp, gợi ý, micro, Xem mẫu, chọn câu). */
 export function parentSongToTune(c: ParentSong): Tune {
   const conv = (ns: ParentSongNote[]): TuneNote[] =>
-    ns.map((n) => (n.rest || !n.pitch ? { rest: true, beats: n.beats } : { pitch: n.pitch, beats: n.beats, ...(n.finger ? { finger: n.finger } : {}) }));
+    ns.map((n) =>
+      n.rest || !n.pitch
+        ? { rest: true, beats: n.beats }
+        : { pitch: n.pitch, beats: n.beats, ...(n.finger ? { finger: n.finger } : {}), ...(n.also?.length ? { also: n.also.map((a) => ({ ...a })) } : {}) },
+    );
   const notes = conv(c.notes);
   const hand = c.lh?.length ? 'BOTH' : guessHand(c.notes);
   const t: Tune = {

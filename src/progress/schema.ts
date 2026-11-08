@@ -548,6 +548,8 @@ export interface ParentSongNote {
   beats: number;
   finger?: number;
   rest?: boolean;
+  /** (+ 2026-11-08) Nốt đánh cùng lúc (hợp âm tay trái) */
+  also?: Array<{ pitch: string; finger?: number }>;
 }
 
 /** (+ 2026-10-06) Bài bố mẹ thêm (src/ui/screens/songEditor.ts). */
@@ -562,8 +564,12 @@ export interface ParentSong {
   bpm: number;
   /** Bè chính (đã tự ghi số ngón khi lưu) */
   notes: ParentSongNote[];
-  /** Bè tay trái (tùy chọn — trình soạn chưa nhập, để dành) */
+  /** Bè tay trái — (+ 2026-11-08) app dựng từ `chords` (src/music/chords.ts) */
   lh?: ParentSongNote[];
+  /** (+ 2026-11-08) Chữ hợp âm tay trái đã gõ ("C | G | Am | F") */
+  chords?: string;
+  /** (+ 2026-11-08) Kiểu đệm: một nốt gốc · hợp âm giữ cả ô · hợp âm theo phách */
+  chordStyle?: 'root' | 'block' | 'pulse';
   /** Số ngón ghi riêng từng nốt */
   position?: 'free';
   /** Ô nhịp bắt đầu mỗi câu */

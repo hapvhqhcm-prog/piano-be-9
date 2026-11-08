@@ -5,6 +5,10 @@ const CACHE = PREFIX + VERSION;
 const PRECACHE = __PRECACHE__;
 // ignoreVary: server (vd "Vary: Origin") làm request module script không khớp cache khi offline.
 const MATCH = { ignoreSearch: true, ignoreVary: true };
+// (+ 2026-11-08) Giọng đọc thu sẵn (voice/hm/): KHÔNG precache (hàng chục MB). Kho riêng, giữ qua mọi bản cập nhật
+// (không có tiền tố PREFIX nên 'activate' không dọn). File .mp3 đặt tên theo mã câu → không bao giờ đổi nội dung.
+const VOICE_CACHE = 'pb9-voice-hm';
+const VOICE_PATH = '/voice/hm/';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -43,6 +47,32 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return; // app không gọi domain ngoài
+
+  if (url.pathname.includes(VOICE_PATH)) {
+    event.respondWith(
+      (async () => {
+        const cache = await caches.open(VOICE_CACHE);
+        if (url.pathname.endsWith('/index.json')) {
+          // danh sách câu: mạng trước (có câu mới), mất mạng → bản đã lưu
+          try {
+            const r = await fetch(req, { cache: 'no-cache' });
+            if (r.ok) await cache.put(req, r.clone());
+            return r;
+          } catch (e) {
+            const c = await cache.match(req, MATCH);
+            if (c) return c;
+            throw e;
+          }
+        }
+        const c = await cache.match(req, MATCH);
+        if (c) return c;
+        const r = await fetch(req);
+        if (r.ok) await cache.put(req, r.clone());
+        return r;
+      })(),
+    );
+    return;
+  }
 
   if (req.mode === 'navigate') {
     event.respondWith(

@@ -11,8 +11,10 @@
 /** Phần tối thiểu của App mà giọng đọc cần (tránh phụ thuộc vòng). */
 export interface VoiceHost {
   store: { settings: { voice?: boolean } };
-  audio: { isSounding: boolean; whenIdle(): Promise<void> };
+  audio: { isSounding: boolean; whenIdle(): Promise<void>; context?: AudioContext | null };
 }
+
+import { clipKeysFor, loadVoiceManifest, playClips, voiceManifest, type ClipPlayback } from './voiceClips';
 
 /** Bỏ qua tiếng micro thêm bao lâu sau khi đọc xong (tiếng vang trong phòng). */
 export const SPEECH_TAIL_MS = 450;
@@ -26,6 +28,8 @@ let speaking = false;
 let lastEnd = 0;
 let gen = 0;
 let unlocked = false;
+/** Lời đang phát bằng giọng thu sẵn (voiceClips.ts). */
+let clip: ClipPlayback | null = null;
 
 /** Ưu tiên giọng tự nhiên, nghe dễ chịu cho trẻ. */
 const PREFERRED = ['linh', 'hoaimy', 'hoai my', 'an', 'namminh', 'google'];
@@ -103,6 +107,7 @@ init();
 
 /** Trình duyệt có giọng tiếng Việt (true khi chưa nạp xong danh sách giọng — để nút 🔊 không chớp tắt). */
 export function voiceSupported(): boolean {
+  if (voiceManifest()) return true; // (+ 2026-11-08) có giọng thu sẵn
   return !!synth() && (viVoice !== null || !voicesLoaded);
 }
 
@@ -119,7 +124,7 @@ export async function viVoiceKnown(ms = 3000): Promise<boolean | null> {
 
 /** Đã tìm thấy giọng vi-VN. */
 export function hasVietnameseVoice(): boolean {
-  return viVoice !== null;
+  return viVoice !== null || voiceManifest() !== null;
 }
 
 /** Đang đọc, hoặc vừa đọc xong chưa lâu (micro phải bỏ qua). */
@@ -139,6 +144,10 @@ export function speakable(text: string): string {
     .replace(/[←→▶↻✓★⬆⬇]/g, '')
     .replace(/\s*[—–]\s*/g, ', ')
     .replace(/\s*\/\s*[A-G][♯♭#b]?(?=$|[\s,.!?)])/g, '') // "Đô / C" → "Đô"
+    // (+ 2026-11-08) dấu thăng / giáng đọc thành chữ ("Fa♯" → "Fa thăng"); đứng riêng (sau chữ "Giáng") thì bỏ
+    .replace(/([A-Za-zÀ-ỹ])♯/g, '$1 thăng')
+    .replace(/([A-Za-zÀ-ỹ])♭/g, '$1 giáng')
+    .replace(/\s*[♯♭]/g, '')
     .replace(/\s+/g, ' ')
     .replace(/\s+([,.!?])/g, '$1')
     .replace(/^[\s,]+|[\s,]+$/g, '')
@@ -160,6 +169,9 @@ function speakingFlag(on: boolean): void {
 /** Dừng câu đang đọc (vd khi rời màn hình). */
 export function cancelSpeech(): void {
   gen++;
+  const c = clip;
+  clip = null;
+  c?.stop();
   const s = synth();
   if (speaking) lastEnd = Date.now();
   speaking = false;
@@ -182,9 +194,56 @@ export function voiceOn(host: VoiceHost): boolean {
  * Promise luôn resolve (đọc xong / bị hủy / lỗi / không có giọng) — không bao giờ treo.
  */
 export async function speak(host: VoiceHost, text: string): Promise<void> {
-  const s = synth();
   const line = speakable(text);
-  if (!s || !line || host.store.settings.voice === false) return;
+  // (+ 2026-11-08) gom lời đã đọc — scripts/e2e.mjs (VOICE_HARVEST=1) lấy để tạo sẵn giọng thu (scripts/voice-corpus.mjs)
+  try {
+    const g = globalThis as { __pb9Spoken?: Set<string> };
+    if (line && (g.__pb9Spoken ??= new Set()).size < 5000) g.__pb9Spoken.add(line);
+  } catch {
+    /* bỏ qua */
+  }
+  if (!line || host.store.settings.voice === false) return;
+  // (+ 2026-11-08) Giọng tự nhiên thu sẵn (HoaiMy): có đủ file cho mọi câu → phát qua app; không thì giọng iPad
+  const ctx = host.audio.context ?? null;
+  if (ctx && !voiceManifest()) await Promise.race([loadVoiceManifest(), new Promise((r) => setTimeout(r, 800))]);
+  const keys = ctx ? clipKeysFor(line) : null;
+  if (keys && ctx) {
+    cancelSpeech();
+    const my = ++gen;
+    if (host.audio.isSounding) {
+      await host.audio.whenIdle();
+      await new Promise((r) => setTimeout(r, 150));
+      if (my !== gen) return;
+    }
+    try {
+      speaking = true;
+      speakingFlag(true);
+      const pb = await playClips(ctx, keys, () => my !== gen);
+      if (pb && my === gen) {
+        clip = pb;
+        await pb.done;
+      } else pb?.stop();
+      if (my === gen) {
+        clip = null;
+        speaking = false;
+        lastEnd = Date.now();
+        speakingFlag(false);
+      }
+      return;
+    } catch {
+      if (my !== gen) return;
+      speaking = false;
+      speakingFlag(false);
+      // tải / giải mã hỏng, âm thanh đang bị ngắt → giọng iPad cho lời này
+    }
+  }
+  await ttsSay(host, line);
+}
+
+/** Đọc bằng giọng có sẵn của iPad (speechSynthesis). */
+async function ttsSay(host: VoiceHost, line: string): Promise<void> {
+  const s = synth();
+  if (!s) return;
   if (!viVoice) pickVoice();
   if (!viVoice && !voicesLoaded) {
     const my0 = gen;

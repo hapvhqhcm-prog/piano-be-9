@@ -1,5 +1,6 @@
 import { notesToSolfege, parseSolfege, restsFor, stripSeparatorCommas, type SolfegeIssue, type SolfegeNote } from '../../music/solfege';
-import { measureCount, timeline, type Tune } from '../../music/tune';
+import { lhTimeline, measureCount, timeline, type Tune } from '../../music/tune';
+import { chordName, chordToneNames, chordViName, chordsUsed, parseChordText, suggestChords, type ChordStyle } from '../../music/chords';
 import { PianoKeyboard } from '../../piano/PianoKeyboard';
 import { midiToFreq, pitchToMidi, viName, type Pitch } from '../../piano/pitchTable';
 import {
@@ -34,6 +35,15 @@ export interface SongEditorHooks {
   /** Lưu xong / thoát */
   onDone(saved: ParentSong | null): void;
 }
+
+/** (+ 2026-11-08) Kiểu đệm tay trái */
+const STYLES: Array<{ id: ChordStyle; label: string; sub: string }> = [
+  { id: 'root', label: '🎵 Một nốt', sub: 'dễ nhất' },
+  { id: 'block', label: '🎹 Hợp âm giữ', sub: '3 ngón, giữ cả ô' },
+  { id: 'pulse', label: '🥁 Theo phách', sub: 'đánh lại theo nhịp' },
+];
+/** Nút chèn nhanh hợp âm hay dùng (giọng Đô trưởng) */
+const CHORD_QUICK = ['C', 'Dm', 'Em', 'F', 'G', 'G7', 'Am', '|', '-', '_'];
 
 type Mode = 'text' | 'tap';
 
@@ -85,6 +95,10 @@ export function songEditorScreen(app: App, existing: ParentSong | null, hooks: S
     let dirty = false;
     let caretNote = -1;
     let playing: { stop(): void } | null = null;
+    // (+ 2026-11-08) Tay trái đệm hợp âm — tab riêng; giai điệu vẫn soạn ở tab Gõ chữ / Chạm phím (`mode`)
+    let view: 'melody' | 'chords' = 'melody';
+    let chordText = existing?.chords ?? '';
+    let chordStyle: ChordStyle = existing?.chordStyle ?? 'block';
 
     const defTitle = () => {
       let n = store.parentSongs().length + 1;
@@ -154,6 +168,8 @@ export function songEditorScreen(app: App, existing: ParentSong | null, hooks: S
         phrases: r.phrases,
         pickupRest: r.pickupRest,
         text: mode === 'text' ? text : undefined,
+        chords: chordText,
+        chordStyle,
       });
     }
 
@@ -193,14 +209,32 @@ export function songEditorScreen(app: App, existing: ParentSong | null, hooks: S
 
     function renderTabs(): void {
       const tab = (m: Mode, label: string) => {
-        const b = h('button', { class: `se-tab${mode === m ? ' on' : ''}`, type: 'button', role: 'tab', 'aria-selected': String(mode === m) }, label);
+        const on = view === 'melody' && mode === m;
+        const b = h('button', { class: `se-tab${on ? ' on' : ''}`, type: 'button', role: 'tab', 'aria-selected': String(on) }, label);
         b.addEventListener('click', () => switchMode(m));
         return b;
       };
+      const chordTab = (() => {
+        const on = view === 'chords';
+        const b = h(
+          'button',
+          { class: `se-tab se-chord-tab${on ? ' on' : ''}`, type: 'button', role: 'tab', 'aria-selected': String(on), 'data-test': 'chord-tab' },
+          chordTabLabel(),
+        );
+        b.addEventListener('click', () => {
+          if (view === 'chords') return;
+          if (mode === 'text' && parseSolfege(text, beatsOf(ts)).errors.length) return toast('Sửa hết lỗi (chữ đỏ) ở giai điệu trước nhé', 2600);
+          stopPlay();
+          view = 'chords';
+          renderTabs();
+          render();
+        });
+        return b;
+      })();
       const rec = h('button', { class: 'se-tab se-rec', type: 'button' }, '🎙️ Đàn để thêm bài');
       rec.addEventListener('click', openRecorder);
       tabs.replaceChildren(
-        h('div', { class: 'se-tabset', role: 'tablist' }, tab('text', '✍️ Gõ chữ Đô Rê Mi'), tab('tap', '🎹 Chạm phím')),
+        h('div', { class: 'se-tabset', role: 'tablist' }, tab('text', '✍️ Gõ chữ Đô Rê Mi'), tab('tap', '🎹 Chạm phím'), chordTab),
         rec,
         h('div', { class: 'se-privacy' }, `🔒 ${PRIVACY_NOTE}`),
       );
@@ -242,6 +276,15 @@ export function songEditorScreen(app: App, existing: ParentSong | null, hooks: S
     }
 
     function switchMode(m: Mode): void {
+      if (view === 'chords') {
+        stopPlay();
+        view = 'melody';
+        if (m === mode) {
+          renderTabs();
+          render();
+          return;
+        }
+      }
       if (m === mode) return;
       stopPlay();
       if (m === 'tap') {
@@ -310,7 +353,7 @@ export function songEditorScreen(app: App, existing: ParentSong | null, hooks: S
           h(
             'li',
             { class: 'se-ok' },
-            `✅ ${notes} nốt · ${measureCount(tune)} ô nhịp${tune.phrases ? ` · ${tune.phrases.length} câu` : ''}${r.pickupRest ? ' · có nhịp lấy đà' : ''} · ${tune.hand === 'LH' ? 'tay trái' : 'tay phải'} — số ngón app tự ghi`,
+            `✅ ${notes} nốt · ${measureCount(tune)} ô nhịp${tune.phrases ? ` · ${tune.phrases.length} câu` : ''}${r.pickupRest ? ' · có nhịp lấy đà' : ''} · ${tune.hand === 'BOTH' ? 'hai tay (tay trái hợp âm)' : tune.hand === 'LH' ? 'tay trái' : 'tay phải'} — số ngón app tự ghi`,
           ),
         );
       }
@@ -467,9 +510,178 @@ export function songEditorScreen(app: App, existing: ParentSong | null, hooks: S
 
     function render(): void {
       stopPlay();
-      screen.classList.toggle('se-mode-tap', mode === 'tap');
-      if (mode === 'text') renderText();
+      screen.classList.toggle('se-mode-tap', view === 'melody' && mode === 'tap');
+      screen.classList.toggle('se-mode-chords', view === 'chords');
+      if (view === 'chords') renderChords();
+      else if (mode === 'text') renderText();
       else renderTap();
+    }
+
+    // ---------------- (+ 2026-11-08) 🎹🎹 HAI TAY: tay trái đệm hợp âm ----------------
+    function chordTabLabel(): string {
+      return chordText.trim() ? '🎹🎹 Hai tay ✓' : '🎹🎹 Hai tay: hợp âm';
+    }
+    const chordArea = h('textarea', {
+      class: 'se-area se-chord-area',
+      autocapitalize: 'off',
+      autocorrect: 'off',
+      autocomplete: 'off',
+      spellcheck: 'false',
+      rows: '3',
+      'aria-label': 'Hợp âm tay trái theo ô nhịp',
+      'data-test': 'chord-area',
+      placeholder: 'Mỗi ô nhịp một hợp âm — ví dụ:\nC | F | G | C   hoặc   Đô | Fa | Sol | Đô',
+    });
+    chordArea.value = chordText;
+    const chordInfo = h('div', { class: 'se-issues', 'aria-live': 'polite' });
+    const chordStaff = h('div', { class: 'se-staff-slot' });
+    let chordTimer = 0;
+    chordArea.addEventListener('input', () => {
+      chordText = chordArea.value;
+      dirty = true;
+      window.clearTimeout(chordTimer);
+      chordTimer = window.setTimeout(refreshChords, 200);
+    });
+
+    /** Giai điệu hiện tại kèm dấu lặng lấy đà — để app tự chọn hợp âm. */
+    function melodyNotes(): SolfegeNote[] {
+      const r = current();
+      return [...restsFor(r.pickupRest), ...r.notes];
+    }
+
+    function refreshChords(): void {
+      const song = build();
+      const tune = song ? parentSongToTune(song) : null;
+      chordStaff.replaceChildren(staffBox(tune, -1));
+      const pr = parseChordText(chordText);
+      const items: HTMLElement[] = [];
+      for (const e of pr.errors.slice(0, 4)) items.push(h('li', { class: 'se-err' }, `❌ ${e.message}`));
+      const melodyBars = tune ? measureCount(tune) : 0;
+      if (!chordText.trim()) items.push(h('li', { class: 'se-info' }, 'ℹ️ Chưa có hợp âm — bài đang là bài một tay. Chạm ✨ để app tự chọn.'));
+      else if (!pr.errors.length && tune) {
+        items.push(h('li', { class: 'se-ok' }, `✅ Tay trái ${pr.bars.length} ô · giai điệu ${melodyBars} ô — bài hai tay`));
+        if (pr.bars.length < melodyBars) items.push(h('li', { class: 'se-warn' }, `⚠️ Thiếu hợp âm cho ${melodyBars - pr.bars.length} ô cuối — tay trái nghỉ ở đó`));
+        if (pr.bars.length > melodyBars) items.push(h('li', { class: 'se-warn' }, `⚠️ Thừa ${pr.bars.length - melodyBars} ô hợp âm — app bỏ bớt`));
+      }
+      const used = chordsUsed(pr.bars);
+      if (used.length)
+        items.push(
+          h('li', { class: 'se-chord-legend' }, ...used.map((c) => h('span', { class: 'se-chord-chip' }, h('b', {}, chordName(c)), ` = ${chordViName(c)} (${chordToneNames(c)})`))),
+        );
+      chordInfo.replaceChildren(...items);
+      // dấu ✓ trên tab Hai tay (không vẽ lại ô chữ đang gõ)
+      const tb = tabs.querySelector('.se-chord-tab');
+      if (tb) tb.textContent = chordTabLabel();
+      renderBar();
+    }
+
+    function insertChord(q: string): void {
+      const a = chordArea.selectionStart ?? chordArea.value.length;
+      const b = chordArea.selectionEnd ?? a;
+      const before = chordArea.value.slice(0, a);
+      const pre = before && !/\s$/.test(before) ? ' ' : '';
+      chordArea.setRangeText(pre + q + ' ', a, b, 'end');
+      chordArea.focus();
+      chordArea.dispatchEvent(new Event('input'));
+    }
+
+    function renderChords(): void {
+      const quick = h(
+        'div',
+        { class: 'se-quick', role: 'group', 'aria-label': 'Chèn hợp âm' },
+        ...CHORD_QUICK.map((q) => {
+          const b = h('button', { class: `se-q${/^[A-G]/.test(q) ? ' se-q-note' : ''}`, type: 'button' }, q === '_' ? '_ nghỉ' : q === '-' ? '- giữ' : q);
+          b.addEventListener('pointerdown', (e) => e.preventDefault());
+          b.addEventListener('click', () => insertChord(q));
+          return b;
+        }),
+      );
+      const styleSeg = h(
+        'div',
+        { class: 'iv-palette se-palette se-style', role: 'group', 'aria-label': 'Kiểu đệm tay trái' },
+        ...STYLES.map((st) => {
+          const on = chordStyle === st.id;
+          const b = h('button', { class: `iv-rh se-rh${on ? ' on' : ''}`, type: 'button', 'aria-pressed': String(on) }, h('span', { class: 'iv-rh-label' }, st.label), h('span', { class: 'iv-rh-sub' }, st.sub));
+          b.addEventListener('click', () => {
+            chordStyle = st.id;
+            dirty = true;
+            renderChords();
+          });
+          return b;
+        }),
+      );
+      const auto = button({
+        icon: '✨',
+        label: 'App tự chọn hợp âm',
+        kind: 'sun',
+        onTap: () => {
+          const notes = melodyNotes();
+          if (!notes.some((n) => !n.rest)) return toast('Viết giai điệu trước nhé (tab Gõ chữ hoặc Chạm phím)', 2600);
+          const go = () => {
+            chordText = suggestChords(notes, beatsOf(ts));
+            chordArea.value = chordText;
+            dirty = true;
+            refreshChords();
+            toast('✨ App đã chọn hợp âm — ▶ Nghe thử, sửa nếu muốn', 2600);
+          };
+          if (chordText.trim()) confirmDialog({ title: 'Thay hợp âm đang có?', text: 'App sẽ chọn lại hợp âm cho cả bài.', okLabel: 'Thay', onOk: go });
+          else go();
+        },
+      });
+      const clear = button({
+        icon: '🗑️',
+        label: 'Bỏ tay trái',
+        disabled: !chordText.trim(),
+        onTap: () =>
+          confirmDialog({
+            title: 'Bỏ tay trái?',
+            text: 'Bài trở lại thành bài một tay (giai điệu giữ nguyên).',
+            okLabel: 'Bỏ',
+            danger: true,
+            onOk: () => {
+              chordText = '';
+              chordArea.value = '';
+              dirty = true;
+              renderChords();
+            },
+          }),
+      });
+      body.replaceChildren(
+        chordStaff,
+        h(
+          'div',
+          { class: 'se-text' },
+          h(
+            'div',
+            { class: 'se-text-main' },
+            h('p', { class: 'se-chord-intro' }, '🎹🎹 Tay phải đàn giai điệu, tay trái đệm hợp âm. Gõ hợp âm cho từng ô nhịp (cách nhau bằng ', h('b', {}, '|'), ') hoặc để app tự chọn.'),
+            auto,
+            styleSeg,
+            quick,
+            chordArea,
+          ),
+          h(
+            'div',
+            { class: 'se-side' },
+            chordInfo,
+            clear,
+            h(
+              'details',
+              { class: 'se-help' },
+              h('summary', {}, '❓ Cách gõ hợp âm'),
+              h(
+                'ul',
+                { class: 'se-help-list' },
+                h('li', {}, h('b', {}, 'C D E F G A B'), ' hoặc ', h('b', {}, 'Đô Rê Mi Fa Sol La Si'), ' — hợp âm trưởng'),
+                h('li', {}, h('b', {}, 'Am'), ' / ', h('b', {}, 'La thứ'), ' — hợp âm thứ · ', h('b', {}, 'G7'), ' — hợp âm 7 · ', h('b', {}, 'F#'), ' ', h('b', {}, 'Bb'), ' — thăng/giáng'),
+                h('li', {}, h('b', {}, 'C | G | Am | F'), ' — mỗi ô một hợp âm · ', h('b', {}, 'F C'), ' trong một ô = mỗi hợp âm nửa ô'),
+                h('li', {}, h('b', {}, '_'), ' tay trái nghỉ cả ô · ', h('b', {}, '-'), ' giữ hợp âm trước'),
+              ),
+            ),
+          ),
+        ),
+      );
+      refreshChords();
     }
 
     // ---------------- Nghe thử ----------------
@@ -494,8 +706,14 @@ export function songEditorScreen(app: App, existing: ParentSong | null, hooks: S
         void app.audio.scheduleFreq(midiToFreq(pitchToMidi(n.pitch)), t0 + n.start * spb, n.beats * spb * 0.95);
         timers.push(window.setTimeout(() => {
           staffView?.setCursor(n.index);
-          if (mode === 'tap') kb.flash(n.pitch!, true), window.setTimeout(() => kb.flash(n.pitch!, false), Math.min(400, n.beats * spb * 900));
+          if (mode === 'tap' && view === 'melody') kb.flash(n.pitch!, true), window.setTimeout(() => kb.flash(n.pitch!, false), Math.min(400, n.beats * spb * 900));
         }, 300 + n.start * spb * 1000));
+      }
+      // (+ 2026-11-08) tay trái (cả hợp âm)
+      for (const n of lhTimeline(tune)) {
+        if (n.rest || !n.pitch) continue;
+        for (const p of [n.pitch, ...(n.also ?? []).map((a) => a.pitch)])
+          void app.audio.scheduleFreq(midiToFreq(pitchToMidi(p)), t0 + n.start * spb, n.beats * spb * 0.95);
       }
       const end = notes.reduce((s, n) => s + n.beats, 0);
       timers.push(window.setTimeout(() => stopPlay(), 300 + end * spb * 1000 + 400));
@@ -513,16 +731,17 @@ export function songEditorScreen(app: App, existing: ParentSong | null, hooks: S
     function save(): void {
       const r = current();
       if (r.errors.length) return toast('Còn lỗi (chữ đỏ) — sửa xong mới lưu được', 2600);
+      if (chordText.trim() && parseChordText(chordText).errors.length) return toast('Còn hợp âm app chưa hiểu (chữ đỏ ở tab Hai tay)', 2600);
       const song = build(existing?.id ?? newParentSongId(store.parentSongs()));
       if (!song) return toast('Bài chưa có nốt nào');
       stopPlay();
       if (existing) {
         const { id: _id, createdAt: _c, ...patch } = song;
         // chế độ chạm phím: bỏ chữ cũ (không còn khớp nốt)
-        store.updateParentSong(existing.id, { ...patch, text: song.text, phrases: song.phrases });
+        store.updateParentSong(existing.id, { ...patch, text: song.text, phrases: song.phrases, lh: song.lh, chords: song.chords, chordStyle: song.chordStyle });
       } else store.addParentSong(song);
       dirty = false;
-      toast(`💾 Đã lưu “${song.title}” — bé mở ở Thư viện › 📝 Bài thêm`, 3000);
+      toast(`💾 Đã lưu “${song.title}” — mở ở 🎵 Bài hát › 📝 Bài thêm`, 3000);
       hooks.onDone(store.findParentSong(song.id) ?? song);
     }
 
@@ -535,13 +754,37 @@ export function songEditorScreen(app: App, existing: ParentSong | null, hooks: S
     function renderBar(): void {
       const r = mode === 'text' ? parseSolfege(text, beatsOf(ts)) : null;
       const has = mode === 'text' ? !!r && r.notes.some((n) => !n.rest) : tapNotes.some((n) => !n.rest);
-      bar.replaceChildren(
+      const parts: Array<HTMLElement | null> = [
         backButton(leave),
         playing
           ? button({ icon: '■', label: 'Dừng', kind: 'retry', onTap: stopPlay })
           : button({ icon: '▶', label: 'Nghe thử', kind: 'sun', disabled: !has, onTap: play }),
         button({ icon: '💾', label: existing ? 'Lưu thay đổi' : 'Lưu bài', kind: 'primary', disabled: !has || (!!r && r.errors.length > 0), onTap: save }),
-      );
+        // (+ 2026-11-08) xóa bài ngay trong trình soạn
+        existing
+          ? button({
+              icon: '🗑️',
+              label: 'Xóa bài',
+              kind: 'danger',
+              onTap: () =>
+                confirmDialog({
+                  title: `Xóa “${existing.title}”?`,
+                  text: 'Bài sẽ biến mất khỏi danh sách bài hát (các lượt đã chơi vẫn giữ).',
+                  okLabel: 'Xóa bài',
+                  okIcon: '🗑️',
+                  danger: true,
+                  onOk: () => {
+                    stopPlay();
+                    store.deleteParentSong(existing.id);
+                    dirty = false;
+                    toast(`Đã xóa “${existing.title}”`, 2200);
+                    hooks.onDone(null);
+                  },
+                }),
+            })
+          : null,
+      ];
+      bar.replaceChildren(...(parts.filter(Boolean) as HTMLElement[]));
     }
 
     renderTop();
@@ -552,6 +795,7 @@ export function songEditorScreen(app: App, existing: ParentSong | null, hooks: S
     return () => {
       recClose?.();
       window.clearTimeout(parseTimer);
+      window.clearTimeout(chordTimer);
       stopPlay();
       kb.destroy();
     };

@@ -382,3 +382,48 @@
   padding: 4px 14px;
   font-size: 18px;
 }
+
+/* ---------- (+ 2026-11-08) Thêm bài ngay ở màn Bài hát · tab Hai tay: hợp âm ---------- */
+.lib-parent-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 0 20px 8px;
+}
+.parent-song-card.is-editing {
+  outline: 3px dashed var(--sun-500, #f5a623);
+  outline-offset: -3px;
+}
+.se-chord-intro {
+  margin: 0 0 8px;
+  font-size: 15px;
+}
+.se-chord-btns {
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.se-chord-area {
+  min-height: 84px;
+}
+.se-style {
+  margin-top: 8px;
+}
+.se-chord-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+}
+.se-chord-chip {
+  padding: 3px 8px;
+  border-radius: 10px;
+  background: var(--mint-100, #e6f7ef);
+  font-size: 14px;
+}
+.se-mode-chords .se-style {
+  margin: 8px 0;
+}
+.se-mode-chords .se-side > .btn {
+  align-self: flex-start;
+}

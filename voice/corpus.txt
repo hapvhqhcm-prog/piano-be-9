@@ -1,0 +1,1859 @@
+" Bản thu biểu diễn" là lượt đàn như trên sân khấu, không dừng giữa chừng, sai thì đàn tiếp.
+" Dịch giọng": app hiện "Chú cừu nhỏ" bản thế Đô, bé dời tay sang thế Sol và đàn CÙNG SỐ NGÓN, nghe vẫn là bài đó.
+" chỗ nào con đàn TO, chỗ nào NHỎ?
+" fill="none" stroke="#c2324d" stroke-width="2.2" stroke-linecap="round"/> </g> </g> <!-- bé: tay (vai khuỷu cổ tay ngang phím) -->
+" không?
+" opacity=".1"/> <!-- đàn piano --> <g stroke="rgba(61,52,102,.35)" stroke-width="1.5" stroke-linejoin="round"> <rect x="186" y="208" width="12" height="16" rx="3" fill="
+" stroke-width="1"/> <!-- đàn piano đứng --> <g stroke="
+" stroke="#fff" stroke-width="1.5"/> <!-- nốt nhạc bay --> <g class="ha-float">
+" tay trái đệm kiểu gì?
+" transform="translate(6 -6)"/> <!-- bé: đầu --> <g
+" trong đầu nhé, con sắp làm được rồi!
+" Đàn theo tai": app đàn một câu quen, bé tự tìm lại trên đàn (app cho sẵn nốt đầu).
+" đã vào sổ của con!
+"/> <!-- bàn phím --> <rect x="172" y="130" width="196" height="12" rx="5" fill="
+"/> <!-- giá nhạc + iPad --> <rect x="244" y="131" width="20" height="5" rx="2" fill="#6d3f25"/> <g transform="rotate(10 256 134)"> <rect x="231" y="86" width="34" height="48" rx="6" fill="
+"/> </linearGradient> </defs> <!-- nền: đốm màu mềm --> <ellipse cx="205" cy="150" rx="185" ry="84" fill="
+"/> <rect x="186" y="226.5" width="39" height="3.5" rx="1.7" fill="#fff"/> </g> <!-- bé: thân (áo) --> <path d="
+"/><stop offset="1" stop-color="#fff6ea"/> </linearGradient> </defs> <!-- phông nền + sàn gỗ + thảm --> <rect x="88" y="4" width="272" height="236" rx="26" fill="url(#
+"; 3 thẻ tư thế đầy đủ hiện ở buổi đầu mỗi tuần.
+"> Cài đặt</text> <!-- ngón tay nhấn giữ --> <g transform="rotate(-12 104 120)"> <rect x="90" y="76" width="30" height="92" rx="15" fill="
+">2s</text> </g> <!-- tệp JSON sao lưu --> <g transform="translate(140 112)"> <path d="M0 0 H62 L80 18 V74 H0 Z" fill="#fff" stroke="
+"Ai chấm": micro tự chấm từng nốt, bé tự kiểm tra cả lượt, bố mẹ chấm (dữ liệu cũ).
+"Bài ca niềm vui" của Beethoven; "Các thánh tiến bước" có một nốt Đô giữ 3 phách.
+"Bắc kim thang" (dân ca Nam Bộ): bàn tay ngũ cung Đô 1, Rê 2, Fa 3, Sol 4, La 5.
+"Bố mẹ sửa" = micro nghe nhầm, người lớn đã bấm Sửa.
+"Chúc mừng sinh nhật" bắt đầu ở phách 3 (hai nốt lấy đà).
+"Chạy-chạy" = hai nốt nhanh đều nhau trong một phách.
+"Chạy-Đi-chạy": "Đi" vang lệch phách.
+"Cò lả" (dân ca Bắc Bộ) có nhiều "Tập-tễnh": tay phải thế Đô (Đô 1, Rê 2, Mi 3, Sol 5), hai nốt Sol trầm là ngón cái tay trái.
+"Gà gáy" là dân ca Cống (Lai Châu), tay đặt Rê 1, Mi 2, Sol 3, La 4, Si 5.
+"Inh lả ơi" (dân ca Thái Tây Bắc): ngón cái ở Rê.
+"Kìa con bướm vàng": câu cuối ngón 1 với xuống Sol trầm.
+"Kìa con bướm vàng, giọng buồn" có thêm La GIÁNG ở câu 3: tay nhích lên, Sol ngón 4, La giáng ngón 5.
+"Lý cây bông" (dân ca Nam Bộ) đi từ khóa Sol xuống khóa Fa, hai tay thay nhau, không đàn cùng lúc.
+"Lý cây xanh" (dân ca Nam Bộ, hai bốn): tay phải Mi 1, Sol 2, La 3, Đô cao 5; tay trái chỉ Rê (ngón cái) và Đô (ngón 2).
+"Lý cây đa" là dân ca quan họ Bắc Ninh; ô đầu có dấu lặng trước nốt Đô.
+"Lý ngựa ô" (dân ca Nam Bộ, bản đầy đủ): tay phải thế Sol (Sol 1, La 2, Si 3, Rê cao 5), tay trái Mi 1, Rê 2, Đô 3, La trầm 5; đoạn cuối nhắc lại một lần.
+"Nhả trước, nhấn sau": khi hợp âm MỚI vang lên thì nhả, rồi nhấn lại NGAY sau đó (đổi mỗi ô nhịp trong bài).
+"Row, row, row your boat" là bài hát thiếu nhi Mỹ thế kỷ 19.
+"Thuộc" = đàn trọn bài theo nhịp, tốc độ từ 60 trở lên, và đạt, ở 2 ngày khác nhau.
+"Trống trường" theo nhịp chỉ nhìn khuông, đừng đọc hộ tên nốt.
+"Tập-tễnh" (móc đơn chấm + móc kép): như đi cà nhắc, dài rồi ngắn.
+"Tập-tễnh": dài rồi ngắn, như đi cà nhắc!
+"Xòe hoa" (điệu múa xòe Thái) bắt đầu bằng một nốt Đô lấy đà; tay ngũ cung Đô 1, Rê 2, Fa 3, Sol 4, La 5.
+"Đi-chấm" dài 1 phách rưỡi, "chạy" theo sau ngắn!
+"Đúng ngay" = không đàn nhầm phím nào trước đó.
+% (dưới 65%).
+%, vừa sức.
+(app tính thế nào)
+(chạm nếu muốn, không bắt buộc)
+(con hát giọng cao, vẫn đúng nhé)
+(con hát giọng trầm, vẫn đúng nhé)
+(dấu khép lại) : NHỎ DẦN đi.
+(dấu mở rộng) : TO DẦN lên.
+(góc trên, cạnh thanh địa chỉ).
+(iPad có thể hỏi quyền, chọn Cho phép)
+(khó nhất).
+(vd: Cô Lan, bạn Minh)
+) hoặc để app tự chọn.
+) một lần, NHẸ TAY như lúc con tập bình thường (đừng đàn thật to).
+)"/> <rect x="196" y="72" width="148" height="50" rx="9" fill="#fff" fill-opacity=".12"/> <rect x="196" y="178" width="148" height="26" rx="8" fill="#fff" fill-opacity=".12"/> <!-- iPad trên giá nhạc --> <rect x="236" y="68" width="70" height="54" rx="8" fill="
+), bản thu hay hơn của con đang KHÔNG được lưu.
+/5 nốt, chưa nên dùng.
+10 lần nhé!
+3 buổi gần nhất con đúng trên 92%, không vấp lượt nào.
+3 bài cũ thật bóng, tốc độ 60, 2 hôm!
+3 bài hai tay thật đều, tốc độ 60, 2 hôm!
+3 hợp âm đệm được rất nhiều bài: I, IV, V!
+3 phách: "MỘT-hai-ba".
+5 lần, mỗi lần bé nói to tên nốt và số ngón rồi mới bấm.
+60 giây, chạm đúng phím!
+: chậm dần lại.
+: đàn như trên sân khấu!
+<!-- (2026-10-18) bàn tay = "găng" tròn đơn giản trên phím (không vẽ ngón) --> <path d="M219 140 Q219 128.5 232 128.5 Q246 128.5 247.5 139 Q248 145.5 241.5 145.5 H225 Q219 145.5 219 140 Z" fill="
+<!-- bé: chân -->
+<!-- chú thích -->
+<!-- nút Cài đặt đang nhấn giữ (vòng đếm 2 giây) --> <rect x="10" y="34" width="140" height="66" rx="33" fill="#fff" stroke="
+</g> <!-- máy đếm nhịp trên nóc đàn --> <path d="M292 35 L299 13 H305 L312 35 Z" fill="
+</g> <!-- vầng sáng nhắc (dưới hình bé) -->
+= chậm dần ở cuối bài (app vẫn gõ nhịp đều, bé chỉ cần "thả" chậm một chút khi đàn cùng bố mẹ, micro không trừ điểm).
+> <!-- ghế đàn --> <g stroke="
+A = tiếng cũ · B = tiếng mới (ấm hơn).
+Ai nữa?
+Ai đã nghe con đàn hôm nay?
+Ai đọc được cả khóa Sol và khóa Fa thì mở được mọi cuốn sách!
+Album bản thu không nằm trong bản sao lưu.
+Album không vào bản sao lưu, chia sẻ bản thu trước khi đổi máy; máy mới: làm lại “ Cài micro 3 bước”.
+Album đang nghỉ, chưa lưu bản thu mới.
+Allegro : nhanh và vui.
+Allegro nghĩa là gì?
+Allegro: nhanh, NGẮT, vui!
+Andante = thong thả như đi bộ; Allegro = nhanh, vui; rit.
+Andante thong thả · Moderato vừa · Allegro nhanh · rit.
+Andante thong thả.
+Andante: thong thả như đi dạo.
+App chưa nghe rõ, đàn lại nhé!
+App chưa nghe thấy.
+App chạy không cần người lớn, đây chỉ là các việc thiết lập / xử lý khi cần.
+App chạy không cần người lớn.
+App chỉ ngón nào, con nhúc nhích ngón đó!
+App gõ 6 tiếng tích mỗi ô (mỗi tiếng là MỘT MÓC ĐƠN, nên "tốc độ 60" ở bài 6 trên 8 là 60 móc đơn/phút, chậm hơn bài bốn bốn, đúng ý).
+App hỏi 2 ô.
+App hỏi TO.
+App hỏi giọng La thứ.
+App hỏi nhỏ.
+App hỏi ở thế Rê.
+App hỏi ở thế Sol.
+App hỏi ở thế Đô cao.
+App hỏi.
+App không tự gửi gì đi đâu.
+App không tự gửi đi đâu, chỉ khi bố mẹ bấm “Chia sẻ” hoặc “In”, và bố mẹ chọn gửi cho ai.
+App không tự gửi đi đâu, chỉ khi bố mẹ bấm “Gửi ảnh” / “Sao chép chữ”.
+App nghe con đàn đúng rồi!
+App nghe đàn cơ và tự chấm từng nốt, xử lý ngay trên iPad, không gửi đi đâu.
+App nhớ tiếng vừa của con rồi!
+App phát 6 tiếng “tinh” và nghe lại.
+App rải một hợp âm, nghe VUI hay BUỒN?
+App sẽ chọn lại hợp âm cho cả bài.
+App trên Màn hình chính có bộ nhớ RIÊNG.
+App tự sang tuần mới khi bé đạt mục tiêu và học xong các bài của tuần.
+App xóa các bản hay nhất CŨ NHẤT cho tới khi Album còn khoảng ba bốn chỗ.
+App đang nghe
+App đang nghe con hát…
+App đang nghe hợp âm…
+App đang nghe, nốt phím đen nào cũng hay!
+App đàn 2 nốt, con nghe rồi đàn lại y hệt, đúng thứ tự.
+App đàn nền nhè nhẹ.
+App đàn nền.
+App đàn, con đàn lại bằng tay trái.
+App đã tự khôi phục tiến độ của bé từ bản sao lưu trong máy (do lỗi cũ khi lên tuần 9).
+App đọc to câu hướng dẫn cho bé.
+Ba chú gà con Đô, Rê, Mi đi dạo, cũng chỉ có ba nốt thôi!
+Ba nốt MỐC: Đô giữa, Sol (vạch 2), Đô cao (khe 3).
+Ba phím đen đứng cạnh nhau là anh em SINH BA.
+Ba: bóng lăn đi, tay vẫn giữ dáng tròn.
+Ba: chạm tới đáy phím, cổ tay mềm.
+Ba: cổ tay nảy bật lên, như quả bóng.
+Ba: hạ cổ tay xuống thấp.
+Ba: ngón cái chạm phím Fa, cả bàn tay dời theo.
+Bass Alberti (thấp, cao, giữa, cao): tay trái giữ yên, cổ tay LẮC nhẹ trái, phải như vẫy, ngón cái không dập mạnh, tay trái phải NHỎ hơn tay phải (giai điệu là chính).
+Beethoven viết "Für Elise" tặng một người bạn.
+Biểu diễn cho cả nhà nghe, nhận huy chương Cấp 1!
+Buổi biểu diễn tuyệt vời!
+Buổi biểu diễn: cả nhà ngồi nghe, vỗ tay to.
+Buổi diễn nhỏ thật tuyệt!
+Buổi diễn tuyệt vời!
+Buổi học đầu tiên, chào mừng con!
+Buổi này chưa có kết quả bé tự kiểm tra.
+Buổi đầu tiên chỉ 1 thẻ tư thế để bé chạm đàn thật ngay, từ buổi 2 mới đủ 3 thẻ.
+Buổi đầu ôn nhẹ: cho bé chơi lại một bài đã thuộc, khen thật cụ thể, rồi bấm nút to, không cần học bù.
+Bài " Đệm hợp âm": mỗi ô bé bấm một hợp âm (I hoặc V7), app hát giai điệu ô đó; lượt 2 không có phím sáng.
+Bài "Bánh nóng, thế Sol" là xem trước thế tay của tuần 14 (ngón cái ở Sol).
+Bài "Kìa con bướm vàng" nhưng ở giọng buồn, nghe lạ không?
+Bài "phong cách Clementi" là bài tự sáng tác cho app, không phải bản gốc của Clementi.
+Bài Fa trưởng ghi sẵn sau khóa.
+Bài ca niềm vui thế Sol, 2 hôm nhé!
+Bài ca niềm vui ở tốc độ 60, 2 hôm nhé!
+Bài con chọn, đàn cho vui nhé!
+Bài con đã thuộc, chơi lại cho nhớ lâu!
+Bài cuối tuần là lần đầu gặp NHỊP 3 "MỘT-hai-ba" (nốt trắng chấm "Đi-i-i" = 3 phách), cùng bé đung đưa người theo nhịp.
+Bài của con đã vào Thư viện, mục Bài của con!
+Bài gì đây?
+Bài hai tay dài: app cho tập riêng từng tay ở câu khó nhất trước, rồi ghép hai tay cả bài.
+Bài hai tay hay bị chấm sai: Cho người hỗ trợ “Micro chấm cả 2 tay” Tắt.
+Bài hai tay: micro nghe riêng tay phải và tay trái.
+Bài hát đầu tiên của con, chỉ cần Mi, Rê, Đô!
+Bài khởi động "Mưa rào mùa hạ": Rê thăng là ngón 4.
+Bài mới "Chú cừu, song tấu với thầy": app đàn bè THẤP của thầy khi bé chơi theo nhịp, cả khi micro bật (micro vẫn chỉ chấm bè của bé).
+Bài này bắt đầu ở Fa, ngón 4 nhé!
+Bài này chính là gam đi xuống!
+Bài này có Sol nữa đấy, ngón 5 chuẩn bị!
+Bài này cần đánh bóng thêm, mai mình thử lại nhé!
+Bài nằm trong Thư viện của bé, chỉ lưu trên iPad này.
+Bài quen "Chèo thuyền nhẹ", nhớ lại từng nốt nhé!
+Bài quen "Chú cừu nhỏ", nhớ lại từng nốt nhé!
+Bài quen "Ngôi sao nhỏ", nhớ La là ngón 5!
+Bài quen tuần trước, đàn theo nhịp trước nhé!
+Bài quen ở chỗ mới, theo nhịp nhé!
+Bài quen ở thế Sol, nhớ lại từng nốt nhé!
+Bài quen!
+Bài sẽ biến mất khỏi Thư viện (các lượt bé đã chơi vẫn giữ trong lịch sử).
+Bài sẽ biến mất khỏi danh sách bài hát (các lượt đã chơi vẫn giữ).
+Bài thử thách cho phép trượt 1 lần, đừng bắt làm lại từ đầu.
+Bài trở lại thành bài một tay (giai điệu giữ nguyên).
+Bài tuần này vừa sức con, luyện thật chắc rồi thi vượt tuần nhé!
+Bài tự thêm chỉ lưu trên iPad này, dùng riêng trong gia đình.
+Bài Đô trưởng dùng ba hợp âm này nhiều nhất.
+Bài đang tập, từng nốt trước nhé.
+Bài đầu tuần đã tách tay sẵn: tập chậm (tốc độ 40), đúng ngón trước rồi mới nhanh.
+Báo cáo có tên của bé (nếu đã đặt).
+Báo cáo có tên của bé.
+Bây giờ con là thầy giáo!
+Bé Nốt hiểu rồi, con giỏi quá!
+Bé Nốt nhớ con!
+Bé Nốt vui lắm, mai mình chơi tiếp nhé!
+Bé chưa vững: thẻ “ Tuần N” “ Ở lại tuần này thêm” “Có”.
+Bé chạm phím trên iPad nên app biết chính xác bé chọn đúng hay sai.
+Bé hay bấm lệch, cho bé đếm "1-2-3 bấm!".
+Bé hay dùng ngón 3 cho Si giáng, nhắc nhẹ.
+Bé kể: hôm nay thấy thế nào?
+Bé luôn có nút tự đi tiếp.
+Bé ngồi ở đàn cho bước 3.
+Bé ngồi ở đàn, iPad đặt chỗ thường dùng.
+Bé thích…
+Bé thấy khó…
+Bé tự bấm nút to, app tự chọn bài, không cần người lớn ngồi cạnh.
+Bé tự bật được micro (iPad hỏi quyền); chỉ ở đây mới tắt được.
+Bé vừa nghỉ ≥ 3 ngày: app gợi ý “Buổi ngắn 5 phút” cho nhẹ nhàng.
+Bé đang làm tốt!
+Bé đạt mục tiêu tuần cuối buổi có nút “ Biểu diễn cho cả nhà”: bé chọn bài, cả nhà nghe.
+Bé đọc khuông thì dễ nhìn tay.
+Bên Hồ Ngân Vang, tiếng đàn ngân dài như tiếng vọng.
+Bên phải là Đô cao (tiếng trong veo).
+Bên trái Đô giữa là Đô trầm (tiếng ồm ồm).
+Bình thường nếu bé bận/ốm, nếu tuần nào cũng thấy khó, tập chậm lại, ôn bài cũ và hỏi người hỗ trợ.
+Bình tĩnh nghe / nhìn rồi chọn.
+Bí mật nằm dưới chân: bàn đạp PEDAL bên phải!
+Băng chuyền bài hôm trước, chỉ nhìn khuông nhé!
+Băng chuyền, chỉ nhìn khuông nhé!
+Băng chuyền: xích lô chạy về vạch đỏ, "Chạy-Đi-chạy"!
+Bước 2 trên 2: Mọi tiến độ và kết quả sẽ bị xóa.
+Bước 3: bấm nút xanh bên dưới.
+Bước : hai phím sát nhau, gọi là QUÃNG 2.
+Bước hay nhảy trên khuông?
+Bước hay nhảy?
+Bước là quãng 2, nhảy là quãng 3.
+Bước, nhảy hay nhảy xa?
+Bạn Đô giữa ngồi dưới cùng và "đội mũ" vạch phụ!
+Bản ghi của khách chỉ giữ tới khi thoát chế độ khách.
+Bản ghi ngắn quá, ghi lại nhé!
+Bản nhạc này đã gần 300 tuổi!
+Bản nhạc phím đen của riêng con!
+Bản thu biểu diễn, đàn như trên sân khấu!
+Bản thu chỉ nằm trên iPad này.
+Bản thu hay nhất của mỗi bài tự vào “ Album của con” (Thư viện), chỉ lưu trên iPad.
+Bản thu hay nhất của mỗi bài vào “ Album của con”.
+Bản vừa ghi sẽ mất (không lưu).
+Bản đầu tiên của mỗi bài luôn được giữ.
+Bản đầu tiên của mỗi bài vẫn được giữ.
+Bảng Chia sẻ mở ra “Lưu vào Tệp”.
+Bấm "AB" để nghe lần lượt cùng một đoạn.
+Bấm "Kiểm tra lại" để thử với độ nhạy mới.
+Bấm "Về màn của bé", app sẽ tự khởi động lại bằng bản mới.
+Bấm Bắt đầu rồi làm theo chữ to trên màn, app tự nghe, tự chuyển bước
+Bấm lại khi sẵn sàng.
+Bấm nút xanh rồi dán vào tin nhắn gửi người hỗ trợ.
+Bấm thử từng mục, rồi “ Gửi kết quả” cho người hỗ trợ.
+Bấm “1.
+Bấm “Bỏ dấu phẩy” (giữa các nốt chỉ cần dấu cách).
+Bấm “Mở ngay” để tới đúng chỗ.
+Bấm “Quay lại” hoặc “Về màn của bé”.
+Bật micro rồi đàn cả bài, bản hay nhất sẽ vào đây!
+Bật nhạc đệm nhé!
+Bật nhạc đệm để bé thấy vui.
+Bật sẵn, bé tự chạm “Cho phép” khi iPad hỏi.
+Bật âm lượng, tắt chế độ Im lặng (gạt / Trung tâm điều khiển), tháo tai nghe; vẫn không được thì đóng hẳn app rồi mở lại.
+Bắc kim thang "Tập-tễnh" thật đều, đàn ngon 2 hôm nhé!
+Bắt đầu bằng hai nốt lấy đà.
+Bắt đầu chậm, đọc thầm "Chạy-chạy-chạy-chạy"!
+Bắt đầu từ chặng của con.
+Bắt đầu ở phách 3.
+Bỏ bài đang soạn?
+Bỏ bản ghi này?
+Bỏ qua cũng được, con vẫn học bình thường
+Bỏ tay trái?
+Bố mẹ có nghe thấy không?
+Bố mẹ gõ nốt Đô Rê Mi hoặc chạm phím, app tự ghi số ngón, bé tập như bài thường.
+Bố mẹ vẫn gõ chữ hoặc chạm phím để thêm bài được.
+Bốn móc đơn dưới dấu luyến đàn LIỀN; hai nốt Sol có chấm đàn NGẮT.
+Bốn nốt cũ đang chờ con!
+Bốn: bàn tay tròn đặt trên phím.
+Bốn: cổ tay nổi lên, nhấc tay ra.
+Bốn: lùi cổ tay về sau.
+Bốn: lơ lửng, nghỉ một chút.
+Bốn: nhẹ nhàng về chỗ cũ.
+Bộ nhớ iPad gần đầy nên KHÔNG cất được bản dự phòng.
+Bộ nhớ iPad gần đầy nên không cất được bản dự phòng dữ liệu hiện tại.
+Che nhẹ bàn tay bé bằng một tờ giấy để bé nhìn khuông.
+Chim sẻ nhảy Minuet: móc đơn LIỀN, nốt chấm NGẮT!
+Cho bé tự tìm phím, đừng chỉ hộ.
+Cho bé đọc to "Chạy-chạy-chạy-chạy" rồi mới đàn.
+Cho phép micro
+Cho phép micro” Cho phép.
+Cho phép micro” để bắt đầu.
+Cho phép micro” để thử ngay.
+Cho phép micro” “2.
+Chuyển sức nặng từ ngón này sang ngón kia, như đi bộ.
+Chuẩn luôn!
+Chuột nhắt rón rén chuẩn luôn!
+Chào con!
+Chào mừng con tới CẤP 4!
+Chân hẫng: kê hộp.
+Chơi lại nhé!
+Chơi lại nhé, con sẽ giỏi hơn!
+Chơi thoải mái nhé!
+Chơi thử nào!
+Chưa bật được micro, cho phép micro rồi thử lại.
+Chưa bật được âm thanh, app vẫn dùng được, thử mở lại sau nhé.
+Chưa bật được, không sao, con vẫn học được.
+Chưa bỏ được bản này, không sao đâu!
+Chưa có bài nào chơi trọn theo nhịp, sắp rồi!
+Chưa có bài nào, mai mình chọn nhé!
+Chưa có bản ghi nào, chạm để ghi bản đầu tiên!
+Chưa có bản thu nào.
+Chưa có hợp âm, bài đang là bài một tay.
+Chưa dùng pedal, tay trước!
+Chưa gõ đúng chữ XOA.
+Chưa muốn?
+Chưa mở được micro, thử lại, hoặc vào Cài đặt › Kiểm tra iPad.
+Chưa mở được màn này.
+Chưa mở được, thử lại nhé.
+Chưa phải Đô, tìm nhóm 2 phím đen gần tên hãng đàn, Đô ở ngay bên trái.
+Chưa sao chép được, chạm vào ô chữ, chọn hết rồi Sao chép.
+Chưa sao chép được, thử lại nhé.
+Chưa tạo được ảnh, thử lại nhé.
+Chưa tự chỉnh được: micro chưa nghe thấy tiếng nào.
+Chưa vào được chế độ khách.
+Chưa đo được nốt nào (đã bỏ qua hết), làm lại khi bé ngồi ở đàn.
+Chưa đo được: micro không nghe rõ tiếng "tinh".
+Chưa đo độ trễ loa micro.
+Chưa được cũng không sao!
+Chưa được cũng không sao, mai thi lại.
+Chưa được cũng không sao.
+Chưa đạt mục tiêu tuần.
+Chưa đọc được, thử lại nhé.
+Chưa ưng?
+Chạm "Pedal sạch" chỉ khi đổi đúng cả bài.
+Chạm một nốt để sửa cao độ / trường độ hoặc xóa.
+Chạm phím bằng đầu ngón, khớp đầu không gãy vào.
+Chạm phím rồi nhấc ngay, thỏ nhảy!
+Chạm phím đen nào!
+Chạm vào màn một lần (iPad cần một lần chạm để bật tiếng sau cuộc gọi).
+Chạm vào một kết quả để đổi Đúng Thử lại.
+Chạm để app tự chọn.
+Chạm để dùng!
+Chạm để ghi tiếng đàn của con!
+Chạm để nghe nhé!
+Chạm để nghe nhé.
+Chạm để xem
+Chạm “ Bật micro” rồi chạm “Cho phép” nhé!
+Chạm “ Bật micro”, khi iPad hỏi, con chạm “Cho phép” nhé!
+Chấm dôi: nốt dài thêm một nửa.
+Chấm nhịp chạy tới vạch.
+Chấm nhỏ trên hoặc dưới đầu nốt: chạm rồi nhấc ngay.
+Chấm nhỏ ở đầu nốt nghĩa là gì?
+Chậm mà chắc trước, rồi nhanh dần nhé!
+Chặng mới:
+Chặng tiếp:
+Chỉ cao hơn hoặc thấp hơn thôi!
+Chỉ còn
+Chỉ khác nốt giữa: thấp xuống nửa cung.
+Chỉ lưu trên iPad này, dùng riêng trong gia đình.
+Chỉ lưu trên iPad này.
+Chỉ nhìn khuông, "TÙNG-tùng" theo nhịp!
+Chỉ nhìn khuông: Chuông ngân vang, 2 hôm nhé!
+Chỉ nhìn ký hiệu hợp âm, con nhớ ngón chưa?
+Chỉ nên làm khi bé đã biết những bài đó.
+Chỉ vào muộn, đếm
+Chỉ Đô, Rê, Mi!
+Chỉ đánh dấu xong khi sao lưu thành công.
+Chọn các ngày + giờ tập “ Tạo lời nhắc trong Lịch”.
+Chọn các ngày và giờ bé tập đàn, app tạo một lời nhắc lặp lại hằng tuần trong Lịch của iPad (báo đúng giờ).
+Chọn một bài con đã thuộc.
+Chọn tuần…
+Chọn tên hoặc chạm phím.
+Chọn tệp sao lưu (.json) đã lưu trong Tệp.
+Chỗ p đàn NHỎ, chỗ f đàn TO, như kể chuyện.
+Chữ f nghĩa là gì?
+Chữ nghiêng dưới khuông nhắc con đàn to hay nhỏ.
+Chữ rit.
+Chữ đang gõ sẽ bị thay bằng bài ví dụ.
+Con chào khán giả trên phím đen!
+Con chơi vài bài ngắn, khó dần.
+Con chưa có bài nào, bấm nút to nhé!
+Con chỉ (hoặc đàn) Đô giữa, tìm đúng thì chạm “Đã tìm đúng”.
+Con chỉ Bé Nốt chỗ có Fa thăng trong Minuet.
+Con chỉ Bé Nốt chỗ trong bài phải dời tay, và dời bằng ngón nào.
+Con chỉ Bé Nốt cách luồn ngón cái dưới ngón 3 khi đi lên gam.
+Con chỉ Bé Nốt hai phím đen của gam Rê trưởng: Fa thăng và Đô thăng.
+Con chỉ Bé Nốt hợp âm Sol bảy: Si, Fa, Sol, ngón 5, 2, 1.
+Con chỉ Bé Nốt hợp âm Đô: ngón 5, 3, 1 tay trái trên Đô, Mi, Sol.
+Con chỉ Bé Nốt ngón 1 đến ngón 5.
+Con chỉ Bé Nốt phím Si giáng, và ngón nào đàn nó trong gam Fa tay phải.
+Con chỉ Bé Nốt: "Bánh nóng" ở thế Rê có phím đen nào?
+Con chỉ Bé Nốt: lên gam Sol, ngón cái luồn dưới ở nốt nào?
+Con chỉ Bé Nốt: tay trái bấm Đô và GIỮ, tay phải đàn Mi Rê Đô.
+Con chỉ Bé Nốt: tay trái giữ nốt nào, giữ bao lâu?
+Con chỉ Bé Nốt: đàn "Chú cừu" ở thế Sol, ngón cái đặt ở đâu?
+Con chỉ Bé Nốt: đổi pedal là "nhả trước, nhấn sau", nhả khi hợp âm mới vang, nhấn lại ngay sau đó.
+Con chỉ cho Bé Nốt khóa Fa: nốt Fa ở giữa hai dấu chấm, Đô giữa ở trên cùng.
+Con chỉ cho Bé Nốt: Fa thăng ở đâu?
+Con chỉ cho Bé Nốt: anh em sinh đôi ở đâu?
+Con chỉ một nốt trên khuông, nói tên nốt.
+Con chỉ một nốt, đố Bé Nốt đọc tên.
+Con chỉ trên khuông cho Bé Nốt: Đô "đội mũ", Mi "trên vạch 1", Sol "trên vạch 2".
+Con chỉ trên khuông cho Bé Nốt: Đô cao ở khe 3, Mi cao ở khe trên cùng, Fa cao trên vạch trên cùng, Sol cao ngồi trên đỉnh khuông.
+Con chỉ trên khuông cho Bé Nốt: Đô giữa có 1 vạch phụ, La dưới có 2 vạch phụ, La cao "đội" 1 vạch phụ ở trên.
+Con chọn 1 hoặc 2 bài con đàn hay nhất!
+Con chọn MỘT bài để biểu diễn nhé!
+Con chọn bài sẽ biểu diễn ở Nhà hát và tập giới thiệu bài cho Bé Nốt nghe.
+Con chọn bài thích nhất trong 3 bài và kể cho Bé Nốt: chỗ nào con đàn TO, chỗ nào NHỎ?
+Con chọn bài thích nhất trong 3 bài, đàn cho Bé Nốt và kể: tay trái đệm kiểu gì?
+Con chọn bài đã đàn được, mời cả nhà ngồi nghe!
+Con chọn một bài con thích nhé!
+Con chọn một bài tuần trước, đàn cho Bé Nốt và kể: tay trái đệm kiểu gì?
+Con chọn những bài hai tay hay nhất để biểu diễn.
+Con còn nhớ các nốt này không?
+Con diễn xong cả buổi rồi, huy chương này là của con!
+Con dạy Bé Nốt "Ếch con nhảy": Đô, Mi, Sol là ngón 1, 3, 5, nhảy qua một phím!
+Con dạy Bé Nốt câu đầu "Bài ca niềm vui": Mi Mi Fa Sol, Sol Fa Mi Rê.
+Con dạy Bé Nốt dời tay từ thế Đô sang thế Sol: ngón cái nhảy từ Đô lên Sol.
+Con dạy Bé Nốt đệm hợp âm Đô, Fa, Sol bằng tay trái.
+Con dạy Bé Nốt: ngón nào đánh Đô, ngón nào đánh Rê, ngón nào đánh Mi?
+Con giơ hai tay lên và chỉ cho Bé Nốt: ngón số 1 của tay trái và tay phải ở đâu?
+Con giả làm thầy: giảng to cho Bé Nốt (hoặc anh chị em, bạn bè) cách ngồi đúng, đặt tay đúng ngón rồi đàn mẫu một bài con đã thuộc (hoặc một câu).
+Con giải thích cho Bé Nốt: Andante là đi thong thả, Allegro là nhanh vui, rit.
+Con giảng cho Bé Nốt nghe nhé!
+Con giỏi quá!
+Con giới thiệu bài sắp đàn với khán giả: "Bài con đàn là…"
+Con giới thiệu bài và kể cho khán giả: bài này dùng thế tay nào?
+Con giới thiệu tên bài, cúi chào, đàn trọn bài rồi cúi chào lần nữa nhé!
+Con giới thiệu từng bài với khán giả: tên bài, giọng gì, nhịp mấy, có pedal không.
+Con giới thiệu với khán giả: "Bài tiếp theo tên là…, của nhạc sĩ…".
+Con giữ nhịp giỏi quá!
+Con giữ nhịp trong đầu giỏi lắm!
+Con giữ nhịp đều (cả lúc máy im) và đàn trọn bài chưa?
+Con giữ nhịp đều và đàn trọn bài chưa?
+Con hoàn thành thử thách tuần rồi!
+Con hoàn thành thử thách tuần!
+Con hát hay lắm!
+Con hát hay quá!
+Con hát rồi đàn giỏi quá!
+Con hát tên 3 nốt rồi đàn lại.
+Con hát đúng hết rồi!
+Con hát đúng rồi!
+Con kết thúc bằng một câu thật hay, giỏi lắm!
+Con kết thúc thật hay, giỏi lắm!
+Con kể cho khán giả nghe hành trình 33 tuần học đàn của con.
+Con kể: hôm nay chỗ nào khó nhất?
+Con là nghệ sĩ nhỏ thật sự: gam, hợp âm rải, pedal, 6 trên 8, con đã làm được hết.
+Con là nhạc công rồi!
+Con là nhạc sĩ rồi!
+Con là thám tử!
+Con làm mưa nhanh "Chạy-chạy-chạy-chạy"!
+Con làm mưa trên phím đen!
+Con làm theo rồi tự kiểm tra nhé!
+Con làm đúng chưa?
+Con làm được rồi!
+Con lạc đà đi "Đi-chấm chạy": nốt có CHẤM dài thêm một nửa, nốt sau đó ngắn lại cho vừa.
+Con lấy 3 bài đã học ra lau thật sáng: nhanh hơn một nấc, to, nhỏ thật rõ, rồi biểu diễn cho cả nhà.
+Con mời Bé Nốt nghe Minuet song tấu và kể: thầy đàn bè cao hay bè thấp?
+Con mời Bé Nốt nghe bài song tấu và kể: thầy đàn bè cao hay bè thấp?
+Con nghe rồi chọn nhé!
+Con nghe thấy chỗ nào chưa đều?
+Con nhận được một cúp mới
+Con nhận được sticker
+Con nhận được sticker Buổi diễn!
+Con nhận được sticker mới!
+Con nhớ điều này nhé!
+Con rải hợp âm Đô trưởng cho Bé Nốt nghe: Đô, Mi, Sol, Mi, Đô, ngón 1, 3, 5, 3, 1.
+Con thuộc bài này rồi!
+Con thích bài nào mà app chưa có (cả bài thiếu nhi mới)?
+Con thấy dễ quá?
+Con thấy dễ?
+Con thật thà lắm!
+Con thử tự đọc trước nhé, đọc xong mới nghe mẫu!
+Con tiến bộ lắm!
+Con tiến bộ nhiều lắm!
+Con tiến bộ thế nào?
+Con trả lời!
+Con tìm đúng phím nhé!
+Con tìm đúng Đô giữa 10 lần (sai nhiều nhất 1 lần) chưa?
+Con tập giới thiệu với Bé Nốt: "Bài con sắp đàn là…
+Con tập thêm một chút, mai mình thi lại nhé.
+Con tự kiểm tra thật thà nhé, làm lại cũng giỏi!
+Con tự kiểm tra: đúng hết rồi, giỏi lắm!
+Con tự đố mình tìm Đô 3 lần ở 3 chỗ khác nhau.
+Con vỗ cho Bé Nốt "Chạy-Đi-chạy, Đi-i" rồi chỉ một dấu nối: vỗ MẤY lần?
+Con vỗ một mẫu nhịp "Đi, Chạy-chạy, Đi-i" rồi bắt Bé Nốt vỗ lại.
+Con vỗ một mẫu nhịp, Bé Nốt vỗ lại.
+Con vỗ một nhịp, Bé Nốt vỗ lại theo con.
+Con vỗ tay cho Bé Nốt nhịp 2: MẠNH-nhẹ, MẠNH-nhẹ, rồi bắt Bé Nốt vỗ lại.
+Con vỗ tay cho Bé Nốt nhịp 3: MẠNH-nhẹ-nhẹ, MẠNH-nhẹ-nhẹ.
+Con vỗ tay và nói "Đi" theo nhịp nhé.
+Con vỗ thế nào?
+Con vỗ đúng chưa?
+Con vừa đung đưa người vừa đếm cho Bé Nốt: MỘT-hai-ba BỐN-năm-sáu.
+Con đang học đúng chặng rồi!
+Con đàn "Chèo thuyền nhẹ" cho Bé Nốt ở thế Đô rồi ở thế Sol, nghe có giống không?
+Con đàn 2 nốt, đố Bé Nốt: bước hay nhảy?
+Con đàn 2 nốt, đố Bé Nốt: lên hay xuống?
+Con đàn BẤT KỲ phím đen nào con thích, chậm hay nhanh, to hay nhỏ.
+Con đàn LIỀN (không hở) chưa?
+Con đàn NGẮT (nhấc tay nhanh) chưa?
+Con đàn NHỎ (mà vẫn rõ tiếng) chưa?
+Con đàn TO chưa?
+Con đàn TO rồi NHỎ, Bé Nốt đoán nhé!
+Con đàn bài con thích nhất cho Bé Nốt nghe.
+Con đàn bài tự nghĩ, Bé Nốt đặt tên!
+Con đàn cho Bé Nốt 5 nốt đầu "Mi, Rê thăng, Mi, Rê thăng, Mi" và chỉ phím Rê thăng.
+Con đàn cho Bé Nốt câu con tìm được bằng tai, Bé Nốt đoán tên bài nhé!
+Con đàn cho Bé Nốt một câu con tìm được bằng tai, rồi đố Bé Nốt tìm lại!
+Con đàn cho Bé Nốt nghe bass Alberti: Đô, Sol, Mi, Sol bằng ngón 5, 1, 3, 1.
+Con đàn cho Bé Nốt nghe gam La thứ hai lần: lần đầu toàn phím trắng, lần sau có Sol thăng.
+Con đàn cho Bé Nốt nghe Đô, Mi, Sol (vui) rồi Đô, Mi giáng, Sol (buồn).
+Con đàn hợp âm, đố Bé Nốt: vui hay buồn?
+Con đàn lại câu đầu rồi tự xem tay mình nhé!
+Con đàn lại từ đầu câu, được nhé!
+Con đàn một câu quen, nhìn tay mình rồi chạm ý con làm được nhé.
+Con đàn một nốt, đố Bé Nốt tên nốt!
+Con đàn phím đen "Chạy-Đi-chạy"!
+Con đàn phím đen: Đi, Đi, Chạy-chạy!
+Con đàn to hơn nhé.
+Con đàn to, nhỏ rõ ràng quá!
+Con đàn trên đàn thật cũng được!
+Con đàn trên đàn thật rồi tự nghe nhé, thật thà nha!
+Con đàn và tự xem tay mình nhé.
+Con đàn xong rồi!
+Con đàn Đô giữa nhé, micro đang nghe!
+Con đàn đúng chưa?
+Con đàn đúng hết, không sai nốt nào chứ?
+Con đàn đều lắm!
+Con đàn đều lắm, chỉ chậm hơn máy.
+Con đáp 2 ô, kết ở Đô!
+Con đáp NHỎ, kết ở Đô nhé!
+Con đáp TO và vui, kết ở Đô!
+Con đáp bằng bước và nhảy, kết ở Đô!
+Con đáp bằng bậc đi xuống về Đô!
+Con đáp bằng hợp âm rải!
+Con đáp bằng nốt NGẮT, nảy như bóng!
+Con đáp chậm, kết ở Đô!
+Con đáp nhẹ nhàng, kết ở Sol!
+Con đáp nhẹ nhàng, kết ở Đô!
+Con đáp thật LIỀN và NHẸ, kết ở Đô!
+Con đáp to dần!
+Con đáp, kết ở La!
+Con đáp, kết ở Rê!
+Con đáp, kết ở Sol!
+Con đáp, kết ở Đô!
+Con đáp, kết ở Đô, như hợp âm I!
+Con đã biểu diễn trọn 2, 3 bài trên sân khấu chưa?
+Con đã chinh phục Lâu đài Âm nhạc!
+Con đã hoàn thành buổi hôm nay!
+Con đã làm xong thử thách tuần này thật chưa?
+Con đã làm đúng chưa?
+Con đã ngồi vào đàn, tuần sau mình cùng thêm một bài mới nhé.
+Con đã tìm lại được câu nhạc bằng tai!
+Con đã tới Lâu đài Âm nhạc!
+Con đã đàn hết bài, đúng phím chưa?
+Con đã ở chặng rất cao rồi!
+Con đặt 5 ngón lên Đô Rê Mi Fa Sol, rồi dạy Bé Nốt "Leo cầu thang".
+Con đệm "Bài ca niềm vui" bằng hợp âm rải cho Bé Nốt hát!
+Con đệm "Chuông ngân vang" cho Bé Nốt hát: I, IV, V7!
+Con đệm hợp âm như nhạc công thật!
+Con đọc to cho Bé Nốt nhịp "Đi-chấm chạy Đi Đi" (nốt chấm dôi).
+Con đọc to cho Bé Nốt: "Chạy-chạy-chạy-chạy, Đi" rồi "Tập-tễnh, Đi", vỗ tay theo.
+Con đọc to tên 5 nốt bất kỳ trên khuông cho Bé Nốt kiểm tra.
+Con đọc và đàn đúng các đoạn nhạc mới chưa?
+Con đối đáp giỏi quá!
+Cuối tuần có " Buổi diễn nhỏ" (không huy chương, có sticker).
+Cuối tuần có " Buổi diễn nhỏ": mời cả nhà ngồi nghe, vỗ tay to, không sửa lỗi lúc bé đang đàn.
+Cài giọng: Cài đặt Trợ năng Nội dung được đọc Giọng nói Tiếng Việt (chọn “Linh”).
+Cài micro lại (3 bước), micro và loa của máy mới khác máy cũ.
+Cài micro: “1.
+Cài đặt Cho người hỗ trợ “Nhập từ tệp JSON” chọn bản sao lưu trong Tệp.
+Cài đặt Cho người hỗ trợ “Nhập từ tệp JSON”.
+Cài đặt Cài micro “2.
+Cài đặt Màn hình & Độ sáng Tự động khóa: 5 phút hoặc lâu hơn.
+Cài đặt iPad Safari Micrô chọn “Hỏi” hoặc “Cho phép”.
+Các lần bé chạm “ Rồi” / “ Làm lại” ở chỗ micro không chấm được (tư thế, ngón, micro tắt…).
+Các nhạc sĩ cổ điển rất thích kiểu đệm này!
+Các thánh tiến bước, hai tay theo nhịp!
+Các thánh tiến bước, hai tay theo nhịp, 2 hôm nhé!
+Các thẻ có hình: chỗ ngồi, bé tự kiểm tra, micro, Cài đặt.
+Cách một phím là NHẢY.
+Cách nhau như thế gọi là QUÃNG 8.
+Câu LIỀN rồi câu NGẮT; TO rồi NHỎ như tiếng vọng.
+Câu cuối NHỎ.
+Câu có La: tay nhích phải!
+Câu hỏi chưa về nhà, con sẽ trả lời!
+Câu hỏi, câu trả lời: con biết đưa giai điệu về nhà rồi!
+Câu nào bé cũng được 3 sao (thưởng vì học xong buổi), để bé dám nói thật.
+Câu trả lời kết thúc ở
+Còn
+Còn bài tập về nhà chưa xong mà con còn vấp.
+Còn dấu nối thì giống sợi dây buộc hai nốt thành một.
+Còn nữa…
+Còn đây là bản hay nhất của con!
+Còn đây là hôm nay!
+Còn đây là nốt bí mật…
+Có 60 giây.
+Có lúc nghe nhầm quãng 8 (cùng tên nốt, khác cao độ), thường do micro quá gần búa đàn; dịch iPad ra xa thêm ~20 cm.
+Có nốt tiếng đủ to mà micro nghe lệch nửa cung bấm "Chỉnh theo đàn nhà" (đàn lâu không lên dây).
+Có nốt tiếng đủ to mà micro vẫn chưa rõ cao độ bớt tiếng ồn (TV, quạt, điều hòa), đàn từng nốt rõ ràng, nhả phím trước khi đàn nốt sau.
+Có vẻ bố mẹ dùng dấu phẩy để tách nốt, nhưng "," nghĩa là THẤP xuống một quãng tám.
+Cùng bé vỗ tay hát "Inh lả ơi" trước khi đàn.
+Cùng bé đung đưa người "MỘT-hai-ba".
+Cả bàn tay nằm trên 5 phím trắng.
+Cảm ơn con đã nói thật!
+CẤP 4 bắt đầu.
+Cần giọng tiếng Việt: Cài đặt iPad Trợ năng Nội dung được đọc Giọng nói Tiếng Việt.
+Cần nhảy / lùi tuần: Cài đặt “Tuần hiện tại” chọn Cấp rồi Tuần (kết quả cũ vẫn giữ).
+Cập bến đảo mới!
+Cẳng tay, cổ tay, bàn tay thẳng một đường ngang phím.
+Cổ tay nảy nhẹ, đầu ngón chạm rồi bật lên ngay.
+Cổ tay võng hay nhô làm gãy đường truyền lực từ cánh tay xuống đầu ngón.
+Cổ tay đi ngang, không xoay lật.
+Cổ tay đứng yên!
+Cứ thế tiếp nhé!
+Dân ca Quảng Nam: đổi tay ở nốt dài.
+Dân ca Thanh Hóa: tay trái đệm quãng 5.
+Dòng kẻ phụ dùng khi nào?
+Dòng kẻ phụ: bé đọc sai thì hỏi "từ Đô giữa đi xuống mấy bậc?" thay vì nói tên nốt.
+Dòng kẻ phụ: vạch ngắn cho nốt ra ngoài khuông.
+Dùng 5 nốt Đô Rê Mi Fa Sol, nghĩ một câu nhạc 4 ô nhịp (kết thúc ở nốt Đô nghe sẽ "xong").
+Dùng loa iPad nhé
+Dưới trăng, vũ hội La Thứ bắt đầu.
+DẤU NỐI: vòng cung nối hai nốt GIỐNG nhau.
+Dấu "." sau nốt là chấm dôi (×1,5), ví dụ: Sol.
+Dấu "~" ở cuối bài không có nốt sau để nối, đã bỏ qua.
+Dấu CHẤM DÔI: nốt dài thêm MỘT NỬA.
+Dấu bình ♮ trả nốt về phím trắng như cũ.
+Dấu bình ♮ xóa dấu thăng, dấu giáng.
+Dấu chấm bên phải nốt làm nốt DÀI THÊM.
+Dấu chấm làm nốt thế nào?
+Dấu hóa theo khóa đúng cho những nốt nào?
+Dấu hóa theo khóa:/ ghi sẵn, đúng cho cả bài.
+Dấu luyến (vòng cung) nhắc đàn liền.
+Dấu luyến nối nốt KHÁC nhau: đàn liền.
+Dấu luyến: LIỀN; nốt có chấm: NGẮT.
+Dấu luyến: đàn LIỀN.
+Dấu lặng: “Suỵt”.
+Dấu mf = đàn VỪA.
+Dấu nối hay dấu luyến?
+Dấu nối: chỉ vỗ MỘT lần cho cả hai nốt.
+Dấu nối: hai nốt giống nhau, đánh một lần, giữ đủ.
+Dấu nối: vỗ MỘT lần!
+Dấu p: NHỎ như mưa phùn.
+Dấu thăng đưa nốt đi đâu?
+Dấu ♮ gọi là gì?
+Dễ = cho phép sớm/muộn nhiều hơn (nên dùng lúc đầu).
+DỊCH GIỌNG: đàn cùng một bài ở chỗ khác trên đàn.
+Dịch "Chú cừu" sang thế Sol, con giữ nguyên gì?
+Dời tay phải lên: ngón cái ở Đô cao (khe 3).
+Dời tay sang
+Dời tay trong dấu lặng!
+Dời tay ở nốt dài!
+Dời tay, giữ nguyên SỐ NGÓN, bài vẫn nghe như cũ.
+Dời tay, giữ số ngón, cùng bài, giọng khác.
+Dữ liệu chính bị trống / hỏng, app đã tự khôi phục tiến độ của bé từ bản sao thứ hai trong máy.
+Dữ liệu của bé nằm trên iPad này, xóa biểu tượng app = mất dữ liệu.
+Dữ liệu hiện tại được cất một bản dự phòng trước khi thay.
+Dữ liệu trước 25 trên 10/2026: bố mẹ chấm.
+Dữ liệu vừa nhập có thể từ iPad khác, số đo micro cũ đã được đặt lại.
+Fa Sol La Si giáng: ngón 1-2-3-4, rồi ngón cái luồn!
+Fa thăng gặp dấu bình thành nốt gì?
+Fa thăng là phím đen ngay bên phải Fa.
+Fa trưởng có dấu hóa nào?
+Fa trưởng: Si giáng.
+Fa// | Mi Đô Rê | Đô--
+Für Elise "Mi, Rê thăng, Mi" theo nhịp, 2 hôm nhé!
+Für Elise có Rê thăng: bé hay đánh Rê trắng.
+Gam Fa có Si giáng, 2 hôm nhé!
+Gam Fa hai tay và Minuet nhỏ, 2 hôm!
+Gam Fa trưởng cần Si giáng, một phím đen.
+Gam Fa trưởng tay phải KHÁC các gam khác: 1-2-3-4 (ngón 4 ở Si giáng) rồi ngón cái luồn xuống Đô.
+Gam La thứ "tự nhiên" toàn phím trắng (từ La tới La); gam "hòa âm" nâng nốt Sol thành Sol THĂNG, nghe "Ả Rập" hơn.
+Gam La thứ không có phím đen, nhưng bản "hòa âm" mượn một phím đen: Sol THĂNG.
+Gam La thứ và Korobeiniki, 2 hôm!
+Gam Rê trưởng có hai phím đen Fa thăng, Đô thăng.
+Gam Sol hai tay cùng lúc, 2 hôm!
+Gam Sol hai tay, 2 hôm, tay thật mềm!
+Gam Sol trưởng cần Fa thăng mới nghe đúng.
+Gam Sol trưởng: tay phải luồn ngón cái xuống Đô (sau ngón 3), xuống gam ngón 3 vắt qua về Si; tay trái ngược lại.
+Gam Sol: nhớ Fa THĂNG, phím đen!
+Gam hai tay cùng lúc rất khó vì mỗi tay luồn ngón ở chỗ khác nhau (tay phải ở nốt thứ 4, tay trái ở nốt thứ 6).
+Gam tay phải và tay trái, 2 hôm nhé!
+Ghi nào!
+Ghép HAI TAY cả bài, chậm thôi!
+Ghép HAI TAY cả bài, chậm thôi, đúng trước!
+Ghế quá thấp hay quá xa thì cổ tay võng và vai phải gồng.
+Giai điệu "Mi, Rê thăng, Mi" nổi tiếng khắp thế giới.
+Giai điệu đi thế nào?
+Giáng: xuống phím sát bên TRÁI.
+Gió mát ở Trạm Nghỉ Gió!
+Giơ tay vẽ cầu vồng rồi thả tay rơi nhẹ xuống phím, cổ tay mềm như sợi bún.
+Giọng đọc / âm thanh…
+Giỏi lắm!
+Giỏi quá
+Giỏi quá!
+Giỏi!
+Giống, bước hay nhảy?
+Giờ Câu 2 theo nhịp.
+Giờ chơi lại
+Giờ con hát lại từng nốt nhé!
+Giờ con nghe mẫu được rồi, nghe xong Bắt đầu đàn lại nhé.
+Giờ con tự bắt nhịp!
+Giờ con đàn từng nốt chỗ này nhé!
+Giờ tay trái đệm, tay phải nghỉ.
+Giờ tay trái, tay phải nghỉ.
+Giờ thử băng chuyền nhé!
+Giữ dữ liệu học của bé an toàn: khi mở bằng tab trình duyệt, iPad có thể tự xóa tiến độ nếu vài ngày không mở.
+Giữ phím tới khi nốt sau vang lên.
+Giữ phím tới khi nốt sau vang, liền như dòng nước!
+Giữ phím…
+Giữ yên lặng, app sẽ phát 6 tiếng "tinh".
+Giữ yên lặng, mở loa iPad vừa đủ nghe.
+Giữa bài về thế Đô.
+Greensleeves hai tay theo nhịp, 2 hôm!
+Greensleeves là dân ca Anh (thế kỷ 16) nhịp 6 trên 8, có Sol thăng (cả hai câu) và Fa thăng (câu cuối), chậm dần (rit.) ở cuối.
+Greensleeves theo nhịp, chậm dần ở cuối!
+Gõ chữ
+Gõ hợp âm cho từng ô nhịp (cách nhau bằng
+Gõ nốt Đô Rê Mi, chạm phím hoặc đàn cho app nghe, thêm cả tay trái đệm hợp âm.
+Gõ phím bất kỳ trên đàn thật cũng được!
+Gầm!
+Gần giữa đàn, ngay dưới tên hãng đàn (hoặc ổ khóa): phím trắng bên TRÁI nhóm 2 phím đen.
+Gần như hoàn hảo!
+Gần rồi!
+Gần đúng rồi!
+Gần đúng rồi, nghe lại nhé!
+Gần đúng!
+Gần được rồi!
+Gần được rồi, mình đàn lại từ đầu câu nhé!
+Gặp bài khó thì dừng, không sao cả!
+Gặp lại bạn nốt cũ nào!
+Gửi cho người cùng trông bé học đàn, hoặc in ra dán cạnh đàn.
+Hai "mỏ" trên khuông: < (crescendo) = TO DẦN, > (diminuendo) = NHỎ DẦN, tăng/giảm từ từ qua nhiều nốt, không nhảy một lần.
+Hai bài valse thế Đô: lượt theo nhịp chỉ nhìn khuông.
+Hai chấm của khóa Fa ôm nốt nào?
+Hai nốt Sol trầm: ngón cái tay trái.
+Hai nốt có dấu nối: đánh mấy lần?
+Hai nốt cùng tên, cách nhau 8 phím trắng.
+Hai nốt cạnh nhau là BƯỚC.
+Hai nốt trên khuông: cùng chỗ = giống, vạch/khe ngay cạnh = bước, cách một = nhảy.
+Hai nốt: GIỐNG, BƯỚC hay NHẢY?
+Hai nốt: bước, nhảy hay nhảy xa?
+Hai phím đen đứng sát nhau là anh em SINH ĐÔI.
+Hai phím đen: Fa thăng, Đô thăng!
+Hai phím đen: Rê thăng và Sol thăng!
+Hai tay cùng làm nên bản nhạc!
+Hai tay cùng lúc rất khó: bài đầu tuần có sẵn bước tập riêng tay phải, rồi tay trái ở CÂU KHÓ nhất (không phải cả bài), rồi mới ghép hai tay cả bài, ghép ở tốc độ 40.
+Hai tay cùng lúc: Bánh nóng, 2 hôm nhé!
+Hai tay giờ đã thành đôi bạn thân: một tay hát, một tay đệm.
+Hai tay luân phiên: chờ tay này xong tay kia mới vào.
+Hai tay thay nhau: nốt cao tay phải, nốt thấp tay trái!
+Hai tay, pedal đổi mỗi ô!
+Hai: chạm phím thật nhanh.
+Hai: khum tay tròn ôm quả bóng.
+Hai: ngón cái chui nhẹ dưới lòng bàn tay.
+Hai: thả rơi nhẹ xuống phím, bàn tay cong.
+Hai: đẩy cổ tay tới trước.
+Hay hụt nốt nhẹ / nghe nhầm: Cài micro “ Dành cho người hỗ trợ” Độ nhạy, “Học lại lệch dây”.
+Hay quá!
+Hoặc dán nội dung JSON vào đây…
+Huy chương Cấp 2, nghệ sĩ hai tay!
+Hát cao lên một xíu nữa nhé
+Hát chưa trúng cũng không sao!
+Hát giúp tai nhớ nốt, con giỏi lắm!
+Hát thấp xuống một xíu nhé
+Hát to tên nốt (Đô Rê Mi…) cả bài trước, rồi mới đàn.
+Hát tên nốt theo thầy nhé!
+Hát đúng thì đàn sẽ dễ hơn!
+Hát đúng, đàn đúng!
+Hãy chọn hết đoạn chữ bên dưới, bấm Sao chép rồi dán vào tin nhắn gửi người hỗ trợ.
+Hãy dùng loa của iPad khi tập.
+Hãy dùng loa iPad để chấm nhịp chính xác.
+Hòa nhạc Cấp 2: có thể quay video bằng điện thoại của bố mẹ để bé xem lại và tự hào.
+Hôm nay con cố gắng lắm rồi, mai mình luyện tiếp nhé!
+Hôm nay con học đủ rồi, mai mình học tiếp nhé!
+Hôm nay con học đủ rồi.
+Hôm nay con là nghệ sĩ, cả nhà là khán giả.
+Hôm nay con thi rồi, mai mình thi lại nhé!
+Hôm nay con thấy thế nào?
+Hôm nay con đổi thế tay, tìm Đô giữa làm mốc trước nhé!
+Hôm nay mình chơi bài con thích nhé
+Hôm nay tập thêm bài của tuần cho thật chắc tay.
+Hết 3 phút, máy tự dừng rồi!
+Hết chỗ rồi!
+Hết lượt khách, về với bé nhé!
+Học thẻ “ Biết thêm” trong bài, từ mới sẽ hiện ở đây!
+Học tiếp để nhận thêm nhé.
+Hỏi "nốt mốc gần nhất là nốt nào?" thay vì đọc hộ.
+Hỏi bé "bài này nghe vui hay buồn?" khi nghe nhạc ở nhà, luyện tai tự nhiên nhất.
+HỢP ÂM: ba nốt cách quãng 3, đàn cùng lúc.
+Hợp âm Fa (IV) rải Đô, Fa, La bằng 1-3-5 là tay mở rộng (quãng 6): nếu tay bé căng, cho bé xoay cổ tay nhẹ sang phải thay vì kéo ngón.
+Hợp âm SOL BẢY (V7) giản lược tay trái: Si, Fa, Sol (ngón 5, 2, 1), từ hợp âm Đô chỉ cần nhích ngón 5 xuống Si và ngón 3 sang Fa.
+Hợp âm V7 giản lược tay trái gồm những nốt nào?
+Hợp âm không chỉ bấm cùng lúc, rải từng nốt một như cầu vồng: lên, rồi xuống!
+Hợp âm làm bài hát đầy đặn!
+Hợp âm nghe VUI hay BUỒN?
+Hợp âm rải: các ngón đi từng nốt nhưng bàn tay vẫn giữ dáng "ôm bóng" của hợp âm, không duỗi thẳng ngón.
+Hợp âm thứ nghe thế nào?
+Hợp âm Đô (C) · Fa (F) · Sol (G) = I · IV · V.
+Hợp âm Đô gồm những nốt nào?
+Hợp âm: 3 ngón xuống CÙNG LÚC.
+Inh lả ơi "MỘT-hai" thật đều, 2 hôm nhé!
+Khen khi bé nói được "Đô ở bên trái hai phím đen".
+Khen nhiều khi bé không nhìn tay.
+Khen sự tự tin, đừng vội chuyển tuần.
+Khi bé sáng tác, đừng sửa "cho hay", hỏi bé "bài này kể chuyện gì?".
+Khi iPad hỏi, con chạm “Cho phép” nhé!
+Khi không bật micro, phiếu chấm có 3 ý (đúng nốt · đều nhịp · đúng ngón), chỉ đánh "đạt" khi cả 3 đều đạt.
+Khi micro bật, app giữ BẢN THU HAY NHẤT của mỗi bài (tối đa 90 giây/bản) để bé nghe lại và bố mẹ gửi ông bà (Thư viện Album của con Gửi).
+Khi tiện: Cài đặt “ Sao lưu dữ liệu” Lưu vào Tệp (app không nhắc).
+Khi đọc nhạc, để ý con nhìn bản nhạc nhiều hơn nhìn tay, chậm cũng được.
+Khi đổi sang thế Sol, nhắc bé "ngón cái về nhà mới ở Sol" trước khi bắt đầu.
+Khoảng 3 phút, mỗi tháng một lần.
+Khum tay tròn như đang ôm quả bóng nhỏ, giữ dáng tay đó khi đặt lên phím.
+Khum tay tròn, khớp gốc ngón cao và chắc như cây cầu.
+Khuông 5 dòng; khóa Sol đánh dấu nốt Sol ở dòng 2.
+Khuông lớn: khóa Sol tay phải, khóa Fa tay trái!
+Khuông lớn: tay phải đọc khóa Sol, tay trái đọc khóa Fa.
+Khuông nhạc có 5 dòng kẻ, đếm từ dưới lên.
+Khuông nhạc có mấy dòng kẻ?
+Khuỷu tay hơi trước người, cẳng tay ngang phím, chân đặt vững.
+Khám phá tiếp nào!
+Khán giả ơi, thả tim cho nghệ sĩ nhé!
+Khó = gần như chính xác tuyệt đối.
+Khó mà vui!
+Khóa Fa có hai chấm ôm dòng 4: nốt Fa.
+Khóa Fa mới lạ, đọc to tên nốt cùng bé, bắt đầu từ nốt mốc Fa (vạch giữa hai dấu chấm).
+Khóa Fa thường dành cho tay nào?
+Khóa Fa đi LÊN qua vạch phụ: Si, Đô giữa, Rê!
+Khóa Fa: hai chấm ôm dòng Fa, cho nốt thấp, tay trái.
+Khóa Fa: hai dấu chấm ôm vạch FA.
+Khóa Sol cho nốt cao, khóa Fa cho nốt thấp.
+Khóa Sol cuộn quanh dòng 2: nốt Sol ở đó.
+Khóa Sol cuộn quanh nốt nào?
+Không bật được micro.
+Không bắt buộc, vài dòng về bé và app (bé thích gì, chỗ nào khó, micro / giọng đọc có ổn không).
+Không chia sẻ / sao chép được trên iPad này.
+Không chấm nhịp; sai thì app gợi ý "cao hơn / thấp hơn", rồi đàn lại nốt, cuối cùng mới chỉ phím, đừng nhắc hộ ngay.
+Không có bản sao lưu: gửi “ Kiểm tra iPad” cho người hỗ trợ.
+Không có gì mới, con đàn bài mới bằng những gì đã giỏi: gam, hợp âm, Alberti.
+Không có gì mới, con đánh bóng 3 bài hai tay cho thật đều, rồi biểu diễn cho cả nhà.
+Không có máy đếm nhịp: cứ đàn đều tay, app tự đoán tốc độ.
+Không có tên bé.
+Không cần nhanh, đọc ĐÚNG trước.
+Không hở chút nào, hay quá!
+Không lưu bản này.
+Không phải lỗi của con đâu.
+Không sao chép tự động được, hãy chọn và sao chép đoạn chữ bên dưới.
+Không tự sao chép được, bấm “Bắt đầu đo” để tạo báo cáo mới.
+Không tự sao chép được, chạm vào ô chữ bên dưới, chọn hết rồi Sao chép.
+Khúc Largo (Dvořák) có dấu luyến cong: đàn LIỀN như trò "Đàn liền" tuần 5.
+Khớp gốc ngón (cây cầu) đỡ sức nặng cánh tay, cầu sụp thì lực tản mất, tiếng đàn yếu.
+Khớp đầu ngón bẹp vào là lý do số 1 khiến tiếng đàn cơ yếu và không đều.
+Khởi động "cá lặn" (luồn ngón cái) là chuẩn bị cho gam ở tuần 20.
+Khủng long cũng phải nhảy theo!
+Kiểm tra 5 nốt
+Kiểm tra 5 nốt” (app tự chỉnh độ nhạy).
+Kiểm tra 5 nốt” (bé đàn Đô Rê Mi Fa Sol).
+Kiểm tra cả iPad (âm thanh, giọng đọc, lưu trữ…)
+Kiểm tra quyền micro rồi bấm "Kiểm tra lại".
+Kiểm tra xếp lớp 5 phút!
+Kiểm tra xếp lớp 5, 10 phút!
+Kiểm tra xếp lớp năm đến mười phút nhé!
+Korobeiniki hai tay theo nhịp!
+Korobeiniki là dân ca Nga (giai điệu trò chơi "Tetris" quen thuộc): tay phải dời thế 3 lần ở câu 2: ô 5 ngón cái lên Rê cao trong dấu lặng; ô 6 ngón cái với xuống Đô cao sau nốt Mi dài; ô 7 ngón 2 bước qua ngón cái về Si.
+Korobeiniki, chỉ nhìn khuông!
+Kết quả chỉ gồm những gì hiện trên màn này + số liệu kỹ thuật; không có tên bé (trừ khi bố mẹ tích ô trên).
+Kết quả các buổi gần đây ổn định.
+Kết quả cũ vẫn giữ.
+Kết quả cũ vẫn giữ; app tự sang tuần mới khi bé đạt mục tiêu.
+Kết thúc bằng một câu con đàn hay nhất nào.
+Kỷ lục mới!
+Kỷ lục đầu tiên của con!
+LEGATO là đàn LIỀN, êm như nước chảy.
+LIỀN: nối như nước chảy.
+La, Si dưới khuông cũng cần dòng kẻ phụ.
+Largo, chỉ nhìn khuông, nhớ pedal!
+Legato nghĩa là gì?
+Legato: đàn liền.
+Leo lên Núi Sol: cả bàn tay dời sang phải, ngón cái đứng ở Sol.
+Leo lên Tháp Nốt Cao!
+Leo lên từ Đô tới Sol, rồi leo xuống về Đô.
+Leo lên Đô Sol bằng ngón 5 1, rồi xuống.
+Leo lên: Đô, Rê, Mi, Fa, Sol.
+Leo từng nấc tốc độ, rồi to, nhỏ thật rõ!
+Leo xuống: Fa, Mi, Rê, rồi về Đô.
+Liền mượt như dòng sông!
+Liền tiếng tuyệt vời!
+Luồn ngón cái phải nhẹ, không xoay cả cổ tay.
+Làm ngay (khoảng 1 phút) để app tự chỉnh độ nhạy:
+Làm phiếu xem tay thật kỹ: buổi hòa nhạc dễ làm bé gồng vai.
+Làm theo gợi ý rồi "Kiểm tra lại" (hoặc nhờ người hỗ trợ).
+Làm tốt tới đâu, con lên thẳng chặng đó.
+Làm được
+Làm được hết những việc này trong MỘT buổi là con sang đảo mới ngay.
+Làm được hết trong một buổi là con sang đảo mới ngay.
+Làm “Cài micro 3 bước” (khoảng 2 phút) để micro nghe đúng trên iPad này nhé.
+Lá chắn âm nhạc mạnh thêm một cấp!
+Lên hay xuống?
+Lên sân khấu Nhà hát, nhận huy chương Cấp 2!
+Lúc khác thử lại nhé.
+Lúc đàn, vai con thả lỏng, ngón tròn, cổ tay mềm chưa?
+Lý cây đa theo nhịp, nhớ "Chạy chạy-chạy" nhé!
+Lý cây đa vang đúng nhịp "Chạy chạy-chạy", 2 hôm nhé!
+Lượt 2: KHÔNG có phím sáng
+Lượt chơi của khách không được lưu.
+Lượt vừa rồi, con đàn to, nhỏ rõ chưa?
+Lạc đà "Đi-chấm chạy" đi chợ, 2 hôm!
+Lạc đà "Đi-chấm chạy", nốt chấm dài, nốt sau ngắn!
+Lần lên thứ hai có Sol THĂNG!
+Lần này app đàn 3 nốt.
+Lần này phím không sáng nữa, nhìn tên nốt trên khuông nhé.
+Lần sau
+Lần trước bàn tay con hơi bẹp, nhìn xem mu bàn tay có tròn như ôm quả bóng nhỏ không.
+Lần trước cổ tay hay võng / nhô, nhìn xem cổ tay con có ngang với phím không.
+Lần trước khớp đầu ngón hay bị bẹp, nhìn xem đầu ngón con có đứng vững trên phím không.
+Lần trước tư thế ngồi chưa đúng, nhìn xem con ngồi thẳng, khuỷu tay ngang phím, chân có chỗ tựa không.
+Lần trước vai con hơi gồng, nhìn xem vai có thả lỏng, cánh tay nặng tự nhiên không.
+Lần đầu TO, nhắc lại NHỎ.
+Lần đầu đo, app lưu làm mốc để tháng sau so sánh.
+Lặp lại: Cài đặt Cho người hỗ trợ “ Kiểm tra sức khỏe app” “ Gửi kết quả”.
+Lệch khá nhiều, nên gọi thợ lên dây khi có dịp.
+Lợi ích: dữ liệu được giữ lâu dài, app mở toàn màn hình, chạy được khi không có mạng.
+Mai kia các bạn ấy sẽ nhảy Minuet cùng con ở Cung điện!
+Mai mình học tiếp nhé!
+Mai thử khó hơn nhé.
+Mi giáng gặp dấu bình thì về lại Mi.
+Mi giáng ở bên nào của Mi?
+Mi giáng ở đâu?
+Mi lên Fa: quãng mấy?
+Mi, Fa cách bao nhiêu?
+Mi, Fa và Si, Đô chỉ cách nửa cung.
+Micro BẬT: chỉ có nhạc nền bộ gõ (trống nhẹ, micro không nghe nhầm thành nốt đàn).
+Micro KHÔNG nghe được pedal, bố mẹ nghe: tiếng nhòe vào nhau (hợp âm cũ còn kêu trong hợp âm mới) là đổi muộn; có khoảng "hụt" tiếng là nhấn sớm.
+Micro TẮT: có thêm nhạc đệm piano (hợp âm theo bài).
+Micro chưa bật được, chạm để thử lại nhé!
+Micro chưa chấm được to dần, nhỏ dần trong bài: bố mẹ nghe và chạm thẻ "To dần, nhỏ dần".
+Micro chưa dùng cho buổi học.
+Micro chấm khi nghe được; chỗ micro không chấm được (tư thế, ngón…) bé tự kiểm tra: “ Rồi / Làm lại”.
+Micro chỉ phân tích ngay trên iPad, không gửi đi đâu; màn này không ghi âm.
+Micro giúp app tự nghe đàn thật và chấm (xử lý ngay trên iPad).
+Micro nghe chưa rõ 3 lần bé tự kiểm tra ( Rồi / Làm lại) và đi tiếp.
+Micro nghe chưa rõ.
+Micro nghe tốt với đàn nhà.
+Micro nghe đúng hết các nốt, hoặc con tự kiểm tra đủ 3 ý (đúng nốt, đều nhịp, đúng ngón).
+Micro sẵn sàng, chạm để ghi nhé!
+Micro sẽ nghe kỹ hơn, con cứ đàn bình thường nhé!
+Micro tắt hoặc nghe chưa rõ bé tự kiểm tra ( Rồi / Làm lại).
+Micro tắt thì bé tự kiểm tra ( Rồi / Làm lại) như thường.
+Micro đang TẮT.
+Micro đang nghe!
+Micro đang tắt.
+Micro được dùng trong buổi học (tự bật khi bé học).
+Minuet là nhạc cổ: tìm cho bé nghe bản gốc trên đài/TV nếu có dịp (không cần trong app).
+Minuet nhỏ Fa trưởng nhịp 3, bé dễ dồn nhịp ở nốt trắng chấm cuối câu: đếm to "MỘT-hai-ba".
+Moderato: vừa phải.
+Muốn chia ô nhịp thì dùng “|”.
+Muốn giữ bản nào thì Gửi / Lưu vào Tệp trước nhé.
+Muốn kéo dài nốt thì gõ: Mi- Rê.
+Muốn đi xa hơn, nốt bắc thêm CẦU NHỎ, dòng kẻ phụ, ở trên hoặc dưới khuông.
+Muốn đàn nhỏ, bản nhạc ghi chữ gì?
+Muốn đổi giờ: xóa sự kiện cũ trong Lịch rồi tạo lại.
+MÓC KÉP: 4 nốt trong 1 phách, "Chạy-chạy-chạy-chạy"!
+Màn này chưa nghe, bấm “1.
+Máy im, con đếm thầm trong đầu, đàn tiếp nhé!
+Mèo con nhảy valse "MỘT-hai-ba", 2 hôm nhé!
+Mình chơi lại thật chậm nhé!
+Mình cùng học đàn nhé.
+Mình cùng tìm nhé!
+Mình khởi động tay trước khi đàn nhé!
+Mình lặp lại câu này nhé!
+Mình nghe lại nốt này rồi hát theo nhé!
+Mình thử lại nhé!
+Mình tạm dừng bài này nhé!
+Mình về màn chính rồi học tiếp nhé!
+Mình xem thầy làm nhé!
+Mình ôn lại vài nốt cũ thật nhanh nhé!
+Mình đàn nốt này để tai nhớ thêm nhé
+Móc kép rất nhanh: bài bắt đầu ở tốc độ 40 là đúng.
+Móc đơn nửa phách “Chạy”.
+Mưa rơi "Chạy-chạy", đọc to trước khi đàn nhé!
+Mấy hôm nay con hay đàn đúng tên nốt nhưng lệch một quãng tám, trước khi đàn, nhắc con tìm Đô giữa (gần giữa đàn, dưới tên hãng đàn).
+Mấy hôm nay con đàn lệch một quãng tám, mình tìm lại Đô giữa nhé!
+Mắt tìm phím nhanh ghê!
+Mặt trời lên TO DẦN, rồi lặn NHỎ DẦN.
+Mẹo: đặt iPad trên giá nhạc, micro hướng về đàn; tắt TV/quạt; bé đàn rõ từng nốt.
+Mọi bản thu trong Album sẽ bị xóa khỏi iPad này (tiến độ học không bị ảnh hưởng).
+Mọi nốt Fa trong bài đều đàn Fa thăng.
+Mọi nốt đã chạm sẽ bị xóa.
+Mỏ khép > : nhỏ dần.
+Mỏ mở < : to dần.
+Mỗi bài giữ bản con đàn hay nhất, và bản đầu tiên để nghe con tiến bộ.
+Mỗi lần đúng, giai điệu dài thêm một nốt.
+Mỗi lần: bé nói to tên nốt và số ngón, rồi mới bấm.
+Mỗi ngày con học một buổi.
+Mỗi ngón một bậc!
+Mỗi ngón tay có một số: ngón cái là 1, ngón út là 5.
+Mỗi ngón tay đứng trên một bậc!
+Mỗi nốt bé nói tên trước rồi mới đàn.
+Mỗi thứ Hai có báo cáo tuần trước: số ngày tập, phút, bài mới thuộc, lời khen.
+Mỗi tiếng "tích" là một bước đi.
+Mỗi tiếng "tích" đánh một nốt, theo con trỏ nhé!
+Mỗi tiếng tích là một móc đơn.
+Mỗi ô 2 phách: "MỘT-hai".
+Mỗi ô bấm một hợp âm tay trái, thầy hát!
+Mỗi ô một hợp âm RẢI tay trái, thầy hát giai điệu!
+Mỗi ô nhịp chỉ có HAI phách, phách MỘT mạnh, phách hai nhẹ.
+Mỗi ô: đàn, rồi đổi pedal.
+MỘT CUNG bằng hai nửa cung, như Đô, Rê.
+MỘT lần chia sẻ: kết quả 5 bước trên + thông tin máy + lỗi gần đây + báo cáo micro.
+Một cung: hai nửa cung.
+Một: cổ tay nhô lên.
+Một: ngón ba giữ phím Mi.
+Một: nhấc cẳng tay lên từ khuỷu, bàn tay buông mềm.
+Một: tay nhẹ, chờ trên phím.
+Một: xòe tay ra, thả lỏng.
+Mời 2 người (bố, mẹ, ông bà, anh chị…) ngồi nghe.
+Mời cả nhà ngồi nghe nhé!
+Mời cả nhà ngồi xuống nghe con đàn nhé!
+Mời cả nhà ngồi xuống nhé!
+Mở app từ biểu tượng trên Màn hình chính.
+Mở bằng biểu tượng trên Màn hình chính (không phải tab Safari).
+Mở loa iPad vừa đủ nghe.
+Mở menu của trình duyệt (⋮ hoặc ).
+Mở nắp đàn, đặt iPad trên giá nhạc, tắt quạt / TV.
+Mục tiêu tuần này tính bằng một lần đạt (không cần nhiều ngày).
+Mừng bé quay lại!
+NGẮT: nảy như bóng.
+Nghe "Đô giữa!" là con tìm thật nhanh.
+Nghe app gõ nhịp, rồi chạm vào thẻ nhịp đúng nhé!
+Nghe app đàn, rồi con đàn lại y hệt nhé!
+Nghe con tiến bộ thế nào nhé:
+Nghe giai điệu đi lên hay đi xuống, rồi chạm vào hình đúng nhé!
+Nghe kỹ rồi đàn lại nhé!
+Nghe kỹ rồi đàn lại đúng thứ tự!
+Nghe kỹ tiếng Fa thăng nhé!
+Nghe lại hoặc lưu bài nhé.
+Nghe lại nhé!
+Nghe lại nốt này nè…
+Nghe lại rồi lưu nhé!
+Nghe máy đếm nhịp ĐẾM VÀO một ô (tích…
+Nghe mẫu nhiều lần là cách tốt nhất.
+Nghe mẫu nhiều lần.
+Nghe nhau và đi cùng nhịp là kỹ năng song tấu.
+Nghe nè…
+Nghe nốt Đô trước, rồi một nốt bí mật.
+Nghe rồi đàn lại bằng tay trái thế Đô giữa.
+Nghe rồi đàn lại ở thế Sol.
+Nghe rồi đàn lại ở thế Đô cao.
+Nghe rồi đàn lại, dài dần!
+Nghe thầy hỏi…
+Nghe thầy đàn câu đầu, con đoán xem là bài gì nhé!
+Nghe thầy đàn một câu quen, con tìm lại trên đàn nhé!
+Nghe thật kỹ, lát nữa con hát lại nhé!
+Nghe vui hay buồn đúng 5 lần trong 6, 2 hôm nhé!
+Nghe vui tai ghê!
+Nghe xem các nốt có nối liền nhau như nước chảy, không hở tiếng không.
+Nghe xem nốt ngắt có nảy thật ngắn, như quả bóng chạm đất rồi bật lên không.
+Nghe Đô mốc, rồi chạm nốt bí ẩn!
+Nghe Đô rồi nốt bí mật, tìm phím!
+Nghe, hát lại, rồi đàn.
+Nghệ sĩ cúi chào, cả nhà vỗ tay!
+Nghỉ chân ở làng nhỏ!
+Nghỉ ngơi nhé
+Nghịch phách "Chạy-Đi-chạy": cùng bé vỗ tay và nói to trước khi đàn, nốt "Đi" vang ở chữ "và", lệch phách mới đúng.
+Ngón 1 ở La dưới Đô giữa.
+Ngón 1 ở La.
+Ngón 1 ở Rê!
+Ngón 1 ở Rê.
+Ngón 1 ở Đô, ngón 2 ở Rê, ngón 3 ở Mi.
+Ngón 1, 2, 3 của con sẽ đến thăm từng nhà!
+Ngón 3 đánh phím ĐEN Fa thăng!
+Ngón 3 đánh phím ĐEN Mi giáng, nghe buồn hẳn!
+Ngón 4 tay phải canh giữ nó!
+Ngón 4 và 5 thường yếu và hay "gập", nhắc bé giữ ngón cong như ôm quả bóng nhỏ.
+Ngón 4 đàn Si giáng nhé!
+Ngón 4 ở Fa, ngón 5 ở Sol.
+Ngón 4 ở Si giáng!
+Ngón 5, 1, 3, 1, cổ tay lắc nhẹ!
+Ngón cái LUỒN dưới bàn tay để đi tiếp, như con cá lặn qua!
+Ngón cái chui nhẹ dưới lòng bàn tay, chạm phím Fa rồi về chỗ cũ.
+Ngón cái chạm bằng cạnh đầu ngón, mềm và hơi cong.
+Ngón cái dời lên Sol: Sol 1, La 2, Si 3!
+Ngón cái lặn dưới ngón 3.
+Ngón cái thõng hay gồng kéo cả bàn tay lệch, các ngón khác mất cây cầu.
+Ngón cái ở Sol, ngón út ở Rê cao.
+Ngón giống gam Đô.
+Ngón không đánh nằm nhẹ trên phím, không vểnh lên.
+Ngón một nhấc lên từ khớp gốc, rồi gõ xuống.
+Ngón một nhấn, giữ phím.
+Ngón tay đã soạn để bàn tay "bò" theo giai điệu: chỉ có một lần ngón cái nhảy Mi La ở nốt lấy đà câu 2, và một lần nhích tay ở ô 7 (Fa thăng ngón 1).
+Ngón vểnh lên là đang gồng, tay mỏi nhanh và ngón sau tới phím chậm.
+Ngón út với tới bạn mới: Rê cao!
+Ngôi sao nhỏ hai tay hợp âm, 2 hôm nhé!
+Người chơi đàn giỏi luôn ngồi đẹp.
+Người nghe chạm ; bé được sticker “Buổi diễn”.
+Ngược với staccato là gì?
+Ngắt (dấu chấm) = nhấc ngón ngay như chạm bếp nóng; liền (dấu luyến cong) = nốt trước chỉ nhả khi nốt sau đã vang.
+Ngắt gọn gàng!
+Ngắt hay liền?
+Ngắt, liền, con làm được hết!
+Nhanh hơn một chút, vẫn đều nhé!
+Nhanh như tia chớp!
+Nhiều "Tập-tễnh"!
+Nhiệm vụ mới!
+Nhà của bạn Đô ở ngay cạnh anh em sinh đôi!
+Nhà hát Lớn rực đèn!
+Nhà hát Lớn, nhận huy chương Cấp 4!
+Nhà hát lớn đã mở cửa!
+Nhà Đô ở đâu?
+Nhìn các ngón không đàn: nằm yên trên phím, không vểnh lên.
+Nhìn kỹ nhé!
+Nhìn lại nhé!
+Nhìn ngón cái: nằm nghiêng nhẹ trên phím, không cong gập hay gồng cứng.
+Nhìn nốt trên khuông, chạm đúng phím.
+Nhìn tay con khi đàn: ngón cong như ôm quả bóng, cổ tay ngang với phím.
+Nhúc nhích ngón này!
+Như "Ngôi sao nhỏ": Đô 1, Sol 4, La 5!
+Nhưng
+Nhưng con đang đàn
+Nhảy : cách một phím, gọi là QUÃNG 3.
+Nhảy Minuet theo nhịp cùng các quý tộc, 2 hôm nhé!
+Nhảy Rê, Fa thăng, La thật TO như siêu nhân!
+Nhảy qua một phím: Đô Mi, Rê Fa, Mi Sol.
+Nhảy tưng tưng, đúng kiểu ngắt!
+Nhấc tay nhanh quá!
+Nhắc lại nhịp 3: "Đi-i-i" giữ cả ô 3 phách!
+Nhắm mắt, sờ nhóm 2 phím đen, phím trắng ngay bên trái nhóm đó là Đô!
+Nhẹ như gió thoảng!
+Nhịp 3 (đã gặp ở tuần 11): bé hay đếm thành 4.
+Nhịp 3, có chấm dôi.
+Nhịp 3: MỘT-hai-ba, thật nhẹ!
+Nhịp 6 trên 8, bắt đầu bằng một nốt La!
+Nhịp 6 trên 8: mỗi ô có 6 móc đơn chia hai nhóm ba "MỘT-hai-ba BỐN-năm-sáu", nhấn nhẹ ở 1 và 4, như đung đưa thuyền.
+Nhịp ba bốn: mỗi ô có 3 phách, MỘT-hai-ba.
+Nhịp ba bốn: mỗi ô có mấy phách?
+Nhịp bốn bốn: mỗi ô có mấy phách?
+Nhịp bốn bốn: mỗi ô nhịp có 4 phách.
+Nhịp hai bốn: mỗi ô chỉ 2 phách "MỘT-hai".
+Nhịp hai bốn: mỗi ô có 2 phách, phách một mạnh.
+Nhịp hai bốn: mỗi ô có mấy phách?
+Nhịp nào vừa nghe?
+Nhỏ rồi TO, TO rồi nhỏ.
+Nhỏ xíu mà rõ, giỏi quá!
+Nhớ "Chạy chạy-chạy"; ô đầu chờ một chút.
+Nhớ Fa THĂNG.
+Nhớ Fa thăng, kết ở Rê!
+Nhớ Fa thăng: Bài ca niềm vui thế Rê, 2 hôm nhé!
+Nhớ lại điều con đã biết nhé!
+Nhớ siêu giỏi!
+Những thay đổi chưa lưu sẽ mất.
+Nên bấm " Sao lưu" trước.
+Nên ghi sẵn ngay sau khóa: DẤU HÓA THEO KHÓA.
+Nên làm lại “Kiểm tra 5 nốt” cho chắc.
+Nên đeo tai nghe hoặc nghe loa iPad ở âm lượng vừa.
+Nói thật nhé, thi vượt chỉ có ý nghĩa khi con làm được thật.
+Năm ngón tay của con sẽ kể chuyện về các bạn ấy!
+Năm sợi dây của khuông nhạc không đủ chỗ cho mọi nốt!
+Nạp năng lượng nào!
+Nếu bé mệt, chia nhỏ: mỗi buổi một bài.
+Nếu bé đàn tên nốt cũ (Mi Rê Đô), nhắc: "nhìn số ngón, không nhìn tên nốt".
+Nếu bé đã học ở tab Safari này: xuất sao lưu ở đây trước
+Nếu chân bé chưa chạm tới bàn đạp, kê một hộp/ghế đẩu nhỏ dưới chân trái và để bé ngồi sát mép ghế hơn, hoặc bỏ pedal, chỉ đàn tay.
+Nếu hiện bảng Chia sẻ: chọn “Lịch” (hoặc “Lưu vào Tệp” rồi mở tệp trong ứng dụng Tệp).
+Nếu không phải, kiểm tra vạch “|” đầu tiên.
+Nếu tay bé mỏi khi tập gam hai tay, chia 2 buổi ngắn thay vì một buổi dài.
+Nốt
+Nốt La: khi Sol, La đi cùng nhau, Sol ngón 4, La ngón 5.
+Nốt app tự phát (Nghe thử) không bị tính.
+Nốt bí mật là nốt nào?
+Nốt cao: đúng 5 nốt trong 6, 2 hôm + bài đọc nhạc!
+Nốt chạy về vạch đỏ, tới vạch thì đánh!
+Nốt chấm dôi: cho bé nói "Đi-chấm chạy" trước khi đàn.
+Nốt dài ngắn khác nhau: đen 1, trắng 2, tròn 4 phách.
+Nốt hiện trên khuông, con chạm đúng phím thật nhanh!
+Nốt lên trên khuông = sang phải trên đàn.
+Nốt mốc nào đây?
+Nốt mới La.
+Nốt mới Si, ngay bên phải La, ngón 5!
+Nốt ngân dài thêm "-" (Mi-), nốt nhanh thêm "/" (Rê/).
+Nốt ngồi TRÊN DÒNG hoặc trong KHE.
+Nốt ngồi ở vạch hay ở khe?
+Nốt ngồi ở đâu?
+Nốt nào dài 4 phách?
+Nốt nào hát được thì tay cũng đàn dễ hơn.
+Nốt nào vừa đủ một ô nhịp ba bốn?
+Nốt nào đây?
+Nốt này là nốt gì?
+Nốt ra ngoài khuông thì mượn DÒNG KẺ PHỤ.
+Nốt sau cao hơn hay thấp hơn?
+Nốt sau giống, bước hay nhảy?
+Nốt thấp dưới Đô giữa và nốt cao trên khuông!
+Nốt tiếp…
+Nốt tròn "Đi-i-i-i" giữ đủ 4 phách.
+Nốt tròn "Đi-i-i-i": giữ phím đủ 4 tiếng "tích"!
+Nốt trắng "Đi-i": giữ phím đủ 2 phách nhé!
+Nốt trắng 2 phách “Đi-i”, nốt tròn 4 phách.
+Nốt trắng chấm dài 3 phách.
+Nốt trắng chấm dài 3 phách: “Đi-i-i”.
+Nốt trắng chấm dài mấy phách?
+Nốt trắng có chấm "Đi-i-i": giữ đủ 3 phách!
+Nốt trắng dài mấy phách?
+Nốt vừa đàn sẽ THAY cho nốt đang có trong trình soạn.
+Nốt đen + móc đơn = "dài, ngắn".
+Nốt đen chấm = 1 phách rưỡi: “Đi-chấm”.
+Nốt đen chấm dài bao nhiêu?
+Nốt đen dài 1 phách: “Đi”.
+Nốt đàn nhẹ nghe được nhưng còn sát ngưỡng.
+Nốt đó là
+NỬA CUNG: hai phím sát nhau, không phím nào ở giữa.
+Nửa cung: hai phím sát nhau.
+PEDAL (bàn đạp PHẢI): gót chân đặt trên sàn, chỉ mũi chân nhấn, không nhấc cả chân.
+PHIẾU XEM TAY (mỗi tuần Cấp 4, bé đàn câu đầu bài của tuần, bố mẹ chạm "Đúng rồi" từng ý): ① vai thả lỏng, không nhô lên, khuỷu tay không ép sát người; ② khớp đầu ngón KHÔNG gãy, đầu ngón đứng trên phím, khớp ngoài cùng không bẹp/cong ngược vào trong (hay gặp ở ngón 1 và ngón 5); ③ cổ tay mềm, ngang phím, không gồng, không võng xuống.
+Pedal phải: gót trên sàn, mũi chân đạp.
+Phiếu xem tay vẫn quan trọng, tốc độ tăng là lúc vai hay gồng lên.
+Phiếu xem tay: để ý khớp đầu ngón 4, ngón yếu hay bẹp.
+Phách 1 mạnh, phách 2 và 3 nhẹ.
+Phách nào mạnh nhất?
+Pháo hoa đã sẵn sàng!
+Phím cạnh nhau là BƯỚC, cách một phím là NHẢY.
+Phím trắng ngay BÊN TRÁI anh em sinh đôi là nhà của bạn ĐÔ.
+Phím đen: bé hay quên dấu ở giữa bài.
+Phần thưởng cho buổi học hôm nay, con chọn bài nào cũng được, đàn cho vui nhé!
+Qua Cầu Hai Tay, hai bàn tay gặp nhau ở Đô giữa: ngón cái tay phải và ngón cái tay trái là hàng xóm!
+Qua khỏi làng là Cầu thang Sol có 5 bậc: Đô Rê Mi Fa Sol.
+Qua mỗi đảo là có quà mới: áo mũ cho Bé Nốt, tiếng đàn lạ, kiểu nhạc đệm.
+Quà mới mở khóa!
+Quãng 8 đếm được mấy phím trắng?
+Quãng mấy?
+Quãng nào đây?
+Quả trứng bí ẩn!
+Rô-bốt cũng phải khen con!
+Rô-bốt cũng phải thử nhiều lần mới đúng!
+Rô-bốt nạp đầy năng lượng, bíp bíp!
+Rô-bốt đàn NGẮT và TO; ô 5 đi xa: NHỎ!
+Rõ rồi!
+Rải "La, Đô, Mi" thật LIỀN, rồi "Mi, Rê thăng, Mi"!
+Rải hợp âm Sol và Fa, 2 hôm nhé!
+Rải đều, không vội ở nốt trên cùng.
+Rồi đàn "Tháp chuông" một lần TO, một lần NHỎ.
+Rồi đàn I, V7, I!
+Rồi đàn Đô Rê Mi NGẮT (nảy như bóng) và LIỀN (nối như dòng nước).
+Rồi, con làm rồi!
+Rồi, đúng hết!
+STACCATO là đàn NGẮT, nảy như quả bóng.
+Sai là đang học, thử lại nào!
+Sao lưu dữ liệu trước nếu muốn giữ.
+Sao lưu tay khi tiện ( Cài đặt Sao lưu dữ liệu).
+Sao lưu tay khi tiện.
+Sau hợp âm V7, bài hát muốn về hợp âm nào?
+Sau thang tốc độ app hỏi bố mẹ "to, nhỏ nghe rõ chưa?": chỉ chạm "Rõ rồi" khi nghe thấy khác biệt thật.
+Sau đây "Luyện tập mỗi ngày" tiếp tục ôn; nếu có thể, đây là lúc tốt để tìm một thầy/cô dạy trực tiếp (kỹ thuật pedal và độ thả lỏng cần mắt người thật).
+Sinh đôi hay sinh ba?
+Siêu giỏi!
+Siêu nhân nào cũng tập lại, mình thử nhé!
+Siêu nhân piano bay lên nào!
+Siêu nhân piano là con đó!
+Siêu nhân piano xuất kích!
+Siêu quá!
+Siêu sức mạnh ngón tay được kích hoạt!
+Siêu trí nhớ!
+Sol bảy (V7) nghe như "sắp về nhà".
+Sol trưởng có dấu hóa nào?
+Sol trưởng: Fa thăng.
+Sol, La ngón 4, 5.
+Sol, La đi cùng nhau: ngón 4, 5!
+Sol,// | La, Sol, Rê | Đô- Sol,/.
+Sol,// | La, Sol, Đô | Si,- Sol,/.
+Sol,// | Sol Mi Đô | Si, La, Fa/.
+Sonatina hai tay theo nhịp!
+Sonatina nhỏ hai tay theo nhịp, 2 hôm!
+Sonatina: tay phải dời thế ở ô 5 (ngón 3 lên Fa) và về thế Đô ở ô 7.
+Song tấu: thầy đàn bè thấp, con đàn Minuet!
+Song tấu: thầy đàn bè thấp, con đàn giai điệu!
+Staccato: chấm nhỏ ở đầu nốt, đàn ngắt, nảy.
+Sticker Chào mừng!
+Sticker bí ẩn, thỉnh thoảng cuối buổi học sẽ có quả trứng!
+Sáng tác 4 ô ở thế Sol, thử một bước nhảy xa!
+Sáng tác 4 ô ở thế Đô, thử "Đi-chấm chạy"!
+Sáng tác 4 ô: bắt đầu nốt KHÁC Đô, kết ở Đô!
+Sáng tác 4 ô: hỏi rồi đáp, kết ở Đô!
+Sóng biển to dần, nhỏ dần, 2 hôm!
+Sóng lên TO, sóng xuống nhỏ!
+Sư tử chính hiệu!
+Sạch rồi, giỏi quá!
+Sắp có!
+Sắp tới Nhà hát Lớn!
+Sắp tới Đại hòa nhạc!
+Sắp tới đỉnh rồi!
+Sẵn sàng cất cánh!
+Số 4 ở trên: mỗi ô nhịp có 4 phách.
+Số chỉ nhịp ba bốn: mỗi ô nhịp có 3 phách.
+Số chỉ nhịp hai bốn: mỗi ô nhịp có 2 phách.
+Số ngón có đổi không?
+Số ngón là gì?
+Số đo (tính từ tham số, tests/pianoTone.test.ts)
+Sổ còn trống, học xong mỗi đảo, thuộc bài hát, tuần nào học đủ 4 buổi là có sticker!
+Sức nặng dồn sang từng ngón.
+Sửa thêm được ở trình soạn sau khi đưa vào bài.
+THỨ nghe buồn : Đô, Mi giáng, Sol.
+TRƯỞNG nghe vui : Đô, Mi, Sol.
+TUẦN TỔNG DUYỆT (không có gì mới) trước Đại hòa nhạc: đánh bóng Minuet, Für Elise và Các thánh tiến bước tới tốc độ 60.
+TUẦN ÔN & BIỂU DIỄN (không có gì mới): bé "đánh bóng" 3 bài cũ.
+TUẦN ÔN (không có gì mới) sau 4 tuần gam và hợp âm rải, trước bass Alberti: đánh bóng 3 bài hai tay.
+Tai con thính ghê!
+Tai nghe nốt trầm: 6 lượt, đúng 5 trên 6 ở 2 ngày là đạt.
+Tai rô-bốt nghe rõ: đúng rồi!
+Tai và tay cùng nhớ nốt rồi!
+Tay con đẹp lắm!
+Tay mềm, ngón cong, mình đàn thôi!
+Tay ngũ cung như "Xòe hoa", có "Tập-tễnh"!
+Tay ngũ cung: mỗi ngón một phím, Fa ngón 3!
+Tay nhích phải: Sol ngón 4!
+Tay nhích sang phải: Sol ngón 4, La ngón 5!
+Tay phải chạy gam, nhẹ tay!
+Tay phải hát giai điệu trước nhé!
+Tay phải hát, nhẹ nhàng.
+Tay phải hát, tay trái đệm hợp âm Đô, Sol.
+Tay phải hỏi, tay trái đáp, lần lượt từng tay!
+Tay phải hỏi, tay trái đáp, trọn bài 2 hôm nhé!
+Tay phải lên gam trước.
+Tay phải ngón 1 ở Mi.
+Tay phải trước, đàn thật êm.
+Tay phải trước: "Bánh nóng" quen thuộc.
+Tay phải trước: giai điệu quen!
+Tay phải đàn giai điệu, tay trái đệm hợp âm.
+Tay phải: NHỎ như chuông ở xa.
+Tay phải: ngón 4 ở Si giáng.
+Tay trái giản lược: Si, Fa, Sol, ngón 5, 2, 1.
+Tay trái giống gam Đô (5-4-3-2-1 rồi 3 vắt qua), Si giáng là ngón 2.
+Tay trái giữ nốt gốc, tay phải rải!
+Tay trái lên: 5 1, rồi ngón 3 VẮT qua La!
+Tay trái lên: 5-4-3-2-1, rồi 3 vắt qua!
+Tay trái một mình: đều như vó ngựa!
+Tay trái mở đầu, tay phải nối!
+Tay trái nốt trắng, tay phải nốt đen, đi cùng nhau!
+Tay trái thường lười hơn: chỉ cần 3, 5 phút/buổi.
+Tay trái đàn phím đen thật NHỎ và LIỀN!
+Tay trái.
+Tay trái: 5-4-3-2-1, rồi 3 vắt qua!
+Tay trái: Si giáng là ngón 2.
+Tay trái: bấm rồi GIỮ thật lâu!
+Tay trái: chuông lớn, bấm rồi GIỮ cả ô!
+Tay trái: hợp âm Rê, Sol và La.
+Tay trái: ngón 5 ở Sol trầm, ngón 1 ở Rê.
+Tay trái: ngón cái ở Đô giữa, ngón út ở Fa.
+Tay trái: ngón như gam Đô, 5-4-3-2-1, rồi 3 vắt qua!
+Tay trái: ngón út (5) ở Đô trầm, ngón cái ở Sol.
+Tay tròn như ôm quả bóng, đẹp lắm!
+Tay đã sẵn sàng!
+Tay đúng thì tiếng đàn to và đẹp!
+Tay: Rê 1 …
+Thang tốc độ 50 60 72: chỉ lên nấc khi nấc dưới ĐỀU và ĐÚNG, chưa được thì mai leo tiếp, đừng ép.
+Thay bằng ví dụ?
+Thay dữ liệu?
+Thay hợp âm đang có?
+Thay nốt đang có?
+Theo thầy!
+Thi vượt
+Thi: đúng 5 trên 6 câu nhé!
+Thiết bị này không dùng được micro, bỏ qua bước này.
+Thiết bị/trang này không dùng được micro (cần mở bằng địa chỉ https:// GitHub Pages).
+Thuyền trôi êm: đàn LIỀN, giữ đủ "Đi-i" và "Suỵt".
+Thuyền đưa nhịp 6 trên 8, 2 hôm nhé!
+Thuyền đưa, chỉ nhìn khuông!
+Thám tử tìm Đô giữa 10 lần, trượt 1 lần cũng không sao!
+Tháo tai nghe / tắt Bluetooth nếu không dùng.
+Tháp chuông "boong boong" hai tay theo nhịp, 2 hôm nhé!
+Thêm một câu nữa nào!
+Thích bài nào mà app chưa có?
+Thăng: lên phím sát bên PHẢI.
+Thư viện Lớn có hàng nghìn bản nhạc.
+Thả lỏng cổ tay, xoay thành vòng tròn thật chậm.
+Thấp: kê gối.
+Thấy dấu p/f trong bài, hỏi bé "chỗ này to hay nhỏ?" trước khi đàn.
+Thấy dễ quá?
+Thấy gồng: dừng, thả rơi cánh tay 2 lần rồi đàn chậm lại.
+Thấy gồng: lùi một nấc tốc độ.
+Thầy hát…
+Thầy sẽ ôn chỗ này nhẹ nhàng ở các buổi sau nhé!
+Thầy sẽ đàn cùng con!
+Thầy đàn mẫu, con đàn lại thật rõ kiểu nhé!
+Thẻ đúng đây!
+Thế Đô cao: ngón cái ở Đô cao, ngón 5 ở Sol cao (ngồi trên đỉnh khuông).
+Thế Đô và thế Sol.
+Thỏ chạy 4 nốt một phách, đúng trước, nhanh sau!
+Thỏ con chạy thật nhanh, còn bạn cà nhắc đi "Tập-tễnh".
+Thử mức khó hơn nhé.
+Thử nhanh hơn?
+Thử thách mới!
+Thử thách nhỏ, bài khó hơn một chút, từng nốt nhé!
+Thử thách nhỏ, nhanh hơn một chút!
+Thử thách: chỉ nhìn khuông nhạc mà đàn!
+Thử đóng hẳn app rồi mở lại.
+Thử đọc một dòng nhạc mới?
+Tiêu chí tuần cần đạt ở 2 NGÀY khác nhau.
+Tiến độ của bé chỉ nằm trên iPad này
+Tiến độ của con vẫn được giữ.
+Tiến độ nằm trên iPad này (app tự giữ thêm một bản sao trong máy), XÓA BIỂU TƯỢNG APP = MẤT DỮ LIỆU.
+Tiến độ nằm trên iPad này (app tự giữ thêm một bản sao trong máy).
+Tiếng to và ấm đến từ sức nặng cánh tay rơi qua ngón cong, không phải từ gồng vai hay ấn ngón.
+Tiếng đàn tới micro rất nhỏ kể cả ở độ nhạy Cao đặt iPad trên giá nhạc (gần dây đàn), mở nắp trên của đàn nếu được.
+Tiếp nào
+Tiếp nào…
+Tiếp theo…
+Tiếp tục 4, 5 buổi ngắn mỗi tuần, sau buổi hòa nhạc là CẤP 4 (gam, hợp âm rải, pedal, 6 trên 8); nếu có thể, tìm thêm một thầy/cô dạy trực tiếp.
+To hay nhỏ?
+To hơn nữa nào, như sư tử gầm!
+To quá đỉnh!
+To và rõ, tuyệt!
+Trong Cung điện, các quý tộc nhảy điệu Minuet nhẹ nhàng.
+Trong Hang Phím Đen: dấu THĂNG đẩy nốt lên phím đen bên PHẢI, dấu GIÁNG kéo nốt xuống phím đen bên TRÁI.
+Trong Hang Si Giáng, gam Fa trưởng có một phím đen bí mật: Si GIÁNG.
+Trong Lâu đài Alberti, tay trái rải hợp âm "thấp, cao, giữa, cao" như tiếng vó ngựa nhỏ.
+Trong Phòng Tổng Duyệt, nghệ sĩ không học bài mới, chỉ đánh bóng bài cũ cho thật đẹp và tập cúi chào.
+Trong Rừng Hợp Âm, ba nốt cùng vang lên một lúc như ba cây cổ thụ.
+Trong Rừng Nhịp, mọi con vật đều đi theo tiếng "tích, tích" của bác Gõ Kiến.
+Trong Thung lũng Song Ca, hai tay hát CÙNG LÚC: tay trái giữ một nốt dài làm nền, tay phải hát giai điệu.
+Trong Thư viện Nốt, mỗi nốt nhạc có một chỗ ngồi trên 5 sợi dây.
+Trong Vườn Tháp Chuông, chuông lớn (tay trái) ngân dài, chuông nhỏ (tay phải) hát giai điệu.
+Trong lúc chờ, bố mẹ gõ chữ hoặc chạm phím để thêm bài.
+Trong Đô trưởng, hợp âm V là gì?
+Trên Biển Đổi Thế, bàn tay như con thuyền: dời sang chỗ mới mà vẫn chèo êm.
+Trên iPad: chạm “Thêm vào Lịch” “Thêm tất cả”.
+Trên khuông, hai cái "mỏ" < và > dạy con đàn như thế!
+Trên phím đen, nốt nào cũng hay!
+Trên Đảo Phím Đen có hai gia đình: anh em SINH ĐÔI (2 phím đen) và anh em SINH BA (3 phím đen).
+Trên Đồi Gam Sol, gam leo 8 bậc từ Sol tới Sol, có một bậc là phím đen Fa thăng.
+Trên Đồi Năm Ngón có ếch con, giọt mưa và chiếc thuyền giấy.
+Trình duyệt này không cho dùng micro (cần mở app từ biểu tượng trên màn hình chính, địa chỉ https).
+Trò "To hay nhỏ?": f = to (ấn sâu, ngón chắc), p = nhỏ (chạm nhẹ), đàn nhỏ KHÔNG có nghĩa là đàn chậm.
+Trò "Vui hay buồn?" 6 lượt: đúng 5 trên 6 ở 2 ngày là đạt.
+Trò "Vui hay buồn?" đúng ít nhất 5 trên 6 trong một buổi, ở 2 ngày khác nhau
+Trò "Đàn liền": nốt trước chỉ nhả khi nốt sau đã vang, như nước chảy, không hở (ngắt tiếng học sau, ở tuần 12).
+Trò Hỏi, Đáp: app hỏi TO, bé trả lời NHỎ, câu nào kết ở Đô cũng đúng.
+Trò Hỏi, Đáp: mọi câu trả lời kết ở Đô đều đúng.
+Trò phím đen cuối tuần: không có nốt sai.
+Trò phím đen: không có nốt sai, cứ để bé tự do.
+Trò tai nghe chỉ 6 lượt: đúng 5 trên 6 trong một buổi, ở 2 ngày khác nhau là đạt, sai 1 câu vẫn qua, đừng nhắc bài hộ.
+Trò đọc nốt 6 lượt: đúng 5 trên 6 ở 2 ngày là đạt.
+Trò “Ngắt hay liền?”
+Trò “To hay nhỏ?”
+Trúng phóc!
+Trước khi đàn theo nhịp: vỗ tay và đọc to nhịp của bài một lượt nhé!
+Trước khi đàn, hỏi bé "Bài này có phím đen nào?".
+Trưởng nghe vui, thứ nghe buồn.
+Trưởng và thứ khác nhau ở nốt nào?
+Trống "TÙNG-tùng": nốt trắng giữ cả ô nhịp!
+Tuyệt cú mèo!
+Tuyệt vời!
+Tuần cũ: app đã gộp bớt chi tiết (số buổi, bài chơi trọn, tiến bộ) để tiết kiệm bộ nhớ, còn lại ngày tập, phút, sao, bài thuộc, biểu diễn, thử thách.
+Tuần cũ: app đã gộp bớt chi tiết để tiết kiệm bộ nhớ.
+Tuần củng cố hai tay: bài mới nhưng kỹ năng cũ.
+Tuần củng cố: không có gì mới, bé đàn bài mới bằng kỹ năng cũ.
+Tuần củng cố: không có gì mới.
+Tuần mới rồi, tìm Đô giữa trên đàn thật nào!
+Tuần này chưa có buổi tập nào.
+Tuần này con ghép mọi thứ đã học: 6 trên 8, La thứ, to dần, nhỏ dần, và chọn bài để biểu diễn.
+Tuần này con đã có sticker Buổi diễn rồi, vẫn tuyệt vời!
+Tuần này con đã…
+Tuần sau app nhắc lại.
+Tuần sau có thử thách mới.
+Tuần tập dượt cho hòa nhạc: cùng bé chọn 2, 3 bài thích nhất (có thể một bài có pedal, một bài 6 trên 8).
+Tuần đọc nốt cao: mỗi lần bé đọc sai, hỏi "nốt này ngồi ở vạch hay ở khe?" rồi đếm từ Đô cao (khe 3) lên.
+Tàu chạy "Chạy-chạy-chạy-chạy", đọc to trước khi đàn nhé!
+Tàu chạy theo nhịp, nhìn tên nốt nhé!
+Tên lửa âm nhạc rời bệ phóng!
+Tên nốt hiện ra, con tìm đúng phím thật nhanh!
+Tìm nhà Đô thật nhanh theo đúng phím đang sáng.
+Tìm đúng Đô giữa rồi!
+Tăng âm lượng iPad, tháo tai nghe, giữ yên lặng rồi đo lại.
+Tăng âm lượng; tắt chế độ Im lặng (Trung tâm điều khiển chuông).
+Tạm thời: bé tự kiểm tra ( Rồi / Làm lại) và đi tiếp.
+Tất cả nốt 1 phách, bấm Nghe thử so với bài hát.
+Tập chậm hơn, mỗi buổi ngắn hơn; có thể bấm “Ở lại tuần này thêm”.
+Tập chậm, mỗi tay riêng.
+Tập cùng bé cúi chào, giới thiệu tên bài, và "sai thì đàn tiếp", đó là kỹ năng biểu diễn quan trọng nhất.
+Tập riêng 5 nốt đầu thật nhiều lần.
+Tập riêng từng chỗ dời tay, nhìn trước nốt kế.
+Tập từng câu, chỉ ghép cả bài khi từng câu đã trơn.
+Tập từng câu, mỗi câu 3 lần đúng liền mới ghép.
+Tập từng câu, rồi cả bài.
+Tập từng nốt trước nhé!
+Tắt = micro chỉ nghe một nốt mỗi lúc.
+Tắt Chế độ nguồn điện thấp (pin) khi tập.
+Tắt mục này = chỉ tiếng tích nhịp.
+Tốc độ
+Tối nay cho bé chơi lại một bài đã thuộc và khen thật cụ thể (ví dụ: “ngón con cong đẹp quá”).
+Tối nay chỉ cần 10, 15 phút: ngồi cạnh bé và bấm nút to.
+Tối nay: đọc nhạc thật chậm, bé nói to tên từng nốt trước khi đàn, bố mẹ không giục.
+Tốt lắm!
+Tốt lắm, thêm lần nữa nào!
+Tốt!
+Tổng duyệt 3 bài, tốc độ 60, 2 hôm!
+Từ nay mở app bằng biểu tượng trên Màn hình chính.
+Từ tuần này lượt THEO NHỊP của bài đã quen chỉ hiện tên nốt (phím không sáng), đừng bật lại phím sáng, để bé nhìn khuông.
+Từ Đô đi lên quãng 8 là nốt gì?
+Từ Đô đếm lên 8 phím trắng: lại gặp Đô.
+Từ Đô: ngón 5 xuống Si, ngón 3 sang Fa, Sol bảy!
+Từng câu một!
+Từng câu một: Câu 1 theo nhịp, chậm mà đều nhé!
+Từng nốt một: lên rồi xuống, thật đều!
+Từng nốt nhé.
+V7 = Si, Fa, Sol, ngón 5, 2, 1, rồi về I.
+Vai hay nhô lên khi bé cố gắng, nhắc "thả vai".
+Vai thả lỏng, thả tay rơi xuống phím rồi nhấc nhẹ.
+Vui hay buồn?
+Vuốt tắt hẳn app rồi mở lại, tiến độ đã lưu không mất.
+Vuốt tắt hẳn app, mở lại, bấm “1.
+Vài nốt quen thuộc nào!
+Vào Bài hát mục 🇻🇳 Bài Việt Nam, chọn một bài con thích và chơi trọn bài.
+Vào Cài đặt Safari Micrô chọn "Hỏi" hoặc "Cho phép", rồi mở lại app.
+Vào Cài đặt › Cài micro (3 bước) để bật, rồi quay lại đây.
+Vào Cài đặt: ở màn của bé, nhấn giữ nút 2 giây rồi làm một phép nhân.
+Vào Trò chơi, chọn một trò và cố đạt điểm cao hơn kỷ lục cũ của con.
+Vì sao?
+Vòng cung nối hai nốt giống nhau là gì?
+Vòng cung trên các nốt gọi là gì?
+Vòng cung trên các nốt là DẤU LUYẾN.
+VẠCH NHỊP chia bài thành từng ô nhịp.
+Vạch nhịp dùng để làm gì?
+Vạch phụ: đúng 5 nốt trong 6, 2 hôm + bài đọc nhạc!
+Vấp là đang học đó!
+Vẫn hụt: “ Kiểm tra sức khỏe app” bước 3 đổi độ nhạy.
+Vẫn im: vuốt tắt hẳn app rồi mở lại từ biểu tượng.
+Vẫn nhập và thay dữ liệu?
+Vẫn xóa hẳn?
+Về nhà rồi!
+Vỗ MẠNH ở phách MỘT!
+Vỗ tay và đọc to chữ, nhìn cả số đếm bên dưới nhé!
+Xem lại Từ điển nhé!
+Xem lại được 8 tuần gần nhất.
+Xem thầy đàn mẫu…
+Xem xong rồi!
+Xong buổi ngắn rồi!
+Xong bài kiểm tra, micro chưa nghe rõ.
+Xong bài kiểm tra, micro nghe tốt!
+Xong bài kiểm tra, đã đổi độ nhạy.
+Xong là ghép cả bài!
+Xong lượt chậm!
+Xong rồi!
+Xong thử thách tuần!
+Xong việc của tuần.
+Xoá nhé?
+Xoá rồi là mất hẳn, không lấy lại được.
+Xuống gam, ngón 3 vắt qua ở đâu?
+Xích lô "Chạy-Đi-chạy", nghe mẫu trước nhé!
+Xích lô đi dạo phố "Chạy-Đi-chạy": tiếng chuông kêu LỆCH phách, vui tai ghê!
+Xích đu đung đưa "MỘT-hai-ba", đàn LIỀN nhé!
+Xóa Album?
+Xóa biểu tượng app = mất dữ liệu, sao lưu tay khi tiện (lưu tệp vào Tệp / iCloud).
+Xóa biểu tượng app = mất hết dữ liệu.
+Xóa bản hay nhất cũ?
+Xóa hết nốt?
+Xóa rồi không lấy lại được.
+Xóa rồi sẽ không lấy lại được.
+app chưa sang tuần mới cho tới khi bố mẹ chọn “Không” bên dưới.
+app đang mở từ biểu tượng.
+buổi gần đây app phải cho con dừng nhẹ nhàng ở một bài khó.
+buổi rồi, giỏi quá!
+bài chưa học.
+bài khác nhau con đã thuộc (có ) và chơi trọn mỗi bài một lần.
+bài là app tự sang tuần mới.
+bài, thuộc = đàn trọn bài theo nhịp, tốc độ từ 60 trở lên, đạt ở 2 ngày khác nhau.
+bé đàn khẽ có thể không được nghe.
+bảo con làm gì?
+bố mẹ làm mẫu một lần trước, rồi đổi vai cho bé làm thầy.
+cent (100 cent = nửa cung).
+chuẩn bị đàn!
+chưa dùng (không bắt buộc).
+chưa sạch lần nào, mình luyện thêm chút nhé!
+chưa thêm (xem hướng dẫn bên dưới).
+chưa đặt.
+chưa?
+chậm dần.
+con hát đúng chưa?
+con hơi chậm, nghe tiếng tích, đàn đúng lúc nhé!
+con tìm các nốt sau bằng tai nhé!
+con đàn đi!
+cuối cùng soạn sẵn báo cáo để bố mẹ sao chép gửi người hỗ trợ.
+câu khó nhất, nhé!
+câu đố!
+có dấu hay không đều được (do re mi…)
+cùng số ngón!
+cùng số ngón, nghe vẫn là bài đó!
+của nhạc sĩ…".
+dấu - hoặc / nối hai tên nốt được coi là dấu cách.
+f (forte) là TO.
+giữ nguyên số ngón!
+giữ phím
+giữ yên lặng, app phát 6 tiếng "tinh".
+hãy đàn Đô giữa (C4) nhé.
+iPad CŨ: “ Sao lưu” Lưu vào Tệp (iCloud Drive) hoặc gửi cho chính mình.
+iPad MỚI: mở app bằng Safari Chia sẻ “Thêm vào MH chính” mở từ biểu tượng.
+iPad chưa cho app dùng micro.
+iPad chưa cho app dùng micro: vào Cài đặt › Safari (hoặc app) › Micro Cho phép, rồi thử lại.
+iPad có thể hỏi lại một lần mỗi khi mở app, chọn Cho phép.
+iPad này chưa ghi âm được.
+iPad này chưa lưu được bản thu (trình duyệt không cho lưu).
+iPad này chưa lưu được bản thu (trình duyệt không cho).
+iPad này không lưu được lâu, bản ghi mất khi tắt app.
+iPad sẽ tự nhắc mỗi tuần; muốn đổi thì tạo lại.
+iPad đang chặn micro.
+iPad đang không có mạng, bật Wi‑Fi rồi thử lại.
+không gửi đi đâu.
+khỏe như tay rô-bốt!
+liền nhau (bé đàn lại nốt sau).
+luyện chút là xong.
+luôn được đàn đầu tiên.
+là chậm dần.
+làm việc giỏi quá!
+lên hay xuống?
+lên phím sát bên phải, xuống phím sát bên trái.
+lần bé đàn khẽ chưa nghe được.
+lần liên tiếp, câu này con thuộc rồi!
+lần liền nhé!
+lần nhé.
+lần này sạch rồi, con tiến bộ thật!
+lần nữa nào!
+lần nữa!
+lần nữa…
+lần trong tuần là xong!
+lần để mở!
+mai leo tiếp nhé!
+mf (mezzo forte) là VỪA VỪA.
+ms, tốt (đã lưu để chấm nhịp).
+món quà!
+mỗi lúc một nốt, đàn rõ, chậm vừa phải.
+nghĩa là gì?
+ngày khác nhau (hai lần cùng ngày = một ngày).
+ngày trong tuần là được cúp, nghỉ ngày nào cũng không sao!
+ngày, nên 4, 5 ngày, nghỉ ngày nào cũng được.
+ngày.
+nhỏ dần
+nhỏ dần.
+nằm trong bản “Sao lưu dữ liệu” (quá nặng), muốn giữ bản nào thì Gửi / Lưu vào Tệp.
+nốt ngay lần đầu, tay con vững lắm!
+nốt nhé!
+nốt phím đen, bản nhạc của riêng con!
+nốt đúng liền!
+nốt, bớt tiếng ồn (quạt, TV, điều hòa).
+nốt, mình đàn chậm chỗ này nhé!
+p (piano) là NHỎ.
+p nhỏ · mf vừa · f to.
+phách ở đầu).
+quá một quãng tám, dời tay nhé!
+rit.: chậm dần.
+rồi bấm Xóa hẳn.
+rồi nhập lại trong app trên Màn hình chính.
+rồi vào ngay nhé.
+rồi đàn lại nhé!
+rồi!
+thử lại nhé!
+tiếng đàn ngân có thể bị nhỏ dần.
+to dần
+to dần · dim.
+tuần học đàn!
+tuần, từ nay mỗi ngày có bài luyện tập mới!
+tích…), rồi đàn ĐÚNG theo tiếng tích.
+tùy chọn.
+và
+và chơi trọn bài thật đều.
+xuống, ngón trước nhấc lên.
+· không mạng, không quảng cáo, không thu thập dữ liệu.
+Ô 1 TO, ô 2 NHỎ, như tiếng vọng trong hang!
+Ô thứ ba có Fa thăng!
+Ô thứ hai có Si giáng!
+Ôn bài cũ, lâu rồi chưa chơi, mình đàn lại nhé!
+Ôn bài cũ: đàn lại câu đầu!
+Ôn lại nhé!
+Ôn nhanh như chớp nhé!
+Ôn vài nốt cũ thật nhanh nhé!
+ô nhịp, nghe lại rồi lưu bài nhé!
+Đang bật micro…
+Đang chờ…
+Đang cập nhật app…
+Đang dùng bản mới nhất (nếu vừa có bản cập nhật, đợi 1, 2 phút rồi thử lại).
+Đang dùng loa / tai nghe Bluetooth?
+Đang dùng loa/tai nghe Bluetooth, micro chấm nhịp kém.
+Đang dùng tai nghe Bluetooth?
+Đang ghi…
+Đang kiểm tra…
+Đang mở…
+Đang nghe hợp âm…
+Đang nghe tiếng ồn của phòng…
+Đang nghe…
+Đang đo micro…
+Đang đo độ trễ…
+Đang đo…
+Đang đếm…
+Đen chấm = 1 phách rưỡi.
+Đi NHỎ và NGẮT, ô cuối hét TO!
+Đi đều thì không ai lạc!
+Đoán đúng 5 nốt trầm trong 6, 2 hôm nhé!
+Đoạn nhạc MỚI, chỉ nhìn khuông, đọc từng nốt rồi đàn nhé!
+Đoạn nhạc MỚI, đọc tên nốt rồi đàn nhé!
+Đoạn nhạc mới toanh, đọc rồi đàn nhé!
+Đung đưa: dài, ngắn!
+Đàn 2 ô nhịp, kết thúc ở
+Đàn LIỀN và NHỎ như thuyền trôi êm!
+Đàn NHỎ (p) và LIỀN theo dấu luyến, thật êm!
+Đàn TO như gà gáy sáng!
+Đàn TO như sư tử, NHỎ như chuột nhắt, theo thầy!
+Đàn TO, như sư tử gầm!
+Đàn cơ cần lực từ cánh tay qua ngón cong, đúng thế tay thì tiếng to, đều mà không mỏi.
+Đàn liền (tuần 5): nốt trước chỉ nhả khi nốt sau đã vang, như bước chân, luôn có một chân chạm đất.
+Đàn lại từ
+Đàn một lần TO (f), một lần NHỎ (p)!
+Đàn ngắt (tuần 12): nảy từ cổ tay mềm, không giật cả cánh tay.
+Đàn phím Đô giữa (C4) 3 lần, mỗi lần cách nhau 1 giây.
+Đàn phím đen tùy thích!
+Đàn theo nhịp, nhìn tên nốt, phím không sáng.
+Đàn theo tiếng "tích"!
+Đàn thật nhỏ như sợ đánh thức em bé, ngón vẫn cong, nhịp vẫn đều từ đầu đến cuối.
+Đàn trên đàn thật nhé!
+Đàn trọn "Bánh nóng" thơm phức, 2 hôm nhé!
+Đàn tới nốt đang sáng (
+Đàn Đô Rê Mi Fa Sol lên rồi xuống: lần đầu thật NHỎ, lần sau thật TO.
+Đàn Đô giữa thêm
+Đàn Đô, nhấn pedal, nhấc tay: đàn vẫn kêu!
+Đàn đi, app đang nghe!
+Đàn đều như đồng hồ tích-tắc 8 ô nhịp, 2 hôm nhé!
+Đàn Ếch con nhảy thật đều, 2 hôm nhé!
+Đánh MỘT lần, giữ đủ cả hai nốt.
+Đây là buổi hòa nhạc lớn nhất, con là nghệ sĩ piano thật sự.
+Đây là bản thu cũ nhất của con…
+Đây là lúc bé thấy mình "giỏi lên".
+Đây là lần đầu con đàn bài này…
+Đây là Đô…
+Đã chọn dùng micro cho các buổi học, khi bé học, app tự nghe và chấm nốt.
+Đã có
+Đã lưu vào Album của con!
+Đã lưu, app dùng con số này khi chấm nhịp.
+Đã mở bảng Chia sẻ, chọn Zalo / Tin nhắn / Mail để gửi cho người hỗ trợ.
+Đã mở bảng Chia sẻ, chọn Zalo / Tin nhắn để gửi người hỗ trợ.
+Đã nhập dữ liệu.
+Đã sao chép báo cáo gần nhất.
+Đã sao chép kết quả, dán vào tin nhắn gửi người hỗ trợ.
+Đã sao chép nhật ký, dán vào tin nhắn gửi người hỗ trợ.
+Đã sao chép, dán vào tin nhắn gửi người hỗ trợ.
+Đã thuộc!
+Đã tải bản mới.
+Đã đóng bảng Chia sẻ, chưa gửi.
+Đã đạt mục tiêu tuần, đang “Ở lại tuần này thêm” nên app CHƯA sang tuần mới (tắt nút đó khi muốn đi tiếp).
+Đã đạt mục tiêu tuần.
+Đèn đi TO rồi xa dần NHỎ.
+Đêm thánh vô cùng có pedal, 2 hôm!
+Đêm thánh vô cùng theo nhịp, 2 hôm nhé!
+Đò lắc lư "MỘT-hai": đàn LIỀN theo dấu luyến!
+Đô (C) là I, Fa (F) là IV, Sol (G) là V.
+Đô 1, Sol 4, La 5, xòe tay rộng một chút!
+Đô Rê Mi rồi LUỒN ngón cái xuống Fa!
+Đô Rê Mi đi lên, Mi Rê Đô đi xuống.
+Đô giữa của khóa Fa và khóa Sol là CÙNG một phím.
+Đô giữa nằm giữa hai khóa.
+Đô giữa nằm ở chính giữa đàn, thường ngay dưới tên đàn hoặc ổ khóa.
+Đô giữa trên khóa Sol có mấy dòng kẻ phụ?
+Đô giữa đội mũ một dòng kẻ phụ.
+Đô giữa ở trên.
+Đô lên Fa: 4 nốt, QUÃNG 4.
+Đô lên Sol: 5 nốt, QUÃNG 5.
+Đô nhảy lên Mi: quãng mấy?
+Đô trưởng có mấy dấu hóa?
+Đô trưởng không có dấu hóa nào.
+Đô trưởng: không có.
+Đô trầm, Đô giữa, Đô cao, cùng tên Đô.
+Đô, Fa là quãng 4, Đô, Sol là quãng 5.
+Đô, Rê cách bao nhiêu?
+Đôi tai giỏi, nghe rồi chọn nhé!
+Đôi tai thám tử: đoán đúng 5 nốt trong 6, 2 hôm nhé!
+Đúng lúc chấm chạm vạch, con chạm vào trống nhé!
+Đúng nốt rồi!
+Đúng nốt, đều nhịp như đồng hồ, giỏi lắm con!
+Đúng phím, đúng ngón, cứ thế nhé!
+Đúng rồi!
+Đúng Đô giữa rồi!
+Đúng!
+Được!
+Đại hòa nhạc Cấp 4, bé đã học xong gam trưởng/thứ, hợp âm rải, Alberti, pedal, 6 trên 8 (≈ ABRSM Initial / đầu Grade 1).
+Đại hòa nhạc, bé đã đi một chặng dài 33 tuần (≈ hết Faber cấp 1 / đầu cấp 2)!
+Đại hòa nhạc, nhận huy chương vàng!
+Đạt mục tiêu rồi!
+Đảo bí mật, đi tiếp để khám phá nhé!
+Đầu bài có hai số: SỐ CHỈ NHỊP.
+Đầu mỗi câu có "Suỵt", chờ một phách rồi đàn!
+Đầu ngón đứng yên nhé.
+Đặt iPad lên giá nhạc, ngồi ngay ngắn nhé
+Đặt iPad trên giá nhạc, phòng yên tĩnh.
+Đặt lại toàn bộ dữ liệu…
+Đặt tay lên nắp đàn, gõ lần lượt ngón 1, 2, 3, 4, 5, đầu ngón cong.
+Đặt tên cho câu nhạc rồi đàn cho cả nhà (hoặc Bé Nốt) nghe nhé.
+Đẹp lắm!
+Đếm cả nốt đầu và nốt cuối.
+Đếm to cùng bé "1-2-3-4".
+Đếm to theo nhé!
+Đếm từ Đô giữa xuống: Si, rồi La trên 2 vạch phụ.
+Đếm vào…
+Đếm vạch phụ xuống!
+Đếm vạch và khe, lên hay xuống?
+Đếm “MỘT-hai, MỘT-hai”, phách MỘT mạnh.
+Đếm “MỘT-hai-ba” như đung đưa xích đu.
+Đếm: MỘT-hai-ba BỐN-năm-sáu!
+Đến lượt con!
+Đến lượt con, đàn lại y như thầy!
+Đều quan trọng hơn nhanh.
+Đều quan trọng hơn nhanh: cho bé đàn chậm (tốc độ 40) trước.
+Để ý ngón: Đô = ngón cái, Rê = ngón trỏ, Mi = ngón giữa.
+Đệm I, V7, I: đi xa rồi về nhà Đô!
+Đỉnh của chóp!
+Đọc 5 đoạn nhạc mới toanh, trong 2 hôm nhé!
+Đọc nhạc: đừng cho bé đoán.
+Đọc to rồi vỗ: Đi · Chạy-chạy · Đi-i · Đi-i-i-i · Suỵt!
+Đổi iPad / lỡ xóa app: Cho người hỗ trợ “Nhập từ tệp JSON”.
+Đổi thế tay giữa bài: cho bé đánh dấu bằng bút chì chỗ phải dời tay (trong đầu) và tập riêng chỗ đó.
+Đợi chút…
+Đủ
+ĐỪNG học tiếp ngay (tránh ghi đè).
+Đừng sửa lỗi lúc bé đang đàn.
+đang dùng cho buổi học.
+đang kiểm tra…
+đi nhé.
+điều nhạc lý.
+đàn cùng lúc nhé!
+đàn lại
+đàn từng phím đang sáng
+đã đặt lời nhắc trong Lịch.
+đúng phím bé đàn không?
+đều lắm!
+đừng đàn lại
+Ảnh đã sẵn sàng, chạm “Chia sẻ” lần nữa nhé.
+Ảnh đã sẵn sàng, chạm “Gửi ảnh” lần nữa nhé.
+Ếch nhảy Đô, Mi, Sol: ngón 1, 3, 5!
+Ốc sên bò thật chậm lên tới Sol rồi trượt xuống.
+Ối, có trục trặc nhỏ.
+Ở Bến Đò, bác lái đò khua mái chèo "MỘT-hai, MỘT-hai".
+Ở Hồ Tấm Gương, tay trái là cái bóng của tay phải: ngón út (5) đứng ở Đô, ngón cái (1) đứng ở Sol.
+Ở Làng Đô Rê Mi, ba bạn Đô, Rê, Mi sống cạnh nhau.
+Ở Suối Móc Kép, nước chảy róc rách: bốn giọt nước rơi trong MỘT phách, "Chạy-chạy-chạy-chạy"!
+Ở Sân khấu nhỏ, cả làng chờ nghe con đàn "Bài ca niềm vui".
+Ở Thung lũng Rê, hai bàn tay cùng leo gam một lúc, mỗi tay luồn ngón ở một chỗ khác nhau.
+Ở Thung lũng Vui Buồn, cùng một bài hát có thể nghe VUI (giọng trưởng) hoặc BUỒN (giọng thứ).
+Ở Thác Gam, nước chảy 8 bậc từ Đô đến Đô.
+Ở Vũ hội Valse mọi người nhảy "MỘT-hai-ba, MỘT-hai-ba".
+Ở Vịnh Thuyền Đưa, sóng đưa thuyền "MỘT-hai-ba BỐN-năm-sáu", mỗi ô 6 móc đơn, chia làm hai nhóm ba.
+Ở Xưởng Đánh Bóng không có gì mới!
+Ở nhà có thể chia đôi, mỗi buổi tập kỹ một nửa.
+Ở thế Sol, ngón cái đặt ở đâu?
+Ở trên đỉnh khuông nhạc có năm bạn nốt cao: Đô, Rê, Mi, Fa, Sol.
+Ở trò chơi nghe / đọc nốt, con trả lời đúng ít nhất 5 trong 6 câu.
+ở buổi tới.
+ở chế độ Từng nốt, tập chậm chỗ hay vấp 3 lần rồi mới chơi theo nhịp.
+“ Bài thêm” “Thêm bài hát”: gõ Đô Rê Mi hoặc chạm phím, app tự đánh số ngón.
+“ Dành cho người hỗ trợ” “ Đo micro & tạo báo cáo” (≈ 1 phút) gửi người hỗ trợ.
+“ Gửi ảnh” để gửi qua Zalo / tin nhắn; “ Sao chép chữ” để dán.
+“Khó” nhiều buổi liền = nên tập chậm lại.
+“Ngón số mấy nhỉ?”
+“Vì sao?” giải thích cách app tính.
+” TRỌN BÀI theo nhịp, đúng nốt, đều nhịp, đúng ngón chưa?
+” TRỌN BÀI, đúng nốt, đúng ngón chưa?
+” cho Bé Nốt nghe.
+” hai tay cùng lúc!
+” tạm dừng, con đã cố gắng nhiều lần rồi.
+”, Bé Nốt vỗ tay theo.
+…hoặc chạm đúng phím trên iPad

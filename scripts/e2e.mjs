@@ -795,6 +795,7 @@ async function runSession(label, start, o = {}) {
     await sleep(d.actions.length ? 250 : 400);
   }
   const ms = Date.now() - tStart;
+  await harvestVoice();
   log(`  ✓ buổi ${label} xong sau ${(ms / 1000).toFixed(0)}s — các màn: ${seq.join(' → ')}${banner ? ` — banner: ${banner}` : ''}`);
   if (answers.length) log(`    đáp án đã chọn: ${[...new Set(answers)].slice(0, 12).join(', ')}`);
   await shot(`${label}-home`);
@@ -805,6 +806,25 @@ async function runSession(label, start, o = {}) {
   assert(!verdicts.wrong.length, `Buổi ${label}: trả lời theo nốt trên khuông mà app chấm sai: ${verdicts.wrong.join(', ')}`);
   assert(last?.completed, `Buổi ${label} chưa được lưu là hoàn thành`);
   return { kinds, seq, banner, stickers, ms, verdicts };
+}
+
+/**
+ * (+ 2026-11-08) VOICE_HARVEST=1: lấy các lời app đã đọc (window.__pb9Spoken, src/audio/voice.ts) → voice/harvest/e2e.json
+ * (gộp dần) → scripts/voice-corpus.mjs tạo sẵn giọng thu cho chúng.
+ */
+async function harvestVoice() {
+  if (process.env.VOICE_HARVEST !== '1') return;
+  try {
+    const lines = await evaluate(`[...(globalThis.__pb9Spoken || [])]`);
+    const dir = join(ROOT, 'voice', 'harvest');
+    mkdirSync(dir, { recursive: true });
+    const f = join(dir, 'e2e.json');
+    const old = existsSync(f) ? JSON.parse(readFileSync(f, 'utf8')) : [];
+    const all = [...new Set([...old, ...lines])].sort();
+    writeFileSync(f, JSON.stringify(all, null, 1));
+  } catch (e) {
+    log(`  (không lấy được lời đã đọc: ${e.message})`);
+  }
 }
 
 // ---------------- cổng phụ huynh ----------------
@@ -1110,6 +1130,30 @@ async function main() {
     notes.push(`Bài "${songTitle}": Xem mẫu ${ended ? 'tự chạy hết' : 'dừng tay'}`);
     await tapText('Quay lại');
     await waitFor(`screenKind() === 'library'`, 'về Thư viện');
+
+    // (+ 2026-11-08) Thêm bài ngay ở màn Bài hát + tab Hai tay (app tự chọn hợp âm) → lưu → chơi bài hai tay
+    await tapText('Thêm bài hát');
+    await waitFor(`!!document.querySelector('.se-area')`, 'màn soạn bài');
+    await evaluate(`(() => { const a = document.querySelector('.se-area'); a.value = 'Đô Đô Sol Sol | La La Sol- | Fa Fa Mi Mi | Rê Rê Đô-'; a.dispatchEvent(new Event('input')); })()`);
+    await sleep(500);
+    await tapSel('[data-test="chord-tab"]');
+    await waitFor(`!!document.querySelector('[data-test="chord-area"]')`, 'tab Hai tay');
+    await tapText('App tự chọn hợp âm');
+    const chords = await waitFor(`document.querySelector('[data-test="chord-area"]').value`, 'app chọn hợp âm');
+    await shot('editor-chords');
+    notes.push(`Thêm bài: app chọn hợp âm "${chords.replace(/\n/g, ' / ')}"`);
+    await tapText('Lưu bài');
+    await waitFor(`screenKind() === 'library' && !!document.querySelector('[data-test="parent-song-card"]')`, 'về Bài hát có bài thêm');
+    const cardSub = await evaluate(inPage(`return txt(document.querySelector('[data-test="parent-song-card"] .song-card-sub'));`));
+    assert(/hai tay/.test(cardSub), `Thẻ bài thêm không ghi hai tay: "${cardSub}"`);
+    await tapSel('[data-test="parent-song-card"]');
+    await waitFor(`screenKind() === 'song'`, 'màn bài thêm hai tay');
+    const grand = await evaluate(`!!document.querySelector('.staff.grand')`);
+    await shot('song-both-added');
+    assert(grand, 'Bài thêm có hợp âm không hiện khuông hai tay');
+    notes.push(`Bài thêm hai tay: "${cardSub}", khuông hai tay ✓`);
+    await tapText('Quay lại');
+    await waitFor(`screenKind() === 'library'`, 'về Thư viện từ bài thêm');
     await tapText('Quay lại');
     await waitFor(`screenKind() === 'home'`, 'về màn chính');
 
@@ -1295,8 +1339,9 @@ async function main() {
     const cacheKeys = await evaluate(`caches.keys().then((k) => k.join(','))`);
     notes.push(`Sau khi về điểm an toàn: đã tải lại sang v2 (${reloaded ? 'meta e2e-build có' : '?'}); cache: ${cacheKeys}`);
     assert(/-e2e2/.test(cacheKeys), 'Cache của bản mới chưa được dùng');
+    // (2026-11-08) kho giọng đọc 'pb9-voice-hm' cố ý giữ lâu dài qua các bản — không tính
     // v0.18: service worker GIỮ cache của đúng MỘT bản trước (trang cũ còn mở vẫn tải được màn lười) — chỉ được dư tối đa 1
-    assert(cacheKeys.split(',').filter((k) => k && !k.endsWith('-e2e2')).length <= 1, 'Cache bản cũ chưa được dọn (dư > 1 bản)');
+    assert(cacheKeys.split(',').filter((k) => k && !k.endsWith('-e2e2') && !k.startsWith('pb9-voice')).length <= 1, 'Cache bản cũ chưa được dọn (dư > 1 bản)');
     await toHome();
     const dataAfter = await appData();
     const title = await homeTitle();

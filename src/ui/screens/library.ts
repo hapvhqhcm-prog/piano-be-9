@@ -21,6 +21,11 @@ const albumMod = lazy(() => import('./album'));
 // (+ 2026-10-12) 📘 Từ điển nhạc nhỏ — chunk riêng
 const glossaryMod = lazy(() => import('./glossary'));
 const handGuideMod = lazy(() => import('./handGuide'));
+// (+ 2026-11-08, OWNER "thêm lại tính năng thêm bài hát … trong màn của bé") trình soạn bài — chunk riêng
+const songEditorMod = lazy(() => import('./songEditor'));
+
+/** Chế độ "✏️ Sửa bài thêm": chạm thẻ bài thêm → mở trình soạn thay vì chơi */
+let editParents = false;
 
 /** Bộ lọc Thư viện (giữ trong lúc mở app): tất cả · 🇻🇳 Bài Việt Nam */
 let libFilter: 'all' | 'vn' = 'all';
@@ -107,28 +112,56 @@ export function libraryScreen(app: App, filter?: 'all' | 'vn') {
         h('div', { class: 'song-card-week' }, `📅 ${d.getDate()} thg ${d.getMonth() + 1}`),
       );
     };
-    // "📝 Bài thêm": bài người lớn tự nhập ở ⚙️ Cài đặt (chỉ lưu trên iPad này) — sửa/xóa ở đó
+    // "📝 Bài thêm": bài tự thêm (chỉ lưu trên iPad này). (+ 2026-11-08) thêm / sửa / xóa NGAY TẠI ĐÂY (màn của bé) —
+    // trình soạn có tab "🎹🎹 Hai tay: hợp âm" (tay trái đệm hợp âm, app tự chọn được)
     const parents = [...(data.parentSongs ?? [])].sort((a, b) => b.createdAt - a.createdAt);
+    if (!parents.length) editParents = false;
+    const openEditor = (c: ParentSong | null) =>
+      app.show(lazyScreen(songEditorMod, (m) => m.songEditorScreen(app, c, { onDone: () => app.show(libraryScreen(app)) })));
     const parentCard = (c: ParentSong) => {
       const t = parentSongToTune(c);
       const bars = Math.round(c.notes.reduce((s, n) => s + n.beats, 0) / (Number(c.timeSignature.split('/')[0]) || 4));
       return h(
         'button',
-        { class: 'song-card parent-song-card', type: 'button', onClick: () => playSong(app, t) },
-        h('div', { class: 'song-card-title' }, h('span', {}, '📝 ', c.title)),
-        h('div', { class: 'song-card-sub' }, `Bài thêm · ${bars} ô nhịp${t.hand === 'LH' ? ' · tay trái' : ''}`),
-        h('div', { class: 'song-card-week' }, `Nhịp ${c.timeSignature}`),
+        {
+          class: `song-card parent-song-card${editParents ? ' is-editing' : ''}`,
+          type: 'button',
+          'data-test': 'parent-song-card',
+          onClick: () => (editParents ? openEditor(c) : playSong(app, t)),
+        },
+        h('div', { class: 'song-card-title' }, h('span', {}, editParents ? '✏️ ' : '📝 ', c.title)),
+        h('div', { class: 'song-card-sub' }, `Bài thêm · ${bars} ô nhịp${t.hand === 'BOTH' ? ' · hai tay 🎹🎹' : t.hand === 'LH' ? ' · tay trái' : ''}`),
+        h('div', { class: 'song-card-week' }, editParents ? 'Chạm để sửa' : `Nhịp ${c.timeSignature}`),
       );
     };
-    const parentSection = parents.length
-      ? h(
-          'section',
-          { class: 'lib-parent' },
-          h('h2', { class: 'lib-level' }, '📝 Bài thêm'),
-          h('p', { class: 'lib-private' }, '🔒 Chỉ lưu trên iPad này, dùng riêng trong gia đình.'),
-          h('div', { class: 'library' }, ...parents.map(parentCard)),
-        )
-      : null;
+    const parentSection = h(
+      'section',
+      { class: 'lib-parent' },
+      h('h2', { class: 'lib-level' }, '📝 Bài thêm'),
+      h(
+        'div',
+        { class: 'lib-parent-actions' },
+        button({ icon: '➕', label: 'Thêm bài hát', kind: 'primary', onTap: () => openEditor(null) }),
+        parents.length
+          ? button({
+              icon: editParents ? '✅' : '✏️',
+              label: editParents ? 'Xong' : 'Sửa bài',
+              onTap: () => {
+                editParents = !editParents;
+                app.show(libraryScreen(app));
+              },
+            })
+          : null,
+      ),
+      h(
+        'p',
+        { class: 'lib-private' },
+        parents.length
+          ? '🔒 Chỉ lưu trên iPad này, dùng riêng trong gia đình.'
+          : 'Thích bài nào mà app chưa có? Gõ nốt Đô Rê Mi, chạm phím hoặc đàn cho app nghe — thêm cả tay trái đệm hợp âm. 🔒 Chỉ lưu trên iPad này.',
+      ),
+      parents.length ? h('div', { class: 'library' }, ...parents.map(parentCard)) : null,
+    );
     const chip = (label: string, on: boolean, f: 'all' | 'vn') =>
       h(
         'button',

@@ -4,6 +4,7 @@ import { AudioEngine } from './audio/AudioEngine';
 import { ProgressStore, type KeyValueStorage } from './progress/ProgressStore';
 import { App, micModule } from './ui/App';
 import { installAudioOverlay } from './ui/components/audioOverlay';
+import { loadVoiceManifest, warmVoiceCache } from './audio/voiceClips';
 import { startScreen } from './ui/screens/start';
 import { registerServiceWorker } from './pwa/updater';
 import { installErrorCapture } from './pwa/errorLog';
@@ -117,6 +118,8 @@ async function boot(): Promise<void> {
   installPortraitNag();
   installAudioOverlay(app.audio, () => app.started);
   registerServiceWorker();
+  // (+ 2026-11-08) Giọng đọc tự nhiên thu sẵn: nạp danh sách câu, rồi tải dần mọi câu lúc rảnh (dùng được khi mất mạng)
+  void loadVoiceManifest().then(() => warmVoiceCache());
   app.show(startScreen(app));
 
   // Chỉ bản dev (và bản build riêng của kiểm thử WebKit — __TEST_HOOKS__): cho phép kiểm thử tự động điều khiển app.
