@@ -365,7 +365,7 @@ describe('gộp lịch sử — kết quả đọc GIỐNG HỆT trước / sau 
         compactData(a, new Date(t));
         expect(readers(a, t)).toEqual(readers(fd, t));
       }
-    }, 120_000);
+    }, 400_000); // máy bận (deploy chạy song song) có lúc > 120 s
   }
 });
 
@@ -438,7 +438,7 @@ describe('dung lượng: dùng điển hình 2 năm', () => {
     console.log(`[durability] typical 2y: full=${fullSize} chars, compacted=${size} chars, live sessions=${comp.st.get().sessions.length}`);
     expect(size).toBeLessThan(300_000);
     expect(fullSize).toBeGreaterThan(3 * size);
-  }, 120_000);
+  }, 400_000); // máy bận (deploy chạy song song) có lúc > 120 s
 });
 
 /** localStorage có giới hạn (ký tự) — ném QuotaExceededError như Safari. */

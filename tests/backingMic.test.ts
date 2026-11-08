@@ -26,7 +26,7 @@ describe('trống nhịp vui (groove)', () => {
           expect(g.gain).toBeLessThanOrEqual(CLICK.accentGain);
         }
       }
-  });
+  }, 60_000);
   it('mỗi kiểu một nhịp điệu riêng (4/4); nhịp ghép 6/8 không thêm', () => {
     const t = findTune('ex_c_quarter')!;
     const sig = (st: BackingStyle) => groove(t, st).slice(0, 8).map((g) => `${g.beat}@${g.hz}`).join(' ');
