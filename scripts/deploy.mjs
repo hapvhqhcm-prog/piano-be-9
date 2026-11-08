@@ -30,7 +30,8 @@ const name = ident('user.name') || 'piano-be-9';
 const email = ident('user.email') || 'piano-be-9@users.noreply.github.com';
 const id = `-c user.name="${name}" -c user.email="${email}"`;
 
-run('npm test');
+// Ít luồng hơn: máy bận thì vitest đủ luồng hay lỗi "Timeout calling onTaskUpdate" dù mọi test đều đạt
+run('npx vitest run --maxWorkers=4');
 run('npm run build');
 
 writeFileSync('dist/.nojekyll', '');
