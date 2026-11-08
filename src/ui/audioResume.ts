@@ -11,9 +11,9 @@
  *  3. Chỉ khi đã dừng liên tục quá GRACE_MS mà tự bật không được → hiện một nút NHỎ ở góc (không che bài).
  *     Bất kỳ lần chạm nào (cả phím đàn trên màn) cũng bật lại tiếng — nút chỉ để bé biết.
  */
-export const GRACE_MS = 4000;
+export const GRACE_MS = 2500;
 /** Các lần tự thử bật lại sau khi âm thanh dừng (ms kể từ lúc dừng). */
-export const RETRY_AT_MS = [0, 400, 1200, 2500, 3800];
+export const RETRY_AT_MS = [0, 300, 800, 1500, 2300];
 
 export interface ResumeEnv {
   /** Đã "Bắt đầu" và âm thanh đang dừng (suspended / interrupted) — cần bật lại. */

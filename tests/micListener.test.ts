@@ -152,6 +152,37 @@ describe('MicListener: iOS làm micro "điếc" → báo tắt, cần bật lạ
     expect(ctx.resume).toHaveBeenCalled();
   });
 
+  it('(+ 2026-11-08) âm thanh bị ngắt chốc lát rồi chạy lại → micro TỰ bật lại (không chạm), dùng lại luồng cũ', async () => {
+    const { mic, engineState, getUserMedia, tracks } = setup();
+    await mic.start();
+    engineState('interrupted');
+    expect(mic.state).toBe('off');
+    expect(tracks[0].readyState).toBe('live'); // luồng micro được giữ
+    engineState('running');
+    await vi.advanceTimersByTimeAsync(10);
+    expect(mic.state).toBe('on');
+    expect(mic.needsRestart).toBe(false);
+    expect(getUserMedia).toHaveBeenCalledTimes(1); // không xin micro lại
+  });
+
+  it('(+ 2026-11-08) canAutoRestart() = false → chờ chạm như cũ; luồng đã chết → xin micro mới khi tự bật lại', async () => {
+    const a = setup();
+    a.mic.canAutoRestart = () => false;
+    await a.mic.start();
+    a.engineState('interrupted');
+    a.engineState('running');
+    await vi.advanceTimersByTimeAsync(10);
+    expect(a.mic.state).toBe('off');
+    expect(a.mic.needsRestart).toBe(true);
+    a.mic.canAutoRestart = () => true;
+    a.tracks[0].readyState = 'ended';
+    a.engineState('suspended');
+    a.engineState('running');
+    await vi.advanceTimersByTimeAsync(10);
+    expect(a.mic.state).toBe('on');
+    expect(a.getUserMedia).toHaveBeenCalledTimes(2);
+  });
+
   it('(+ 2026-10-08) ctx.resume() treo mãi (iOS sau cuộc gọi/Siri) → không kẹt "starting": tắt micro, lần chạm sau thử lại được', async () => {
     const { mic, ctx, tracks, getUserMedia, states } = setup();
     ctx.state = 'interrupted';

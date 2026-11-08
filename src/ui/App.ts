@@ -85,6 +85,8 @@ export class App {
     });
     // Giọng đọc hướng dẫn không đi qua AudioEngine → micro hỏi ở đây để không tính tiếng đọc là "bé đàn khẽ"
     mic.externalBusy = () => m.speechBusy();
+    // (+ 2026-11-08) âm thanh chạy lại sau khi iPad ngắt → micro tự bật lại, nhưng chỉ khi micro còn bật trong Cài đặt
+    mic.canAutoRestart = () => this.micWanted;
     // Bé đàn khẽ nhiều lần không nghe được → micro tự tăng độ nhạy MỘT bậc: lưu, ghi nhật ký, báo bé một câu nhẹ
     mic.onAutoSensitivity((c) => {
       if (this.store.guest) return; // 👤 khách chơi: micro không tự học

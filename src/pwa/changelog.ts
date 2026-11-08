@@ -29,6 +29,13 @@ export const CHANGELOG_BASELINE = '0.15.0';
 
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
+    version: '0.30.2',
+    date: '2026-11-08',
+    items: [
+      'Sửa lỗi bản 0.30.1: micro không nghe sau khi iPad ngắt tiếng — giờ micro tự bật lại, không cần chạm.',
+    ],
+  },
+  {
     version: '0.30.1',
     date: '2026-11-08',
     items: [

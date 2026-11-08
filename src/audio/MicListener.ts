@@ -310,7 +310,13 @@ export class MicListener {
     // AudioContext bị iOS ngắt (cuộc gọi, Siri, báo thức…) → nguồn micro không còn chạy → coi là điếc
     audio.onStateChange?.((s: EngineState) => {
       if ((this._state === 'on' || this._state === 'starting') && (s === 'interrupted' || s === 'suspended' || s === 'closed')) {
-        this.markDeaf();
+        // (2026-11-08) iPad ngắt âm thanh chốc lát (giọng đọc, thông báo…): luồng micro thường vẫn sống → GIỮ lại để bật
+        // lại ngay khi âm thanh chạy, không phải xin micro lại
+        this.markDeaf(s !== 'closed');
+      } else if (s === 'running' && this._needsRestart && this._state === 'off' && this.canAutoRestart()) {
+        // (2026-11-08, OWNER "app lại không nghe được") âm thanh chạy lại → micro TỰ bật lại, không chờ bé chạm màn hình
+        // (bé đang đàn trên đàn thật, không chạm gì cả)
+        void this.start();
       }
     });
   }
@@ -593,12 +599,20 @@ export class MicListener {
     return this._state;
   }
 
-  /** Micro bị cắt ngầm → tắt hẳn, đánh dấu cần bật lại ở lần chạm sau, báo 'off'. */
-  private markDeaf(): void {
+  /**
+   * Micro bị cắt ngầm → tắt, đánh dấu cần bật lại, báo 'off'. Bật lại: tự động khi âm thanh chạy lại (autoRestart),
+   * hoặc ở lần chạm sau (App.armMicRestart). `keepStream` = giữ luồng micro nếu còn sống (chỉ AudioContext bị ngắt).
+   */
+  private markDeaf(keepStream = false): void {
     if (this._state !== 'on' && this._state !== 'starting') return;
     this._needsRestart = true;
-    this.teardown();
+    const tracks = this.stream?.getAudioTracks() ?? [];
+    const alive = tracks.length > 0 && tracks.every((t) => t.readyState === 'live' && !t.muted);
+    this.teardown(keepStream && alive);
   }
+
+  /** (+ 2026-11-08) Âm thanh chạy lại sau khi bị ngắt → tự bật lại micro (không cần chạm)? App: chỉ khi micro bật trong Cài đặt. */
+  canAutoRestart: () => boolean = () => true;
 
   /** Watchdog: bộ đệm toàn 0 hoặc y hệt khung trước (nguồn micro đã ngừng chạy) quá MIC_STALE_MS. */
   private checkStale(buf: Float32Array): boolean {
