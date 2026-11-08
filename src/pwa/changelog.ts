@@ -33,6 +33,7 @@ export const CHANGELOG: readonly ChangelogEntry[] = [
     date: '2026-11-08',
     items: [
       'Sửa lỗi bản 0.30.1: micro không nghe sau khi iPad ngắt tiếng — giờ micro tự bật lại, không cần chạm.',
+      'Nút cam nhỏ "Chạm để có tiếng" hiện sớm hơn nếu iPad không tự cho chạy lại tiếng.',
     ],
   },
   {
