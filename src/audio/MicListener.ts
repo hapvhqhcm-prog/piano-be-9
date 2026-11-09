@@ -5,6 +5,7 @@ import { MicAnalyzer, type AppSound, type Sensitivity } from './micAnalyzer';
 import { SensitivityAdvisor, type AutoSensChange } from './micAutoSens';
 import type { HeardNote, PitchResult, Tuning } from './pitchDetect';
 import { TuningEstimator, TuningLearner, type AutoTuning } from './autoTune';
+import { MicEventLog } from './micClaims';
 
 /**
  * Micro nghe đàn cơ (OWNER mở khóa ARCHITECTURE LOCK ngày 2026-10-04).
@@ -131,6 +132,8 @@ export const ANALYSIS_FRAME = 2048;
  * 25 ms vẫn rất nhẹ.
  */
 export const HISTORY_SIZE = 32768;
+/** (+ 2026-11-09) Giữ bấy nhiêu giây tiếng micro gần nhất cho nút "🙉 App nghe sai" (≈ 1 MB ở 48 kHz). */
+export const RING_S = 5;
 
 interface HandsRequest {
   spec: HandsSpec;
@@ -153,6 +156,16 @@ export class MicListener {
   private source: MediaStreamAudioSourceNode | null = null;
   private analyser: AnalyserNode | null = null;
   private buf: Float32Array<ArrayBuffer> | null = null;
+  /**
+   * (+ 2026-11-09) "🙉 App nghe sai": giữ RING_S giây tiếng micro THÔ gần nhất (vòng) + nhật ký sự kiện micro →
+   * bé chạm nút thì lấy ra (snapshot) để đoán kiểu lỗi và lưu đoạn tiếng (micClaims.ts / micClaimStore.ts).
+   */
+  private ring: Float32Array | null = null;
+  private ringPos = 0;
+  private ringFill = 0;
+  private ringRate = 0;
+  private ringLastT = -1;
+  readonly events = new MicEventLog(6);
   private timer: number | undefined;
   private analyzer = new MicAnalyzer();
   private lastClapAt = -1;
@@ -677,6 +690,12 @@ export class MicListener {
     const needPitch = this.noteListeners.size > 0 || this.frameListeners.size > 0;
     if (app !== 'quiet') st.appFrames++;
     const f = this.analyzer.process(buf.subarray(buf.length - ANALYSIS_FRAME), ctx.sampleRate, now, app, needPitch);
+    this.keepRing(buf, now, ctx.sampleRate);
+    this.events.push({ t: now, kind: 'level', rms: f.rms, gate: f.gate, floor: f.floor });
+    if (f.onset) this.events.push({ t: now, kind: 'onset' });
+    if (f.nearMiss) this.events.push({ t: now, kind: 'near' });
+    if (f.note) this.events.push({ t: now, kind: 'note', midi: f.note.midi, cents: Math.round(f.note.cents) });
+    if (f.voice) this.events.push({ t: now, kind: 'voice', midi: f.voice.midi });
     // "Gõ/vỗ" (chấm vỗ nhịp): mốc thời gian định vị trong khung phân tích
     if (f.onset && now - this.lastClapAt > 0.15) {
       this.lastClapAt = now;
@@ -715,6 +734,40 @@ export class MicListener {
     }
   }
 
+  /** Chép phần MỚI của bộ đệm micro (theo thời gian trôi từ lần trước) vào vòng RING_S giây. */
+  private keepRing(buf: Float32Array, now: number, sr: number): void {
+    if (!this.ring || this.ringRate !== sr) {
+      this.ring = new Float32Array(Math.round(sr * RING_S));
+      this.ringRate = sr;
+      this.ringPos = 0;
+      this.ringFill = 0;
+      this.ringLastT = -1;
+    }
+    const ring = this.ring;
+    let n = this.ringLastT < 0 ? ANALYSIS_FRAME : Math.round((now - this.ringLastT) * sr);
+    this.ringLastT = now;
+    n = Math.max(0, Math.min(n, buf.length, ring.length));
+    for (let i = buf.length - n; i < buf.length; i++) {
+      ring[this.ringPos] = buf[i];
+      this.ringPos = (this.ringPos + 1) % ring.length;
+    }
+    this.ringFill = Math.min(ring.length, this.ringFill + n);
+  }
+
+  /** (+ 2026-11-09) `seconds` giây tiếng micro thô gần nhất (cũ → mới) + thời điểm cuối (đồng hồ AudioContext). */
+  snapshot(seconds = 4): { pcm: Float32Array; sampleRate: number; endT: number } | null {
+    const ring = this.ring;
+    if (!ring || !this.ringFill) return null;
+    const n = Math.min(this.ringFill, Math.round(seconds * this.ringRate));
+    const out = new Float32Array(n);
+    let k = (this.ringPos - n + ring.length) % ring.length;
+    for (let i = 0; i < n; i++) {
+      out[i] = ring[k];
+      k = (k + 1) % ring.length;
+    }
+    return { pcm: out, sampleRate: this.ringRate, endT: this.ringLastT };
+  }
+
   /** Tự học lệch dây từ khung này (chỉ khi app im, không đọc to, màn hình đang chờ nốt). */
   private learnTuning(f: { pitch: PitchResult | null; note: HeardNote | null; onset: boolean }, app: AppSound): void {
     if (!this.autoTuneEnabled || app !== 'quiet' || this.externalBusy()) {
@@ -738,6 +791,12 @@ export class MicListener {
       const st = this.autoTune.state;
       this.autoTuneListeners.forEach((fn) => fn(st, changed));
     }
+  }
+
+  /** (+ 2026-11-09) "🙉 App nghe sai" đoán micro bị iPad ngắt (tín hiệu ≈ 0): mở lại micro ngay. */
+  async forceRestart(): Promise<MicState> {
+    if (this._state === 'on' || this._state === 'starting') this.markDeaf(false);
+    return this.start();
   }
 
   /** Màn hình không cần micro nữa: tắt hẳn (và thôi tự bật lại). */

@@ -38,6 +38,15 @@ import { askSelf, makeReview, showResult } from './songResult';
 import { focusStepDone } from './songFocus';
 import { selfCheck } from '../selfCheck';
 import { READ_FIRST_WRONG_SPOT } from '../../lessons/readingAids';
+import { reportMicWrong } from '../micClaim';
+
+/**
+ * (+ 2026-11-09, OWNER chọn "Nút 'App nghe sai!'") Nút "🙉 App nghe sai" hiện ở nhóm nốt nào (chỉ số nhóm) — khi micro
+ * vừa chấm SAI nhóm đó, hoặc bé đã gõ phím mà CLAIM_AFTER_MS vẫn chưa được nhận.
+ */
+const claimAt = new WeakMap<SongCtx, number>();
+export const CLAIM_AFTER_MS = 5000;
+const claimable = (c: SongCtx): boolean => micOn(c) && !c.selfRun && !c.loop3 && claimAt.get(c) === c.wIdx;
 
 export function startWait(c: SongCtx): void {
   c.token++;
@@ -86,6 +95,28 @@ export function showWaitNote(c: SongCtx): void {
         : '',
   );
   waitBar(c, g);
+  // (+ 2026-11-09) bé đã đàn (micro có tiếng gõ) mà 5 giây chưa được nhận → hiện "🙉 App nghe sai"
+  if (micOn(c) && !c.selfRun && !c.loop3) {
+    const tk = c.token;
+    const idx = c.wIdx;
+    const shownAt = c.app.audio.context?.currentTime ?? 0;
+    window.setTimeout(() => {
+      if (tk !== c.token || idx !== c.wIdx || c.state !== 'playing' || c.mode !== 'wait' || claimAt.get(c) === idx) return;
+      if (!c.app.mic.events.since(shownAt).some((e) => e.kind === 'onset' || e.kind === 'near' || e.kind === 'note')) return;
+      claimAt.set(c, idx);
+      waitBar(c, g);
+    }, CLAIM_AFTER_MS);
+  }
+}
+
+/** (+ 2026-11-09) Bé chạm "🙉 App nghe sai": app ghi lại + tự sửa nếu được, bé đi tiếp (nốt "đã qua", không tính "đúng ngay"). */
+function claimWrong(c: SongCtx, g: Onset): void {
+  const msg = reportMicWrong(c.app, { expected: midisOf(g), where: 'song-wait', songId: c.tune.id });
+  claimAt.delete(c);
+  passGroup(c, 'skip');
+  c.app.mic.resetTracker();
+  showWaitNote(c);
+  c.status.textContent = msg;
 }
 
 /**
@@ -101,6 +132,7 @@ function waitBar(c: SongCtx, g: Onset): void {
     backButton(() => c.act.reset()),
     c.hints !== 'full' ? button({ icon: '💡', label: 'Gợi ý', onTap: () => hint(c, g) }) : null,
     listenOffer(c) ? button({ icon: '🎧', label: 'Nghe mẫu câu này', onTap: () => c.act.listenHere() }) : null,
+    claimable(c) ? ((b) => (b.setAttribute('data-test', 'mic-claim'), b))(button({ icon: '🙉', label: 'App nghe sai', onTap: () => claimWrong(c, g) })) : null,
     // Luôn có nút "▶ Đi tiếp" của BÉ (kể cả khi micro bật) — phòng micro không nhận ra nốt; micro chưa nghe đủ hai tay 3 lần → nổi bật.
     // (2026-10-25, bỏ phần phụ huynh) trước đây "👪 Bố mẹ: tiếp". Nốt cho qua kiểu này không tính "đúng ngay" (dấu trung tính).
     // (+ 2026-10-15) đàn sai mãi một nốt (≥ 5 lần, ≥ 8 s — missHelp 'skip') → cũng nổi bật: bé tự cho qua, luyện sau
@@ -158,7 +190,9 @@ export function onWaitInput(c: SongCtx, midi: number, from: 'mic' | 'tap' | 'par
       log.wrong++;
       log.played ??= midi;
       if (c.wFirstWrongAt < 0) c.wFirstWrongAt = performance.now();
-      if (c.wWrongThis === READ_FIRST_WRONG_SPOT && listenOffer(c)) waitBar(c, g);
+      const showClaim = micOn(c) && !c.selfRun && !c.loop3 && claimAt.get(c) !== c.wIdx;
+      if (showClaim) claimAt.set(c, c.wIdx);
+      if (showClaim || (c.wWrongThis === READ_FIRST_WRONG_SPOT && listenOffer(c))) waitBar(c, g);
     }
     const heard = midiToPitch(midi);
     c.kb.setResult(heard, 'heard');

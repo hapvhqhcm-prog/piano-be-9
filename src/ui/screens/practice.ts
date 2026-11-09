@@ -21,6 +21,7 @@ import { StaffView } from '../components/staffView';
 import { HandOverlay, eventsFromTargets, playDemo } from '../components/demo';
 import { MicHonestyWatch } from '../components/micHonesty';
 import { selfAgainButton, selfOkButton } from '../selfCheck';
+import { reportMicWrong } from '../micClaim';
 import { CHECK_PRINCIPLE } from '../../lessons/handTechnique';
 import { principleThumb } from '../components/handArtLazy';
 
@@ -177,6 +178,23 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
     /** (+ 2026-10-15) Lần cuối micro thấy bé gõ phím / "suýt nghe" (Date.now()) — phân biệt "đàn khẽ quá" với "chưa đàn" */
     let lastActivity = 0;
     let silenceShown = false;
+    /** (+ 2026-11-09) Chỗ đặt nút "🙉 App nghe sai" trên thanh dưới của nốt đang chờ (điền khi micro chấm sai / im lâu) */
+    let claimSlot: HTMLElement | null = null;
+    const offerClaim = () => {
+      if (!claimSlot || claimSlot.childElementCount || !micOn()) return;
+      const b = button({
+        icon: '🙉',
+        label: 'App nghe sai',
+        onTap: () => {
+          const t = target();
+          const msg = reportMicWrong(app, { expected: t.keys.map((k) => pitchToMidi(k)), where: 'practice' });
+          micHint(msg, 'good');
+          send('CORRECT');
+        },
+      });
+      b.setAttribute('data-test', 'mic-claim');
+      claimSlot.append(b);
+    };
     let lastHintSpokenAt = 0;
     /** Số nốt liên tiếp đúng ngay lần đầu (để mừng mốc 3, 6, 9…) */
     let firstTryRun = 0;
@@ -270,6 +288,7 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
         return;
       }
       honesty.timeout();
+      offerClaim();
       micHint('🎤 App chưa nghe thấy — con đàn to hơn, hoặc tự xem rồi chạm 👍 Rồi', 'wrong');
       lastHintSpokenAt = Date.now();
       void say('App chưa nghe thấy. Con đàn to hơn nhé.');
@@ -530,6 +549,8 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
             selfAgainButton(() => send('RETRY'), { disabled: !waiting }),
             selfOkButton(() => send('CORRECT'), { disabled: !waiting, primary: selfNow }),
           );
+          claimSlot = waiting && !selfNow ? h('span', { class: 'claim-slot' }) : null;
+          if (claimSlot) bar.append(claimSlot);
           if (snap.state === 'SHOW_NOTE') {
             // Nốt MỚI: đọc "Đô, ngón 1" trước, rồi mới phát âm mẫu
             if (spokenIndex !== snap.index && voiceOn(app)) {
@@ -782,6 +803,7 @@ export function practiceScreen(app: App, seg: Segment, hooks: PracticeHooks) {
      */
     function micWrong(t: Target, say: string): void {
       wrongCount++;
+      offerClaim();
       if (firstWrongAt < 0) firstWrongAt = performance.now();
       const help = missHelp(wrongCount, performance.now() - firstWrongAt);
       if (help === 'skip') offerSkipInline();

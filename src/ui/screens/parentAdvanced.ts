@@ -6,6 +6,7 @@
  *   trái sớm, tư thế đầy đủ, giới hạn ngày, kiểm tra bản mới, 🩺 Kiểm tra iPad, nhập dữ liệu, đặt lại, chỉnh micro, Album).
  */
 import { LEFT_HAND_WEEK, MAX_WEEK, POSTURE_CUE, WEEKS, levelOf } from '../../lessons/lessonEngine';
+import { micClaimCard } from './micClaimCard';
 import { LEVELS } from '../../lessons/curriculum';
 import { sessionCount } from '../../progress/history';
 import type { AppData } from '../../progress/schema';
@@ -414,6 +415,8 @@ export function advancedSection(c: ParentCtx, d: Readonly<AppData>): HTMLElement
     'div',
     { class: 'adv settings-main' },
     mainSettingsCard(c, d),
+    // (+ 2026-11-09) chỉ hiện khi bé đã báo "🙉 App nghe sai"
+    micClaimCard(),
     dataCard(c, d),
     support,
     h('p', { class: 'muted foot' }, `Piano bé ${APP_VERSION} · không mạng, không quảng cáo, không thu thập dữ liệu.`),

@@ -377,3 +377,26 @@ describe('MicListener: giữ luồng micro giữa các màn (iPad không hỏi q
     }
   });
 });
+
+describe('(+ 2026-11-09) "🙉 App nghe sai": vòng tiếng 5 giây + nhật ký micro + bật lại', () => {
+  it('snapshot trả đúng ~4 giây tiếng gần nhất; nhật ký có mức tiếng', async () => {
+    const { mic } = setup();
+    await mic.start();
+    vi.advanceTimersByTime(6000);
+    const s = mic.snapshot(4);
+    expect(s).not.toBeNull();
+    expect(s!.sampleRate).toBe(48000);
+    expect(Math.abs(s!.pcm.length - 4 * 48000)).toBeLessThan(2400);
+    expect(s!.pcm.some((v) => v !== 0)).toBe(true);
+    const ev = mic.events.since(Date.now() / 1000 - 2);
+    expect(ev.some((e) => e.kind === 'level')).toBe(true);
+  });
+
+  it('forceRestart: mở lại micro (getUserMedia lần nữa nếu luồng cũ đã bỏ)', async () => {
+    const { mic, getUserMedia } = setup();
+    await mic.start();
+    expect(await mic.forceRestart()).toBe('on');
+    expect(mic.state).toBe('on');
+    expect(getUserMedia.mock.calls.length).toBeGreaterThanOrEqual(1);
+  });
+});

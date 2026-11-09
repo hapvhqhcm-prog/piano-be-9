@@ -29,6 +29,16 @@ export const CHANGELOG_BASELINE = '0.15.0';
 
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
+    version: '0.32.0',
+    date: '2026-11-09',
+    parentAction: true,
+    items: [
+      'Nút "🙉 App nghe sai" cho bé: hiện khi micro chấm sai hoặc bé đàn mà app im — bé đi tiếp ngay, không bực.',
+      'Mỗi lần bé chạm, app tự chỉnh nếu được: nghe thính hơn, bật lại micro, hoặc bù cho đàn lệch dây.',
+      'App lưu đoạn tiếng 4 giây trên iPad. ⚙️ Cài đặt › "🙉 Gửi tệp" để gửi người làm app sửa tận gốc.',
+    ],
+  },
+  {
     version: '0.31.0',
     date: '2026-11-08',
     items: [
